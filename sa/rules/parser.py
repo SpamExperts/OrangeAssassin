@@ -21,7 +21,7 @@ import sa.rules.header
 import sa.rules.ruleset
 
 
-# These are the types of rule that we know how to interpret, ignore anything
+# These are the types of rules that we know how to interpret, ignore anything
 # else. These include rule types and option types.
 KNOWN_RTYPE = frozenset(
     (
@@ -31,6 +31,7 @@ KNOWN_RTYPE = frozenset(
         "rawbody",  # Specifies a RawBodyRule
         "uri",  # Specifies a URIRule
         "header",  # Specifies a HeaderRule
+        "mimeheader",  # Specifies a MimeHeaderRule
         "meta",  # Specifies a MetaRule
     )
 )
@@ -40,8 +41,9 @@ RULES = {
     "body": sa.rules.body.BodyRule,
     "rawbody": sa.rules.body.RawBodyRule,
     "uri": sa.rules.uri.URIRule,
-    "header": sa.rules.header.HeaderRule,
     "meta": sa.rules.meta.MetaRule,
+    "header": sa.rules.header.HeaderRule,
+    "mimeheader": sa.rules.header.MimeHeaderRule,
 }
 
 

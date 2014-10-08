@@ -7,6 +7,7 @@ standard_library.install_hooks()
 
 import re
 import email
+import email.utils
 import html.parser
 import collections
 import email.header
@@ -58,6 +59,27 @@ class _Headers(collections.defaultdict):
         return super(_Headers, self).__getitem__(key.lower())
 
 
+class _memoize(object):
+    """Memoize the result of the function in a cache. Used to prevent
+    superfluous parsing of headers.
+    """
+    def __init__(self, cache_name):
+        self._cache_name = cache_name
+
+    def __call__(self, func):
+        """Check if the information is available in a cache, if not call the
+        function and cache the result.
+        """
+        def wrapped_func(fself, name):
+            cache = getattr(fself, self._cache_name)
+            result = cache.get(name)
+            if result is None:
+                result = func(fself, name)
+                cache[name] = result
+            return result
+        return wrapped_func
+
+
 class Message(object):
     """Internal representation of an email message. Used for rule matching."""
     def __init__(self, raw_msg):
@@ -67,7 +89,10 @@ class Message(object):
         self.raw_msg = self.translate_line_breaks(raw_msg)
         self.msg = email.message_from_string(self.raw_msg)
 
-        self.headers = []
+        self.headers = _Headers()
+        self.raw_headers = _Headers()
+        self.addr_headers = _Headers()
+        self.name_headers = _Headers()
         self.text = ""
         self.raw_text = ""
         self.uri_list = []
@@ -117,23 +142,63 @@ class Message(object):
                 parts.append(value)
         return "".join(parts)
 
-    @classmethod
-    def _dump_headers(cls, msg):
-        """Decode all headers."""
-        # XXX Not all headers will actually be checked we could only parse
-        # XXX the ones we know we will check or have it done lazily.
-        headers = _Headers()
-        for name, value in msg._headers:
-            value = cls._decode_header(value)
-            if value:
-                headers[name].append(value)
-        return headers
+    def get_raw_header(self, header_name):
+        """Get a list of raw headers with this name."""
+        # This is just for consistencies, the raw headers should have been
+        # parsed together with the message.
+        return self.raw_headers[header_name]
+
+    @_memoize("headers")
+    def get_decoded_header(self, header_name):
+        """Get a list of decoded headers with this name."""
+        values = []
+        for value in self.raw_headers[header_name]:
+            values.append(self._decode_header(value))
+        return values
+
+    @_memoize("addr_headers")
+    def get_addr_header(self, header_name):
+        """Get a list of the first addresses from this header."""
+        values = []
+        for value in self.get_decoded_header(header_name):
+            for dummy, addr in email.utils.getaddresses([value]):
+                if addr:
+                    values.append(addr)
+                    break
+        return values
+
+    @_memoize("name_headers")
+    def get_name_header(self, header_name):
+        """Get a list of the first names from this header."""
+        values = []
+        for value in self.get_decoded_header(header_name):
+            for name, dummy in email.utils.getaddresses([value]):
+                if name:
+                    values.append(name)
+                    break
+        return values
+
+    def iter_decoded_headers(self):
+        """Iterate through all the decoded headers.
+
+        Yields strings like <header_name>: <header_value>
+        """
+        for header_name in self.raw_headers:
+            for value in self.get_decoded_header(header_name):
+                yield "%s: %s" % (header_name, value)
+
+    def _dump_headers(self):
+        """Dump all raw headers in the more manageable case insensitive
+        default dict.
+        """
+        for name, raw_value in self.msg._headers:
+            self.raw_headers[name].append(raw_value)
 
     def _parse_message(self):
         """Parse the message."""
-        self.headers = self._dump_headers(self.msg)
+        self._dump_headers()
         # The body starts with the Subject header(s)
-        body = self.headers["Subject"][:]
+        body = self.get_decoded_header("Subject")[:]
         raw_body = []
         for subtype, payload in self._iter_text_parts():
             self.uri_list.extend(URL_RE.findall(payload))
