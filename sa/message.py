@@ -97,7 +97,7 @@ class Message(object):
         self.raw_mime_headers = _Headers()
         self.text = ""
         self.raw_text = ""
-        self.uri_list = []
+        self.uri_list = set()
         self.rules_checked = {}
         self._parse_message()
 
@@ -212,31 +212,31 @@ class Message(object):
         # The body starts with the Subject header(s)
         body = self.get_decoded_header("Subject")[:]
         raw_body = []
-        for payload, part in self._iter_parts():
+        for payload, part in self._iter_parts(self.msg):
             # Extract any MIME headers
             for name, raw_value in part._headers:
                 self.raw_mime_headers[name].append(raw_value)
-
             if payload is not None:
                 # this must be a text part
-                self.uri_list.extend(URL_RE.findall(payload))
-                if part.get_content_subtype == "html":
+                self.uri_list.update(set(URL_RE.findall(payload)))
+                if part.get_content_subtype() == "html":
                     body.extend(self.normalize_html_part(payload.replace("\n",
-                                                                         "")))
+                                                                         " ")))
                     raw_body.append(payload)
                 else:
-                    body.append(payload.replace("\n", ""))
+                    body.append(payload.replace("\n", " "))
                     raw_body.append(payload)
         self.text = " ".join(body)
         self.raw_text = "\n".join(raw_body)
 
-    def _iter_parts(self):
+    @staticmethod
+    def _iter_parts(msg):
         """Extract and decode the text parts from the parsed email message.
         For non-text parts the payload will be None.
 
         Yields (payload, part)
         """
-        for part in self.msg.walk():
+        for part in msg.walk():
             if part.get_content_maintype() == "text":
                 payload = part.get_payload(decode=True)
 

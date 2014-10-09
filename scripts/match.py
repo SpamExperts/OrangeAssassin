@@ -1,4 +1,4 @@
-# ! /usr/bin/env python
+#! /usr/bin/env python
 
 """Testing tool that parses SA rule set files and runs a match against message.
 
