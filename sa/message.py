@@ -93,6 +93,8 @@ class Message(object):
         self.raw_headers = _Headers()
         self.addr_headers = _Headers()
         self.name_headers = _Headers()
+        self.mime_headers = _Headers()
+        self.raw_mime_headers = _Headers()
         self.text = ""
         self.raw_text = ""
         self.uri_list = []
@@ -178,43 +180,61 @@ class Message(object):
                     break
         return values
 
+    def get_raw_mime_header(self, header_name):
+        """Get a list of raw MIME headers with this name."""
+        # This is just for consistencies, the raw headers should have been
+        # parsed together with the message.
+        return self.raw_mime_headers[header_name]
+
+    @_memoize("mime_headers")
+    def get_decoded_mime_header(self, header_name):
+        """Get a list of raw MIME headers with this name."""
+        values = []
+        for value in self.raw_mime_headers[header_name]:
+            values.append(self._decode_header(value))
+        return values
+
     def iter_decoded_headers(self):
         """Iterate through all the decoded headers.
 
-        Yields strings like <header_name>: <header_value>
+        Yields strings like "<header_name>: <header_value>"
         """
         for header_name in self.raw_headers:
             for value in self.get_decoded_header(header_name):
                 yield "%s: %s" % (header_name, value)
 
-    def _dump_headers(self):
-        """Dump all raw headers in the more manageable case insensitive
-        default dict.
-        """
+    def _parse_message(self):
+        """Parse the message."""
+        # Dump the message raw headers
         for name, raw_value in self.msg._headers:
             self.raw_headers[name].append(raw_value)
 
-    def _parse_message(self):
-        """Parse the message."""
-        self._dump_headers()
         # The body starts with the Subject header(s)
         body = self.get_decoded_header("Subject")[:]
         raw_body = []
-        for subtype, payload in self._iter_text_parts():
-            self.uri_list.extend(URL_RE.findall(payload))
-            if subtype == "html":
-                body.extend(self.normalize_html_part(payload.replace("\n", "")))
-                raw_body.append(payload)
-            else:
-                body.append(payload.replace("\n", ""))
-                raw_body.append(payload)
+        for payload, part in self._iter_parts():
+            # Extract any MIME headers
+            for name, raw_value in part._headers:
+                self.raw_mime_headers[name].append(raw_value)
+
+            if payload is not None:
+                # this must be a text part
+                self.uri_list.extend(URL_RE.findall(payload))
+                if part.get_content_subtype == "html":
+                    body.extend(self.normalize_html_part(payload.replace("\n",
+                                                                         "")))
+                    raw_body.append(payload)
+                else:
+                    body.append(payload.replace("\n", ""))
+                    raw_body.append(payload)
         self.text = " ".join(body)
         self.raw_text = "\n".join(raw_body)
 
-    def _iter_text_parts(self):
+    def _iter_parts(self):
         """Extract and decode the text parts from the parsed email message.
+        For non-text parts the payload will be None.
 
-        Yields (subtype, payload)
+        Yields (payload, part)
         """
         for part in self.msg.walk():
             if part.get_content_maintype() == "text":
@@ -233,8 +253,8 @@ class Message(object):
                         payload = payload.decode("ascii", "ignore")
                     except UnicodeError:
                         continue
-                yield part.get_content_subtype(), payload
+                yield payload, part
             else:
-                continue
+                yield None, part
 
 

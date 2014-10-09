@@ -1,7 +1,60 @@
-"""Rules that check headers."""
+"""Rules that check email headers."""
 
 import sa.regex
 import sa.rules.base
+
+
+class MimeHeaderRule(sa.rules.base.BaseRule):
+    """Abstract class for all MIME header rules."""
+    _rule_type = "BODY: "
+
+    def match(self, msg):
+        raise NotImplementedError()
+
+    @classmethod
+    def get_rule(cls, name, data):
+        kwargs = cls.get_rule_kwargs(data)
+
+        header_name, pattern = data["value"].split("=~", 1)
+        header_name = header_name.strip()
+        kwargs["pattern"] = sa.regex.perl2re(pattern)
+        if ":" in header_name:
+            header_name, mod = header_name.rsplit(":", 1)
+            kwargs["header_name"] = header_name.strip()
+            if mod == "raw":
+                return _PatternMimeRawHeaderRule(name, **kwargs)
+        else:
+            kwargs["header_name"] = header_name.strip()
+            return _PatternMimeHeaderRule(name, **kwargs)
+
+
+class _PatternMimeHeaderRule(MimeHeaderRule):
+    """Matches a MIME header by name and a regular expression for the value.
+    The headers are decoded, and the header name is NOT included.
+    """
+    def __init__(self, name, pattern=None, header_name=None, score=None,
+                 desc=None):
+        super(_PatternMimeHeaderRule, self).__init__(name, score=score,
+                                                     desc=desc)
+        self._header_name = header_name
+        self._pattern = pattern
+
+    def match(self, msg):
+        for value in msg.get_decoded_mime_header(self._header_name):
+            if self._pattern.match(value):
+                return True
+        return False
+
+
+class _PatternMimeRawHeaderRule(_PatternMimeHeaderRule):
+    """Matches a header by name and a regular expression for the value. The
+    headers are NOT decoded, and the header name is NOT included.
+    """
+    def match(self, msg):
+        for value in msg.get_raw_mime_header(self._header_name):
+            if self._pattern.match(value):
+                return True
+        return False
 
 
 class HeaderRule(sa.rules.base.BaseRule):
@@ -15,7 +68,7 @@ class HeaderRule(sa.rules.base.BaseRule):
         value = data["value"]
 
         if "=~" in value:
-            header_name, pattern = data["value"].split("=~", 1)
+            header_name, pattern = value.split("=~", 1)
             header_name = header_name.strip()
             kwargs["pattern"] = sa.regex.perl2re(pattern)
             if header_name == "ALL":
@@ -37,8 +90,8 @@ class HeaderRule(sa.rules.base.BaseRule):
             else:
                 kwargs["header_name"] = header_name.strip()
                 return _PatternHeaderRule(name, **kwargs)
-        elif data["value"].startswith("exists:"):
-            kwargs["header_name"] = data["value"].lstrip("exists:").strip()
+        elif value.startswith("exists:"):
+            kwargs["header_name"] = value.lstrip("exists:").strip()
             return _ExistsHeaderRule(name, **kwargs)
 
 
@@ -137,7 +190,8 @@ class _AllHeaderRule(HeaderRule):
     name IS included in the search, and headers are decoded.
     """
     def __init__(self, name, pattern, score=None, desc=None):
-        HeaderRule.__init__(self, name, pattern, score=score, desc=desc)
+        HeaderRule.__init__(self, name, score=score, desc=desc)
+        self._pattern = pattern
 
     def match(self, msg):
         for header in msg.iter_decoded_headers():

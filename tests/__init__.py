@@ -1,6 +1,6 @@
 """Package reserved for tests and test utilities."""
 
-from __future__ import absolute_import 
+from __future__ import absolute_import
 
 import unittest
 

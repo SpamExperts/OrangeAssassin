@@ -43,8 +43,6 @@ def perl2re(pattern):
     # We don't need to consider the pre-flags
     dummy, pattern = pattern.strip().split("/", 1)
     pattern, flags_str = pattern.rsplit("/", 1)
-    pattern = pattern.replace(r"\/", "/")
-    pattern = pattern.replace(r"\#", "#")
 
     flags = reduce(operator.or_, (FLAGS.get(flag, 0) for flag in flags_str), 0)
     if "g" in flags_str:

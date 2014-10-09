@@ -7,7 +7,8 @@ import sa.rules.base
 # Syntax differences between Perl and Python.
 CONVERT = (
     ("&&", "&"),
-    ("||", '|')
+    ("||", '|'),
+    ("!", "not "),
 )
 
 
@@ -24,6 +25,8 @@ class MetaRule(sa.rules.base.BaseRule):
             rule = rule.replace(operator, repl)
         self.rule = "match = lambda msg: %s" % rule
         self._location = {}
+        # XXX we should check for potentially unsafe code or run it in
+        # XXX RestrictedPython.
         self._code_obj = compile(self.rule, "<meta>", "exec")
 
     @staticmethod
