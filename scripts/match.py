@@ -8,10 +8,12 @@ Prints out any matching rules.
 from __future__ import print_function
 
 import os
+import sys
 import glob
 import optparse
 
 import sa
+import sa.errors
 import sa.message
 import sa.rules.parser
 
@@ -27,7 +29,14 @@ def main():
     options, (rule_glob, msg_file) = opt.parse_args()
     os.nice(options.nice)
 
-    ruleset = sa.rules.parser.parse_sa_rules(glob.glob(rule_glob))
+    try:
+        ruleset = sa.rules.parser.parse_sa_rules(glob.glob(rule_glob))
+    except sa.errors.MaxRecursionDepthExceeded as e:
+        print(e.recursion_list, file=sys.stderr)
+        sys.exit(1)
+    except sa.errors.ParsingError as e:
+        print(e, file=sys.stderr)
+        sys.exit(1)
 
     with open(msg_file) as msgf:
         raw_msg = msgf.read()

@@ -14,16 +14,18 @@ standard_library.install_hooks()
 
 import collections
 
+import sa.errors
 import sa.rules.uri
 import sa.rules.body
 import sa.rules.meta
 import sa.rules.header
 import sa.rules.ruleset
 
+# Simple protection against recursion with "include".
+MAX_RECURSION = 10
 
-# These are the types of rules that we know how to interpret, ignore anything
-# else. These include rule types and option types.
-KNOWN_RTYPE = frozenset(
+# Rules that require 2 arguments
+KNOWN_2_RTYPE = frozenset(
     (
         "score",  # Specifies the score adjustment if the rule matches
         "describe",  # Specifies a comment describing the rule
@@ -35,6 +37,16 @@ KNOWN_RTYPE = frozenset(
         "meta",  # Specifies a MetaRule
     )
 )
+# Rules that require 1 arguments
+KNOWN_1_RTYPE = frozenset(
+    (
+        "include",  # Include another file in the current one
+    )
+)
+
+# These are the types of rules that we know how to interpret, ignore anything
+# else. These include rule types and option types.
+KNOWN_RTYPE = KNOWN_1_RTYPE | KNOWN_2_RTYPE
 
 # These types define rules and not options. Map against their specific class.
 RULES = {
@@ -47,28 +59,44 @@ RULES = {
 }
 
 
-def parse_sa_file(rulef, results):
+def parse_sa_file(rulef, results, depth=0):
     """Parse a single SpamAssasin Rule and add the data to the 'results'
     dictionary.
     """
-    for line in rulef:
+    for line_no, line in enumerate(rulef):
         line = line.strip()
         if not line or line.startswith("#"):
             continue
+
         try:
-            rtype, name, value = line.split(None, 2)
+            rtype, value = line.split(None, 1)
         except ValueError:
             continue
-        if rtype not in KNOWN_RTYPE:
-            continue
-        if name not in results:
-            results[name] = {}
+        if rtype in KNOWN_1_RTYPE:
+            if rtype == "include":
+                if depth + 1 > MAX_RECURSION:
+                    raise sa.errors.MaxRecursionDepthExceeded(rulef.name,
+                                                              line_no + 1, line)
+                with open(value) as inc_rulef:
+                    try:
+                        parse_sa_file(inc_rulef, results, depth=depth + 1)
+                    except sa.errors.MaxRecursionDepthExceeded as e:
+                        e.add_call(rulef.name, line_no + 1, line)
+                        raise e
+        elif rtype in KNOWN_2_RTYPE:
+            try:
+                rtype, name, value = line.split(None, 2)
+            except ValueError:
+                raise sa.errors.InvalidSyntax(rulef.name, line_no + 1, line,
+                                              "Missing argument")
+            if name not in results:
+                results[name] = {}
 
-        if rtype in RULES:
-            results[name]["type"] = rtype
-            results[name]["value"] = value
-        else:
-            results[name][rtype] = value
+            if rtype in RULES:
+                results[name]["type"] = rtype
+                results[name]["value"] = value
+            else:
+                results[name][rtype] = value
 
 
 def parse_sa_rules(files):

@@ -14,7 +14,6 @@ class MimeHeaderRule(sa.rules.base.BaseRule):
     @classmethod
     def get_rule(cls, name, data):
         kwargs = cls.get_rule_kwargs(data)
-
         header_name, pattern = data["value"].split("=~", 1)
         header_name = header_name.strip()
         kwargs["pattern"] = sa.regex.perl2re(pattern)
@@ -84,9 +83,9 @@ class HeaderRule(sa.rules.base.BaseRule):
                 if mod == "raw":
                     return _PatternRawHeaderRule(name, **kwargs)
                 if mod == "addr":
-                    return _AddrHeaderRule(name, **kwargs)
+                    return _PatternAddrHeaderRule(name, **kwargs)
                 if mod == "name":
-                    return _NameHeaderRule(name, **kwargs)
+                    return _PatternNameHeaderRule(name, **kwargs)
             else:
                 kwargs["header_name"] = header_name.strip()
                 return _PatternHeaderRule(name, **kwargs)
@@ -133,7 +132,7 @@ class _PatternRawHeaderRule(_PatternHeaderRule):
         return False
 
 
-class _AddrHeaderRule(_PatternHeaderRule):
+class _PatternAddrHeaderRule(_PatternHeaderRule):
     """Matches a header by name and a regular expression for the value. The
     value checked is the first address that appears in the header's value.
     """
@@ -144,7 +143,7 @@ class _AddrHeaderRule(_PatternHeaderRule):
         return False
 
 
-class _NameHeaderRule(_PatternHeaderRule):
+class _PatternNameHeaderRule(_PatternHeaderRule):
     """Matches a header by name and a regular expression for the value. The
     value checked is the first name that appears in the header's value.
     """

@@ -6,8 +6,8 @@ import sa.rules.base
 
 # Syntax differences between Perl and Python.
 CONVERT = (
-    ("&&", "&"),
-    ("||", '|'),
+    ("&&", "and"),
+    ("||", "or"),
     ("!", "not "),
 )
 
@@ -31,7 +31,7 @@ class MetaRule(sa.rules.base.BaseRule):
 
     @staticmethod
     def _get_subrules(rule):
-        return set(re.findall(r"(\w+)\W", rule))
+        return set(re.findall(r"(\w+)(?:\W|$)", rule))
 
     def preprocess(self, ruleset):
         """Get the referenced sub-rules of this meta-rule and add execute the
