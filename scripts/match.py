@@ -25,7 +25,7 @@ def main():
     opt.add_option("-n", "--nice", dest="nice", type="int",
                    help="'nice' level", default=0)
     opt.add_option("--paranoid", action="store_true", default=False,
-                   dest="debug", help="if errors are found in the ruleset "
+                   dest="paranoid", help="if errors are found in the ruleset "
                    "stop processing")
     opt.add_option("-d", "--debug", action="store_true", default=False,
                    dest="debug", help="enable debugging output")

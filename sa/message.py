@@ -58,6 +58,9 @@ class _Headers(collections.defaultdict):
     def __getitem__(self, key):
         return super(_Headers, self).__getitem__(key.lower())
 
+    def __contains__(self, key):
+        return super(_Headers, self).__contains__(key.lower())
+
 
 class _memoize(object):
     """Memoize the result of the function in a cache. Used to prevent
