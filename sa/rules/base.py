@@ -3,6 +3,17 @@
 from builtins import map
 from builtins import object
 
+import sa.errors
+
+# Maps flags for Bayesian classifier and network tests to the
+# corresponding score to use
+_ADVANCED_SCORING = {
+    (False, False): lambda scores: scores[0],
+    (False, True): lambda scores: scores[1],
+    (True, False): lambda scores: scores[2],
+    (True, True): lambda scores: scores[3],
+}
+
 
 class BaseRule(object):
     """Abstract class for rules."""
@@ -12,14 +23,25 @@ class BaseRule(object):
         self.name = name
         if score is None:
             score = [1.0]
-        self.score = score
+        self._scores = score
+
+        if len(self._scores) not in (1, 4):
+            raise sa.errors.InvalidRule(name, "Expected 1 or 4 values for the "
+                                        "score and got %s" % len(self._scores))
+
         if desc is None:
             desc = "No description available."
         self.description = desc
+        # Public score, the value is change accordingly when the
+        # rule is added to a ruleset.
+        self.score = self._scores[0]
 
     def preprocess(self, ruleset):
         """Runs before the rule is added to the Ruleset."""
-        pass
+        if len(self._scores) == 1:
+            return
+        flags = ruleset.use_bayes, ruleset.use_network
+        self.score = _ADVANCED_SCORING[flags](self._scores)
 
     def postprocess(self, ruleset):
         """Runs after the rule is added to the Ruleset."""
@@ -35,7 +57,7 @@ class BaseRule(object):
         """Check if the rule should be processed or not."""
         if self.name.startswith("__"):
             return False
-        elif self.score == [0]:
+        elif self.score == 0:
             return False
         return True
 
@@ -63,5 +85,5 @@ class BaseRule(object):
         return cls(name, **cls.get_rule_kwargs(data))
 
     def __str__(self):
-        return "* %s %s %s%s" % (self.score[0], self.name, self._rule_type,
+        return "* %s %s %s%s" % (self.score, self.name, self._rule_type,
                                  self.description)

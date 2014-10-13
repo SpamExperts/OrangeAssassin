@@ -13,6 +13,9 @@ class RuleSet(object):
     def __init__(self):
         self.checked = collections.OrderedDict()
         self.not_checked = {}
+        # XXX Hardcoded at the moment, should be loaded from configuration.
+        self.use_bayes = True
+        self.use_network = True
 
     def add_rule(self, rule):
         """Add a rule to the ruleset, execute any pre and post processing
@@ -20,12 +23,8 @@ class RuleSet(object):
         """
         rule.preprocess(self)
         if rule.should_check():
-            if rule.name in self.not_checked:
-                del self.not_checked[rule.name]
             self.checked[rule.name] = rule
         else:
-            if rule.name in self.checked:
-                del self.checked[rule.name]
             self.not_checked[rule.name] = rule
         rule.postprocess(self)
 
@@ -44,5 +43,5 @@ class RuleSet(object):
 
     def match(self, msg):
         """Match the message against all the rules in this ruleset."""
-        for rule in self.checked.values():
-            msg.rules_checked[rule.name] = rule.match(msg)
+        for name, rule in self.checked.items():
+            msg.rules_checked[name] = rule.match(msg)

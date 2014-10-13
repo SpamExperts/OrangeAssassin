@@ -1,5 +1,7 @@
 # -*- coding: UTF-8 -*-
 
+"""Tests for sa.message"""
+
 import re
 import unittest
 import collections

@@ -1,3 +1,5 @@
+"""Tests for sa.rules.base"""
+
 import unittest
 
 try:
@@ -6,6 +8,7 @@ except ImportError:
     from mock import patch, Mock
 
 
+import sa.errors
 import sa.rules.base
 
 
@@ -21,20 +24,24 @@ class TestBaseRule(unittest.TestCase):
     def test_init_base(self):
         rule = sa.rules.base.BaseRule("TEST", [0.75], "Some Rule")
         self.assertEqual(rule.name, "TEST")
-        self.assertEqual(rule.score, [0.75])
+        self.assertEqual(rule._scores, [0.75])
         self.assertEqual(rule.description, "Some Rule")
 
     def test_init_base_no_score(self):
         rule = sa.rules.base.BaseRule("TEST", None, "Some Rule")
         self.assertEqual(rule.name, "TEST")
-        self.assertEqual(rule.score, [1.0])
+        self.assertEqual(rule._scores, [1.0])
         self.assertEqual(rule.description, "Some Rule")
 
     def test_init_base_no_desc(self):
         rule = sa.rules.base.BaseRule("TEST", [0.75], None)
         self.assertEqual(rule.name, "TEST")
-        self.assertEqual(rule.score, [0.75])
+        self.assertEqual(rule._scores, [0.75])
         self.assertEqual(rule.description, "No description available.")
+
+    def test_init_base_invalid_score(self):
+        self.assertRaises(sa.errors.InvalidRule, sa.rules.base.BaseRule,
+                          "TEST", [0.75, 1.0])
 
     def test_match(self):
         rule = sa.rules.base.BaseRule("TEST")
@@ -55,6 +62,13 @@ class TestBaseRule(unittest.TestCase):
     def test_preprocess(self):
         rule = sa.rules.base.BaseRule("TEST")
         self.assertIsNone(rule.preprocess(None))
+        self.assertEqual(rule.score, 1.0)
+
+    def test_preprocess_advanced(self):
+        mock_ruleset = Mock(use_bayes=True, use_network=False)
+        rule = sa.rules.base.BaseRule("TEST", [1.0, 2.0, 3.0, 4.0])
+        rule.preprocess(mock_ruleset)
+        self.assertEqual(rule.score, 3.0)
 
     def test_postprocess(self):
         rule = sa.rules.base.BaseRule("TEST")

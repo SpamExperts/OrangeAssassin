@@ -1,3 +1,5 @@
+"""Tests for sa.regex"""
+
 import re
 import unittest
 

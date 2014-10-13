@@ -71,6 +71,8 @@ def parse_sa_file(rulef, results, depth=0):
         try:
             rtype, value = line.split(None, 1)
         except ValueError:
+            # XXX Are there any rules/options in SA that have only one word?
+            # XXX if not we should raise a InvalidSyntax error here.
             continue
         if rtype in KNOWN_1_RTYPE:
             if rtype == "include":

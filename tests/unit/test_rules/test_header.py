@@ -1,3 +1,5 @@
+"""Tests for sa.rules.header"""
+
 import unittest
 
 try:

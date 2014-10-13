@@ -14,8 +14,8 @@ def suite():
 
     test_suite = unittest.TestSuite()
     test_suite.addTest(test_regex.suite())
-    test_suite.addTest(test_message.suite())
     test_suite.addTest(test_rules.suite())
+    test_suite.addTest(test_message.suite())
     return test_suite
 
 if __name__ == '__main__':

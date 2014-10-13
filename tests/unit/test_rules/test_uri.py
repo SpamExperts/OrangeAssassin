@@ -1,3 +1,5 @@
+"""Tests for sa.rules.uri"""
+
 import unittest
 
 try:

@@ -9,6 +9,16 @@ class ParsingError(SAError):
     """An error occurred while parsing rules."""
 
 
+class InvalidRule(ParsingError):
+    """The rule syntax seems valid but the usage is incorrect."""
+    def __init__(self, rule_name, description=""):
+        self.name = rule_name
+        self.desc = description
+
+    def __str__(self):
+        return "Invalid Rule %s: %s" % (self.name, self.desc)
+
+
 class InvalidSyntax(ParsingError):
     """The rule syntax is invalid."""
     def __init__(self, filename, line_number, line, description=""):
@@ -28,11 +38,11 @@ class MaxRecursionDepthExceeded(ParsingError):
     """
     def __init__(self, filename, line_number, line):
         ParsingError.__init__(self)
-        self._recurstion_list = [(filename, line_number, line)]
+        self._recursion_list = [(filename, line_number, line)]
 
     def add_call(self, filename, line_number, line):
         """Add to the recursion list."""
-        self._recurstion_list.append((filename, line_number, line))
+        self._recursion_list.append((filename, line_number, line))
 
     @property
     def recursion_list(self):
@@ -40,6 +50,6 @@ class MaxRecursionDepthExceeded(ParsingError):
 
         (filename, line number, line)
         """
-        return self._recurstion_list
+        return self._recursion_list
 
 

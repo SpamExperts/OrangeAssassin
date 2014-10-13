@@ -1,3 +1,5 @@
+"""Tests for sa.rules.body"""
+
 import unittest
 
 try:

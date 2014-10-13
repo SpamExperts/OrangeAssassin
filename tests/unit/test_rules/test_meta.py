@@ -1,3 +1,5 @@
+"""Tests for sa.rules.meta"""
+
 import unittest
 
 try:
