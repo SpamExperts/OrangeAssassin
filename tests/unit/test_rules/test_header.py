@@ -24,18 +24,26 @@ class TestMimeHeader(unittest.TestCase):
     def test_get_rule_mimeheader(self):
         data = {"value": "Content-Id =~ /test/"}
         expected = {"header_name": "Content-Id",
-                    "pattern": self.mock_perl2re(" /test/")}
+                    "pattern": self.mock_perl2re(" /test/", "=~")}
         result = sa.rules.header.MimeHeaderRule.get_rule("TEST", data)
-        self.mock_perl2re.assert_called_with(" /test/")
+        self.mock_perl2re.assert_called_with(" /test/", "=~")
         self.assertEqual(self.mock_mime("TEST", **expected), result)
 
     def test_get_rule_raw_mimeheader(self):
         data = {"value": "Content-Id:raw =~ /test/"}
         expected = {"header_name": "Content-Id",
-                    "pattern": self.mock_perl2re(" /test/")}
+                    "pattern": self.mock_perl2re(" /test/", "=~")}
         result = sa.rules.header.MimeHeaderRule.get_rule("TEST", data)
-        self.mock_perl2re.assert_called_with(" /test/")
+        self.mock_perl2re.assert_called_with(" /test/", "=~")
         self.assertEqual(self.mock_raw_mime("TEST", **expected), result)
+
+    def test_get_rule_mimeheader_not_op(self):
+        data = {"value": "Content-Id !~ /test/"}
+        expected = {"header_name": "Content-Id",
+                    "pattern": self.mock_perl2re(" /test/", "!~")}
+        result = sa.rules.header.MimeHeaderRule.get_rule("TEST", data)
+        self.mock_perl2re.assert_called_with(" /test/", "!~")
+        self.assertEqual(self.mock_mime("TEST", **expected), result)
 
     def test_match(self):
         result = sa.rules.header.MimeHeaderRule("TEST")
@@ -138,7 +146,7 @@ class TestHeaderRule(unittest.TestCase):
         result = sa.rules.header.HeaderRule("TEST")
         self.assertRaises(NotImplementedError, result.match, Mock())
 
-    def check_get_rule(self, value, klass, name=None, pattern=None):
+    def check_get_rule(self, value, klass, name=None, pattern=None, op="=~"):
         data = {"value": value}
         expected = {}
         if name is not None:
@@ -148,7 +156,7 @@ class TestHeaderRule(unittest.TestCase):
 
         result = sa.rules.header.HeaderRule.get_rule("TEST", data)
         if pattern is not None:
-            self.mock_perl2re.assert_called_with(" /test/")
+            self.mock_perl2re.assert_called_with(" /test/", op)
         self.assertEqual(self.mocks[klass]("TEST", **expected), result)
 
     def test_get_rule_allheader(self):
@@ -164,6 +172,10 @@ class TestHeaderRule(unittest.TestCase):
     def test_get_rule_header(self):
         self.check_get_rule("X-Test =~ /test/", "_PatternHeaderRule",
                             name="X-Test", pattern="/test/")
+
+    def test_get_rule_header_no_op(self):
+        self.check_get_rule("X-Test !~ /test/", "_PatternHeaderRule",
+                            name="X-Test", pattern="/test/", op="!~")
 
     def test_get_rule_raw_header(self):
         self.check_get_rule("X-Test:raw =~ /test/", "_PatternRawHeaderRule",

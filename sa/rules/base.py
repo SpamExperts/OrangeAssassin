@@ -47,6 +47,10 @@ class BaseRule(object):
         """Runs after the rule is added to the Ruleset."""
         pass
 
+    def postparsing(self, ruleset):
+        """Runs after all the rules have been parsed."""
+        pass
+
     def match(self, msg):
         """Check if the rule matches the message. 'msg' must be a object of
         type ``sa.message.Message``.
@@ -87,3 +91,10 @@ class BaseRule(object):
     def __str__(self):
         return "* %s %s %s%s" % (self.score, self.name, self._rule_type,
                                  self.description)
+
+
+class _NOOPRule(BaseRule):
+    """Placeholder for rules we don't have support yet."""
+    def match(self, msg):
+        return False
+

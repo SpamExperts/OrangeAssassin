@@ -15,6 +15,8 @@ class TestPerl2Re(unittest.TestCase):
     def setUp(self):
         unittest.TestCase.setUp(self)
         self.mock_compile = patch("sa.regex.re.compile").start()
+        self.mock_match_pattern = patch("sa.regex.MatchPattern").start()
+        self.mock_notmatch_pattern = patch("sa.regex.NotMatchPattern").start()
 
     def tearDown(self):
         unittest.TestCase.tearDown(self)
@@ -43,6 +45,16 @@ class TestPerl2Re(unittest.TestCase):
         sa.regex.perl2re("m/test/")
         self.check_compile("test", 0)
 
+    def test_match_op_pattern(self):
+        result = sa.regex.perl2re("/test/", "=~")
+        pattern = self.mock_compile("test", 0)
+        self.assertEqual(result, self.mock_match_pattern(pattern))
+
+    def test_match_op_pattern_not(self):
+        result = sa.regex.perl2re("/test/", "!~")
+        pattern = self.mock_compile("test", 0)
+        self.assertEqual(result, self.mock_notmatch_pattern(pattern))
+
 
 class TestPattern(unittest.TestCase):
     def test_pattern(self):
@@ -59,15 +71,15 @@ class TestPattern(unittest.TestCase):
         result = p.match("test")
         self.assertEqual(result, 0)
 
-    def test_countpattern_matched(self):
-        p = sa.regex.CountPattern(Mock(**{"findall.return_value": ["1", "1"]}))
-        result = p.match("test")
-        self.assertEqual(result, 2)
-
-    def test_countpattern_not_matched(self):
-        p = sa.regex.CountPattern(Mock(**{"findall.return_value": []}))
+    def test_notmatchpattern_matched(self):
+        p = sa.regex.NotMatchPattern(Mock(**{"search.return_value": True}))
         result = p.match("test")
         self.assertEqual(result, 0)
+
+    def test_notmatchpattern_not_matched(self):
+        p = sa.regex.NotMatchPattern(Mock(**{"search.return_value": False}))
+        result = p.match("test")
+        self.assertEqual(result, 1)
 
 
 def suite():

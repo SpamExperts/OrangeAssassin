@@ -12,12 +12,14 @@ from __future__ import absolute_import
 from future import standard_library
 standard_library.install_hooks()
 
+import re
 import collections
 
 import sa.errors
 import sa.rules.uri
 import sa.rules.body
 import sa.rules.meta
+import sa.rules.full
 import sa.rules.header
 import sa.rules.ruleset
 
@@ -29,6 +31,7 @@ KNOWN_2_RTYPE = frozenset(
     (
         "score",  # Specifies the score adjustment if the rule matches
         "describe",  # Specifies a comment describing the rule
+        "full",  # Specifies a FullRule
         "body",  # Specifies a BodyRule
         "rawbody",  # Specifies a RawBodyRule
         "uri",  # Specifies a URIRule
@@ -50,6 +53,7 @@ KNOWN_RTYPE = KNOWN_1_RTYPE | KNOWN_2_RTYPE
 
 # These types define rules and not options. Map against their specific class.
 RULES = {
+    "full": sa.rules.full.FullRule,
     "body": sa.rules.body.BodyRule,
     "rawbody": sa.rules.body.RawBodyRule,
     "uri": sa.rules.uri.URIRule,
@@ -63,16 +67,26 @@ def parse_sa_file(rulef, results, depth=0):
     """Parse a single SpamAssasin Rule and add the data to the 'results'
     dictionary.
     """
+    ignore = False
     for line_no, line in enumerate(rulef):
         line = line.strip()
-        if not line or line.startswith("#"):
+        if not line or line.startswith("#") or ignore:
+            continue
+
+        # Remove any comments
+        line = re.sub(r"((?<=[^\\])#.*)", "", line).strip()
+
+        # XXX We don't have any support for plugins
+        if line.startswith("ifplugin"):
+            ignore = True
+            continue
+        elif line.startswith("endif"):
+            ignore = False
             continue
 
         try:
             rtype, value = line.split(None, 1)
         except ValueError:
-            # XXX Are there any rules/options in SA that have only one word?
-            # XXX if not we should raise a InvalidSyntax error here.
             continue
         if rtype in KNOWN_1_RTYPE:
             if rtype == "include":
@@ -101,7 +115,7 @@ def parse_sa_file(rulef, results, depth=0):
                 results[name][rtype] = value
 
 
-def parse_sa_rules(files):
+def parse_sa_rules(files, paranoid=False):
     """Parse a list of SpamAssasin rules and returns the corresponding ruleset.
 
     'files' - a list of file paths.
@@ -120,9 +134,19 @@ def parse_sa_rules(files):
         with open(file_name) as rulef:
             parse_sa_file(rulef, results)
 
-    ruleset = sa.rules.ruleset.RuleSet()
+    ruleset = sa.rules.ruleset.RuleSet(paranoid)
     for name, data in results.items():
-        rule = RULES[data["type"]].get_rule(name, data)
-        ruleset.add_rule(rule)
-
+        try:
+            rule_type = data["type"]
+        except KeyError:
+            if paranoid:
+                raise sa.errors.InvalidRule(name, "No rule type defined.")
+        else:
+            try:
+                rule = RULES[rule_type].get_rule(name, data)
+                ruleset.add_rule(rule)
+            except sa.errors.InvalidRule:
+                if paranoid:
+                    raise
+    ruleset.post_parsing()
     return ruleset

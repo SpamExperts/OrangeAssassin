@@ -7,12 +7,18 @@ standard_library.install_hooks()
 
 import collections
 
+import sa.errors
+
 
 class RuleSet(object):
     """A set of rules used to match against a message."""
-    def __init__(self):
+    def __init__(self, paranoid=False):
+        """Create a new empty RuleSet if paranoid is set to False any
+        invalid rule is ignored.
+        """
         self.checked = collections.OrderedDict()
         self.not_checked = {}
+        self.paranoid = paranoid
         # XXX Hardcoded at the moment, should be loaded from configuration.
         self.use_bayes = True
         self.use_network = True
@@ -40,6 +46,17 @@ class RuleSet(object):
             if checked_only:
                 raise
         return self.not_checked[name]
+
+    def post_parsing(self):
+        """Run all post processing hooks."""
+        for rule_list in (self.checked, self.not_checked):
+            for name, rule in list(rule_list.items()):
+                try:
+                    rule.postparsing(self)
+                except sa.errors.InvalidRule:
+                    if self.paranoid:
+                        raise
+                    del rule_list[name]
 
     def match(self, msg):
         """Match the message against all the rules in this ruleset."""

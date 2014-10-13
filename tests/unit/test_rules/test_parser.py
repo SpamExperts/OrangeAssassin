@@ -56,6 +56,51 @@ class TestParseSARules(unittest.TestCase):
         ruleset.add_rule.assert_called_with(
             mock_body_rule.get_rule("TEST_RULE", data))
 
+    def test_parse_get_rules_no_type_defined(self):
+        mock_body_rule = Mock()
+        data = {"score": "1.0"}
+        self.mock_results["TEST_RULE"] = data
+        self.mock_rules["body"] = mock_body_rule
+
+        ruleset = sa.rules.parser.parse_sa_rules(["testf_1"])
+
+        self.assertFalse(mock_body_rule.get_rule.called)
+        self.assertFalse(ruleset.add_rule.called)
+
+    def test_parse_get_rules_no_type_defined_paranoid(self):
+        mock_body_rule = Mock()
+        data = {"score": "1.0"}
+        self.mock_results["TEST_RULE"] = data
+        self.mock_rules["body"] = mock_body_rule
+
+        self.assertRaises(sa.errors.InvalidRule,
+                          sa.rules.parser.parse_sa_rules, ["testf_1"],
+                          paranoid=True)
+
+    def test_parse_get_rules_invalid_rule(self):
+        mock_body_rule = Mock(**{"get_rule.side_effect":
+                                 sa.errors.InvalidRule("TEST_RULE")})
+        data = {"type": "body", "score": "1.0"}
+        self.mock_results["TEST_RULE"] = data
+        self.mock_rules["body"] = mock_body_rule
+
+        ruleset = sa.rules.parser.parse_sa_rules(["testf_1"])
+
+        mock_body_rule.get_rule.assert_called_with("TEST_RULE", data)
+        self.assertFalse(ruleset.add_rule.called)
+
+    def test_parse_get_rules_invalid_rule_paranoid(self):
+        mock_body_rule = Mock(**{"get_rule.side_effect":
+                                 sa.errors.InvalidRule("TEST_RULE")})
+        data = {"type": "body", "score": "1.0"}
+        self.mock_results["TEST_RULE"] = data
+        self.mock_rules["body"] = mock_body_rule
+
+        self.assertRaises(sa.errors.InvalidRule,
+                          sa.rules.parser.parse_sa_rules, ["testf_1"],
+                          paranoid=True)
+
+
 
 class TestParseSAFile(unittest.TestCase):
     def setUp(self):
@@ -85,6 +130,11 @@ class TestParseSAFile(unittest.TestCase):
     def test_parse_file_skip_comment(self):
         self.check_parse(["body TEST_RULE /test/",
                           " # body TEST_RULE2 /test/", ],
+                         {"TEST_RULE": {"type": "body",
+                                        "value": "/test/"}})
+
+    def test_parse_file_skip_comment_inline(self):
+        self.check_parse(["body TEST_RULE /test/ # inline comment"],
                          {"TEST_RULE": {"type": "body",
                                         "value": "/test/"}})
 

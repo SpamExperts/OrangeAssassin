@@ -7,6 +7,7 @@ try:
 except ImportError:
     from mock import patch, Mock, call
 
+import sa.errors
 import sa.rules.meta
 
 
@@ -50,32 +51,39 @@ class TestMetaRule(unittest.TestCase):
         self.assertEqual(rule.subrules, expected)
 
     def test_init_convert_rule(self):
-        perlrule = "TEST_1 && TEST_2"
+        perlrule = "TEST_1&&TEST_2"
         expected = "match = lambda msg: TEST_1(msg) and TEST_2(msg)"
         rule = sa.rules.meta.MetaRule("TEST", perlrule)
         self.assertEqual(rule.rule, expected)
 
     def test_init_convert_syntax(self):
-        perlrule = "TEST_1 && TEST_2 || !TEST_3"
-        expected = "TEST_1(msg) and TEST_2(msg) or not TEST_3(msg)"
+        perlrule = "TEST_1&&TEST_2||!TEST_3"
+        expected = "TEST_1(msg) and TEST_2(msg) or  not TEST_3(msg)"
         expected = "match = lambda msg: %s" % expected
         rule = sa.rules.meta.MetaRule("TEST", perlrule)
         self.assertEqual(rule.rule, expected)
 
-    def test_preprocess(self):
+    def test_postparsing(self):
         perlrule = "TEST_1 && TEST_2"
         mock_subrule = Mock()
         mock_ruleset = Mock(**{"get_rule.return_value": mock_subrule})
         rule = sa.rules.meta.MetaRule("TEST", perlrule)
-        rule.preprocess(mock_ruleset)
+        rule.postparsing(mock_ruleset)
         self.assertEqual(rule._location["TEST_1"], mock_subrule.match)
         self.assertEqual(rule._location["TEST_2"], mock_subrule.match)
 
-    def test_preprocess_nomatch(self):
+    def test_postparsing_nomatch(self):
         mock_ruleset = Mock()
         rule = sa.rules.meta.MetaRule("TEST", "None")
         rule._code_obj = compile("None", "<meta>", "exec")
-        self.assertRaises(AssertionError, rule.preprocess, mock_ruleset)
+        self.assertRaises(AssertionError, rule.postparsing, mock_ruleset)
+
+    def test_postparsing_undefined_subrule(self):
+        mock_ruleset = Mock(**{"get_rule.side_effect": KeyError})
+        rule = sa.rules.meta.MetaRule("TEST", "None")
+        rule._code_obj = compile("None", "<meta>", "exec")
+        self.assertRaises(sa.errors.InvalidRule, rule.postparsing,
+                          mock_ruleset)
 
 
 def suite():

@@ -11,6 +11,7 @@ def suite():
     import tests.unit.test_rules.test_uri as test_uri
     import tests.unit.test_rules.test_base as test_base
     import tests.unit.test_rules.test_body as test_body
+    import tests.unit.test_rules.test_full as test_full
     import tests.unit.test_rules.test_meta as test_meta
     import tests.unit.test_rules.test_header as test_header
 
@@ -21,6 +22,7 @@ def suite():
     test_suite.addTests(test_uri.suite())
     test_suite.addTests(test_base.suite())
     test_suite.addTests(test_body.suite())
+    test_suite.addTests(test_full.suite())
     test_suite.addTests(test_meta.suite())
     test_suite.addTests(test_header.suite())
 

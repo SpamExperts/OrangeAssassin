@@ -24,13 +24,17 @@ def main():
                                 usage=usage)
     opt.add_option("-n", "--nice", dest="nice", type="int",
                    help="'nice' level", default=0)
+    opt.add_option("--paranoid", action="store_true", default=False,
+                   dest="debug", help="if errors are found in the ruleset "
+                   "stop processing")
     opt.add_option("-d", "--debug", action="store_true", default=False,
                    dest="debug", help="enable debugging output")
     options, (rule_glob, msg_file) = opt.parse_args()
     os.nice(options.nice)
 
     try:
-        ruleset = sa.rules.parser.parse_sa_rules(glob.glob(rule_glob))
+        ruleset = sa.rules.parser.parse_sa_rules(glob.glob(rule_glob),
+                                                 options.paranoid)
     except sa.errors.MaxRecursionDepthExceeded as e:
         print(e.recursion_list, file=sys.stderr)
         sys.exit(1)

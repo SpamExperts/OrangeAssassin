@@ -14,9 +14,17 @@ class MimeHeaderRule(sa.rules.base.BaseRule):
     @classmethod
     def get_rule(cls, name, data):
         kwargs = cls.get_rule_kwargs(data)
-        header_name, pattern = data["value"].split("=~", 1)
+        value = data["value"].strip()
+
+        match_op = None
+        if "=~" in value:
+            match_op = "=~"
+        elif "!~" in value:
+            match_op = "!~"
+
+        header_name, pattern = value.split(match_op, 1)
         header_name = header_name.strip()
-        kwargs["pattern"] = sa.regex.perl2re(pattern)
+        kwargs["pattern"] = sa.regex.perl2re(pattern, match_op)
         if ":" in header_name:
             header_name, mod = header_name.rsplit(":", 1)
             kwargs["header_name"] = header_name.strip()
@@ -66,10 +74,16 @@ class HeaderRule(sa.rules.base.BaseRule):
         kwargs = cls.get_rule_kwargs(data)
         value = data["value"]
 
+        match_op = None
         if "=~" in value:
-            header_name, pattern = value.split("=~", 1)
+            match_op = "=~"
+        elif "!~" in value:
+            match_op = "!~"
+
+        if match_op is not None:
+            header_name, pattern = value.split(match_op, 1)
             header_name = header_name.strip()
-            kwargs["pattern"] = sa.regex.perl2re(pattern)
+            kwargs["pattern"] = sa.regex.perl2re(pattern, match_op)
             if header_name == "ALL":
                 return _AllHeaderRule(name, **kwargs)
             if header_name == "ToCc":
@@ -92,6 +106,8 @@ class HeaderRule(sa.rules.base.BaseRule):
         elif value.startswith("exists:"):
             kwargs["header_name"] = value.lstrip("exists:").strip()
             return _ExistsHeaderRule(name, **kwargs)
+        elif value.startswith("eval:"):
+            return sa.rules.base._NOOPRule.get_rule(name, data)
 
 
 class _ExistsHeaderRule(HeaderRule):

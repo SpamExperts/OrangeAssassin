@@ -86,6 +86,32 @@ class TestRuleSet(unittest.TestCase):
         ruleset.add_rule(mock_rule)
         mock_rule.postprocess.assert_called_with(ruleset)
 
+    def test_post_parsing(self):
+        mock_rule = Mock()
+        ruleset = sa.rules.ruleset.RuleSet()
+        ruleset.checked = {"TEST_RULE": mock_rule}
+
+        ruleset.post_parsing()
+        mock_rule.postparsing.assert_called_with(ruleset)
+
+    def test_post_parsing_invalid_rule(self):
+        mock_rule = Mock(**{"postparsing.side_effect":
+                            sa.errors.InvalidRule("TEST_RULE")})
+        ruleset = sa.rules.ruleset.RuleSet()
+        ruleset.checked = {"TEST_RULE": mock_rule}
+
+        ruleset.post_parsing()
+        mock_rule.postparsing.assert_called_with(ruleset)
+        self.assertEqual(ruleset.checked, {})
+
+    def test_post_parsing_invalid_rule_parnoid(self):
+        mock_rule = Mock(**{"postparsing.side_effect":
+                            sa.errors.InvalidRule("TEST_RULE")})
+        ruleset = sa.rules.ruleset.RuleSet(paranoid=True)
+        ruleset.checked = {"TEST_RULE": mock_rule}
+
+        self.assertRaises(sa.errors.InvalidRule, ruleset.post_parsing)
+
 
 def suite():
     """Gather all the tests from this package in a test suite."""

@@ -350,6 +350,8 @@ def suite():
     test_suite.addTest(unittest.makeSuite(TestHTMLStrip, "test"))
     test_suite.addTest(unittest.makeSuite(TestHeaders, "test"))
     test_suite.addTest(unittest.makeSuite(TestParseMessage, "test"))
+    test_suite.addTest(unittest.makeSuite(TestIterPartsMessage, "test"))
+    test_suite.addTest(unittest.makeSuite(TestMessageVarious, "test"))
     test_suite.addTest(unittest.makeSuite(TestGetHeaders, "test"))
     return test_suite
 
