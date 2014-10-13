@@ -12,6 +12,7 @@ class ParsingError(SAError):
 class InvalidRule(ParsingError):
     """The rule syntax seems valid but the usage is incorrect."""
     def __init__(self, rule_name, description=""):
+        ParsingError.__init__(self)
         self.name = rule_name
         self.desc = description
 
@@ -22,6 +23,7 @@ class InvalidRule(ParsingError):
 class InvalidSyntax(ParsingError):
     """The rule syntax is invalid."""
     def __init__(self, filename, line_number, line, description=""):
+        ParsingError.__init__(self)
         self.filename = filename
         self.line_no = line_number
         self.line = line

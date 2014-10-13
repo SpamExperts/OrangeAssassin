@@ -110,7 +110,7 @@ class _PatternHeaderRule(HeaderRule):
     """
     def __init__(self, name, pattern=None, header_name=None, score=None,
                  desc=None):
-        super(HeaderRule, self).__init__(name, score=score, desc=desc)
+        super(_PatternHeaderRule, self).__init__(name, score=score, desc=desc)
         self._header_name = header_name
         self._pattern = pattern
 

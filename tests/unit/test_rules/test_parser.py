@@ -25,7 +25,7 @@ class TestParseSARules(unittest.TestCase):
                                   "sa.rules.ruleset.RuleSet").start()
         self.mock_parse = patch("sa.rules.parser.parse_sa_file",
                                 side_effect=mock_parse_file).start()
-        self.mock_open = patch("sa.rules.parser.open", mock_open(), 
+        self.mock_open = patch("sa.rules.parser.open", mock_open(),
                                create=True).start()
         patch("sa.rules.parser.RULES", self.mock_rules).start()
 
@@ -119,7 +119,7 @@ class TestParseSAFile(unittest.TestCase):
                                   "value": "/test/"},
                     "TEST_RULE2": {"type": "body",
                                    "value": "/test2/"}}
-        open_name = "sa.rules.parser.open" 
+        open_name = "sa.rules.parser.open"
         with patch(open_name, create=True) as open_mock:
             open_mock.return_value = MagicMock()
             handle = open_mock.return_value.__enter__.return_value
