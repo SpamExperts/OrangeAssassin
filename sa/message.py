@@ -151,13 +151,13 @@ class Message(object):
         """Get a list of raw headers with this name."""
         # This is just for consistencies, the raw headers should have been
         # parsed together with the message.
-        return self.raw_headers[header_name]
+        return self.raw_headers.get(header_name, [])
 
     @_memoize("headers")
     def get_decoded_header(self, header_name):
         """Get a list of decoded headers with this name."""
         values = []
-        for value in self.raw_headers[header_name]:
+        for value in self.get_raw_header(header_name):
             values.append(self._decode_header(value))
         return values
 
@@ -187,13 +187,13 @@ class Message(object):
         """Get a list of raw MIME headers with this name."""
         # This is just for consistencies, the raw headers should have been
         # parsed together with the message.
-        return self.raw_mime_headers[header_name]
+        return self.raw_mime_headers.get(header_name, [])
 
     @_memoize("mime_headers")
     def get_decoded_mime_header(self, header_name):
         """Get a list of raw MIME headers with this name."""
         values = []
-        for value in self.raw_mime_headers[header_name]:
+        for value in self.get_raw_mime_header(header_name):
             values.append(self._decode_header(value))
         return values
 
@@ -259,5 +259,3 @@ class Message(object):
                 yield payload, part
             else:
                 yield None, part
-
-

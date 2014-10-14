@@ -17,7 +17,7 @@ class TestParseSARules(unittest.TestCase):
         self.mock_results = {}
         self.mock_rules = {}
 
-        def mock_parse_file(rulef, results):
+        def mock_parse_file(rulef, results, paranoid=False, depth=0):
             for name, data in self.mock_results.items():
                 results[name] = data
 
@@ -101,7 +101,6 @@ class TestParseSARules(unittest.TestCase):
                           paranoid=True)
 
 
-
 class TestParseSAFile(unittest.TestCase):
     def setUp(self):
         unittest.TestCase.setUp(self)
@@ -116,55 +115,55 @@ class TestParseSAFile(unittest.TestCase):
         self.assertEqual(results, expected)
 
     def test_parse_file(self):
-        self.check_parse(["body TEST_RULE /test/"],
+        self.check_parse([b"body TEST_RULE /test/"],
                          {"TEST_RULE": {"type": "body",
                                         "value": "/test/"}})
 
     def test_parse_file_rule_options(self):
-        self.check_parse(["body TEST_RULE /test/",
-                          "score TEST_RULE 1.0"],
+        self.check_parse([b"body TEST_RULE /test/",
+                          b"score TEST_RULE 1.0"],
                          {"TEST_RULE": {"type": "body",
                                         "value": "/test/",
                                         "score": "1.0"}})
 
     def test_parse_file_skip_comment(self):
-        self.check_parse(["body TEST_RULE /test/",
-                          " # body TEST_RULE2 /test/", ],
+        self.check_parse([b"body TEST_RULE /test/",
+                          b" # body TEST_RULE2 /test/", ],
                          {"TEST_RULE": {"type": "body",
                                         "value": "/test/"}})
 
     def test_parse_file_skip_comment_inline(self):
-        self.check_parse(["body TEST_RULE /test/ # inline comment"],
+        self.check_parse([b"body TEST_RULE /test/ # inline comment"],
                          {"TEST_RULE": {"type": "body",
                                         "value": "/test/"}})
 
     def test_parse_file_skip_empty(self):
-        self.check_parse(["body TEST_RULE /test/",
-                          "  ", ],
+        self.check_parse([b"body TEST_RULE /test/",
+                          b"  ", ],
                          {"TEST_RULE": {"type": "body",
                                         "value": "/test/"}})
 
     def test_parse_file_skip_unknown(self):
-        self.check_parse(["body TEST_RULE /test/",
-                          "unknownbody TEST_RULE /test/", ],
+        self.check_parse([b"body TEST_RULE /test/",
+                          b"unknownbody TEST_RULE /test/", ],
                          {"TEST_RULE": {"type": "body",
                                         "value": "/test/"}})
 
     def test_parse_file_skip_single_word(self):
-        self.check_parse(["body TEST_RULE /test/",
-                          "rule", ],
+        self.check_parse([b"body TEST_RULE /test/",
+                          b"rule", ],
                          {"TEST_RULE": {"type": "body",
                                         "value": "/test/"}})
 
     def test_parse_file_invalid_syntax(self):
-        mockf = Mock(**{"__iter__": Mock(return_value=iter(["body TEST_RULE"])),
+        mockf = Mock(**{"__iter__": Mock(return_value=iter([b"body TEST_RULE"])),
                         "name": "testf_2"})
         self.assertRaises(sa.errors.InvalidSyntax, self.check_parse,
                           mockf, {})
 
     def test_parse_file_include(self):
-        rules = ["body TEST_RULE /test/",
-                 "include testf_2", ]
+        rules = [b"body TEST_RULE /test/",
+                 b"include testf_2", ]
         expected = {"TEST_RULE": {"type": "body",
                                   "value": "/test/"},
                     "TEST_RULE2": {"type": "body",
@@ -173,12 +172,12 @@ class TestParseSAFile(unittest.TestCase):
         with patch(open_name, create=True) as open_mock:
             open_mock.return_value = MagicMock()
             handle = open_mock.return_value.__enter__.return_value
-            handle.__iter__.return_value = ("body TEST_RULE2 /test2/",)
+            handle.__iter__.return_value = (b"body TEST_RULE2 /test2/",)
 
             self.check_parse(rules, expected)
 
     def test_parse_file_include_max_recursion(self):
-        rules = Mock(**{"__iter__": Mock(return_value=iter(["include testf_1"])),
+        rules = Mock(**{"__iter__": Mock(return_value=iter([b"include testf_1"])),
                         "name": "testf_1"})
         expected = {}
 
@@ -186,7 +185,7 @@ class TestParseSAFile(unittest.TestCase):
         with patch(open_name, create=True) as open_mock:
             open_mock.return_value = MagicMock()
             handle = open_mock.return_value.__enter__.return_value
-            handle.__iter__.return_value = ("include testf2",)
+            handle.__iter__.return_value = (b"include testf2",)
             handle.__iter__.name = "testf_1"
 
             self.assertRaises(sa.errors.MaxRecursionDepthExceeded,

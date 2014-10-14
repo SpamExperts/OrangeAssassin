@@ -63,13 +63,20 @@ RULES = {
 }
 
 
-def parse_sa_file(rulef, results, depth=0):
+def parse_sa_file(rulef, results, paranoid=False, depth=0):
     """Parse a single SpamAssasin Rule and add the data to the 'results'
     dictionary.
     """
     ignore = False
     for line_no, line in enumerate(rulef):
-        line = line.strip()
+        try:
+            line = line.decode("iso-8859-1").strip()
+        except UnicodeDecodeError as e:
+            if paranoid:
+                raise sa.errors.InvalidSyntax(rulef.name, line_no, line,
+                                              "Decoding Error: %s" % e)
+            else:
+                continue
         if not line or line.startswith("#") or ignore:
             continue
 
@@ -95,7 +102,8 @@ def parse_sa_file(rulef, results, depth=0):
                                                               line_no + 1, line)
                 with open(value) as inc_rulef:
                     try:
-                        parse_sa_file(inc_rulef, results, depth=depth + 1)
+                        parse_sa_file(inc_rulef, results, paranoid=paranoid,
+                                      depth=depth + 1)
                     except sa.errors.MaxRecursionDepthExceeded as e:
                         e.add_call(rulef.name, line_no + 1, line)
                         raise e
@@ -131,8 +139,8 @@ def parse_sa_rules(files, paranoid=False):
     # XXX This should be a default OrderedDict
     results = collections.OrderedDict()
     for file_name in files:
-        with open(file_name) as rulef:
-            parse_sa_file(rulef, results)
+        with open(file_name, "rb") as rulef:
+            parse_sa_file(rulef, results, paranoid=paranoid)
 
     ruleset = sa.rules.ruleset.RuleSet(paranoid)
     for name, data in results.items():
