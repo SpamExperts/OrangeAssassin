@@ -11,38 +11,21 @@ import sa.errors
 import sa.rules.parser
 
 
-class TestParseSARules(unittest.TestCase):
+class TestParseGetRuleset(unittest.TestCase):
     def setUp(self):
         unittest.TestCase.setUp(self)
         self.mock_results = {}
         self.mock_rules = {}
 
-        def mock_parse_file(rulef, results, paranoid=False, depth=0):
-            for name, data in self.mock_results.items():
-                results[name] = data
-
         self.mock_ruleset = patch("sa.rules.parser."
                                   "sa.rules.ruleset.RuleSet").start()
-        self.mock_parse = patch("sa.rules.parser.parse_sa_file",
-                                side_effect=mock_parse_file).start()
-        self.mock_open = patch("sa.rules.parser.open", mock_open(),
-                               create=True).start()
         patch("sa.rules.parser.RULES", self.mock_rules).start()
+        self.parser = sa.rules.parser.SAParser()
+        self.parser.results = self.mock_results
 
     def tearDown(self):
         unittest.TestCase.tearDown(self)
         patch.stopall()
-
-    def test_parse(self):
-        files = ["testf_1"]
-        sa.rules.parser.parse_sa_rules(files)
-        rulef, results = self.mock_parse.call_args[0]
-        self.assertEqual(results, self.mock_results)
-        self.assertEqual(rulef, self.mock_open("testf_1"))
-
-    def test_parse_get_ruleset(self):
-        ruleset = sa.rules.parser.parse_sa_rules([])
-        self.assertEqual(ruleset, self.mock_ruleset())
 
     def test_parse_get_rules(self):
         mock_body_rule = Mock()
@@ -50,7 +33,7 @@ class TestParseSARules(unittest.TestCase):
         self.mock_results["TEST_RULE"] = data
         self.mock_rules["body"] = mock_body_rule
 
-        ruleset = sa.rules.parser.parse_sa_rules(["testf_1"])
+        ruleset = self.parser.get_ruleset()
 
         mock_body_rule.get_rule.assert_called_with("TEST_RULE", data)
         ruleset.add_rule.assert_called_with(
@@ -62,7 +45,7 @@ class TestParseSARules(unittest.TestCase):
         self.mock_results["TEST_RULE"] = data
         self.mock_rules["body"] = mock_body_rule
 
-        ruleset = sa.rules.parser.parse_sa_rules(["testf_1"])
+        ruleset = self.parser.get_ruleset()
 
         self.assertFalse(mock_body_rule.get_rule.called)
         self.assertFalse(ruleset.add_rule.called)
@@ -72,10 +55,10 @@ class TestParseSARules(unittest.TestCase):
         data = {"score": "1.0"}
         self.mock_results["TEST_RULE"] = data
         self.mock_rules["body"] = mock_body_rule
+        self.parser.paranoid = True
 
         self.assertRaises(sa.errors.InvalidRule,
-                          sa.rules.parser.parse_sa_rules, ["testf_1"],
-                          paranoid=True)
+                          ruleset=self.parser.get_ruleset)
 
     def test_parse_get_rules_invalid_rule(self):
         mock_body_rule = Mock(**{"get_rule.side_effect":
@@ -84,7 +67,7 @@ class TestParseSARules(unittest.TestCase):
         self.mock_results["TEST_RULE"] = data
         self.mock_rules["body"] = mock_body_rule
 
-        ruleset = sa.rules.parser.parse_sa_rules(["testf_1"])
+        ruleset = self.parser.get_ruleset()
 
         mock_body_rule.get_rule.assert_called_with("TEST_RULE", data)
         self.assertFalse(ruleset.add_rule.called)
@@ -95,13 +78,13 @@ class TestParseSARules(unittest.TestCase):
         data = {"type": "body", "score": "1.0"}
         self.mock_results["TEST_RULE"] = data
         self.mock_rules["body"] = mock_body_rule
+        self.parser.paranoid = True
 
         self.assertRaises(sa.errors.InvalidRule,
-                          sa.rules.parser.parse_sa_rules, ["testf_1"],
-                          paranoid=True)
+                          self.parser.get_ruleset)
 
 
-class TestParseSAFile(unittest.TestCase):
+class TestParseSALine(unittest.TestCase):
     def setUp(self):
         unittest.TestCase.setUp(self)
 
@@ -110,9 +93,10 @@ class TestParseSAFile(unittest.TestCase):
         patch.stopall()
 
     def check_parse(self, rules, expected):
-        results = {}
-        sa.rules.parser.parse_sa_file(rules, results)
-        self.assertEqual(results, expected)
+        parser = sa.rules.parser.SAParser()
+        for line_no, line in enumerate(rules):
+            parser._handle_line("filename", line, line_no)
+        self.assertEqual(parser.results, expected)
 
     def test_parse_file(self):
         self.check_parse([b"body TEST_RULE /test/"],
@@ -156,10 +140,8 @@ class TestParseSAFile(unittest.TestCase):
                                         "value": "/test/"}})
 
     def test_parse_file_invalid_syntax(self):
-        mockf = Mock(**{"__iter__": Mock(return_value=iter([b"body TEST_RULE"])),
-                        "name": "testf_2"})
         self.assertRaises(sa.errors.InvalidSyntax, self.check_parse,
-                          mockf, {})
+                          [b"body TEST_RULE"], {})
 
     def test_parse_file_include(self):
         rules = [b"body TEST_RULE /test/",
@@ -195,8 +177,8 @@ class TestParseSAFile(unittest.TestCase):
 def suite():
     """Gather all the tests from this package in a test suite."""
     test_suite = unittest.TestSuite()
-    test_suite.addTest(unittest.makeSuite(TestParseSARules, "test"))
-    test_suite.addTest(unittest.makeSuite(TestParseSAFile, "test"))
+    test_suite.addTest(unittest.makeSuite(TestParseGetRuleset, "test"))
+    test_suite.addTest(unittest.makeSuite(TestParseSALine, "test"))
     return test_suite
 
 if __name__ == '__main__':

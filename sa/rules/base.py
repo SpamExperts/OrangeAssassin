@@ -1,6 +1,10 @@
 """Base for rules."""
 
+from __future__ import absolute_import
+
 from builtins import map
+from builtins import dict
+from builtins import list
 from builtins import object
 
 import sa.errors
@@ -70,7 +74,7 @@ class BaseRule(object):
         """Extract the keyword arguments necessary to create a new instance
         for this class.
         """
-        kwargs = {}
+        kwargs = dict()
         try:
             kwargs["score"] = list(map(float, data["score"].strip().split()))
         except KeyError:
@@ -95,6 +99,5 @@ class BaseRule(object):
 
 class _NOOPRule(BaseRule):
     """Placeholder for rules we don't have support yet."""
-    def match(self, msg):
+    def match(self, dummy):
         return False
-

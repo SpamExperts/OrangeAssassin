@@ -19,9 +19,3 @@ class FullRule(sa.rules.base.BaseRule):
         kwargs = sa.rules.base.BaseRule.get_rule_kwargs(data)
         kwargs["pattern"] = sa.regex.perl2re(data["value"])
         return kwargs
-
-    @classmethod
-    def get_rule(cls, name, data):
-        if data["value"].startswith("eval:"):
-            return sa.rules.base._NOOPRule.get_rule(name, data)
-        return super(FullRule, cls).get_rule(name, data)

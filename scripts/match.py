@@ -13,6 +13,7 @@ import glob
 import optparse
 
 import sa
+import sa.config
 import sa.errors
 import sa.message
 import sa.rules.parser
@@ -32,6 +33,8 @@ def main():
     options, (rule_glob, msg_file) = opt.parse_args()
     os.nice(options.nice)
 
+    logger = sa.config.setup_logging("sa-logger", debug=options.debug)
+
     try:
         ruleset = sa.rules.parser.parse_sa_rules(glob.glob(rule_glob),
                                                  options.paranoid)
@@ -44,8 +47,7 @@ def main():
 
     with open(msg_file) as msgf:
         raw_msg = msgf.read()
-
-    msg = sa.message.Message(raw_msg)
+    msg = sa.message.Message(ruleset.ctxt, raw_msg)
 
     ruleset.match(msg)
 

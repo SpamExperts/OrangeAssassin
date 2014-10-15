@@ -1,5 +1,7 @@
 """Rules that are boolean or arithmetic combinations of other rules."""
 
+from builtins import dict
+
 import re
 
 import sa.errors
@@ -26,7 +28,7 @@ class MetaRule(sa.rules.base.BaseRule):
         for operator, repl in CONVERT:
             rule = rule.replace(operator, repl)
         self.rule = "match = lambda msg: %s" % rule
-        self._location = {}
+        self._location = dict()
         # XXX we should check for potentially unsafe code or run it in
         # XXX RestrictedPython.
         self._code_obj = compile(self.rule, "<meta>", "exec")

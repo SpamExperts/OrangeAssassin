@@ -106,8 +106,6 @@ class HeaderRule(sa.rules.base.BaseRule):
         elif value.startswith("exists:"):
             kwargs["header_name"] = value.lstrip("exists:").strip()
             return _ExistsHeaderRule(name, **kwargs)
-        elif value.startswith("eval:"):
-            return sa.rules.base._NOOPRule.get_rule(name, data)
 
 
 class _ExistsHeaderRule(HeaderRule):

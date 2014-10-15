@@ -1,5 +1,7 @@
 """Errors specific to this package."""
 
+from builtins import list
+
 
 class SAError(Exception):
     """Base class for all errors."""
@@ -38,9 +40,9 @@ class MaxRecursionDepthExceeded(ParsingError):
     """The maximum recursion depth has been exceeded while parsing include
     directives.
     """
-    def __init__(self, filename, line_number, line):
+    def __init__(self):
         ParsingError.__init__(self)
-        self._recursion_list = [(filename, line_number, line)]
+        self._recursion_list = list()
 
     def add_call(self, filename, line_number, line):
         """Add to the recursion list."""
@@ -55,3 +57,15 @@ class MaxRecursionDepthExceeded(ParsingError):
         return self._recursion_list
 
 
+class PluginError(SAError):
+    """Something went wrong with a plugin."""
+
+
+class PluginLoadError(PluginError):
+    """Something went wrong while loading a plugin."""
+
+
+class InhibitCallbacks(Exception):
+    """Stops the processing of the current callback, and prevent other plugins
+    callbacks.
+    """

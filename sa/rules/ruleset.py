@@ -1,5 +1,6 @@
 """A set of rules."""
 
+from builtins import dict
 from builtins import object
 
 from future import standard_library
@@ -12,13 +13,14 @@ import sa.errors
 
 class RuleSet(object):
     """A set of rules used to match against a message."""
-    def __init__(self, paranoid=False):
+    def __init__(self, context, paranoid=False):
         """Create a new empty RuleSet if paranoid is set to False any
         invalid rule is ignored.
         """
         self.checked = collections.OrderedDict()
-        self.not_checked = {}
+        self.not_checked = dict()
         self.paranoid = paranoid
+        self.ctxt = context
         # XXX Hardcoded at the moment, should be loaded from configuration.
         self.use_bayes = True
         self.use_network = True
@@ -61,4 +63,6 @@ class RuleSet(object):
     def match(self, msg):
         """Match the message against all the rules in this ruleset."""
         for name, rule in self.checked.items():
+            self.ctxt.log.debug("Checking rule: %s", rule)
             msg.rules_checked[name] = rule.match(msg)
+        self.ctxt.hook_check_end(msg)
