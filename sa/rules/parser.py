@@ -131,7 +131,8 @@ class SAParser(object):
         try:
             rtype, value = line.split(None, 1)
         except ValueError:
-            return
+            # Some plugin might know how to handle this line
+            rtype, value = line, ""
 
         if rtype == "include":
             self._handle_include(value, line, line_no, _depth)
@@ -157,7 +158,9 @@ class SAParser(object):
             else:
                 self.results[name][rtype] = value
         else:
-            self.ctxt.hook_parse_config(rtype, value)
+            if not self.ctxt.hook_parse_config(rtype, value):
+                self.ctxt.log.warn("Ignoring unknown configuration line: %s",
+                                   line)
 
     def _handle_include(self, value, line, line_no, _depth=0):
         """Handles the 'include' keyword."""

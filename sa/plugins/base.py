@@ -54,7 +54,6 @@ class BasePlugin(object):
         """Parse and set a integer option."""
         try:
             self.set_global(global_key, int(value))
-            return True
         except ValueError:
             raise sa.errors.PluginError("Invalid value for %s: %s" %
                                         (global_key, value))
@@ -63,29 +62,21 @@ class BasePlugin(object):
         """Parse and set a float option."""
         try:
             self.set_global(global_key, float(value))
-            return True
         except ValueError:
             raise sa.errors.PluginError("Invalid value for %s: %s" %
                                         (global_key, value))
 
     def set_bool_option(self, global_key, value):
         """Parse and set a bool option."""
-        try:
-            self.set_global(global_key, value.lower() in ("1", "true"))
-            return True
-        except ValueError:
-            raise sa.errors.PluginError("Invalid value for %s: %s" %
-                                        (global_key, value))
+        self.set_global(global_key, value.lower() in ("1", "true"))
 
     def set_str_option(self, global_key, value):
         """Parse and set a string option."""
         self.set_global(global_key, value)
-        return True
 
     def set_list_option(self, global_key, value, separator=","):
         """Parse and set a list option."""
         self.set_global(global_key, value.split(separator))
-        return True
 
     def inhibit_further_callbacks(self):
         """Tells the plugin handler to inhibit calling into other plugins in
@@ -102,14 +93,9 @@ class BasePlugin(object):
 
         May be overridden.
         """
-        dispatches = {"int": self.set_int_option,
-                      "float": self.set_float_option,
-                      "bool": self.set_bool_option,
-                      "str": self.set_str_option,
-                      "list": self.set_list_option,
-                      }
         if key in self.options:
-            dispatches[self.options[key][0]](key, value)
+            set_func = getattr(self, "set_%s_option" % self.options[key][0])
+            set_func(key, value)
             self.inhibit_further_callbacks()
 
     # XXX The name method for this is horrible, but it's likely better to have

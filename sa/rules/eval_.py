@@ -21,7 +21,7 @@ class EvalRule(sa.rules.base.BaseRule):
             eval_rule_name, eval_args = _EVAL_RULE_P.match(eval_rule).groups()
             self._eval_rule = eval_rule_name
             self._eval_args = eval(eval_args)
-        except (TypeError, ValueError):
+        except (TypeError, ValueError, AttributeError):
             raise sa.errors.InvalidRule(self.name, "Invalid eval rule: %s" %
                                         eval_rule)
         except SyntaxError:

@@ -91,7 +91,3 @@ def perl2re(pattern, match_op="=~"):
         return MatchPattern(re.compile(pattern, flags))
     elif match_op == "!~":
         return NotMatchPattern(re.compile(pattern, flags))
-
-
-
-

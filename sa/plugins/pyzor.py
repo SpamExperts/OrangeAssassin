@@ -61,7 +61,11 @@ class PyzorPlugin(sa.plugins.base.BasePlugin):
         """Does the actual work for reporting digests to pyzor."""
         if not self.get_global("use_pyzor"):
             return
-        digest = self.get_local(msg, "digest")
+        try:
+            digest = self.get_local(msg, "digest")
+        except KeyError:
+            digest = pyzor.digest.DataDigester(msg.msg).value
+            self.set_local(msg, "digest", digest)
         client = self.get_global("client")
         self.ctxt.log.debug("Reporting digest %s with Pyzor (%s)", digest,
                             spam)

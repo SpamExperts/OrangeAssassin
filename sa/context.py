@@ -6,7 +6,13 @@ from builtins import object
 from future import standard_library
 standard_library.install_hooks()
 
+try:
+    import importlib.machinery
+except ImportError:
+    pass
+
 import os
+import imp
 import logging
 import importlib
 import collections
@@ -47,7 +53,8 @@ class _Context(object):
         """
         if key is None:
             del self.plugin_data[plugin_name]
-        del self.plugin_data[plugin_name][key]
+        else:
+            del self.plugin_data[plugin_name][key]
 
     def pop_plugin_data(self, plugin_name, key=None):
         """Extract and remove data for the specified plugin under the given key.
@@ -56,8 +63,8 @@ class _Context(object):
         If no key is given delete all the data stored for this plugin.
         """
         if key is None:
-            return self.plugin_data.popitem(plugin_name, None)
-        return self.plugin_data[plugin_name].popitem(key, None)
+            return self.plugin_data.pop(plugin_name, None)
+        return self.plugin_data[plugin_name].pop(key, None)
 
 
 def _callback_chain(func):
@@ -67,9 +74,10 @@ def _callback_chain(func):
     def wrapped_func(*args, **kwargs):
         """Ignore any InhibitCallbacks exceptions."""
         try:
-            return func(*args, **kwargs)
+            func(*args, **kwargs)
         except sa.errors.InhibitCallbacks:
-            pass
+            return True
+        return False
     return wrapped_func
 
 
@@ -83,13 +91,14 @@ class GlobalContext(_Context):
 
     def load_plugin(self, name, path=None):
         """Load the specified plugin from the given path."""
-        if name in self.plugins:
-            self.log.warn("Redefining plugin %s.", name)
-            self.unload_plugin(name)
+        class_name = name.rsplit(".", 1)[-1]
+        if class_name in self.plugins:
+            self.log.warn("Redefining plugin %s.", class_name)
+            self.unload_plugin(class_name)
 
         if path is None:
             # The plugin should be sys.path already
-            module_name, name = name.rsplit(".", 1)
+            module_name, class_name = name.rsplit(".", 1)
             try:
                 module = importlib.import_module(module_name)
             except ImportError as e:
@@ -100,13 +109,13 @@ class GlobalContext(_Context):
         else:
             module = self._load_module_py2(path)
 
-        plugin_class = getattr(module, name)
+        plugin_class = getattr(module, class_name)
         if plugin_class is None:
             raise sa.errors.PluginLoadError("Missing plugin %s in %s" %
-                                            (name, path))
+                                            (class_name, path))
         if not issubclass(plugin_class, sa.plugins.base.BasePlugin):
             raise sa.errors.PluginLoadError("%s is not a subclass of "
-                                            "BasePlugin" % name)
+                                            "BasePlugin" % class_name)
         plugin = plugin_class(self)
 
         for rule in plugin.eval_rules:
@@ -115,10 +124,10 @@ class GlobalContext(_Context):
             eval_rule = getattr(plugin, rule)
             if eval_rule is None:
                 raise sa.errors.PluginLoadError("Undefined eval rule %s in "
-                                                "%s" % (rule, name))
+                                                "%s" % (rule, class_name))
             self.eval_rules[rule] = eval_rule
 
-        self.plugins[name] = plugin
+        self.plugins[class_name] = plugin
 
     def unload_plugin(self, name):
         """Unload the specified plugin and remove any data stored in this
@@ -137,7 +146,6 @@ class GlobalContext(_Context):
     @staticmethod
     def _load_module_py3(path):
         """Load module in Python 3."""
-        import importlib.machinery
         modulename = os.path.basename(path).rstrip(".py").rstrip(".pyc")
 
         loader = importlib.machinery.SourceFileLoader(modulename, path)
