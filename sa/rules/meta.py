@@ -14,6 +14,9 @@ CONVERT = (
     ("!", " not "),
 )
 
+# Simple protection against recursion, or infinite loops with the meta rules.
+MAX_RECURSION = 10
+
 _SUBRULE_P = re.compile(r"([_a-zA-Z]\w*)(?=\W|$)")
 
 
@@ -33,14 +36,24 @@ class MetaRule(sa.rules.base.BaseRule):
         # XXX RestrictedPython.
         self._code_obj = compile(self.rule, "<meta>", "exec")
 
-    def postparsing(self, ruleset):
+    def postparsing(self, ruleset, _depth=0):
         """Get the referenced sub-rules of this meta-rule and add execute the
         python code creating an appropriate match function for this meta-rule.
         """
+        if _depth > MAX_RECURSION:
+            raise sa.errors.InvalidRule(self.name, "Maximum recursion depth "
+                                        "for meta rules has been exceeded.")
+        if "match" in self._location:
+            # The rule has already been processed.
+            return
         sa.rules.base.BaseRule.postparsing(self, ruleset)
         for subrule_name in self.subrules:
             try:
                 subrule = ruleset.get_rule(subrule_name)
+                # Call any postparsing for this subrule to ensure that the rule
+                # is usable. (For example when the meta rule references other
+                # meta rules).
+                subrule.postparsing(ruleset, _depth=_depth + 1)
             except KeyError:
                 raise sa.errors.InvalidRule(self.name, "Undefined subrule "
                                             "referenced %r" % subrule_name)

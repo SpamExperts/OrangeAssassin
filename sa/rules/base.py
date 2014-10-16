@@ -51,7 +51,7 @@ class BaseRule(object):
         """Runs after the rule is added to the Ruleset."""
         pass
 
-    def postparsing(self, ruleset):
+    def postparsing(self, ruleset, _depth=0):
         """Runs after all the rules have been parsed."""
         pass
 

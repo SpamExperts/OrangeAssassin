@@ -55,7 +55,8 @@ class RuleSet(object):
             for name, rule in list(rule_list.items()):
                 try:
                     rule.postparsing(self)
-                except sa.errors.InvalidRule:
+                except sa.errors.InvalidRule as e:
+                    self.ctxt.log.error(e)
                     if self.paranoid:
                         raise
                     del rule_list[name]
