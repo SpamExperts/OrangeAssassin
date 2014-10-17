@@ -154,7 +154,6 @@ class GlobalContext(_Context):
     @staticmethod
     def _load_module_py2(path):
         """Load module in Python 2."""
-        import imp
         modulename = os.path.basename(path).rstrip(".py").rstrip(".pyc")
 
         for suffix, open_type, file_type in imp.get_suffixes():
