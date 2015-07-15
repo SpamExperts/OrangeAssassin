@@ -93,7 +93,7 @@ class GlobalContext(_Context):
         """Load the specified plugin from the given path."""
         class_name = name.rsplit(".", 1)[-1]
         if class_name in self.plugins:
-            self.log.warn("Redefining plugin %s.", class_name)
+            self.log.warning("Redefining plugin %s.", class_name)
             self.unload_plugin(class_name)
 
         if path is None:
@@ -120,7 +120,7 @@ class GlobalContext(_Context):
 
         for rule in plugin.eval_rules:
             if rule in self.eval_rules:
-                self.log.warn("Redefining eval rule: %s", rule)
+                self.log.warning("Redefining eval rule: %s", rule)
             eval_rule = getattr(plugin, rule)
             if eval_rule is None:
                 raise sa.errors.PluginLoadError("Undefined eval rule %s in "
