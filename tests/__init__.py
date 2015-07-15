@@ -1,3 +1,5 @@
+#! /usr/bin/env python
+
 """Package reserved for tests and test utilities."""
 
 from __future__ import absolute_import
