@@ -159,8 +159,8 @@ class SAParser(object):
                 self.results[name][rtype] = value
         else:
             if not self.ctxt.hook_parse_config(rtype, value):
-                self.ctxt.log.warn("Ignoring unknown configuration line: %s",
-                                   line)
+                self.ctxt.log.warning("Ignoring unknown configuration line: %s",
+                                      line)
 
     def _handle_include(self, value, line, line_no, _depth=0):
         """Handles the 'include' keyword."""
@@ -202,7 +202,7 @@ class SAParser(object):
                 rule_type = data["type"]
             except KeyError:
                 e = sa.errors.InvalidRule(name, "No rule type defined.")
-                self.ctxt.log.warn(e)
+                self.ctxt.log.warning(e)
                 if self.paranoid:
                     raise e
             else:
