@@ -39,7 +39,11 @@ STRICT_CHARSETS = frozenset(("quopri-codec", "quopri", "quoted-printable",
 class _ParseHTML(html.parser.HTMLParser):
     """Extract data from HTML parts."""
     def __init__(self, collector):
-        html.parser.HTMLParser.__init__(self, convert_charrefs=False)
+        try:
+            html.parser.HTMLParser.__init__(self, convert_charrefs=False)
+        except TypeError:
+            # Python 2 does not have the convert_charrefs argument.
+            html.parser.HTMLParser.__init__(self)
         self.reset()
         self.collector = collector
 
