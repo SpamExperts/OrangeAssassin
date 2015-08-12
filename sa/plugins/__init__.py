@@ -4,6 +4,6 @@
 # Plugins reimplemented from Perl to Python.
 REIMPLEMENTED_PLUGINS = {
     "Mail::SpamAssassin::Plugin::DumpText": "sa.plugins.dump_text.DumpText",
-    "Mail::SpamAssassin::Plugin::Pyzor": "sa.plugins.pyzor.PyzorPlugin"
-    "Mail::SpamAssassin::Plugin::WhiteListSubject": "sa.plugins.whitelist_subject.WhitelistSubjectPlugin"
+    "Mail::SpamAssassin::Plugin::Pyzor": "sa.plugins.pyzor.PyzorPlugin",
+    "Mail::SpamAssassin::Plugin::WhiteListSubject": "sa.plugins.whitelist_subject.WhiteListSubjectPlugin"
 }

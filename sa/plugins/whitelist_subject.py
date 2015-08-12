@@ -35,12 +35,12 @@ class WhiteListSubjectPlugin(sa.plugins.base.BasePlugin):
     def check_subject_in_whitelist(self, msg):
         """Check the subject in the blacklist subjects list 
         """
-        return self._check_subject(self, msg, self.options["whitelist_subject"][1])
+        return self._check_subject(msg, self.options["whitelist_subject"][1])
 
     def check_subject_in_blacklist(self, msg):
         """Check the subject in the blacklist subjects list 
         """
-        return self._check_subject(self, msg, self.options["blacklist_subject"][1])
+        return self._check_subject(msg, self.options["blacklist_subject"][1])
 
     def _check_subject(self, msg, option_list):
         """ Does the work for checking the subject in the whitelist/blacklist
