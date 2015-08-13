@@ -165,7 +165,7 @@ class BasePlugin(object):
         """Open a new DSN session
         """
         if 'sqlalchemy' not in sys.modules:
-            return None
+            return
         splits = self.get_local('user_scores_dsn').split(":")
         dbtype, dbname, host, port = ("","","","")
         if not splits:
@@ -180,7 +180,7 @@ class BasePlugin(object):
         if "" in (dbtype,host):
             # We don't know what driver to use and 
             # we don't know where to connect.
-            return None
+            return
         username = self.get_local('user_scores_username')
         password = self.get_local('user_scores_password')
         up = ":".join([k for k in [username, password] if k])
