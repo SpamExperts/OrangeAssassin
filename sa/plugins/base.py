@@ -171,6 +171,9 @@ class BasePlugin(object):
         if not splits:
             #No database connection has been configured
             return
+        if len(split) < 3:
+            # Wrong configuration, we need dbtype, dbname and host
+            return
         #First parts is the DBI.
         if len(split[1:]) == 3:
             dbtype, dbname, host = split[1:]
