@@ -5,6 +5,14 @@ from __future__ import absolute_import
 from builtins import tuple
 from builtins import object
 
+import sys
+
+try:
+    from sqlalchemy import create_engine
+    from sqlalchemy.orm import sessionmaker
+except:
+    pass
+
 import sa.errors
 
 
@@ -15,7 +23,11 @@ class BasePlugin(object):
     eval_rules = tuple()
     # Dictionary that matches options to tuples like (type, defaul_value)
     # Supported types are "int", "float", "bool", "str", "list".
-    options = dict()
+    options = {
+            "user_scores_dsn": "",
+            "user_scores_sql_username": "",
+            "user_scores_sql_password": "",
+            }
 
     def __init__(self, context):
         """Initialize the plugin and parses all options specified in
@@ -148,3 +160,34 @@ class BasePlugin(object):
 
         May be overridden.
         """
+
+    def open_dsn_session(self):
+        """Open a new DSN session
+        """
+        if 'sqlalchemy' not in sys.modules:
+            return None
+        splits = self.get_local('user_scores_dsn').split(":")
+        dbtype, dbname, host, port = ("","","","")
+        if not splits:
+            #No database connection has been configured
+            return
+        #First parts is the DBI.
+        if len(split[1:]) == 3:
+            dbtype, dbname, host = split[1:]
+        else:
+            # We just care about the next four items
+            dbtype, dbname, host, port = split[1:4]
+        if "" in (dbtype,host):
+            # We don't know what driver to use and 
+            # we don't know where to connect.
+            return None
+        username = self.get_local('user_scores_username')
+        password = self.get_local('user_scores_password')
+        up = ":".join([k for k in [username, password] if k])
+        host = "@%s"%host if up else host
+        hp = ":".join([k for k in [host,port] if k])
+        engine = create_engine('%s://%s%s/%s'%(dbype, up, hp, dbname))
+        Session = sessionmaker(bind=engine)
+        return Session()
+
+
