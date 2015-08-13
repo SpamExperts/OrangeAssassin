@@ -2,6 +2,8 @@
 
 from __future__ import absolute_import
 
+import re
+
 import sa.plugins.base
 
 class WhiteListSubjectPlugin(sa.plugins.base.BasePlugin):
@@ -9,7 +11,7 @@ class WhiteListSubjectPlugin(sa.plugins.base.BasePlugin):
     options = {"whitelist_subject": ("list",[]),
                    "blacklist_subject": ("list",[])}
     
-    def parse_config(self, key, option):
+    def parse_config(self, key, value):
         """ Parse a config line, instead of using the regular
         set_?_option we need to use set_append_option because 
         we need to append the setting to the current existing one instead
@@ -18,7 +20,7 @@ class WhiteListSubjectPlugin(sa.plugins.base.BasePlugin):
         #Need to check if the option is a valid regular expression.
         if key in self.options:
             try:
-                re.compile(option.strip())
+                re.compile(value.strip())
             except Exception:
                 return 
             self.set_append_option(key, value)
@@ -28,8 +30,8 @@ class WhiteListSubjectPlugin(sa.plugins.base.BasePlugin):
     def set_append_option(self, key, value):
         """Append the key to the whitelist_subject option
         """
-        self.options[key][0].append(value)
-        self.set_global(key, self.options[key][0])
+        self.options[key][1].append(value)
+        self.set_global(key, self.options[key][1])
 
 
     def check_subject_in_whitelist(self, msg):
