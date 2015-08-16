@@ -57,6 +57,28 @@ class TestWhitelistSubject(unittest.TestCase):
         plugin = sa.plugins.whitelist_subject.WhiteListSubjectPlugin(self.mock_ctxt)
         self.assertTrue(plugin.check_subject_in_whitelist(self.mock_msg))
 
+    def test_check_subject_one_regex_false(self):
+        self.options["whitelist_subject"] = ("list", [r"[a-z]+"])
+        self.msg = email.message_from_string(MESSAGE.format("Test subject"))
+        self.mock_msg.msg = self.msg
+        plugin = sa.plugins.whitelist_subject.WhiteListSubjectPlugin(self.mock_ctxt)
+        self.assertFalse(plugin.check_subject_in_whitelist(self.mock_msg))
+
+    def test_check_subject_one_regex_blank(self):
+        self.options["whitelist_subject"] = ("list", [])
+        self.msg = email.message_from_string(MESSAGE.format("Test subject"))
+        self.mock_msg.msg = self.msg
+        plugin = sa.plugins.whitelist_subject.WhiteListSubjectPlugin(self.mock_ctxt)
+        self.assertFalse(plugin.check_subject_in_whitelist(self.mock_msg))
+
+    def test_check_subject_one_regex_black(self):
+        self.options["blacklist_subject"] = ("list", [r"[a-zA-Z]+"])
+        self.options["whitelist_subject"] = ("list", [])
+        self.msg = email.message_from_string(MESSAGE.format("Test subject"))
+        self.mock_msg.msg = self.msg
+        plugin = sa.plugins.whitelist_subject.WhiteListSubjectPlugin(self.mock_ctxt)
+        self.assertFalse(plugin.check_subject_in_whitelist(self.mock_msg))
+
 
 def suite():
     """Gather all the tests from this package in a test suite."""
