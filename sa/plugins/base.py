@@ -5,29 +5,55 @@ from __future__ import absolute_import
 from builtins import tuple
 from builtins import object
 
-import sys
-
 try:
     from sqlalchemy import create_engine
     from sqlalchemy.orm import sessionmaker
-except:
-    pass
+except ImportError:
+    create_engine = None
+    sessionmaker = None
 
 import sa.errors
 
 
+def dbi_to_alchemy(dsn, user, password):
+    """Convert perl DBI setting to SQLAlchemy settings."""
+    dummy, driver, connection = dsn.split(":", 2)
+    if driver.lower() == "mysql":
+        db_name, hostname = connection.split(":", 1)
+    elif driver.lower() == "pg":
+        driver = "postgresql"
+        db_name, hostname = connection.split(";")
+        db_name = db_name.split("=")[1]
+        hostname = hostname.split("=")[1]
+    else:
+        return ""
+    return "%s://%s:%s@%s/%s" % (driver, user, password, hostname, db_name)
+
+
 class BasePlugin(object):
-    """Abstract class for plugins. All plugins must inherit from this class."""
-    # List of methods that will be registered as eval rules after the plugin
-    # has been initialized.
+    """Abstract class for plugins. All plugins must inherit from this class.
+
+    This exposes methods to methods to store data and configuration options
+    in the "global" context and the "local" context.
+
+     * The "global" context is loaded once when the configuration is parsed
+     and persists throughout until the plugin is reloaded.
+     * The "local" context is stored per message and each new message parsed
+     has its one context.
+
+    The methods automatically stores the data under the plugin names to ensure
+    that there are no name clashes between plugins.
+
+    The plugin can also define eval rules by implementing a method and adding
+    it to the eval_rules list. These will be registered after the plugin has
+    been initialized.
+    """
     eval_rules = tuple()
-    # Dictionary that matches options to tuples like (type, defaul_value)
+    # Dictionary that matches options to tuples like (type, default_value)
     # Supported types are "int", "float", "bool", "str", "list".
-    options = {
-            "user_scores_dsn": "",
-            "user_scores_sql_username": "",
-            "user_scores_sql_password": "",
-            }
+    options = None
+    # The name of the DSN options
+    dsn_name = None
 
     def __init__(self, context):
         """Initialize the plugin and parses all options specified in
@@ -35,6 +61,10 @@ class BasePlugin(object):
         """
         self.ctxt = context
         self._plugin_name = self.__class__.__name__
+        if self.dsn_name:
+            self.options[self.dsn_name + "_dsn"] = ("str", "")
+            self.options[self.dsn_name + "_sql_username"] = ("str", "")
+            self.options[self.dsn_name + "_sql_password"] = ("str", "")
         for key, (dummy, value) in self.options.items():
             self.set_global(key, value)
 
@@ -117,8 +147,27 @@ class BasePlugin(object):
         post-parsing. This hook can be used for e.g. to add rules to the
         ruleset.
 
-        May be overridden.
+        By default this prepares the SQLAlchemy engine if the plugin has any
+        set.
         """
+        connect_string = None
+        if self.dsn_name:
+            dsn = self.get_global(self.dsn_name + "_dsn")
+            if dsn.startswith("DBI"):
+                # Convert from SA format.
+                user = self.get_global(self.dsn_name + "_sql_username")
+                password = self.get_global(self.dsn_name + "_sql_password")
+                connect_string = dbi_to_alchemy(dsn, user, password)
+            elif dsn:
+                # The connect string is already in the correct format
+                connect_string = dsn
+        if connect_string is not None:
+            self.set_global("engine", create_engine(connect_string))
+
+    def get_session(self):
+        """Open a new SQLAlchemy session."""
+        engine = self.get_global("engine")
+        return sessionmaker(bind=engine)()
 
     def check_start(self, msg):
         """Called before the metadata is extracted from the message. The
@@ -160,37 +209,3 @@ class BasePlugin(object):
 
         May be overridden.
         """
-
-    def open_dsn_session(self):
-        """Open a new DSN session
-        """
-        if 'sqlalchemy' not in sys.modules:
-            return
-        splits = self.get_local('user_scores_dsn').split(":")
-        dbtype, dbname, host, port = ("","","","")
-        if not splits:
-            #No database connection has been configured
-            return
-        if len(split[1:]) < 3:
-            # Wrong configuration, we need dbtype, dbname and host
-            return
-        #First parts is the DBI.
-        if len(split[1:]) == 3:
-            dbtype, dbname, host = split[1:]
-        else:
-            # We just care about the next four items
-            dbtype, dbname, host, port = split[1:4]
-        if "" in (dbtype,host):
-            # We don't know what driver to use and 
-            # we don't know where to connect.
-            return
-        username = self.get_local('user_scores_username')
-        password = self.get_local('user_scores_password')
-        up = ":".join([k for k in [username, password] if k])
-        host = "@%s"%host if up else host
-        hp = ":".join([k for k in [host,port] if k])
-        engine = create_engine('%s://%s%s/%s'%(dbype, up, hp, dbname))
-        Session = sessionmaker(bind=engine)
-        return Session()
-
-

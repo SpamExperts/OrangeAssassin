@@ -4,35 +4,40 @@ from __future__ import absolute_import
 
 import re
 
+import sa.regex
 import sa.plugins.base
 
+
 class WhiteListSubjectPlugin(sa.plugins.base.BasePlugin):
-    eval_rules = ("check_subject_in_whitelist", "check_subject_in_blacklist")
-    options = {"whitelist_subject": ("list",[]),
-                   "blacklist_subject": ("list",[])}
-    
+    eval_rules = (
+        "check_subject_in_whitelist",
+        "check_subject_in_blacklist"
+    )
+    options = {
+        "whitelist_subject": ("list", []),
+        "blacklist_subject": ("list", [])
+    }
+
     def parse_config(self, key, value):
         """ Parse a config line, instead of using the regular
         set_?_option we need to use set_append_option because 
         we need to append the setting to the current existing one instead
         of adding one more.
         """
-        #Need to check if the option is a valid regular expression.
+        # Need to check if the option is a valid regular expression.
         if key in self.options:
             try:
                 re.compile(value.strip())
-            except Exception:
-                return 
+            except re.error:
+                return
             self.set_append_option(key, value)
             self.inhibit_further_callbacks()
 
-        
     def set_append_option(self, key, value):
         """Append the key to the whitelist_subject option
         """
         self.options[key][1].append(value)
         self.set_global(key, self.options[key][1])
-
 
     def check_subject_in_whitelist(self, msg):
         """Check the subject in the blacklist subjects list 
