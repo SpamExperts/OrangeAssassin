@@ -8,6 +8,7 @@ except ImportError:
     from mock import patch, Mock, MagicMock
 
 import sa.errors
+import sa.context
 import sa.plugins.base
 
 
@@ -15,9 +16,15 @@ class TestBasePlugin(unittest.TestCase):
     def setUp(self):
         unittest.TestCase.setUp(self)
         self.options = {}
+        sa.plugins.base.BasePlugin.dsn_name = None
         patch("sa.plugins.base.BasePlugin.options", self.options).start()
+        self.mock_create_engine = patch("sa.plugins.base.create_engine",
+                                        create=True).start()
+        self.mock_session_maker = patch("sa.plugins.base.sessionmaker",
+                                        create=True).start()
         self.mock_ctxt = MagicMock()
         self.mock_msg = MagicMock()
+        self.mock_ruleset = MagicMock()
 
     def tearDown(self):
         unittest.TestCase.tearDown(self)
@@ -29,6 +36,14 @@ class TestBasePlugin(unittest.TestCase):
         sa.plugins.base.BasePlugin(self.mock_ctxt)
         self.mock_ctxt.set_plugin_data.assert_called_with("BasePlugin",
                                                           "test_bool", False)
+
+    def test_init_options_dsn_defaults(self):
+        sa.plugins.base.BasePlugin.dsn_name = "test_plugin"
+        sa.plugins.base.BasePlugin(self.mock_ctxt)
+
+        self.assertIn("test_plugin_dsn", self.options)
+        self.assertIn("test_plugin_sql_password", self.options)
+        self.assertIn("test_plugin_sql_username", self.options)
 
     def test_set_global(self):
         plugin = sa.plugins.base.BasePlugin(self.mock_ctxt)
@@ -126,11 +141,136 @@ class TestBasePlugin(unittest.TestCase):
                                                           "test", ["value1",
                                                                    "value2"])
 
+    def test_create_engine_from_dbi(self):
+        dbi = "DBI:mysql:spamassassin:localhost"
+        alchemy = "mysql://testuser:password@localhost/spamassassin"
+        mock_dbi = patch("sa.plugins.base.dbi_to_alchemy",
+                         return_value=alchemy).start()
+
+        sa.plugins.base.BasePlugin.dsn_name = "test_plugin"
+        plugin = sa.plugins.base.BasePlugin(self.mock_ctxt)
+
+        expected = self.mock_create_engine(alchemy)
+        plugin.finish_parsing_end(self.mock_ruleset)
+        self.mock_ctxt.set_plugin_data.assert_called_with("BasePlugin",
+                                                          "engine", expected)
+
+    def test_create_engine_from_dbi_real_context(self):
+        dbi = "DBI:mysql:spamassassin:localhost"
+        alchemy = "mysql://testuser:password@localhost/spamassassin"
+        mock_dbi = patch("sa.plugins.base.dbi_to_alchemy",
+                         return_value=alchemy).start()
+        context = sa.context.GlobalContext()
+
+        sa.plugins.base.BasePlugin.dsn_name = "test_plugin"
+        plugin = sa.plugins.base.BasePlugin(context)
+
+        plugin_data = context.plugin_data["BasePlugin"]
+        plugin_data["test_plugin_dsn"] = dbi
+        plugin_data["test_plugin_sql_username"] = "testuser"
+        plugin_data ["test_plugin_sql_password"] = "password"
+
+        plugin.finish_parsing_end(self.mock_ruleset)
+        mock_dbi.assert_called_with(dbi, "testuser", "password")
+        self.mock_create_engine.assert_called_with(alchemy)
+
+    def test_create_engine_from_alchemy_real_context(self):
+        alchemy = "mysql://testuser:password@localhost/spamassassin"
+        context = sa.context.GlobalContext()
+
+        sa.plugins.base.BasePlugin.dsn_name = "test_plugin"
+        plugin = sa.plugins.base.BasePlugin(context)
+
+        plugin_data = context.plugin_data["BasePlugin"]
+        plugin_data["test_plugin_dsn"] = alchemy
+
+        plugin.finish_parsing_end(self.mock_ruleset)
+        self.mock_create_engine.assert_called_with(alchemy)
+
+    def test_get_session(self):
+        engine = MagicMock()
+        context = sa.context.GlobalContext()
+
+        sa.plugins.base.BasePlugin.dsn_name = "test_plugin"
+        plugin = sa.plugins.base.BasePlugin(context)
+
+        plugin_data = context.plugin_data["BasePlugin"]
+        plugin_data["engine"] = engine
+
+        result = plugin.get_session()
+        self.mock_session_maker.assert_called_with(bind=engine)
+        expected = self.mock_session_maker(bind=engine)()
+        self.assertEqual(result, expected)
+
+
+class TestDBItoAlchemy(unittest.TestCase):
+    """Test converting Perl DBI to SQLAlchemy engine format."""
+    def setUp(self):
+        unittest.TestCase.setUp(self)
+
+    def tearDown(self):
+        unittest.TestCase.tearDown(self)
+        patch.stopall()
+
+    def test_mysql(self):
+        """Test converting MySQL DBI to Alchemy"""
+        expected = "mysql://testuser:password@localhost/spamassassin"
+        dsn = "DBI:mysql:spamassassin:localhost"
+        user = "testuser"
+        password = "password"
+        result = sa.plugins.base.dbi_to_alchemy(dsn, user, password)
+        self.assertEqual(result, expected)
+
+    def test_mysql_port(self):
+        """Test converting MySQL DBI to Alchemy with custom port specified"""
+        expected = "mysql://testuser:password@localhost:3306/spamassassin"
+        dsn = "DBI:mysql:spamassassin:localhost:3306"
+        user = "testuser"
+        password = "password"
+        result = sa.plugins.base.dbi_to_alchemy(dsn, user, password)
+        self.assertEqual(result, expected)
+
+    def test_postgress(self):
+        """Test converting PostgreSQL DBI to Alchemy"""
+        expected = "postgresql://testuser:password@localhost/spamassassin"
+        dsn = "DBI:Pg:dbname=spamassassin;host=localhost"
+        user = "testuser"
+        password = "password"
+        result = sa.plugins.base.dbi_to_alchemy(dsn, user, password)
+        self.assertEqual(result, expected)
+
+    def test_postgress_port(self):
+        """Test converting PostgreSQL DBI to Alchemy with custom port."""
+        expected = "postgresql://testuser:password@localhost:3306/spamassassin"
+        dsn = "DBI:Pg:dbname=spamassassin;host=localhost;port=3306"
+        user = "testuser"
+        password = "password"
+        result = sa.plugins.base.dbi_to_alchemy(dsn, user, password)
+        self.assertEqual(result, expected)
+
+    def test_sqlite(self):
+        """Test converting PostgreSQL DBI to Alchemy"""
+        expected = "sqlite:////path/spamassassin.db"
+        dsn = "DBI:SQLite:dbname=/path/spamassassin.db"
+        user = ""
+        password = ""
+        result = sa.plugins.base.dbi_to_alchemy(dsn, user, password)
+        self.assertEqual(result, expected)
+
+    def test_unknown_driver(self):
+        expected = ""
+        dsn = "DBI:Oracle:somethingelse"
+        user = "testuser"
+        password = "password"
+        result = sa.plugins.base.dbi_to_alchemy(dsn, user, password)
+        self.assertEqual(result, expected)
+
 
 def suite():
     """Gather all the tests from this package in a test suite."""
     test_suite = unittest.TestSuite()
     test_suite.addTest(unittest.makeSuite(TestBasePlugin, "test"))
+    test_suite.addTest(unittest.makeSuite(TestDBItoAlchemy, "test"))
     return test_suite
 
 if __name__ == '__main__':

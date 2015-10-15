@@ -19,14 +19,24 @@ def dbi_to_alchemy(dsn, user, password):
     """Convert perl DBI setting to SQLAlchemy settings."""
     dummy, driver, connection = dsn.split(":", 2)
     if driver.lower() == "mysql":
+        driver = "mysql"
         db_name, hostname = connection.split(":", 1)
     elif driver.lower() == "pg":
         driver = "postgresql"
-        db_name, hostname = connection.split(";")
-        db_name = db_name.split("=")[1]
-        hostname = hostname.split("=")[1]
+        values = dict(item.split("=") for item in connection.split(";"))
+        db_name = values["dbname"]
+        hostname = values["host"]
+        if "port" in values:
+            hostname = "%s:%s" % (hostname, values["port"])
+    elif driver.lower() == "sqlite":
+        driver = "sqlite"
+        user, password, hostname = "", "", ""
+        values = dict(item.split("=") for item in connection.split(";"))
+        db_name = values["dbname"]
     else:
         return ""
+    if not user or not password:
+        return "%s://%s/%s" % (driver, hostname, db_name)
     return "%s://%s:%s@%s/%s" % (driver, user, password, hostname, db_name)
 
 
@@ -153,7 +163,7 @@ class BasePlugin(object):
         connect_string = None
         if self.dsn_name:
             dsn = self.get_global(self.dsn_name + "_dsn")
-            if dsn.startswith("DBI"):
+            if dsn.upper().startswith("DBI"):
                 # Convert from SA format.
                 user = self.get_global(self.dsn_name + "_sql_username")
                 password = self.get_global(self.dsn_name + "_sql_password")
