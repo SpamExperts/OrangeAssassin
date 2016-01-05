@@ -1,2 +1,0 @@
-# SpamPAD
-Python Antispam Daemon
