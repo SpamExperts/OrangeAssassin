@@ -11,3 +11,5 @@ install:
 script:
   - "py.test tests/unit/ --cov pad --cov-report term-missing"
   - "py.test tests/functional/"
+after_success:
+  - coveralls
