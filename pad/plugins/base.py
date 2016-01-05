@@ -1,4 +1,4 @@
-"""Base for SA plugins."""
+"""Base for PAD plugins."""
 
 from __future__ import absolute_import
 
@@ -12,7 +12,7 @@ except ImportError:
     create_engine = None
     sessionmaker = None
 
-import sa.errors
+import pad.errors
 
 
 def dbi_to_alchemy(dsn, user, password):
@@ -107,16 +107,16 @@ class BasePlugin(object):
         try:
             self.set_global(global_key, int(value))
         except ValueError:
-            raise sa.errors.PluginError("Invalid value for %s: %s" %
-                                        (global_key, value))
+            raise pad.errors.PluginError("Invalid value for %s: %s" %
+                                         (global_key, value))
 
     def set_float_option(self, global_key, value):
         """Parse and set a float option."""
         try:
             self.set_global(global_key, float(value))
         except ValueError:
-            raise sa.errors.PluginError("Invalid value for %s: %s" %
-                                        (global_key, value))
+            raise pad.errors.PluginError("Invalid value for %s: %s" %
+                                         (global_key, value))
 
     def set_bool_option(self, global_key, value):
         """Parse and set a bool option."""
@@ -134,7 +134,7 @@ class BasePlugin(object):
         """Tells the plugin handler to inhibit calling into other plugins in
         the plugin chain for the current callback.
         """
-        raise sa.errors.InhibitCallbacks()
+        raise pad.errors.InhibitCallbacks()
 
     def parse_config(self, key, value):
         """Parse a config line that the normal parses doesn't know how to

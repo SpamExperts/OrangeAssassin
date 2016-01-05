@@ -1,4 +1,4 @@
-"""Tests for sa.rules.meta"""
+"""Tests for pad.rules.meta"""
 
 import unittest
 
@@ -7,8 +7,8 @@ try:
 except ImportError:
     from mock import patch, Mock, call
 
-import sa.errors
-import sa.rules.meta
+import pad.errors
+import pad.rules.meta
 
 
 class TestMetaRule(unittest.TestCase):
@@ -22,7 +22,7 @@ class TestMetaRule(unittest.TestCase):
 
     def test_match(self):
         mock_match = Mock(return_value=True)
-        rule = sa.rules.meta.MetaRule("TEST", "None")
+        rule = pad.rules.meta.MetaRule("TEST", "None")
         rule._location["match"] = mock_match
         result = rule.match(self.mock_msg)
 
@@ -31,7 +31,7 @@ class TestMetaRule(unittest.TestCase):
 
     def test_match_notmatched(self):
         mock_match = Mock(return_value=False)
-        rule = sa.rules.meta.MetaRule("TEST", "None")
+        rule = pad.rules.meta.MetaRule("TEST", "None")
         rule._location["match"] = mock_match
         result = rule.match(self.mock_msg)
 
@@ -41,48 +41,48 @@ class TestMetaRule(unittest.TestCase):
     def test_get_rule_kwargs(self):
         data = {"value": "TEST_1 && TEST_2"}
         expected = {"rule": "TEST_1 && TEST_2"}
-        kwargs = sa.rules.meta.MetaRule.get_rule_kwargs(data)
+        kwargs = pad.rules.meta.MetaRule.get_rule_kwargs(data)
         self.assertEqual(kwargs, expected)
 
     def test_init_subrules(self):
         perlrule = "TEST_1 && TEST_2"
         expected = {"TEST_1", "TEST_2"}
-        rule = sa.rules.meta.MetaRule("TEST", perlrule)
+        rule = pad.rules.meta.MetaRule("TEST", perlrule)
         self.assertEqual(rule.subrules, expected)
 
     def test_init_convert_rule(self):
         perlrule = "TEST_1&&TEST_2"
         expected = "match = lambda msg: TEST_1(msg) and TEST_2(msg)"
-        rule = sa.rules.meta.MetaRule("TEST", perlrule)
+        rule = pad.rules.meta.MetaRule("TEST", perlrule)
         self.assertEqual(rule.rule, expected)
 
     def test_init_convert_syntax(self):
         perlrule = "TEST_1&&TEST_2||!TEST_3"
         expected = "TEST_1(msg) and TEST_2(msg) or  not TEST_3(msg)"
         expected = "match = lambda msg: %s" % expected
-        rule = sa.rules.meta.MetaRule("TEST", perlrule)
+        rule = pad.rules.meta.MetaRule("TEST", perlrule)
         self.assertEqual(rule.rule, expected)
 
     def test_postparsing(self):
         perlrule = "TEST_1 && TEST_2"
         mock_subrule = Mock()
         mock_ruleset = Mock(**{"get_rule.return_value": mock_subrule})
-        rule = sa.rules.meta.MetaRule("TEST", perlrule)
+        rule = pad.rules.meta.MetaRule("TEST", perlrule)
         rule.postparsing(mock_ruleset)
         self.assertEqual(rule._location["TEST_1"], mock_subrule.match)
         self.assertEqual(rule._location["TEST_2"], mock_subrule.match)
 
     def test_postparsing_nomatch(self):
         mock_ruleset = Mock()
-        rule = sa.rules.meta.MetaRule("TEST", "None")
+        rule = pad.rules.meta.MetaRule("TEST", "None")
         rule._code_obj = compile("None", "<meta>", "exec")
         self.assertRaises(AssertionError, rule.postparsing, mock_ruleset)
 
     def test_postparsing_undefined_subrule(self):
         mock_ruleset = Mock(**{"get_rule.side_effect": KeyError})
-        rule = sa.rules.meta.MetaRule("TEST", "None")
+        rule = pad.rules.meta.MetaRule("TEST", "None")
         rule._code_obj = compile("None", "<meta>", "exec")
-        self.assertRaises(sa.errors.InvalidRule, rule.postparsing,
+        self.assertRaises(pad.errors.InvalidRule, rule.postparsing,
                           mock_ruleset)
 
 

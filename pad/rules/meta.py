@@ -4,8 +4,8 @@ from builtins import dict
 
 import re
 
-import sa.errors
-import sa.rules.base
+import pad.errors
+import pad.rules.base
 
 # Syntax differences between Perl and Python.
 CONVERT = (
@@ -20,7 +20,7 @@ MAX_RECURSION = 10
 _SUBRULE_P = re.compile(r"([_a-zA-Z]\w*)(?=\W|$)")
 
 
-class MetaRule(sa.rules.base.BaseRule):
+class MetaRule(pad.rules.base.BaseRule):
     """These rules are boolean or arithmetic combinations of other rules."""
 
     def __init__(self, name, rule, score=None, desc=None):
@@ -41,12 +41,12 @@ class MetaRule(sa.rules.base.BaseRule):
         python code creating an appropriate match function for this meta-rule.
         """
         if _depth > MAX_RECURSION:
-            raise sa.errors.InvalidRule(self.name, "Maximum recursion depth "
+            raise pad.errors.InvalidRule(self.name, "Maximum recursion depth "
                                         "for meta rules has been exceeded.")
         if "match" in self._location:
             # The rule has already been processed.
             return
-        sa.rules.base.BaseRule.postparsing(self, ruleset)
+        pad.rules.base.BaseRule.postparsing(self, ruleset)
         for subrule_name in self.subrules:
             try:
                 subrule = ruleset.get_rule(subrule_name)
@@ -55,7 +55,7 @@ class MetaRule(sa.rules.base.BaseRule):
                 # meta rules).
                 subrule.postparsing(ruleset, _depth=_depth + 1)
             except KeyError:
-                raise sa.errors.InvalidRule(self.name, "Undefined subrule "
+                raise pad.errors.InvalidRule(self.name, "Undefined subrule "
                                             "referenced %r" % subrule_name)
             self._location[subrule_name] = subrule.match
         exec(self._code_obj, self._location)
@@ -66,6 +66,6 @@ class MetaRule(sa.rules.base.BaseRule):
 
     @staticmethod
     def get_rule_kwargs(data):
-        kwargs = sa.rules.base.BaseRule.get_rule_kwargs(data)
+        kwargs = pad.rules.base.BaseRule.get_rule_kwargs(data)
         kwargs["rule"] = data["value"]
         return kwargs

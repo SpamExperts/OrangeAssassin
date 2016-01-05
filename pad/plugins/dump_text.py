@@ -4,10 +4,10 @@ from __future__ import print_function, absolute_import
 
 import sys
 
-import sa.plugins.base
+import pad.plugins.base
 
 
-class DumpText(sa.plugins.base.BasePlugin):
+class DumpText(pad.plugins.base.BasePlugin):
     """Similar to the SA DumpText demo plugin, useful for debugging rulesets.
     """
 

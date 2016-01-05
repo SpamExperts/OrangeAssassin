@@ -19,8 +19,8 @@ import collections
 
 import future.utils
 
-import sa.errors
-import sa.plugins.base
+import pad.errors
+import pad.plugins.base
 
 
 class _Context(object):
@@ -28,7 +28,7 @@ class _Context(object):
 
     def __init__(self):
         self.plugin_data = collections.defaultdict(dict)
-        self.log = logging.getLogger("sa-logger")
+        self.log = logging.getLogger("pad-logger")
 
     def set_plugin_data(self, plugin_name, key, value):
         """Store data for the specified plugin under the given key."""
@@ -75,7 +75,7 @@ def _callback_chain(func):
         """Ignore any InhibitCallbacks exceptions."""
         try:
             func(*args, **kwargs)
-        except sa.errors.InhibitCallbacks:
+        except pad.errors.InhibitCallbacks:
             return True
         return False
     return wrapped_func
@@ -102,8 +102,8 @@ class GlobalContext(_Context):
             try:
                 module = importlib.import_module(module_name)
             except ImportError as e:
-                raise sa.errors.PluginLoadError("Unable to load %s: %s" %
-                                                (module_name, e))
+                raise pad.errors.PluginLoadError("Unable to load %s: %s" %
+                                                 (module_name, e))
         elif future.utils.PY3:
             module = self._load_module_py3(path)
         else:
@@ -111,10 +111,10 @@ class GlobalContext(_Context):
 
         plugin_class = getattr(module, class_name)
         if plugin_class is None:
-            raise sa.errors.PluginLoadError("Missing plugin %s in %s" %
-                                            (class_name, path))
-        if not issubclass(plugin_class, sa.plugins.base.BasePlugin):
-            raise sa.errors.PluginLoadError("%s is not a subclass of "
+            raise pad.errors.PluginLoadError("Missing plugin %s in %s" %
+                                             (class_name, path))
+        if not issubclass(plugin_class, pad.plugins.base.BasePlugin):
+            raise pad.errors.PluginLoadError("%s is not a subclass of "
                                             "BasePlugin" % class_name)
         plugin = plugin_class(self)
 
@@ -123,7 +123,7 @@ class GlobalContext(_Context):
                 self.log.warning("Redefining eval rule: %s", rule)
             eval_rule = getattr(plugin, rule)
             if eval_rule is None:
-                raise sa.errors.PluginLoadError("Undefined eval rule %s in "
+                raise pad.errors.PluginLoadError("Undefined eval rule %s in "
                                                 "%s" % (rule, class_name))
             self.eval_rules[rule] = eval_rule
 
@@ -134,7 +134,7 @@ class GlobalContext(_Context):
         context.
         """
         if name not in self.plugins:
-            raise sa.errors.PluginLoadError("Plugin %s not loaded." % name)
+            raise pad.errors.PluginLoadError("Plugin %s not loaded." % name)
 
         plugin = self.plugins[name]
         # Delete any defined rules
@@ -161,8 +161,8 @@ class GlobalContext(_Context):
                 with open(path, open_type) as sourcef:
                     return imp.load_module(modulename, sourcef, path,
                                            (suffix, open_type, file_type))
-        raise sa.errors.PluginLoadError("Unable to load module %s from %s" %
-                                        (modulename, path))
+        raise pad.errors.PluginLoadError("Unable to load module %s from %s" %
+                                         (modulename, path))
 
     @_callback_chain
     def hook_parse_config(self, key, value):

@@ -4,11 +4,11 @@ from __future__ import absolute_import
 
 import re
 
-import sa.regex
-import sa.plugins.base
+import pad.regex
+import pad.plugins.base
 
 
-class WhiteListSubjectPlugin(sa.plugins.base.BasePlugin):
+class WhiteListSubjectPlugin(pad.plugins.base.BasePlugin):
     eval_rules = (
         "check_subject_in_whitelist",
         "check_subject_in_blacklist"

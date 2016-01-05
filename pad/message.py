@@ -15,7 +15,7 @@ import html.parser
 import collections
 import email.header
 
-import sa.context
+import pad.context
 
 URL_RE = re.compile(r"""
 (
@@ -92,7 +92,7 @@ class _memoize(object):
         return wrapped_func
 
 
-class Message(sa.context.MessageContext):
+class Message(pad.context.MessageContext):
     """Internal representation of an email message. Used for rule matching."""
     def __init__(self, global_context, raw_msg):
         """Parse the message, extracts and decode all headers and all

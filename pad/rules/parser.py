@@ -1,6 +1,6 @@
-"""Parse SA rule sets.
+"""Parse PAD rule sets.
 
-The general syntax for SpamAssassin rules is (on one line):
+The general syntax for PAD rules is (on one line):
 
 <type> <name> <value>
 
@@ -19,16 +19,16 @@ import re
 import contextlib
 import collections
 
-import sa.errors
-import sa.context
-import sa.plugins
-import sa.rules.uri
-import sa.rules.body
-import sa.rules.meta
-import sa.rules.full
-import sa.rules.eval_
-import sa.rules.header
-import sa.rules.ruleset
+import pad.errors
+import pad.context
+import pad.plugins
+import pad.rules.uri
+import pad.rules.body
+import pad.rules.meta
+import pad.rules.full
+import pad.rules.eval_
+import pad.rules.header
+import pad.rules.ruleset
 
 # Simple protection against recursion with "include".
 MAX_RECURSION = 10
@@ -63,26 +63,26 @@ KNOWN_RTYPE = KNOWN_1_RTYPE | KNOWN_2_RTYPE
 
 # These types define rules and not options. Map against their specific class.
 RULES = {
-    "full": sa.rules.full.FullRule,
-    "body": sa.rules.body.BodyRule,
-    "rawbody": sa.rules.body.RawBodyRule,
-    "uri": sa.rules.uri.URIRule,
-    "meta": sa.rules.meta.MetaRule,
-    "header": sa.rules.header.HeaderRule,
-    "mimeheader": sa.rules.header.MimeHeaderRule,
-    "eval": sa.rules.eval_.EvalRule,
+    "full": pad.rules.full.FullRule,
+    "body": pad.rules.body.BodyRule,
+    "rawbody": pad.rules.body.RawBodyRule,
+    "uri": pad.rules.uri.URIRule,
+    "meta": pad.rules.meta.MetaRule,
+    "header": pad.rules.header.HeaderRule,
+    "mimeheader": pad.rules.header.MimeHeaderRule,
+    "eval": pad.rules.eval_.EvalRule,
 }
 
 _COMMENT_P = re.compile(r"((?<=[^\\])#.*)")
 
 
-class SAParser(object):
-    """Parses SA ruleset and extracts and combines the relevant data.
+class PADParser(object):
+    """Parses PAD ruleset and extracts and combines the relevant data.
 
     Note that this is not thread-safe.
     """
     def __init__(self, paranoid=False):
-        self.ctxt = sa.context.GlobalContext()
+        self.ctxt = pad.context.GlobalContext()
         # XXX This could be a default OrderedDict
         self.results = collections.OrderedDict()
         self.paranoid = paranoid
@@ -99,15 +99,15 @@ class SAParser(object):
                 raise
 
     def parse_file(self, filename, _depth=0):
-        """Parses a single SA ruleset file."""
+        """Parses a single PAD ruleset file."""
         if _depth > MAX_RECURSION:
-            raise sa.errors.MaxRecursionDepthExceeded()
+            raise pad.errors.MaxRecursionDepthExceeded()
         self.ctxt.log.debug("Parsing file: %s", filename)
 
         with open(filename, "rb") as rulef:
             for line_no, line in enumerate(rulef):
-                with self._paranoid(sa.errors.InvalidSyntax,
-                                    sa.errors.PluginLoadError):
+                with self._paranoid(pad.errors.InvalidSyntax,
+                                    pad.errors.PluginLoadError):
                     self._handle_line(filename, line, line_no + 1, _depth)
 
     def _handle_line(self, filename, line, line_no, _depth=0):
@@ -115,7 +115,7 @@ class SAParser(object):
         try:
             line = line.decode("iso-8859-1").strip()
         except UnicodeDecodeError as e:
-            raise sa.errors.InvalidSyntax(filename, line_no, line,
+            raise pad.errors.InvalidSyntax(filename, line_no, line,
                                           "Decoding Error: %s" % e)
 
         if line.startswith("endif"):
@@ -144,7 +144,7 @@ class SAParser(object):
             try:
                 rtype, name, value = line.split(None, 2)
             except ValueError:
-                raise sa.errors.InvalidSyntax(filename, line_no, line,
+                raise pad.errors.InvalidSyntax(filename, line_no, line,
                                               "Missing argument")
             if name not in self.results:
                 self.results[name] = dict()
@@ -167,13 +167,13 @@ class SAParser(object):
         filename = value.strip()
         try:
             self.parse_file(filename, _depth=_depth + 1)
-        except sa.errors.MaxRecursionDepthExceeded as e:
+        except pad.errors.MaxRecursionDepthExceeded as e:
             e.add_call(filename, line_no, line)
             raise e
 
     def _handle_ifplugin(self, value):
         """Handles the 'ifplugin' keyword."""
-        plugin_name = sa.plugins.REIMPLEMENTED_PLUGINS.get(value, value)
+        plugin_name = pad.plugins.REIMPLEMENTED_PLUGINS.get(value, value)
         try:
             plugin_name = plugin_name.rsplit(".", 1)[1]
         except IndexError:
@@ -188,25 +188,25 @@ class SAParser(object):
             plugin_name, path = value.split(None, 1)
         except ValueError:
             plugin_name, path = value, None
-        plugin_name = sa.plugins.REIMPLEMENTED_PLUGINS.get(plugin_name,
-                                                           plugin_name)
+        plugin_name = pad.plugins.REIMPLEMENTED_PLUGINS.get(plugin_name,
+                                                            plugin_name)
         self.ctxt.log.debug("Loading plugin %s value from %s", plugin_name,
                             path)
         self.ctxt.load_plugin(plugin_name, path)
 
     def get_ruleset(self):
         """Create and return the corresponding ruleset for the parsed files."""
-        ruleset = sa.rules.ruleset.RuleSet(self.ctxt, self.paranoid)
+        ruleset = pad.rules.ruleset.RuleSet(self.ctxt, self.paranoid)
         for name, data in self.results.items():
             try:
                 rule_type = data["type"]
             except KeyError:
-                e = sa.errors.InvalidRule(name, "No rule type defined.")
+                e = pad.errors.InvalidRule(name, "No rule type defined.")
                 self.ctxt.log.warning(e)
                 if self.paranoid:
                     raise e
             else:
-                with self._paranoid(sa.errors.InvalidRule):
+                with self._paranoid(pad.errors.InvalidRule):
                     rule = RULES[rule_type].get_rule(name, data)
                     ruleset.add_rule(rule)
 
@@ -215,8 +215,8 @@ class SAParser(object):
         return ruleset
 
 
-def parse_sa_rules(files, paranoid=False):
-    """Parse a list of SpamAssasin rules and returns the corresponding ruleset.
+def parse_pad_rules(files, paranoid=False):
+    """Parse a list of PAD rules and returns the corresponding ruleset.
 
     'files' - a list of file paths.
 
@@ -228,7 +228,7 @@ def parse_sa_rules(files, paranoid=False):
 
     Other options may be included such as "score", "describe".
     """
-    parser = SAParser(paranoid=paranoid)
+    parser = PADParser(paranoid=paranoid)
     for filename in files:
         parser.parse_file(filename)
 

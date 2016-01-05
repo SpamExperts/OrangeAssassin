@@ -1,4 +1,4 @@
-"""Tests for sa.rules.eval_"""
+"""Tests for pad.rules.eval_"""
 
 import unittest
 
@@ -7,8 +7,8 @@ try:
 except ImportError:
     from mock import patch, Mock
 
-import sa.errors
-import sa.rules.eval_
+import pad.errors
+import pad.rules.eval_
 
 
 class TestEvalRule(unittest.TestCase):
@@ -24,7 +24,7 @@ class TestEvalRule(unittest.TestCase):
 
     def test_match(self):
         mock_method = Mock(return_value=True)
-        rule = sa.rules.eval_.EvalRule("TEST", "test_rule()")
+        rule = pad.rules.eval_.EvalRule("TEST", "test_rule()")
         rule.eval_rule = mock_method
 
         result = rule.match(self.mock_msg)
@@ -33,7 +33,7 @@ class TestEvalRule(unittest.TestCase):
 
     def test_not_match(self):
         mock_method = Mock(return_value=False)
-        rule = sa.rules.eval_.EvalRule("TEST", "test_rule()")
+        rule = pad.rules.eval_.EvalRule("TEST", "test_rule()")
         rule.eval_rule = mock_method
 
         result = rule.match(self.mock_msg)
@@ -41,43 +41,43 @@ class TestEvalRule(unittest.TestCase):
         self.assertEqual(result, False)
 
     def test_extract_args(self):
-        rule = sa.rules.eval_.EvalRule("TEST", "test_rule(1, '2')")
+        rule = pad.rules.eval_.EvalRule("TEST", "test_rule(1, '2')")
 
         self.assertEqual(rule._eval_args, (1, '2'))
         self.assertEqual(rule._eval_rule, "test_rule")
 
     def test_extract_args_invalid_rule_name(self):
-        self.assertRaises(sa.errors.InvalidRule, sa.rules.eval_.EvalRule,
+        self.assertRaises(pad.errors.InvalidRule, pad.rules.eval_.EvalRule,
                           "TEST", "1test_rule(1, '2')")
 
     def test_extract_args_invalid_args(self):
-        self.assertRaises(sa.errors.InvalidRule, sa.rules.eval_.EvalRule,
+        self.assertRaises(pad.errors.InvalidRule, pad.rules.eval_.EvalRule,
                           "TEST", "test_rule(1, '2)")
 
     def test_preprocess(self):
         mock_eval = Mock()
         self.eval_rules["test_rule"] = mock_eval
-        rule = sa.rules.eval_.EvalRule("TEST", "test_rule(1, '2')")
+        rule = pad.rules.eval_.EvalRule("TEST", "test_rule(1, '2')")
         rule.preprocess(self.mock_ruleset)
 
         rule.match(self.mock_msg)
         mock_eval.assert_called_with(self.mock_msg, 1, '2')
 
     def test_preprocess_missing_rule(self):
-        rule = sa.rules.eval_.EvalRule("TEST", "test_rule(1, '2')")
-        self.assertRaises(sa.errors.InvalidRule,
+        rule = pad.rules.eval_.EvalRule("TEST", "test_rule(1, '2')")
+        self.assertRaises(pad.errors.InvalidRule,
                           rule.preprocess, self.mock_ruleset)
 
     def test_get_rule_kwargs(self):
         data = {"value": "eval:test_rule()"}
         expected = {"eval_rule": "test_rule()"}
-        kwargs = sa.rules.eval_.EvalRule.get_rule_kwargs(data)
+        kwargs = pad.rules.eval_.EvalRule.get_rule_kwargs(data)
         self.assertEqual(kwargs, expected)
 
     def test_get_rule_kwargs_no_eval_modifier(self):
         data = {"value": "test_rule()"}
         expected = {"eval_rule": "test_rule()"}
-        kwargs = sa.rules.eval_.EvalRule.get_rule_kwargs(data)
+        kwargs = pad.rules.eval_.EvalRule.get_rule_kwargs(data)
         self.assertEqual(kwargs, expected)
 
 

@@ -1,10 +1,10 @@
 """Rules that check email headers."""
 
-import sa.regex
-import sa.rules.base
+import pad.regex
+import pad.rules.base
 
 
-class MimeHeaderRule(sa.rules.base.BaseRule):
+class MimeHeaderRule(pad.rules.base.BaseRule):
     """Abstract class for all MIME header rules."""
     _rule_type = "BODY: "
 
@@ -24,7 +24,7 @@ class MimeHeaderRule(sa.rules.base.BaseRule):
 
         header_name, pattern = value.split(match_op, 1)
         header_name = header_name.strip()
-        kwargs["pattern"] = sa.regex.perl2re(pattern, match_op)
+        kwargs["pattern"] = pad.regex.perl2re(pattern, match_op)
         if ":" in header_name:
             header_name, mod = header_name.rsplit(":", 1)
             kwargs["header_name"] = header_name.strip()
@@ -64,7 +64,7 @@ class _PatternMimeRawHeaderRule(_PatternMimeHeaderRule):
         return False
 
 
-class HeaderRule(sa.rules.base.BaseRule):
+class HeaderRule(pad.rules.base.BaseRule):
     """Abstract base class for all header rules."""
     def match(self, msg):
         raise NotImplementedError()
@@ -83,7 +83,7 @@ class HeaderRule(sa.rules.base.BaseRule):
         if match_op is not None:
             header_name, pattern = value.split(match_op, 1)
             header_name = header_name.strip()
-            kwargs["pattern"] = sa.regex.perl2re(pattern, match_op)
+            kwargs["pattern"] = pad.regex.perl2re(pattern, match_op)
             if header_name == "ALL":
                 return _AllHeaderRule(name, **kwargs)
             if header_name == "ToCc":

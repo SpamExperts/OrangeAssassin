@@ -1,9 +1,9 @@
 """Rules that check for URIs."""
 
-import sa.rules.base
+import pad.rules.base
 
 
-class URIRule(sa.rules.base.BaseRule):
+class URIRule(pad.rules.base.BaseRule):
     """Match a regular expression against any URI found in all parts of the
     message body.
 
@@ -23,6 +23,6 @@ class URIRule(sa.rules.base.BaseRule):
 
     @staticmethod
     def get_rule_kwargs(data):
-        kwargs = sa.rules.base.BaseRule.get_rule_kwargs(data)
-        kwargs["pattern"] = sa.regex.perl2re(data["value"])
+        kwargs = pad.rules.base.BaseRule.get_rule_kwargs(data)
+        kwargs["pattern"] = pad.regex.perl2re(data["value"])
         return kwargs

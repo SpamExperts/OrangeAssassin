@@ -2,12 +2,12 @@
 
 from __future__ import absolute_import
 
-import sa
+import pad
 import distutils.core
 
 distutils.core.setup(name='??????',
-                     version=sa.__version__,
+                     version=pad.__version__,
                      scripts=['scripts/match.py'],
-                     packages=['sa', 'sa.rules'],
+                     packages=['pad', 'pad.rules'],
                      test_suite="tests.suite"
-)
+                     )

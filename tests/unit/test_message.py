@@ -1,6 +1,6 @@
 # -*- coding: UTF-8 -*-
 
-"""Tests for sa.message"""
+"""Tests for pad.message"""
 
 import re
 import unittest
@@ -12,7 +12,7 @@ try:
 except ImportError:
     from mock import patch, Mock, call
 
-import sa.message
+import pad.message
 
 HTML_TEXT = """<html><head><title>Email spam</title></head><body>
 <p><b>Email spam</b>, also known as <b>junk email</b>
@@ -37,7 +37,7 @@ class TestHTMLStrip(unittest.TestCase):
         unittest.TestCase.tearDown(self)
 
     def test_HTMLStripper(self):
-        stripper = sa.message._ParseHTML(self.data)
+        stripper = pad.message._ParseHTML(self.data)
         stripper.feed(HTML_TEXT)
         res = " ".join(self.data)
         self.assertEqual(res, HTML_TEXT_STRIPED)
@@ -52,18 +52,18 @@ class TestHeaders(unittest.TestCase):
 
     def test_case_insensitive(self):
         value = "test123"
-        headers = sa.message._Headers()
+        headers = pad.message._Headers()
         headers["TeSt"] = value
         self.assertEqual(headers["tEsT"], value)
 
     def test_case_insensitive_contains(self):
         value = "test123"
-        headers = sa.message._Headers()
+        headers = pad.message._Headers()
         headers["TeSt"] = value
         self.assertTrue("tEsT" in headers)
 
     def test_default_value(self):
-        headers = sa.message._Headers()
+        headers = pad.message._Headers()
         self.assertIsInstance(headers["tEsT"], list)
 
 
@@ -74,9 +74,9 @@ class TestParseMessage(unittest.TestCase):
         self.parts = []
         self.headers = []
         self.mime_headers = []
-        patch("sa.message.email.message_from_string",
+        patch("pad.message.email.message_from_string",
               **{"return_value._headers": self.headers}).start()
-        patch("sa.message.Message._iter_parts",
+        patch("pad.message.Message._iter_parts",
               return_value=self.parts).start()
         self.plain_part = Mock(**{"get_content_subtype.return_value": "plain",
                                   "_headers": self.mime_headers
@@ -93,37 +93,37 @@ class TestParseMessage(unittest.TestCase):
     def test_text_raw_payload(self):
         payload = "text payload 1\ntext payload 2"
         self.parts.append((payload, self.plain_part))
-        msg = sa.message.Message(self.mock_ctxt, "")
+        msg = pad.message.Message(self.mock_ctxt, "")
         self.assertEqual(msg.raw_text, payload)
 
     def test_text_payload(self):
         payload = "text payload 1\ntext payload 2"
         self.parts.append((payload, self.plain_part))
-        msg = sa.message.Message(self.mock_ctxt, "")
+        msg = pad.message.Message(self.mock_ctxt, "")
         self.assertEqual(msg.text, "text payload 1 text payload 2")
 
     def test_html_raw_payload(self):
         payload = "<html>text payload 1\ntext payload 2</html>"
         self.parts.append((payload, self.html_part))
-        msg = sa.message.Message(self.mock_ctxt, "")
+        msg = pad.message.Message(self.mock_ctxt, "")
         self.assertEqual(msg.raw_text, payload)
 
     def test_html_payload(self):
         payload = "<html>text payload 1\ntext payload 2</html>"
         self.parts.append((payload, self.html_part))
-        msg = sa.message.Message(self.mock_ctxt, "")
+        msg = pad.message.Message(self.mock_ctxt, "")
         self.assertEqual(msg.text, "text payload 1 text payload 2")
 
     def test_non_text_part(self):
         self.parts.append((None, self.plain_part))
-        msg = sa.message.Message(self.mock_ctxt, "")
+        msg = pad.message.Message(self.mock_ctxt, "")
         self.assertEqual(msg.text, "")
         self.assertEqual(msg.raw_text, "")
 
     def test_dump_headers(self):
         self.headers.extend([("From", "from@example.com"),
                              ("To", "to@example.com")])
-        msg = sa.message.Message(self.mock_ctxt, "")
+        msg = pad.message.Message(self.mock_ctxt, "")
         self.assertEqual(msg.raw_headers["From"], ["from@example.com"])
         self.assertEqual(msg.raw_headers["To"], ["to@example.com"])
 
@@ -131,7 +131,7 @@ class TestParseMessage(unittest.TestCase):
         self.headers.extend([("From", "from@example.com"),
                              ("To", "to@example.com"),
                              ("From", "from2@example.com")])
-        msg = sa.message.Message(self.mock_ctxt, "")
+        msg = pad.message.Message(self.mock_ctxt, "")
         self.assertEqual(msg.raw_headers["From"], ["from@example.com",
                                                    "from2@example.com"])
         self.assertEqual(msg.raw_headers["To"], ["to@example.com"])
@@ -140,20 +140,20 @@ class TestParseMessage(unittest.TestCase):
         self.mime_headers.extend([("Content-Type", "text/plain;"),
                                   ("Content-Transfer-Encoding", "base64")])
         self.parts.append((None, self.plain_part))
-        msg = sa.message.Message(self.mock_ctxt, "")
+        msg = pad.message.Message(self.mock_ctxt, "")
         self.assertEqual(msg.raw_mime_headers["Content-Type"], ["text/plain;"])
         self.assertEqual(msg.raw_mime_headers["Content-Transfer-Encoding"],
                          ["base64"])
 
     def test_dump_uris_plain(self):
         self.parts.append(("http://example.com", self.plain_part))
-        msg = sa.message.Message(self.mock_ctxt, "")
+        msg = pad.message.Message(self.mock_ctxt, "")
         self.assertEqual(msg.uri_list, {"http://example.com"})
 
     def test_dump_uris_html(self):
         self.parts.append(("<a href='http://example.com'>http://example.com</a>",
                            self.html_part))
-        msg = sa.message.Message(self.mock_ctxt, "")
+        msg = pad.message.Message(self.mock_ctxt, "")
         self.assertEqual(msg.uri_list, {"http://example.com"})
 
 
@@ -179,7 +179,7 @@ class TestIterPartsMessage(unittest.TestCase):
         decode = Mock(return_value="test123")
         part = self.create_part("text", "utf-8", decode)
         self.parts.append(part)
-        result = sa.message.Message._iter_parts(self.msg)
+        result = pad.message.Message._iter_parts(self.msg)
         self.assertEqual(list(result), [(u"test123", part)])
         decode.assert_has_calls([call("utf-8", "ignore")])
 
@@ -187,7 +187,7 @@ class TestIterPartsMessage(unittest.TestCase):
         decode = Mock(return_value="test123")
         part = self.create_part("text", "", decode)
         self.parts.append(part)
-        result = sa.message.Message._iter_parts(self.msg)
+        result = pad.message.Message._iter_parts(self.msg)
         self.assertEqual(list(result), [(u"test123", part)])
         decode.assert_has_calls([call("ascii", "ignore")])
 
@@ -195,7 +195,7 @@ class TestIterPartsMessage(unittest.TestCase):
         decode = Mock(return_value="test123")
         part = self.create_part("text", "quopri", decode)
         self.parts.append(part)
-        result = sa.message.Message._iter_parts(self.msg)
+        result = pad.message.Message._iter_parts(self.msg)
         self.assertEqual(list(result), [(u"test123", part)])
         decode.assert_has_calls([call("quopri", "strict")])
 
@@ -207,7 +207,7 @@ class TestIterPartsMessage(unittest.TestCase):
         decode = Mock(side_effect=_decode)
         part = self.create_part("text", "invalid", decode)
         self.parts.append(part)
-        result = sa.message.Message._iter_parts(self.msg)
+        result = pad.message.Message._iter_parts(self.msg)
         self.assertEqual(list(result), [(u"test123", part)])
         decode.assert_has_calls([call("invalid", "ignore"),
                                  call("ascii", "ignore")])
@@ -216,7 +216,7 @@ class TestIterPartsMessage(unittest.TestCase):
         decode = Mock(side_effect=UnicodeError)
         part = self.create_part("text", "invalid", decode)
         self.parts.append(part)
-        result = sa.message.Message._iter_parts(self.msg)
+        result = pad.message.Message._iter_parts(self.msg)
         self.assertEqual(list(result), [])
         decode.assert_has_calls([call("invalid", "ignore"),
                                  call("ascii", "ignore")])
@@ -224,7 +224,7 @@ class TestIterPartsMessage(unittest.TestCase):
     def test_non_test(self):
         part = self.create_part("multipart", "invalid", "")
         self.parts.append(part)
-        result = sa.message.Message._iter_parts(self.msg)
+        result = pad.message.Message._iter_parts(self.msg)
         self.assertEqual(list(result), [(None, part)])
 
 
@@ -238,7 +238,7 @@ class TestMessageVarious(unittest.TestCase):
         patch.stopall()
 
     def test_clear_matches(self):
-        msg = sa.message.Message(self.mock_ctxt, "Subject: test\n\n")
+        msg = pad.message.Message(self.mock_ctxt, "Subject: test\n\n")
         msg.rules_checked["TEST_HEADER"] = True
         msg.clear_matches()
         self.assertEqual(msg.rules_checked, {})
@@ -247,19 +247,19 @@ class TestMessageVarious(unittest.TestCase):
         text = "Test1\nTest2\r\nTest3\r"
         expected = "Test1\nTest2\nTest3\n"
 
-        result = sa.message.Message.translate_line_breaks(text)
+        result = pad.message.Message.translate_line_breaks(text)
         self.assertEqual(result, expected)
 
     def test_norm_html_data(self):
         payload = "<html> test </html>"
-        mock_feed = patch("sa.message._ParseHTML.feed").start()
-        sa.message.Message.normalize_html_part(payload)
+        mock_feed = patch("pad.message._ParseHTML.feed").start()
+        pad.message.Message.normalize_html_part(payload)
         mock_feed.assert_has_calls([call(payload)])
 
     def test_decode_header(self):
         header = u"Это тестовое сообщение"
         enc_header = email.header.make_header([(header, "utf-8"), ])
-        result = sa.message.Message._decode_header(enc_header)
+        result = pad.message.Message._decode_header(enc_header)
         self.assertEqual(result, header)
 
 
@@ -267,7 +267,7 @@ class TestGetHeaders(unittest.TestCase):
     def setUp(self):
         unittest.TestCase.setUp(self)
         self.mock_ctxt = Mock(plugins={})
-        self.msg = sa.message.Message(self.mock_ctxt, "Subject: test\n\n")
+        self.msg = pad.message.Message(self.mock_ctxt, "Subject: test\n\n")
 
     def tearDown(self):
         unittest.TestCase.tearDown(self)

@@ -5,10 +5,10 @@ from __future__ import absolute_import
 import pyzor.client
 import pyzor.digest
 
-import sa.plugins.base
+import pad.plugins.base
 
 
-class PyzorPlugin(sa.plugins.base.BasePlugin):
+class PyzorPlugin(pad.plugins.base.BasePlugin):
 
     eval_rules = ("check_pyzor",)
     options = {"use_pyzor": ("bool", True),

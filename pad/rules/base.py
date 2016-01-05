@@ -7,7 +7,7 @@ from builtins import dict
 from builtins import list
 from builtins import object
 
-import sa.errors
+import pad.errors
 
 # Maps flags for Bayesian classifier and network tests to the
 # corresponding score to use
@@ -30,7 +30,7 @@ class BaseRule(object):
         self._scores = score
 
         if len(self._scores) not in (1, 4):
-            raise sa.errors.InvalidRule(name, "Expected 1 or 4 values for the "
+            raise pad.errors.InvalidRule(name, "Expected 1 or 4 values for the "
                                         "score and got %s" % len(self._scores))
 
         if desc is None:
@@ -57,7 +57,7 @@ class BaseRule(object):
 
     def match(self, msg):
         """Check if the rule matches the message. 'msg' must be a object of
-        type ``sa.message.Message``.
+        type ``pad.message.Message``.
         """
         raise NotImplementedError()
 

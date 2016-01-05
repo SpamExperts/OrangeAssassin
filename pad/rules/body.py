@@ -1,10 +1,10 @@
 """Rules that check email body."""
 
-import sa.regex
-import sa.rules.base
+import pad.regex
+import pad.rules.base
 
 
-class BodyRule(sa.rules.base.BaseRule):
+class BodyRule(pad.rules.base.BaseRule):
     """Match a regular expression against the extracted text of the message.
 
     The text is:
@@ -24,8 +24,8 @@ class BodyRule(sa.rules.base.BaseRule):
 
     @staticmethod
     def get_rule_kwargs(data):
-        kwargs = sa.rules.base.BaseRule.get_rule_kwargs(data)
-        kwargs["pattern"] = sa.regex.perl2re(data["value"])
+        kwargs = pad.rules.base.BaseRule.get_rule_kwargs(data)
+        kwargs["pattern"] = pad.regex.perl2re(data["value"])
         return kwargs
 
 

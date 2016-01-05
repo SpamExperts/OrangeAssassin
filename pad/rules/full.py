@@ -1,10 +1,10 @@
 """Matches against the full pristine message."""
 
-import sa.regex
-import sa.rules.base
+import pad.regex
+import pad.rules.base
 
 
-class FullRule(sa.rules.base.BaseRule):
+class FullRule(pad.rules.base.BaseRule):
     """Match a regular expression against the full raw message."""
 
     def __init__(self, name, pattern, score=None, desc=None):
@@ -16,6 +16,6 @@ class FullRule(sa.rules.base.BaseRule):
 
     @staticmethod
     def get_rule_kwargs(data):
-        kwargs = sa.rules.base.BaseRule.get_rule_kwargs(data)
-        kwargs["pattern"] = sa.regex.perl2re(data["value"])
+        kwargs = pad.rules.base.BaseRule.get_rule_kwargs(data)
+        kwargs["pattern"] = pad.regex.perl2re(data["value"])
         return kwargs

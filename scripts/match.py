@@ -1,6 +1,6 @@
 #! /usr/bin/env python
 
-"""Testing tool that parses SA rule set files and runs a match against message.
+"""Testing tool that parses PAD rule set files and runs a match against message.
 
 Prints out any matching rules.
 """
@@ -12,16 +12,16 @@ import sys
 import glob
 import optparse
 
-import sa
-import sa.config
-import sa.errors
-import sa.message
-import sa.rules.parser
+import pad
+import pad.config
+import pad.errors
+import pad.message
+import pad.rules.parser
 
 
 def main():
-    usage = "usage: %prog [options] sa_rules_glob message_file"
-    opt = optparse.OptionParser(description=__doc__, version=sa.__version__,
+    usage = "usage: %prog [options] pad_rules_glob message_file"
+    opt = optparse.OptionParser(description=__doc__, version=pad.__version__,
                                 usage=usage)
     opt.add_option("-n", "--nice", dest="nice", type="int",
                    help="'nice' level", default=0)
@@ -33,21 +33,21 @@ def main():
     options, (rule_glob, msg_file) = opt.parse_args()
     os.nice(options.nice)
 
-    logger = sa.config.setup_logging("sa-logger", debug=options.debug)
+    logger = pad.config.setup_logging("pad-logger", debug=options.debug)
 
     try:
-        ruleset = sa.rules.parser.parse_sa_rules(glob.glob(rule_glob),
-                                                 options.paranoid)
-    except sa.errors.MaxRecursionDepthExceeded as e:
+        ruleset = pad.rules.parser.parse_pad_rules(glob.glob(rule_glob),
+                                                   options.paranoid)
+    except pad.errors.MaxRecursionDepthExceeded as e:
         print(e.recursion_list, file=sys.stderr)
         sys.exit(1)
-    except sa.errors.ParsingError as e:
+    except pad.errors.ParsingError as e:
         print(e, file=sys.stderr)
         sys.exit(1)
 
     with open(msg_file) as msgf:
         raw_msg = msgf.read()
-    msg = sa.message.Message(ruleset.ctxt, raw_msg)
+    msg = pad.message.Message(ruleset.ctxt, raw_msg)
 
     ruleset.match(msg)
 

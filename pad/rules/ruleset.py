@@ -8,7 +8,7 @@ standard_library.install_hooks()
 
 import collections
 
-import sa.errors
+import pad.errors
 
 
 class RuleSet(object):
@@ -55,7 +55,7 @@ class RuleSet(object):
             for name, rule in list(rule_list.items()):
                 try:
                     rule.postparsing(self)
-                except sa.errors.InvalidRule as e:
+                except pad.errors.InvalidRule as e:
                     self.ctxt.log.error(e)
                     if self.paranoid:
                         raise

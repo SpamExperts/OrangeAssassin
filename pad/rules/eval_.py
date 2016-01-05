@@ -2,8 +2,8 @@
 
 import re
 
-import sa.errors
-import sa.rules.base
+import pad.errors
+import pad.rules.base
 
 
 # Used to extract the eval rule data
@@ -13,7 +13,7 @@ _EVAL_RULE_P = re.compile(r"""
 """, re.VERBOSE)
 
 
-class EvalRule(sa.rules.base.BaseRule):
+class EvalRule(pad.rules.base.BaseRule):
     """Evaluates a registered eval function."""
     def __init__(self, name, eval_rule, score=None, desc=None):
         super(EvalRule, self).__init__(name, score=score, desc=desc)
@@ -22,10 +22,10 @@ class EvalRule(sa.rules.base.BaseRule):
             self._eval_rule = eval_rule_name
             self._eval_args = eval(eval_args)
         except (TypeError, ValueError, AttributeError):
-            raise sa.errors.InvalidRule(self.name, "Invalid eval rule: %s" %
-                                        eval_rule)
+            raise pad.errors.InvalidRule(self.name, "Invalid eval rule: %s" %
+                                         eval_rule)
         except SyntaxError:
-            raise sa.errors.InvalidRule(self.name, "Invalid arguments for "
+            raise pad.errors.InvalidRule(self.name, "Invalid arguments for "
                                         "eval rule: %s" % eval_rule)
 
         self.eval_rule = None
@@ -40,7 +40,7 @@ class EvalRule(sa.rules.base.BaseRule):
         try:
             method = ruleset.ctxt.eval_rules[self._eval_rule]
         except KeyError:
-            raise sa.errors.InvalidRule(self.name, "Undefined eval rule "
+            raise pad.errors.InvalidRule(self.name, "Undefined eval rule "
                                         "referenced: %s" % self._eval_rule)
 
         def new_method(msg):
@@ -53,6 +53,6 @@ class EvalRule(sa.rules.base.BaseRule):
 
     @staticmethod
     def get_rule_kwargs(data):
-        kwargs = sa.rules.base.BaseRule.get_rule_kwargs(data)
+        kwargs = pad.rules.base.BaseRule.get_rule_kwargs(data)
         kwargs["eval_rule"] = data['value'].lstrip('eval:').strip()
         return kwargs

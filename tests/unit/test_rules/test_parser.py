@@ -1,4 +1,4 @@
-"""Tests for sa.rules.parser"""
+"""Tests for pad.rules.parser"""
 
 import unittest
 from builtins import UnicodeDecodeError
@@ -8,8 +8,8 @@ try:
 except ImportError:
     from mock import patch, Mock, mock_open, MagicMock
 
-import sa.errors
-import sa.rules.parser
+import pad.errors
+import pad.rules.parser
 
 
 class TestParseGetRuleset(unittest.TestCase):
@@ -18,10 +18,10 @@ class TestParseGetRuleset(unittest.TestCase):
         self.mock_results = {}
         self.mock_rules = {}
 
-        self.mock_ruleset = patch("sa.rules.parser."
-                                  "sa.rules.ruleset.RuleSet").start()
-        patch("sa.rules.parser.RULES", self.mock_rules).start()
-        self.parser = sa.rules.parser.SAParser()
+        self.mock_ruleset = patch("pad.rules.parser."
+                                  "pad.rules.ruleset.RuleSet").start()
+        patch("pad.rules.parser.RULES", self.mock_rules).start()
+        self.parser = pad.rules.parser.PADParser()
         self.parser.results = self.mock_results
 
     def tearDown(self):
@@ -58,11 +58,11 @@ class TestParseGetRuleset(unittest.TestCase):
         self.mock_rules["body"] = mock_body_rule
         self.parser.paranoid = True
 
-        self.assertRaises(sa.errors.InvalidRule, self.parser.get_ruleset)
+        self.assertRaises(pad.errors.InvalidRule, self.parser.get_ruleset)
 
     def test_parse_get_rules_invalid_rule(self):
         mock_body_rule = Mock(**{"get_rule.side_effect":
-                                 sa.errors.InvalidRule("TEST_RULE")})
+                                 pad.errors.InvalidRule("TEST_RULE")})
         data = {"type": "body", "score": "1.0"}
         self.mock_results["TEST_RULE"] = data
         self.mock_rules["body"] = mock_body_rule
@@ -74,22 +74,22 @@ class TestParseGetRuleset(unittest.TestCase):
 
     def test_parse_get_rules_invalid_rule_paranoid(self):
         mock_body_rule = Mock(**{"get_rule.side_effect":
-                                 sa.errors.InvalidRule("TEST_RULE")})
+                                 pad.errors.InvalidRule("TEST_RULE")})
         data = {"type": "body", "score": "1.0"}
         self.mock_results["TEST_RULE"] = data
         self.mock_rules["body"] = mock_body_rule
         self.parser.paranoid = True
 
-        self.assertRaises(sa.errors.InvalidRule,
+        self.assertRaises(pad.errors.InvalidRule,
                           self.parser.get_ruleset)
 
 
-class TestParseSALine(unittest.TestCase):
+class TestParsePADLine(unittest.TestCase):
     def setUp(self):
         unittest.TestCase.setUp(self)
         self.plugins = {}
         self.mock_ctxt = patch(
-            "sa.rules.parser.sa.context.GlobalContext",
+            "pad.rules.parser.pad.context.GlobalContext",
             **{"return_value.plugins": self.plugins,
                "return_value.hook_parse_config.return_value": False}).start()
 
@@ -98,7 +98,7 @@ class TestParseSALine(unittest.TestCase):
         patch.stopall()
 
     def check_parse(self, rules, expected):
-        parser = sa.rules.parser.SAParser()
+        parser = pad.rules.parser.PADParser()
         for line_no, line in enumerate(rules):
             parser._handle_line("filename", line, line_no)
         self.assertEqual(parser.results, expected)
@@ -151,13 +151,13 @@ class TestParseSALine(unittest.TestCase):
                                                          "test_config")
 
     def test_parse_line_invalid_syntax(self):
-        self.assertRaises(sa.errors.InvalidSyntax, self.check_parse,
+        self.assertRaises(pad.errors.InvalidSyntax, self.check_parse,
                           [b"body TEST_RULE"], {})
 
     def test_parse_line_decoding_error(self):
         error = UnicodeDecodeError("iso-8859-1", b'test', 0, 1, 'test error')
         mock_line = Mock(**{"decode.side_effect": error})
-        self.assertRaises(sa.errors.InvalidSyntax, self.check_parse,
+        self.assertRaises(pad.errors.InvalidSyntax, self.check_parse,
                           [mock_line], {})
 
     def test_parse_line_ifplugin_loaded(self):
@@ -190,15 +190,15 @@ class TestParseSALine(unittest.TestCase):
                                         "value": "eval:check_test()"}})
 
     def test_parse_line_load_plugin(self):
-        self.check_parse([b"loadplugin DumpText /etc/sa/plugins/dump_text.py"],
+        self.check_parse([b"loadplugin DumpText /etc/pad/plugins/dump_text.py"],
                          {})
         self.mock_ctxt.return_value.load_plugin.assert_called_with(
-            "DumpText", "/etc/sa/plugins/dump_text.py")
+            "DumpText", "/etc/pad/plugins/dump_text.py")
 
     def test_parse_line_load_plugin_no_path(self):
-        self.check_parse([b"loadplugin sa.plugins.dump_text.DumpText"], {})
+        self.check_parse([b"loadplugin pad.plugins.dump_text.DumpText"], {})
         self.mock_ctxt.return_value.load_plugin.assert_called_with(
-            "sa.plugins.dump_text.DumpText", None)
+            "pad.plugins.dump_text.DumpText", None)
 
     def test_parse_line_include(self):
         rules = [b"body TEST_RULE /test/",
@@ -207,7 +207,7 @@ class TestParseSALine(unittest.TestCase):
                                   "value": "/test/"},
                     "TEST_RULE2": {"type": "body",
                                    "value": "/test2/"}}
-        open_name = "sa.rules.parser.open"
+        open_name = "pad.rules.parser.open"
         with patch(open_name, create=True) as open_mock:
             open_mock.return_value = MagicMock()
             handle = open_mock.return_value.__enter__.return_value
@@ -220,36 +220,36 @@ class TestParseSALine(unittest.TestCase):
                         "name": "testf_1"})
         expected = {}
 
-        open_name = "sa.rules.parser.open"
+        open_name = "pad.rules.parser.open"
         with patch(open_name, create=True) as open_mock:
             open_mock.return_value = MagicMock()
             handle = open_mock.return_value.__enter__.return_value
             handle.__iter__.return_value = (b"include testf2",)
             handle.__iter__.name = "testf_1"
 
-            self.assertRaises(sa.errors.MaxRecursionDepthExceeded,
+            self.assertRaises(pad.errors.MaxRecursionDepthExceeded,
                               self.check_parse, rules, expected)
 
 
-class TestParseSARules(unittest.TestCase):
+class TestParsePADRules(unittest.TestCase):
     def setUp(self):
         unittest.TestCase.setUp(self)
-        self.mock_parser = patch("sa.rules.parser.SAParser").start()
+        self.mock_parser = patch("pad.rules.parser.PADParser").start()
 
     def tearDown(self):
         unittest.TestCase.tearDown(self)
         patch.stopall()
 
     def test_paranoid(self):
-        sa.rules.parser.parse_sa_rules([])
+        pad.rules.parser.parse_pad_rules([])
         self.mock_parser.assert_called_once_with(paranoid=False)
 
     def test_paranoid_true(self):
-        sa.rules.parser.parse_sa_rules([], paranoid=True)
+        pad.rules.parser.parse_pad_rules([], paranoid=True)
         self.mock_parser.assert_called_once_with(paranoid=True)
 
     def test_parse_files(self):
-        sa.rules.parser.parse_sa_rules(["testf1.cf"])
+        pad.rules.parser.parse_pad_rules(["testf1.cf"])
         self.mock_parser.return_value.parse_file.assert_called_with("testf1.cf")
 
 
@@ -257,8 +257,8 @@ def suite():
     """Gather all the tests from this package in a test suite."""
     test_suite = unittest.TestSuite()
     test_suite.addTest(unittest.makeSuite(TestParseGetRuleset, "test"))
-    test_suite.addTest(unittest.makeSuite(TestParseSALine, "test"))
-    test_suite.addTest(unittest.makeSuite(TestParseSARules, "test"))
+    test_suite.addTest(unittest.makeSuite(TestParsePADLine, "test"))
+    test_suite.addTest(unittest.makeSuite(TestParsePADRules, "test"))
     return test_suite
 
 if __name__ == '__main__':

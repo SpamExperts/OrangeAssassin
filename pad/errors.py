@@ -3,11 +3,11 @@
 from builtins import list
 
 
-class SAError(Exception):
+class PADError(Exception):
     """Base class for all errors."""
 
 
-class ParsingError(SAError):
+class ParsingError(PADError):
     """An error occurred while parsing rules."""
 
 
@@ -57,7 +57,7 @@ class MaxRecursionDepthExceeded(ParsingError):
         return self._recursion_list
 
 
-class PluginError(SAError):
+class PluginError(PADError):
     """Something went wrong with a plugin."""
 
 
