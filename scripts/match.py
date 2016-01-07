@@ -28,6 +28,10 @@ def main():
     opt.add_option("--paranoid", action="store_true", default=False,
                    dest="paranoid", help="if errors are found in the ruleset "
                    "stop processing")
+    opt.add_option("-k", "--revoke", dest="revoke", type="bool",
+                   default="False", help="Revoke the given message")
+    opt.add_option("-r", "--report", dest="report", type="bool",
+                   default="False", help="Report the given message")
     opt.add_option("-d", "--debug", action="store_true", default=False,
                    dest="debug", help="enable debugging output")
     options, (rule_glob, msg_file) = opt.parse_args()
@@ -54,6 +58,11 @@ def main():
     for name, result in msg.rules_checked.items():
         if result:
             print(ruleset.get_rule(name))
+
+    if options['revoke']:
+        ruleset.context.hook_revoke(raw_msg)
+    if options['report']:
+        ruleset.context.hook_report(raw_msg)
 
 if __name__ == "__main__":
     main()
