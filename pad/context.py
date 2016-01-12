@@ -129,6 +129,7 @@ class GlobalContext(_Context):
                                             "BasePlugin" % class_name)
         # Initialize the plugin and load any additional data
         plugin = plugin_class(self)
+        self._load_cmds(plugin, class_name)
         self._load_eval_rules(plugin, class_name)
         # Store the plugin instance in the dictionary
         self.plugins[class_name] = plugin
@@ -171,6 +172,8 @@ class GlobalContext(_Context):
         # Delete any defined rules
         for rule in plugin.eval_rules:
             self.eval_rules.pop(rule, None)
+        for rule_type in plugin.cmds or ():
+            self.cmds.pop(rule_type, None)
         self.pop_plugin_data(name)
         del self.plugins[name]
 

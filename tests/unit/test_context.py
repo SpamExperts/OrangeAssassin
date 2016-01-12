@@ -1,5 +1,6 @@
 """Tests for pad.context"""
 
+import logging
 import unittest
 
 try:
@@ -14,6 +15,7 @@ import pad.context
 class TestContext(unittest.TestCase):
     def setUp(self):
         unittest.TestCase.setUp(self)
+        logging.getLogger("pad-logger").handlers = [logging.NullHandler()]
 
     def tearDown(self):
         unittest.TestCase.tearDown(self)
@@ -69,6 +71,7 @@ class TestGlobalContextLoadPlugin(unittest.TestCase):
 
     def setUp(self):
         unittest.TestCase.setUp(self)
+        logging.getLogger("pad-logger").handlers = [logging.NullHandler()]
         self.mock_module = MagicMock()
         self.mock_import = patch("pad.context.importlib").start()
         self.mock_load2 = patch("pad.context.GlobalContext._load_module_py2",
@@ -159,10 +162,30 @@ class TestGlobalContextLoadPlugin(unittest.TestCase):
         self.assertRaises(pad.errors.PluginLoadError, ctxt.load_plugin,
                           "TestPlugin", "/etc/pad/plugins/test_plugin.py")
 
+    def test_load_plugin_register_cmd_rules(self):
+        new_rule = MagicMock()
+        plugin_obj = self.mock_module.TestPlugin.return_value
+        plugin_obj.cmds = {"new_rtype": new_rule}
+        ctxt = pad.context.GlobalContext()
+        ctxt.load_plugin("TestPlugin", "/etc/pad/plugins/test_plugin.py")
+
+        self.assertEqual(ctxt.cmds["new_rtype"], new_rule)
+
+    def test_load_plugin_register_cmd_rules_redefined(self):
+        new_rule = MagicMock()
+        plugin_obj = self.mock_module.TestPlugin.return_value
+        plugin_obj.cmds = {"new_rtype": new_rule}
+        ctxt = pad.context.GlobalContext()
+        ctxt.cmds["new_rtype"] = Mock()
+        ctxt.load_plugin("TestPlugin", "/etc/pad/plugins/test_plugin.py")
+
+        self.assertEqual(ctxt.cmds["new_rtype"], new_rule)
+
 
 class TestGlobalContextLoadModule(unittest.TestCase):
     def setUp(self):
         unittest.TestCase.setUp(self)
+        logging.getLogger("pad-logger").handlers = [logging.NullHandler()]
         self.mock_machinery = patch("pad.context.importlib.machinery",
                                     create=True).start()
         self.mock_imp = patch("pad.context.imp.load_module", create=True).start()
@@ -200,6 +223,7 @@ class TestGlobalContextLoadModule(unittest.TestCase):
 class TestGlobalContextUnloadPlugin(unittest.TestCase):
     def setUp(self):
         unittest.TestCase.setUp(self)
+        logging.getLogger("pad-logger").handlers = [logging.NullHandler()]
 
     def tearDown(self):
         unittest.TestCase.tearDown(self)
@@ -224,6 +248,14 @@ class TestGlobalContextUnloadPlugin(unittest.TestCase):
 
         ctxt.unload_plugin("TestPlugin")
         self.assertEqual(ctxt.eval_rules, {})
+
+    def test_unload_delete_cmd_rules(self):
+        ctxt = pad.context.GlobalContext()
+        ctxt.plugins["TestPlugin"] = MagicMock(cmds={"new_rtype": Mock()})
+        ctxt.cmds["new_rtype"] = MagicMock()
+
+        ctxt.unload_plugin("TestPlugin")
+        self.assertEqual(ctxt.cmds, {})
 
     def test_unload_remove_plugin_data(self):
         ctxt = pad.context.GlobalContext()

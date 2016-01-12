@@ -85,6 +85,20 @@ class TestParseGetRuleset(unittest.TestCase):
         self.assertRaises(pad.errors.InvalidRule,
                           self.parser.get_ruleset)
 
+    def test_parse_get_rules_cmd_plugin(self):
+        mock_body_rule = Mock()
+        data = {"type": "new_body", "score": "1.0"}
+        self.mock_results["TEST_RULE"] = data
+        # This is not handle by the default rules, but rather
+        # by a plugin that has been previously loaded.
+        self.parser.ctxt.cmds["new_body"] = mock_body_rule
+
+        ruleset = self.parser.get_ruleset()
+
+        mock_body_rule.get_rule.assert_called_with("TEST_RULE", data)
+        ruleset.add_rule.assert_called_with(
+            mock_body_rule.get_rule("TEST_RULE", data))
+
 
 class TestParsePADLine(unittest.TestCase):
     def setUp(self):
