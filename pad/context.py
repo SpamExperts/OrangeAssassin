@@ -20,6 +20,7 @@ import collections
 import future.utils
 
 import pad.errors
+import pad.rules.base
 import pad.plugins.base
 
 
@@ -82,12 +83,22 @@ def _callback_chain(func):
 
 
 class GlobalContext(_Context):
-    """Context available globally."""
+    """Context available globally.
+
+    Stores the global plugin data currently loaded including:
+     * plugins - the actual code loaded
+     * eval_rules - the methods for the "eval" rules currently
+      defined
+     * cmds - additional RULES that are handled by plugins.
+      This maps the rule type (e.g. "body") to the Rule class.
+      These must inherit from pad.rules.base.BaseRule.
+    """
 
     def __init__(self):
         super(GlobalContext, self).__init__()
         self.plugins = dict()
         self.eval_rules = dict()
+        self.cmds = dict()
 
     def load_plugin(self, name, path=None):
         """Load the specified plugin from the given path."""
@@ -116,8 +127,16 @@ class GlobalContext(_Context):
         if not issubclass(plugin_class, pad.plugins.base.BasePlugin):
             raise pad.errors.PluginLoadError("%s is not a subclass of "
                                             "BasePlugin" % class_name)
+        # Initialize the plugin and load any additional data
         plugin = plugin_class(self)
+        self._load_eval_rules(plugin, class_name)
+        # Store the plugin instance in the dictionary
+        self.plugins[class_name] = plugin
 
+    def _load_eval_rules(self, plugin, class_name):
+        """Get all the eval rules defined by this plugin and store
+        a reference in the eval_rules dictionary.
+        """
         for rule in plugin.eval_rules:
             if rule in self.eval_rules:
                 self.log.warning("Redefining eval rule: %s", rule)
@@ -127,7 +146,19 @@ class GlobalContext(_Context):
                                                 "%s" % (rule, class_name))
             self.eval_rules[rule] = eval_rule
 
-        self.plugins[class_name] = plugin
+    def _load_cmds(self, plugin, class_name):
+        """Load any new RULES that are handled by this plugin. These
+        must inherit from pad.rules.base.BaseRule.
+        """
+        if not plugin.cmds:
+            return
+        for rule_type, rule_class in plugin.cmds.viewitems():
+            if rule_type in self.cmds:
+                self.log.warning("Redefining CMD rule: %s", rule_type)
+            if not issubclass(rule_class, pad.rules.base.BaseRule):
+                raise pad.errors.PluginLoadError("%s is not a subclass of "
+                                                 "BasePlugin" % class_name)
+            self.cmds[rule_type] = rule_class
 
     def unload_plugin(self, name):
         """Unload the specified plugin and remove any data stored in this
@@ -172,8 +203,18 @@ class GlobalContext(_Context):
                 break
 
     @_callback_chain
+    def hook_parsing_start(self, results):
+        """Hook after the parsing has finished but the ruleset
+        is not initialized.
+        """
+        for plugin in self.plugins.values():
+            plugin.finish_parsing_start(results)
+
+    @_callback_chain
     def hook_parsing_end(self, ruleset):
-        """Hook after the parsing has finished."""
+        """Hook after the parsing has finished but and the
+        rulest is initialized.
+        """
         for plugin in self.plugins.values():
             plugin.finish_parsing_end(ruleset)
 

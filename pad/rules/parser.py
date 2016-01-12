@@ -197,6 +197,7 @@ class PADParser(object):
 
     def get_ruleset(self):
         """Create and return the corresponding ruleset for the parsed files."""
+        self.ctxt.hook_parsing_start(self.results)
         ruleset = pad.rules.ruleset.RuleSet(self.ctxt, self.paranoid)
         for name, data in self.results.items():
             try:
@@ -208,7 +209,13 @@ class PADParser(object):
                     raise e
             else:
                 with self._paranoid(pad.errors.InvalidRule):
-                    rule = RULES[rule_type].get_rule(name, data)
+                    try:
+                        rule_class = RULES[rule_type]
+                    except KeyError:
+                        # A plugin might have been loaded that
+                        # can handle this.
+                        rule_class = self.ctxt.cmds[rule_type]
+                    rule = rule_class.get_rule(name, data)
                     ruleset.add_rule(rule)
 
         self.ctxt.hook_parsing_end(ruleset)

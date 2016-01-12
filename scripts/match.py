@@ -34,7 +34,6 @@ def main():
     os.nice(options.nice)
 
     logger = pad.config.setup_logging("pad-logger", debug=options.debug)
-
     try:
         ruleset = pad.rules.parser.parse_pad_rules(glob.glob(rule_glob),
                                                    options.paranoid)

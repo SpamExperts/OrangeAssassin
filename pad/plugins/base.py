@@ -59,6 +59,8 @@ class BasePlugin(object):
     been initialized.
     """
     eval_rules = tuple()
+    # Defines any new rules that the plugins implements.
+    cmds = None
     # Dictionary that matches options to tuples like (type, default_value)
     # Supported types are "int", "float", "bool", "str", "list".
     options = None
@@ -146,10 +148,22 @@ class BasePlugin(object):
 
         May be overridden.
         """
-        if key in self.options or ():
+        if key in self.options:
             set_func = getattr(self, "set_%s_option" % self.options[key][0])
             set_func(key, value)
             self.inhibit_further_callbacks()
+
+    def finish_parsing_start(self, results):
+        """Called when the configuration parsing has finished but before
+        the has actually been initialized from the parsed data.
+
+        This can be used to insert new data after parsing.
+
+        :param results: A dictionary that maps the rule names to the
+        rest of the data extracted from the configuration (e.g. the
+        score, description etc.)
+        :return: Nothing
+        """
 
     # XXX The name method for this is horrible, but it's likely better to have
     # XXX it the same as SA.
