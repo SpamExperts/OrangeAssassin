@@ -30,7 +30,7 @@ class TestRevokeReport(unittest.TestCase):
 
     def test_report(self):
         options = scripts.match.parse_arguments(["--report", "-"])
-        options.messages = [StringIO.StringIO(x) for x in self.messages]
+        options.messages = [[StringIO.StringIO(x) for x in self.messages]]
         patch("scripts.match.parse_arguments",
               return_value=options).start()
         scripts.match.main()
@@ -40,7 +40,7 @@ class TestRevokeReport(unittest.TestCase):
 
     def test_revoke(self):
         options = scripts.match.parse_arguments(["--revoke", "-"])
-        options.messages = [StringIO.StringIO(x) for x in self.messages]
+        options.messages = [[StringIO.StringIO(x) for x in self.messages]]
         patch("scripts.match.parse_arguments",
               return_value=options).start()
         scripts.match.main()
