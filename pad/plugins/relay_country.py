@@ -9,34 +9,38 @@ import struct
 
 import pad.plugins.base
 
-# XXX: Need to set this in a configuration parameter.
-# The database can be downloaded from here:
-# http://geolite.maxmind.com/download/geoip/database/GeoIPCountryCSV.zip
-DATABASE_PATH = "geo.csv"
+ipfindregex = re.compile("[\[\(\s\/]((?:[0-9]{1,3}\.){3}[0-9]{1,3})[\s\]\)\/]")
 
 def ip2long(ip):
-    """
-    Convert an IP string to long
+    """Convert an IP string to long
     """
     try:
         packedIP = socket.inet_aton(ip)
         return struct.unpack("!L", packedIP)[0]
-    except:
+    except (struct.error, socket.error):
         pass
 
 
 class RelayCountry(pad.plugins.base.BasePlugin):
-    """ This plugin exposes the countris that a mail was relayed from.
+    """This plugin exposes the countries that a mail was relayed from.
+
+    There is an option to specify the path for the database, it is called
+    "geodb", is a string and points to the file where the database is.
+
+    The database is a csv file that can be downloaded from maxmind server:
+    http://geolite.maxmind.com/download/geoip/database/GeoIPCountryCSV.zip
     """
+    options = {"geodb": ("string", ""),}
+
     def __init__(self, *args, **kwargs):
         self.ipranges = []
         super(pad.plugins.base.BasePlugin, self).__init__(*args, **kwargs)
 
     def load_database(self):
         try:
-            databasecsv = csv.reader(open(DATABASE_PATH))
+            databasecsv = csv.reader(open(self.get_global("geodb")), "rb")
         except (IOError, OSError):
-            #Can't open the file
+            # Can't open the file.
             return
         self.ipranges = []
         for item in databasecsv:
@@ -44,7 +48,7 @@ class RelayCountry(pad.plugins.base.BasePlugin):
             self.ipranges.append((ip_range_start, country_code))
 
     def get_country(self, IP):
-        """ Return the country corresponding to an IP based on the
+        """Return the country corresponding to an IP based on the
         network range database.
         """
         if not self.ipranges:
@@ -53,6 +57,7 @@ class RelayCountry(pad.plugins.base.BasePlugin):
                 IP.startswith("172.16") or 
                 IP.startswith("192.168") or
                 IP.startswith("127.0.0.1")):
+            return "**"
             return
         ipl = ip2long(IP)
         for index, item in enumerate(self.ipranges):
@@ -60,26 +65,27 @@ class RelayCountry(pad.plugins.base.BasePlugin):
                 nextitem = self.ipranges[index + 1]
             except IndexError:
                 nextitem = (0,"NONE")
-            #print ipl, item[0], nextitem[0]
             if ipl >= item[0] and ipl <= nextitem[0]:
                 return item[1]
-        return
+        return "XX"
 
     def check_start(self, msg):
-        """ Check the X-Relay-Countries in the message and exposes the 
+        """Check the X-Relay-Countries in the message and exposes the 
         countries that a mail was relayed from
         """
-        ipfindregex = re.compile("[\[\(\s\/]((?:[0-9]{1,3}\.){3}[0-9]{1,3})[\s\]\)\/]")
+        if not self.get_global("geodb"):
+            return 
         all_received = msg.msg.get_all("Received")
-        all_received.extend(msg.msg.get_all("X-Received"))
+        if not all_received:
+            return
         all_received = "\n".join(all_received)
-        ips = ipfindregex.finall(all_received)
+        ips = ipfindregex.findall(all_received)
         result = []
         for ip in ips:
             country = self.get_country(ip)
             if country:
-                result.appen(country)
+                result.append(country)
         if result:
-            msg.headers.append("X-Spam-Relay-Country", 
+            msg.headers.append("X-Relay-Country", 
                                " ".join(result))
         
