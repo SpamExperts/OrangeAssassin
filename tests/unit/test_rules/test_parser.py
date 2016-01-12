@@ -1,5 +1,6 @@
 """Tests for pad.rules.parser"""
 
+import logging
 import unittest
 from builtins import UnicodeDecodeError
 
@@ -15,6 +16,7 @@ import pad.rules.parser
 class TestParseGetRuleset(unittest.TestCase):
     def setUp(self):
         unittest.TestCase.setUp(self)
+        logging.getLogger("pad-logger").handlers = [logging.NullHandler()]
         self.mock_results = {}
         self.mock_rules = {}
 
@@ -87,6 +89,7 @@ class TestParseGetRuleset(unittest.TestCase):
 class TestParsePADLine(unittest.TestCase):
     def setUp(self):
         unittest.TestCase.setUp(self)
+        logging.getLogger("pad-logger").handlers = [logging.NullHandler()]
         self.plugins = {}
         self.mock_ctxt = patch(
             "pad.rules.parser.pad.context.GlobalContext",
@@ -235,6 +238,7 @@ class TestParsePADLine(unittest.TestCase):
 class TestParsePADRules(unittest.TestCase):
     def setUp(self):
         unittest.TestCase.setUp(self)
+        logging.getLogger("pad-logger").handlers = [logging.NullHandler()]
         self.mock_parser = patch("pad.rules.parser.PADParser").start()
 
     def tearDown(self):
