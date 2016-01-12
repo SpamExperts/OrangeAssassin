@@ -57,5 +57,6 @@ class EvalRule(pad.rules.base.BaseRule):
     def get_rule_kwargs(data):
         kwargs = pad.rules.base.BaseRule.get_rule_kwargs(data)
         kwargs["eval_rule"] = data['value'].lstrip('eval:').strip()
-        kwargs["target"] = data['target']
+        if "target" in data:
+            kwargs["target"] = data['target']
         return kwargs

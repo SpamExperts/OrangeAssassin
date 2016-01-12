@@ -61,7 +61,7 @@ class TestEvalRule(unittest.TestCase):
         rule.preprocess(self.mock_ruleset)
 
         rule.match(self.mock_msg)
-        mock_eval.assert_called_with(self.mock_msg, 1, '2')
+        mock_eval.assert_called_with(self.mock_msg, 1, '2', target=None)
 
     def test_preprocess_missing_rule(self):
         rule = pad.rules.eval_.EvalRule("TEST", "test_rule(1, '2')")
