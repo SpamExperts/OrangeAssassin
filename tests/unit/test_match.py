@@ -14,9 +14,9 @@ import scripts.match
 EXAMPLE_EMAIL = ()
 
 class TestRevokeReport(unittest.TestCase):
-    messages = ["Message Test 1",
-                "Message Test 2",
-                "Message Test 3",]
+    messages = ["Message Stub 1",
+                "Message Stub 2",
+                "Message Stub 3",]
 
     def setUp(self):
         ruleset = patch("scripts.match.pad.rules."

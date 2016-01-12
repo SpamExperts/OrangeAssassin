@@ -24,15 +24,13 @@ import pad.rules.parser
 class MessageList(argparse.FileType):
 
     def __call__(self, string):
-        if string != "-" and os.path.isdir(string):
-            items = [
-                super(MessageList, self).__call__(
-                    open(os.path.join(string, x), self._mode))
-                for x in os.listdir(string) 
-                if os.path.isfile(os.path.join(string,x))]
-            return items
+        if os.path.isdir(string):
+            for x in os.listdir(string):
+                path = os.path.join(string, x)
+                msgf = super(MessageList, self).__call__(path)
+                yield msgf
         else:
-            return [super(MessageList, self).__call__(string)]
+            yield super(MessageList, self).__call__(string)
 
 
 def parse_arguments(args):
@@ -58,10 +56,10 @@ def parse_arguments(args):
     parser.add_argument("--siteconfig", action="store",
                         help="Path to standard configuration directory",
                         default="/etc/mail/spamassassin")
-    parser.add_argument("messages", type=MessageList(), nargs="?",
+    parser.add_argument("messages", type=MessageList(), nargs="*",
                         metavar="path", help="Paths to messages or "
                         "directories containing messages",
-                        default="-")
+                        default=[[sys.stdin]])
 
     return parser.parse_args(args)
 
@@ -84,23 +82,23 @@ def main():
         print(e, file=sys.stderr)
         sys.exit(1)
 
-    for msgf in options.messages:
+    for message_list in options.messages:
+        for msgf in message_list:
+            raw_msg = msgf.read()
+            msg = pad.message.Message(ruleset.ctxt, raw_msg)
 
-        raw_msg = msgf.read()
-        msg = pad.message.Message(ruleset.ctxt, raw_msg)
+            ruleset.match(msg)
 
-        ruleset.match(msg)
+            for name, result in msg.rules_checked.items():
+                if result:
+                    print(ruleset.get_rule(name))
 
-        for name, result in msg.rules_checked.items():
-            if result:
-                print(ruleset.get_rule(name))
+            if options.revoke:
+                ruleset.context.hook_revoke(raw_msg)
+            if options.report:
+                ruleset.context.hook_report(raw_msg)
 
-        if options.revoke:
-            ruleset.context.hook_revoke(raw_msg)
-        if options.report:
-            ruleset.context.hook_report(raw_msg)
-
-        msgf.close()
+            msgf.close()
 
 if __name__ == "__main__":
     main()
