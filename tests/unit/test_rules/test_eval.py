@@ -63,6 +63,16 @@ class TestEvalRule(unittest.TestCase):
         rule.match(self.mock_msg)
         mock_eval.assert_called_with(self.mock_msg, 1, '2', target=None)
 
+    def test_preprocess_target(self):
+        mock_eval = Mock()
+        self.eval_rules["test_rule"] = mock_eval
+        rule = pad.rules.eval_.EvalRule("TEST", "test_rule(1, '2')",
+                                        target="body")
+        rule.preprocess(self.mock_ruleset)
+
+        rule.match(self.mock_msg)
+        mock_eval.assert_called_with(self.mock_msg, 1, '2', target="body")
+
     def test_preprocess_missing_rule(self):
         rule = pad.rules.eval_.EvalRule("TEST", "test_rule(1, '2')")
         self.assertRaises(pad.errors.InvalidRule,
@@ -71,6 +81,13 @@ class TestEvalRule(unittest.TestCase):
     def test_get_rule_kwargs(self):
         data = {"value": "eval:test_rule()"}
         expected = {"eval_rule": "test_rule()"}
+        kwargs = pad.rules.eval_.EvalRule.get_rule_kwargs(data)
+        self.assertEqual(kwargs, expected)
+
+    def test_get_rule_kwargs_target(self):
+        data = {"value": "eval:test_rule()",
+                "target": "header"}
+        expected = {"eval_rule": "test_rule()", "target": "header"}
         kwargs = pad.rules.eval_.EvalRule.get_rule_kwargs(data)
         self.assertEqual(kwargs, expected)
 
