@@ -153,7 +153,7 @@ class GlobalContext(_Context):
         """
         if not plugin.cmds:
             return
-        for rule_type, rule_class in plugin.cmds.viewitems():
+        for rule_type, rule_class in plugin.cmds.items():
             if rule_type in self.cmds:
                 self.log.warning("Redefining CMD rule: %s", rule_type)
             if not issubclass(rule_class, pad.rules.base.BaseRule):
