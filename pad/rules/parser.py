@@ -189,11 +189,12 @@ class PADParser(object):
             plugin_name, path = value.split(None, 1)
         except ValueError:
             plugin_name, path = value, None
-        plugin_name = pad.plugins.REIMPLEMENTED_PLUGINS.get(plugin_name,
-                                                            plugin_name)
-        self.ctxt.log.debug("Loading plugin %s value from %s", plugin_name,
-                            path)
-        self.ctxt.load_plugin(plugin_name, path)
+        if "::" in plugin_name:
+            plugin_name = pad.plugins.REIMPLEMENTED_PLUGINS.get(plugin_name)
+        if plugin_name:
+            self.ctxt.log.debug("Loading plugin %s value from %s", plugin_name,
+                                path)
+            self.ctxt.load_plugin(plugin_name, path)
 
     def get_ruleset(self):
         """Create and return the corresponding ruleset for the parsed files."""
