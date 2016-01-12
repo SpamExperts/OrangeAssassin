@@ -187,7 +187,8 @@ class TestParsePADLine(unittest.TestCase):
     def test_parse_line_convert_evalrule(self):
         self.check_parse([b"body TEST_RULE eval:check_test()"],
                          {"TEST_RULE": {"type": "eval",
-                                        "value": "eval:check_test()"}})
+                                        "value": "eval:check_test()",
+                                        "target": "body"}})
 
     def test_parse_line_load_plugin(self):
         self.check_parse([b"loadplugin DumpText /etc/pad/plugins/dump_text.py"],

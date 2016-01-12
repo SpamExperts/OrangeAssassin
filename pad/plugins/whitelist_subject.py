@@ -39,12 +39,12 @@ class WhiteListSubjectPlugin(pad.plugins.base.BasePlugin):
         self.options[key][1].append(value)
         self.set_global(key, self.options[key][1])
 
-    def check_subject_in_whitelist(self, msg):
+    def check_subject_in_whitelist(self, msg, target=None):
         """Check the subject in the blacklist subjects list 
         """
         return self._check_subject(msg, self.options["whitelist_subject"][1])
 
-    def check_subject_in_blacklist(self, msg):
+    def check_subject_in_blacklist(self, msg, target=None):
         """Check the subject in the blacklist subjects list 
         """
         return self._check_subject(msg, self.options["blacklist_subject"][1])

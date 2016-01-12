@@ -1,5 +1,6 @@
 """Rules that check for URIs."""
 
+import pad.regex
 import pad.rules.base
 
 

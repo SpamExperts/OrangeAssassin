@@ -24,7 +24,7 @@ class PyzorPlugin(pad.plugins.base.BasePlugin):
         self.set_global("client", pyzor.client.BatchClient(
             timeout=self.get_global("pyzor_timeout")))
 
-    def check_pyzor(self, msg):
+    def check_pyzor(self, msg, target=None):
         """Check the message with the defined pyzor servers. Stores the
         digest so it can be used
         """

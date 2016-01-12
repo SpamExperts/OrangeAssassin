@@ -152,6 +152,7 @@ class PADParser(object):
             if rtype in RULES:
                 if value.startswith("eval:"):
                     # This is for compatibility with SA ruleset
+                    self.results[name]["target"] = rtype
                     rtype = "eval"
                 self.results[name]["type"] = rtype
                 self.results[name]["value"] = value

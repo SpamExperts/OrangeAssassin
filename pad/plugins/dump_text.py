@@ -10,24 +10,24 @@ import pad.plugins.base
 class DumpText(pad.plugins.base.BasePlugin):
     """Similar to the SA DumpText demo plugin, useful for debugging rulesets.
     """
-
+    options = {}
     eval_rules = ("dump_text",
                   "dump_raw_text",
                   "dump_meta_data",)
 
-    def dump_text(self, msg):
+    def dump_text(self, msg, target=None):
         """Dump the decoded parsed text of the message to stderr."""
         self.ctxt.log.debug("Dumping text to STDERR")
         print(msg.text, file=sys.stderr)
         return True
 
-    def dump_raw_text(self, msg):
+    def dump_raw_text(self, msg, target=None):
         """Dump the decoded raw text of the message to stderr."""
         self.ctxt.log.debug("Dumping raw text to STDERR")
         print(msg.raw_text, file=sys.stderr)
         return True
 
-    def dump_meta_data(self, msg):
+    def dump_meta_data(self, msg, target=None):
         """Dump the extracted data of the message to stderr."""
         self.ctxt.log.debug("Dumping metadata to STDERR.")
         print("Decoded Headers:", file=sys.stderr)

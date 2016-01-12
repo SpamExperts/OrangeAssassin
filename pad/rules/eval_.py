@@ -15,7 +15,7 @@ _EVAL_RULE_P = re.compile(r"""
 
 class EvalRule(pad.rules.base.BaseRule):
     """Evaluates a registered eval function."""
-    def __init__(self, name, eval_rule, score=None, desc=None):
+    def __init__(self, name, eval_rule, score=None, desc=None, target=None):
         super(EvalRule, self).__init__(name, score=score, desc=desc)
         try:
             eval_rule_name, eval_args = _EVAL_RULE_P.match(eval_rule).groups()
@@ -28,13 +28,15 @@ class EvalRule(pad.rules.base.BaseRule):
             raise pad.errors.InvalidRule(self.name, "Invalid arguments for "
                                         "eval rule: %s" % eval_rule)
 
+        self.target = target
         self.eval_rule = None
 
     def preprocess(self, ruleset):
         """Get the eval rule from the global context and create a partial method
         from it and the specified argument from the configuration.
 
-        The message object is always passed as the first argument.
+        The message and target object is always passed as the first
+        argument.
         """
         super(EvalRule, self).preprocess(ruleset)
         try:
@@ -44,7 +46,7 @@ class EvalRule(pad.rules.base.BaseRule):
                                         "referenced: %s" % self._eval_rule)
 
         def new_method(msg):
-            return method(*((msg,) + self._eval_args))
+            return method(*((msg,) + self._eval_args), target=self.target)
 
         self.eval_rule = new_method
 
@@ -55,4 +57,5 @@ class EvalRule(pad.rules.base.BaseRule):
     def get_rule_kwargs(data):
         kwargs = pad.rules.base.BaseRule.get_rule_kwargs(data)
         kwargs["eval_rule"] = data['value'].lstrip('eval:').strip()
+        kwargs["target"] = data['target']
         return kwargs

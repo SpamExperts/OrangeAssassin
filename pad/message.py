@@ -268,6 +268,7 @@ class Message(pad.context.MessageContext):
         for name, raw_value in self.msg._headers:
             self.raw_headers[name].append(raw_value)
 
+        # XXX This is strange, but it's what SA does.
         # The body starts with the Subject header(s)
         body = list(self.get_decoded_header("Subject"))
         raw_body = list()

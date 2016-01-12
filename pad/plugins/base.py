@@ -75,8 +75,9 @@ class BasePlugin(object):
             self.options[self.dsn_name + "_dsn"] = ("str", "")
             self.options[self.dsn_name + "_sql_username"] = ("str", "")
             self.options[self.dsn_name + "_sql_password"] = ("str", "")
-        for key, (dummy, value) in self.options.items():
-            self.set_global(key, value)
+        if self.options:
+            for key, (dummy, value) in self.options.items():
+                self.set_global(key, value)
 
     def set_global(self, key, value):
         """Store data in the global context"""
@@ -145,7 +146,7 @@ class BasePlugin(object):
 
         May be overridden.
         """
-        if key in self.options:
+        if key in self.options or ():
             set_func = getattr(self, "set_%s_option" % self.options[key][0])
             set_func(key, value)
             self.inhibit_further_callbacks()
