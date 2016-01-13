@@ -1,5 +1,6 @@
 """Load and set-up various configurations."""
 
+import os
 import logging
 
 try:
@@ -45,5 +46,28 @@ def setup_logging(log_name, debug=False, filepath=None, sentry_dsn=None,
         logger.addHandler(sentry_handler)
 
     return logger
+
+
+def get_files_with_extension(path, extension):
+    for p in os.listdir(path):
+        if p.endswith(extension):
+            yield os.path.join(path, p)
+
+
+def get_config_files(config_path, siteconfig_path):
+    """Return the .pre and .cf files in the correct order."""
+    config_files = []
+    config_files.extend(
+        sorted(get_files_with_extension(siteconfig_path, ".pre")))
+    config_files.extend(
+        sorted(get_files_with_extension(config_path, ".pre")))
+    config_files.extend(
+        sorted(get_files_with_extension(config_path, ".cf")))
+    config_files.extend(
+        sorted(get_files_with_extension(siteconfig_path, ".cf")))
+
+    return config_files
+
+
 
 
