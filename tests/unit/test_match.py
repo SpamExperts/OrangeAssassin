@@ -30,7 +30,9 @@ class TestRevokeReport(unittest.TestCase):
         super(TestRevokeReport, self).tearDown()
 
     def test_report(self):
-        options = scripts.match.parse_arguments(["--report", "-"])
+        options = scripts.match.parse_arguments(["--report",
+                                                 "--siteconfigpath", ".",
+                                                 "--configpath", "."])
         options.messages = [[StringIO(x) for x in self.messages]]
         patch("scripts.match.parse_arguments",
               return_value=options).start()
@@ -40,7 +42,9 @@ class TestRevokeReport(unittest.TestCase):
         self.context.hook_revoke.assert_not_called()
 
     def test_revoke(self):
-        options = scripts.match.parse_arguments(["--revoke", "-"])
+        options = scripts.match.parse_arguments(["--revoke",
+                                                 "--siteconfigpath", ".",
+                                                 "--configpath", "."])
         options.messages = [[StringIO(x) for x in self.messages]]
         patch("scripts.match.parse_arguments",
               return_value=options).start()
