@@ -113,6 +113,7 @@ class Message(pad.context.MessageContext):
         self.uri_list = set()
         self.rules_checked = dict()
         self._parse_message()
+        self._hook_parsed_metadata()
 
     def clear_matches(self):
         """Clear any already checked rules."""

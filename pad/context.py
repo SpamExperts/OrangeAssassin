@@ -132,7 +132,7 @@ class GlobalContext(_Context):
         plugin = plugin_class(self)
         self._load_cmds(plugin, class_name)
         self._load_eval_rules(plugin, class_name)
-        self.log.info("Plugin %s loaded", path)
+        self.log.info("Plugin %s loaded", name)
         # Store the plugin instance in the dictionary
         self.plugins[class_name] = plugin
 
@@ -262,3 +262,9 @@ class MessageContext(_Context):
         """Hook before the message is checked."""
         for plugin in self._global_ctxt.plugins.values():
             plugin.extract_metadata(self, payload, part)
+
+    @_callback_chain
+    def _hook_parsed_metadata(self, payload, part):
+        """Hook before the message is checked."""
+        for plugin in self._global_ctxt.plugins.values():
+            plugin.parsed_metadata(self)
