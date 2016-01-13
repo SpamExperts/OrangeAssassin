@@ -14,15 +14,16 @@ import scripts.match
 EXAMPLE_EMAIL = ()
 
 class TestRevokeReport(unittest.TestCase):
-    messages = ["Message Stub 1",
-                "Message Stub 2",
-                "Message Stub 3",]
+    messages = [u"Message Stub 1",
+                u"Message Stub 2",
+                u"Message Stub 3",]
 
     def setUp(self):
         ruleset = patch("scripts.match.pad.rules."
                         "parser.parse_pad_rules").start()
         self.context = ruleset.return_value.context
         patch("scripts.match.MessageList").start()
+        patch("scripts.match.pad.config.get_config_files").start()
 
     def tearDown(self):
         patch.stopall()
@@ -30,7 +31,7 @@ class TestRevokeReport(unittest.TestCase):
 
     def test_report(self):
         options = scripts.match.parse_arguments(["--report", "-"])
-        options.messages = [[StringIO.StringIO(x) for x in self.messages]]
+        options.messages = [[StringIO(x) for x in self.messages]]
         patch("scripts.match.parse_arguments",
               return_value=options).start()
         scripts.match.main()
@@ -40,7 +41,7 @@ class TestRevokeReport(unittest.TestCase):
 
     def test_revoke(self):
         options = scripts.match.parse_arguments(["--revoke", "-"])
-        options.messages = [[StringIO.StringIO(x) for x in self.messages]]
+        options.messages = [[StringIO(x) for x in self.messages]]
         patch("scripts.match.parse_arguments",
               return_value=options).start()
         scripts.match.main()
