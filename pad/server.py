@@ -1,6 +1,7 @@
 """The PAD server listens for connections, parses the messages and
 returns the result.
 """
+from __future__ import absolute_import
 
 import os
 import errno
@@ -11,10 +12,20 @@ import threading
 import socketserver
 
 import pad.config
+import pad.protocol
 import pad.rules.parser
 
+import pad.protocol.ping
+import pad.protocol.check
+import pad.protocol.symbols
+import pad.protocol.report
 
-CHUNK_SIZE = 8192
+COMMANDS = {
+    "PING": pad.protocol.ping.PingCommand,
+    "CHECK": pad.protocol.check.CheckCommand,
+    "SYMBOLS": pad.protocol.symbols.SymbolsCommand,
+    "REPORT": pad.protocol.report.ReportCommand,
+}
 
 
 def _eintr_retry(func, *args):
@@ -25,6 +36,18 @@ def _eintr_retry(func, *args):
         except OSError as e:
             if e.args[0] != errno.EINTR:
                 raise
+
+
+class RequestHandler(socketserver.StreamRequestHandler):
+    """Handle a single request."""
+
+    def handle(self):
+        """Get the command from the client and pass it to the
+        correct handler.
+        """
+        line = self.rfile.readline().strip()
+        command, proto_version = line.split()
+        COMMANDS[command.upper()](self.rfile, self.wfile, self.server.ruleset)
 
 
 class Server(socketserver.TCPServer):
@@ -134,58 +157,3 @@ class PreForkServer(Server):
             os.kill(pid, signal.SIGUSR1)
         if self.pids is None:
             Server.load_config(self)
-
-
-class RequestHandler(socketserver.StreamRequestHandler):
-    """Handle a single pyzord request."""
-
-    def __init__(self, request, client_address, server):
-        # For brevity
-        self.log = server.ruleset.ctxt.log
-        self.ruleset = server.ruleset
-        socketserver.StreamRequestHandler.__init__(self, request,
-                                                   client_address, server)
-
-    def handle(self):
-        # self.request is the TCP socket connected to the client
-        command, options = self.get_command()
-        msg = self.get_message(options)
-        self.server.log.debug("Received: %s/%s (%s)", command, options,
-                              len(msg))
-        self.request.sendall("NOOP")
-
-    def get_command(self):
-        """Get and parse the command."""
-        line = self.rfile.readline().strip()
-        command, proto_version = line.split()
-        options = {"proto_version": proto_version}
-
-        while True:
-            line = self.rfile.readline().strip()
-            if not line:
-                break
-            name, value = line.split(":")
-            options[name.lower()] = value.strip()
-        return command, options
-
-    def get_message(self, options):
-        """Retrieve the message from the client.
-
-        The data is read in chunks and returned as a joined string.
-        """
-        message_chunks = list()
-        # If the Content-Length is available it's much easier to
-        # retrieve the data.
-        content_length = options.get('content-length')
-        if content_length is not None:
-            content_length = int(content_length)
-        while content_length is None or content_length > 0:
-            chunk = self.rfile.read(min(content_length, CHUNK_SIZE))
-            if not chunk:
-                break
-            message_chunks.append(chunk)
-            content_length -= len(chunk)
-        return "".join(message_chunks)
-
-
-
