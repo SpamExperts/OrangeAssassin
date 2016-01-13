@@ -2,7 +2,7 @@
 
 import unittest
 import argparse
-import StringIO
+from io import StringIO
 
 try:
     from unittest.mock import patch, Mock, MagicMock, mock_open, call
