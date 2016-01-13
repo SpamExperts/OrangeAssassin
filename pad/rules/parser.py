@@ -193,6 +193,8 @@ class PADParser(object):
             plugin_name = pad.plugins.REIMPLEMENTED_PLUGINS.get(plugin_name)
         if plugin_name:
             self.ctxt.load_plugin(plugin_name, path)
+        else:
+            self.ctxt.log.warn("Plugin not available: %s", value)
 
     def get_ruleset(self):
         """Create and return the corresponding ruleset for the parsed files."""
@@ -219,6 +221,7 @@ class PADParser(object):
                     ruleset.add_rule(rule)
 
         self.ctxt.hook_parsing_end(ruleset)
+        self.ctxt.log.info("%s rules loaded", len(ruleset.checked))
         ruleset.post_parsing()
         return ruleset
 

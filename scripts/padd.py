@@ -34,7 +34,7 @@ def main():
     parser.add_argument("-C", "--configpath", "--config-file", action="store",
                         help="Path to standard configuration directory",
                         default="/usr/share/spamassassin")
-    parser.add_argument("--siteconfig", action="store",
+    parser.add_argument("--sitepath", "--siteconfig", action="store",
                         help="Path to standard configuration directory",
                         default="/etc/mail/spamassassin")
     parser.add_argument("-r", "--pidfile", default="/var/run/padd.pid")
@@ -53,11 +53,11 @@ def main():
                                       filepath=args.log_file)
     address = (args.listen, args.port)
     if args.prefork is not None:
-        server = pad.server.PreForkServer(address, args.siteconfig,
+        server = pad.server.PreForkServer(address, args.sitepath,
                                           args.configpath,
-                                          args.paranoid)
+                                          args.paranoid, prefork=args.prefork)
     else:
-        server = pad.server.Server(address, args.siteconfig, args.configpath,
+        server = pad.server.Server(address, args.sitepath, args.configpath,
                                    args.paranoid)
     server.serve_forever()
 

@@ -10,8 +10,11 @@ import logging
 import threading
 import socketserver
 
-
 import pad.config
+import pad.rules.parser
+
+
+CHUNK_SIZE = 8192
 
 
 def _eintr_retry(func, *args):
@@ -58,8 +61,10 @@ class Server(socketserver.TCPServer):
 
     def load_config(self):
         """Reads the configuration files and reloads the ruleset."""
-        self.ruleset = pad.config.load_ruleset(self.sitepath, self.configpath,
-                                               self.paranoid)
+        self.ruleset = pad.rules.parser.parse_pad_rules(
+            pad.config.get_config_files(self.configpath, self.sitepath),
+            self.paranoid
+        )
 
     def shutdown_handler(self, *args, **kwargs):
         """Handler for the SIGTERM signal. This should be used to kill the
@@ -134,9 +139,53 @@ class PreForkServer(Server):
 class RequestHandler(socketserver.StreamRequestHandler):
     """Handle a single pyzord request."""
 
+    def __init__(self, request, client_address, server):
+        # For brevity
+        self.log = server.ruleset.ctxt.log
+        self.ruleset = server.ruleset
+        socketserver.StreamRequestHandler.__init__(self, request,
+                                                   client_address, server)
+
     def handle(self):
         # self.request is the TCP socket connected to the client
-        self.data = self.request.recv(1024).strip()
-        self.server.log.info("Received: %s", self.data)
-        # just send back the same data, but upper-cased
-        self.request.sendall(self.data.upper())
+        command, options = self.get_command()
+        msg = self.get_message(options)
+        self.server.log.debug("Received: %s/%s (%s)", command, options,
+                              len(msg))
+        self.request.sendall("NOOP")
+
+    def get_command(self):
+        """Get and parse the command."""
+        line = self.rfile.readline().strip()
+        command, proto_version = line.split()
+        options = {"proto_version": proto_version}
+
+        while True:
+            line = self.rfile.readline().strip()
+            if not line:
+                break
+            name, value = line.split(":")
+            options[name.lower()] = value.strip()
+        return command, options
+
+    def get_message(self, options):
+        """Retrieve the message from the client.
+
+        The data is read in chunks and returned as a joined string.
+        """
+        message_chunks = list()
+        # If the Content-Length is available it's much easier to
+        # retrieve the data.
+        content_length = options.get('content-length')
+        if content_length is not None:
+            content_length = int(content_length)
+        while content_length is None or content_length > 0:
+            chunk = self.rfile.read(min(content_length, CHUNK_SIZE))
+            if not chunk:
+                break
+            message_chunks.append(chunk)
+            content_length -= len(chunk)
+        return "".join(message_chunks)
+
+
+

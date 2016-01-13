@@ -6,8 +6,6 @@ import re
 import operator
 from functools import reduce
 
-import pad.errors
-
 # Map of perl flags and the corresponding re ones.
 FLAGS = {
     "i": re.IGNORECASE,
