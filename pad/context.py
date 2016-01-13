@@ -264,7 +264,7 @@ class MessageContext(_Context):
             plugin.extract_metadata(self, payload, part)
 
     @_callback_chain
-    def _hook_parsed_metadata(self, payload, part):
+    def _hook_parsed_metadata(self):
         """Hook before the message is checked."""
         for plugin in self._global_ctxt.plugins.values():
             plugin.parsed_metadata(self)
