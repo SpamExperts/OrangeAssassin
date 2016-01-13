@@ -160,8 +160,8 @@ class PADParser(object):
                 self.results[name][rtype] = value
         else:
             if not self.ctxt.hook_parse_config(rtype, value):
-                self.ctxt.log.warning("Ignoring unknown configuration line: %s",
-                                      line)
+                self.ctxt.log.warning("%s:%s Ignoring unknown configuration "
+                                      "line: %s", filename, line_no, line)
 
     def _handle_include(self, value, line, line_no, _depth=0):
         """Handles the 'include' keyword."""
@@ -192,8 +192,6 @@ class PADParser(object):
         if "::" in plugin_name:
             plugin_name = pad.plugins.REIMPLEMENTED_PLUGINS.get(plugin_name)
         if plugin_name:
-            self.ctxt.log.debug("Loading plugin %s value from %s", plugin_name,
-                                path)
             self.ctxt.load_plugin(plugin_name, path)
 
     def get_ruleset(self):
@@ -209,13 +207,14 @@ class PADParser(object):
                 if self.paranoid:
                     raise e
             else:
-                with self._paranoid(pad.errors.InvalidRule):
+                with self._paranoid(pad.errors.InvalidRule, re.error):
                     try:
                         rule_class = RULES[rule_type]
                     except KeyError:
                         # A plugin might have been loaded that
                         # can handle this.
                         rule_class = self.ctxt.cmds[rule_type]
+                    self.ctxt.log.debug("Adding rule %s with: %s", name, data)
                     rule = rule_class.get_rule(name, data)
                     ruleset.add_rule(rule)
 

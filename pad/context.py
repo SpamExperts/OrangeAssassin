@@ -102,6 +102,7 @@ class GlobalContext(_Context):
 
     def load_plugin(self, name, path=None):
         """Load the specified plugin from the given path."""
+        self.log.debug("Loading plugin %s from %s", name, path)
         class_name = name.rsplit(".", 1)[-1]
         if class_name in self.plugins:
             self.log.warning("Redefining plugin %s.", class_name)
@@ -131,6 +132,7 @@ class GlobalContext(_Context):
         plugin = plugin_class(self)
         self._load_cmds(plugin, class_name)
         self._load_eval_rules(plugin, class_name)
+        self.log.info("Plugin %s loaded", path)
         # Store the plugin instance in the dictionary
         self.plugins[class_name] = plugin
 
@@ -139,6 +141,7 @@ class GlobalContext(_Context):
         a reference in the eval_rules dictionary.
         """
         for rule in plugin.eval_rules:
+            self.log.debug("Registering eval rule: %s.%s", class_name, rule)
             if rule in self.eval_rules:
                 self.log.warning("Redefining eval rule: %s", rule)
             eval_rule = getattr(plugin, rule)
@@ -154,6 +157,7 @@ class GlobalContext(_Context):
         if not plugin.cmds:
             return
         for rule_type, rule_class in plugin.cmds.items():
+            self.log.debug("Registering CMD rule: %s.%s", class_name, rule_type)
             if rule_type in self.cmds:
                 self.log.warning("Redefining CMD rule: %s", rule_type)
             if not issubclass(rule_class, pad.rules.base.BaseRule):

@@ -6,6 +6,8 @@ import re
 import operator
 from functools import reduce
 
+import pad.errors
+
 # Map of perl flags and the corresponding re ones.
 FLAGS = {
     "i": re.IGNORECASE,
@@ -87,7 +89,9 @@ def perl2re(pattern, match_op="=~"):
         pattern = conv_p.sub(repl, pattern)
 
     flags = reduce(operator.or_, (FLAGS.get(flag, 0) for flag in flags_str), 0)
+
     if match_op == "=~":
         return MatchPattern(re.compile(pattern, flags))
     elif match_op == "!~":
         return NotMatchPattern(re.compile(pattern, flags))
+
