@@ -20,12 +20,12 @@ class TellCommand(pad.protocol.base.BaseProtocol):
             local = "local" in targets
             remote = "remote" in targets
             self.ruleset.ctxt.hook_report(msg, spam, local, remote)
-            response.append("DidSet: %s" % options.get("set"))
+            response.append("DidSet: %s\r\n" % options.get("set"))
         if "remove" in options:
-            targets = options.get("set").split(",")
+            targets = options.get("remove").split(",")
             local = "local" in targets
             remote = "remote" in targets
-            self.ruleset.ctxt.hook_report(msg, spam, local, remote)
-            response.append("DidRemove: %s" % options.get("remove"))
+            self.ruleset.ctxt.hook_revoke(msg, spam, local, remote)
+            response.append("DidRemove: %s\r\n" % options.get("remove"))
         for action in response:
             yield action

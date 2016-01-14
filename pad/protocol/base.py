@@ -51,7 +51,8 @@ class BaseProtocol(object):
             if not chunk:
                 break
             message_chunks.append(chunk)
-            content_length -= len(chunk)
+            if content_length is not None:
+                content_length -= len(chunk)
         if options.get('compress') == "zlib":
             return zlib.decompress("".join(message_chunks))
         return "".join(message_chunks)
