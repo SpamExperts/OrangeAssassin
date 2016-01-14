@@ -47,7 +47,8 @@ class BaseProtocol(object):
         if content_length is not None:
             content_length = int(content_length)
         while content_length is None or content_length > 0:
-            chunk = self.rfile.read(min(content_length, self.chunk_size))
+            chunk = self.rfile.read(min(content_length or self.chunk_size,
+                                        self.chunk_size))
             if not chunk:
                 break
             message_chunks.append(chunk)
