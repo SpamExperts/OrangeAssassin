@@ -15,16 +15,21 @@ import pad.config
 import pad.protocol
 import pad.rules.parser
 
-import pad.protocol.ping
+import pad.protocol.noop
+import pad.protocol.tell
 import pad.protocol.check
-import pad.protocol.symbols
-import pad.protocol.report
+import pad.protocol.process
 
 COMMANDS = {
-    "PING": pad.protocol.ping.PingCommand,
+    "TELL": pad.protocol.tell.TellCommand,
+    "PING": pad.protocol.noop.PingCommand,
+    "SKIP": pad.protocol.noop.SkipCommand,
     "CHECK": pad.protocol.check.CheckCommand,
-    "SYMBOLS": pad.protocol.symbols.SymbolsCommand,
-    "REPORT": pad.protocol.report.ReportCommand,
+    "SYMBOLS": pad.protocol.check.SymbolsCommand,
+    "REPORT": pad.protocol.check.ReportCommand,
+    "REPORT_IFSPAM": pad.protocol.check.ReportIfSpamCommand,
+    "PROCESS": pad.protocol.process.ProcessCommand,
+    "HEADERS": pad.protocol.process.HeadersCommand,
 }
 
 
@@ -70,6 +75,7 @@ class Server(socketserver.TCPServer):
         self.log.debug("Listening on %s", address)
         socketserver.TCPServer.__init__(self, address, RequestHandler,
                                         bind_and_activate=False)
+        self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         try:
             self.socket.setsockopt(socket.IPPROTO_IPV6, socket.IPV6_V6ONLY, 0)
         except (AttributeError, socket.error) as e:

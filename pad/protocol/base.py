@@ -1,7 +1,10 @@
 """Base class for all protocol commands"""
 
+import zlib
+
 import pad
 import pad.message
+
 
 class BaseProtocol(object):
     """Base object for any protocol command implementation."""
@@ -19,7 +22,7 @@ class BaseProtocol(object):
         self.ruleset = ruleset
         # For brevity
         self.log = ruleset.ctxt.log
-        self._get_and_handle()
+        self.get_and_handle()
 
     def get_options(self):
         """Get any options added to the command."""
@@ -44,14 +47,18 @@ class BaseProtocol(object):
         if content_length is not None:
             content_length = int(content_length)
         while content_length is None or content_length > 0:
-            chunk = self.rfile.read(min(content_length, self.chunk_size))
+            chunk = self.rfile.read(min(content_length or self.chunk_size,
+                                        self.chunk_size))
             if not chunk:
                 break
             message_chunks.append(chunk)
-            content_length -= len(chunk)
+            if content_length is not None:
+                content_length -= len(chunk)
+        if options.get('compress') == "zlib":
+            return zlib.decompress("".join(message_chunks))
         return "".join(message_chunks)
 
-    def _get_and_handle(self):
+    def get_and_handle(self):
         """Get data from the client and call the handle method."""
         message = None
         options = dict()

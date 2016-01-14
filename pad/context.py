@@ -232,13 +232,13 @@ class GlobalContext(_Context):
             plugin.check_end(msg)
 
     @_callback_chain
-    def hook_report(self, msg):
+    def hook_report(self, msg, spam=True, local=True, remote=True):
         """Hook when the message should be reported as spam."""
         for plugin in self.plugins.values():
             plugin.plugin_report(msg)
 
     @_callback_chain
-    def hook_revoke(self, msg):
+    def hook_revoke(self, msg, spam=False, local=True, remote=True):
         """Hook when the message should be reported as ham."""
         for plugin in self.plugins.values():
             plugin.plugin_revoke(msg)

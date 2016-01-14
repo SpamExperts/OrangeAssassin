@@ -8,8 +8,9 @@ python:
 install:
   - "pip install -r requirements.txt"
   - "pip install -r tests/requirements.txt"
+  - "python setup.py install"
 script:
-  - "py.test tests/unit/ --cov pad --cov-report term-missing"
+  - "py.test tests/unit/ --cov pad --cov scripts --cov-report term-missing"
   - "py.test tests/functional/"
 after_success:
   - coveralls

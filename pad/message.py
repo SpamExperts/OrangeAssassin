@@ -111,6 +111,7 @@ class Message(pad.context.MessageContext):
         self.text = ""
         self.raw_text = ""
         self.uri_list = set()
+        self.score = 0
         self.rules_checked = dict()
         self._parse_message()
         self._hook_parsed_metadata()
@@ -118,6 +119,13 @@ class Message(pad.context.MessageContext):
     def clear_matches(self):
         """Clear any already checked rules."""
         self.rules_checked = dict()
+        self.score = 0
+
+    def get_adjusted_message(self, header_only=False):
+        """Get message adjusted by the rules."""
+        # XXX We don't have support yet for actually modifying
+        # XXX the message.
+        return self.msg.as_string()
 
     @staticmethod
     def translate_line_breaks(text):
