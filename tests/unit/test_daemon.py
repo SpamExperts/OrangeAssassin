@@ -14,6 +14,7 @@ import scripts.padd
 class TestDaemon(unittest.TestCase):
     def setUp(self):
         unittest.TestCase.setUp(self)
+        patch("scripts.padd.pad.config.setup_logging").start()
         self.mock_pfs = patch("scripts.padd.pad.server.PreForkServer").start()
         self.mock_s = patch("scripts.padd.pad.server.Server").start()
         self.argv = ["padd.py"]
