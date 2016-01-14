@@ -9,15 +9,15 @@ try:
 except ImportError:
     _HAS_RAVEN = False
 
-import pad.rules.parser
-
 
 def setup_logging(log_name, debug=False, filepath=None, sentry_dsn=None,
                   file_lvl="INFO", sentry_lvl="WARN"):
     """Setup logging according to the specified options. Return the Logger
     object.
     """
-    fmt = logging.Formatter('%(asctime)s %(levelname)s %(message)s')
+    fmt = logging.Formatter(
+        '%(asctime)s (%(process)d) %(levelname)s %(message)s'
+    )
 
     stream_handler = logging.StreamHandler()
 

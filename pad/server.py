@@ -60,9 +60,11 @@ class Server(socketserver.TCPServer):
     thread and single process.
     """
 
-    def __init__(self, address, sitepath, configpath, paranoid=False):
+    def __init__(self, address, sitepath, configpath, paranoid=False,
+                 ignore_unknown=True):
         self.log = logging.getLogger("pad-logger")
         self.paranoid = paranoid
+        self.ignore_unknown = ignore_unknown
         self.ruleset = None
         self.sitepath = sitepath
         self.configpath = configpath
@@ -92,7 +94,7 @@ class Server(socketserver.TCPServer):
         """Reads the configuration files and reloads the ruleset."""
         self.ruleset = pad.rules.parser.parse_pad_rules(
             pad.config.get_config_files(self.configpath, self.sitepath),
-            self.paranoid
+            paranoid=self.paranoid, ignore_unknown=self.ignore_unknown
         )
 
     def shutdown_handler(self, *args, **kwargs):
@@ -123,13 +125,14 @@ class PreForkServer(Server):
     The parent process will then wait for all his child process to complete.
     """
     def __init__(self, address, sitepath, configpath, paranoid=False,
-                 prefork=6):
+                 ignore_unknown=True, prefork=6):
         """The same as Server.__init__ but requires a list of databases
         instead of a single database connection.
         """
         self.pids = None
         self._prefork = prefork
-        Server.__init__(self, address, sitepath, configpath, paranoid=paranoid)
+        Server.__init__(self, address, sitepath, configpath, paranoid=paranoid,
+                        ignore_unknown=ignore_unknown)
 
     def serve_forever(self, poll_interval=0.5):
         """Fork the current process and wait for all children to finish."""

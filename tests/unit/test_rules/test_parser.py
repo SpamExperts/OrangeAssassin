@@ -58,7 +58,7 @@ class TestParseGetRuleset(unittest.TestCase):
         data = {"score": "1.0"}
         self.mock_results["TEST_RULE"] = data
         self.mock_rules["body"] = mock_body_rule
-        self.parser.paranoid = True
+        self.parser.ctxt.paranoid = True
 
         self.assertRaises(pad.errors.InvalidRule, self.parser.get_ruleset)
 
@@ -80,7 +80,7 @@ class TestParseGetRuleset(unittest.TestCase):
         data = {"type": "body", "score": "1.0"}
         self.mock_results["TEST_RULE"] = data
         self.mock_rules["body"] = mock_body_rule
-        self.parser.paranoid = True
+        self.parser.ctxt.paranoid = True
 
         self.assertRaises(pad.errors.InvalidRule,
                           self.parser.get_ruleset)
@@ -267,11 +267,13 @@ class TestParsePADRules(unittest.TestCase):
 
     def test_paranoid(self):
         pad.rules.parser.parse_pad_rules([])
-        self.mock_parser.assert_called_once_with(paranoid=False)
+        self.mock_parser.assert_called_once_with(paranoid=False,
+                                                 ignore_unknown=True)
 
     def test_paranoid_true(self):
         pad.rules.parser.parse_pad_rules([], paranoid=True)
-        self.mock_parser.assert_called_once_with(paranoid=True)
+        self.mock_parser.assert_called_once_with(paranoid=True,
+                                                 ignore_unknown=True)
 
     def test_parse_files(self):
         pad.rules.parser.parse_pad_rules(["testf1.cf"])

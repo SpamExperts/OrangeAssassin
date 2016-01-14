@@ -29,7 +29,8 @@ class TestDaemon(unittest.TestCase):
         scripts.padd.main()
         self.mock_s.assert_called_with(
             ("0.0.0.0", 783), '/etc/mail/spamassassin',
-            '/usr/share/spamassassin', False
+            '/usr/share/spamassassin', paranoid=False,
+            ignore_unknown=True,
         )
         self.mock_s.return_value.serve_forever.assert_called_with()
 
@@ -38,7 +39,8 @@ class TestDaemon(unittest.TestCase):
         scripts.padd.main()
         self.mock_pfs.assert_called_with(
             ("0.0.0.0", 783), '/etc/mail/spamassassin',
-            '/usr/share/spamassassin', False, prefork=6
+            '/usr/share/spamassassin', paranoid=False,
+            ignore_unknown=True, prefork=6
         )
         self.mock_pfs.return_value.serve_forever.assert_called_with()
 

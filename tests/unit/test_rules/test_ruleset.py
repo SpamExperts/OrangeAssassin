@@ -7,6 +7,7 @@ try:
 except ImportError:
     from mock import patch, Mock, PropertyMock, MagicMock
 
+import pad.errors
 import pad.rules.ruleset
 
 
@@ -116,6 +117,7 @@ class TestRuleSet(unittest.TestCase):
     def test_post_parsing_invalid_rule(self):
         mock_rule = Mock(**{"postparsing.side_effect":
                             pad.errors.InvalidRule("TEST_RULE")})
+        self.mock_ctxt.paranoid = False
         ruleset = pad.rules.ruleset.RuleSet(self.mock_ctxt)
         ruleset.checked = {"TEST_RULE": mock_rule}
 
@@ -126,7 +128,8 @@ class TestRuleSet(unittest.TestCase):
     def test_post_parsing_invalid_rule_parnoid(self):
         mock_rule = Mock(**{"postparsing.side_effect":
                             pad.errors.InvalidRule("TEST_RULE")})
-        ruleset = pad.rules.ruleset.RuleSet(self.mock_ctxt, paranoid=True)
+        self.mock_ctxt.paranoid = True
+        ruleset = pad.rules.ruleset.RuleSet(self.mock_ctxt)
         ruleset.checked = {"TEST_RULE": mock_rule}
 
         self.assertRaises(pad.errors.InvalidRule, ruleset.post_parsing)

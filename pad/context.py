@@ -94,11 +94,28 @@ class GlobalContext(_Context):
       These must inherit from pad.rules.base.BaseRule.
     """
 
-    def __init__(self):
+    def __init__(self, paranoid=False, ignore_unknown=True):
         super(GlobalContext, self).__init__()
         self.plugins = dict()
+        self.paranoid = paranoid
+        self.ignore_unknown = ignore_unknown
         self.eval_rules = dict()
         self.cmds = dict()
+
+    def err(self, *args, **kwargs):
+        """Log a error according to the paranoid and
+        ignore_unknown.
+
+        If paranoid is True the log to ERROR, if the
+        ignore_unknown flag is set to False the log
+        to WARN and to DEBUG otherwise.
+        """
+        if self.paranoid:
+            self.log.error(*args, **kwargs)
+        elif not self.ignore_unknown:
+            self.log.warn(*args, **kwargs)
+        else:
+            self.log.debug(*args, **kwargs)
 
     def load_plugin(self, name, path=None):
         """Load the specified plugin from the given path."""

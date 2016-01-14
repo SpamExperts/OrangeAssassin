@@ -19,6 +19,7 @@ import re
 import contextlib
 import collections
 
+import pad.config
 import pad.errors
 import pad.context
 import pad.plugins
@@ -81,11 +82,11 @@ class PADParser(object):
 
     Note that this is not thread-safe.
     """
-    def __init__(self, paranoid=False):
-        self.ctxt = pad.context.GlobalContext()
+    def __init__(self, paranoid=False, ignore_unknown=True):
+        self.ctxt = pad.context.GlobalContext(paranoid=paranoid,
+                                              ignore_unknown=ignore_unknown)
         # XXX This could be a default OrderedDict
         self.results = collections.OrderedDict()
-        self.paranoid = paranoid
         self._ignore = False
 
     @contextlib.contextmanager
@@ -94,8 +95,8 @@ class PADParser(object):
         try:
             yield
         except exceptions as e:
-            self.ctxt.log.error(e)
-            if self.paranoid:
+            self.ctxt.err(e)
+            if self.ctxt.paranoid:
                 raise
 
     def parse_file(self, filename, _depth=0):
@@ -160,8 +161,8 @@ class PADParser(object):
                 self.results[name][rtype] = value
         else:
             if not self.ctxt.hook_parse_config(rtype, value):
-                self.ctxt.log.warning("%s:%s Ignoring unknown configuration "
-                                      "line: %s", filename, line_no, line)
+                self.ctxt.err("%s:%s Ignoring unknown configuration line: %s",
+                              filename, line_no, line)
 
     def _handle_include(self, value, line, line_no, _depth=0):
         """Handles the 'include' keyword."""
@@ -199,14 +200,14 @@ class PADParser(object):
     def get_ruleset(self):
         """Create and return the corresponding ruleset for the parsed files."""
         self.ctxt.hook_parsing_start(self.results)
-        ruleset = pad.rules.ruleset.RuleSet(self.ctxt, self.paranoid)
+        ruleset = pad.rules.ruleset.RuleSet(self.ctxt)
         for name, data in self.results.items():
             try:
                 rule_type = data["type"]
             except KeyError:
                 e = pad.errors.InvalidRule(name, "No rule type defined.")
-                self.ctxt.log.warning(e)
-                if self.paranoid:
+                self.ctxt.err(e)
+                if self.ctxt.paranoid:
                     raise e
             else:
                 with self._paranoid(pad.errors.InvalidRule, re.error):
@@ -226,7 +227,7 @@ class PADParser(object):
         return ruleset
 
 
-def parse_pad_rules(files, paranoid=False):
+def parse_pad_rules(files, paranoid=False, ignore_unknown=True):
     """Parse a list of PAD rules and returns the corresponding ruleset.
 
     'files' - a list of file paths.
@@ -239,7 +240,7 @@ def parse_pad_rules(files, paranoid=False):
 
     Other options may be included such as "score", "describe".
     """
-    parser = PADParser(paranoid=paranoid)
+    parser = PADParser(paranoid=paranoid, ignore_unknown=ignore_unknown)
     for filename in files:
         parser.parse_file(filename)
 
