@@ -40,10 +40,11 @@ class ImageInfoPlugin(pad.plugins.base.BasePlugin):
                 images = self.get_local(msg, "images")
             except KeyError:
                 images = {}
+            print(count)
 
             imginfo = self._image_info(part.get_payload(decode=True))
             imginfo['name'] = part.get_param("name")
-            imginfo['type'] = part.get_content_subtype()
+            imginfo['subtype'] = part.get_content_subtype()
             images[part.get("Content-ID")] = imginfo
             self.set_local(msg, "images", images)
 
@@ -79,7 +80,7 @@ class ImageInfoPlugin(pad.plugins.base.BasePlugin):
         except:
             images = {}
         for cid, image in images.items():
-            if img_type == "all" or img_type == image['type']:
+            if img_type == "all" or img_type == image['subtype']:
                 if image['width'] == width and image['height'] == height:
                     return True
         return False
@@ -92,13 +93,13 @@ class ImageInfoPlugin(pad.plugins.base.BasePlugin):
         except:
             images = {}
         for cid, image in images.items():
-            if img_type == "all" or img_type == image['type']:
+            if img_type == "all" or img_type == image['subtype']:
                 count+=1
 
         if max_count:
-            return count>=min_count and count<=max_count
+            return count >= min_count and count <= max_count
         else:
-            return count>=min_count
+            return count >= min_count
 
     def pixel_coverage(self, msg, img_type, min_coverage, max_coverage=None,
                        target=None):
@@ -108,7 +109,7 @@ class ImageInfoPlugin(pad.plugins.base.BasePlugin):
         except:
             images = {}
         for cid, img in images.items():
-            if img_type == "all" or img_type == img['type']:
+            if img_type == "all" or img_type == img['subtype']:
                 if max_coverage:
                     if img['coverage'] >= min_coverage and img['coverage'] <= max_coverage:
                         return True
@@ -126,7 +127,7 @@ class ImageInfoPlugin(pad.plugins.base.BasePlugin):
             images = {}
 
         for cid, img in images.items():
-            if img_type == "all" or img_type == img['type']:
+            if img_type == "all" or img_type == img['subtype']:
 
                 if img['width'] < min_width:
                     continue
@@ -152,7 +153,7 @@ class ImageInfoPlugin(pad.plugins.base.BasePlugin):
         except:
             images = {}
         for cid, img in images.items():
-            if img_type == "all" or img_type == img['type']:
+            if img_type == "all" or img_type == img['subtype']:
                 try:
                     ratio = len(msg.text)/img['coverage']
                 except ZeroDivisionError:
