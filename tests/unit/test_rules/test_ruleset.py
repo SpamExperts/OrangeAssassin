@@ -3,9 +3,9 @@
 import unittest
 
 try:
-    from unittest.mock import patch, Mock, PropertyMock
+    from unittest.mock import patch, Mock, PropertyMock, MagicMock
 except ImportError:
-    from mock import patch, Mock, PropertyMock
+    from mock import patch, Mock, PropertyMock, MagicMock
 
 import pad.rules.ruleset
 
@@ -20,8 +20,8 @@ class TestRuleSet(unittest.TestCase):
         patch.stopall()
 
     def test_match(self):
-        mock_msg = Mock(rules_checked={})
-        mock_rule = Mock()
+        mock_msg = MagicMock(rules_checked={})
+        mock_rule = MagicMock()
         ruleset = pad.rules.ruleset.RuleSet(self.mock_ctxt)
         ruleset.checked = {"TEST_RULE": mock_rule}
 
@@ -30,6 +30,24 @@ class TestRuleSet(unittest.TestCase):
         mock_rule.match.assert_called_with(mock_msg)
         self.assertEqual(mock_msg.rules_checked["TEST_RULE"],
                          mock_rule.match(mock_msg))
+
+    def test_match_check_score(self):
+        mock_msg = MagicMock(rules_checked={}, score=0)
+        mock_rule = MagicMock(score=42)
+        ruleset = pad.rules.ruleset.RuleSet(self.mock_ctxt)
+        ruleset.checked = {"TEST_RULE": mock_rule}
+
+        ruleset.match(mock_msg)
+        self.assertEqual(mock_msg.score, 42)
+
+    def test_no_match_check_score(self):
+        mock_msg = MagicMock(rules_checked={}, score=0)
+        mock_rule = MagicMock(score=42, match=lambda m: False)
+        ruleset = pad.rules.ruleset.RuleSet(self.mock_ctxt)
+        ruleset.checked = {"TEST_RULE": mock_rule}
+
+        ruleset.match(mock_msg)
+        self.assertEqual(mock_msg.score, 0)
 
     def test_get_rule(self):
         mock_rule = Mock()
