@@ -40,17 +40,6 @@ SITE_RULES_PATHS = (
     )
 
 
-USER_PREFS_TEMPLATE_PATHS = (
-    '/etc/mail/spamassassin',
-    '/usr/local/etc/mail/spamassassin',
-    '/usr/local/share/spamassassin',
-    '/etc/spamassassin',
-    '/etc/mail/spamassassin',
-    '/usr/local/share/spamassassin',
-    '/usr/share/spamassassin',
-    )
-
-
 class MessageList(argparse.FileType):
 
     def __call__(self, string):
@@ -94,7 +83,7 @@ def parse_arguments(args):
 
     parser.add_argument("-C", "--configpath", "--config-file", action="store",
                         help="Path to standard configuration directory",
-                        default=default_config)
+                        default=default_config, required=require_config)
 
     available_siteconfig_paths = [x for x in SITE_RULES_PATHS if os.path.exists(x)]
 
@@ -143,6 +132,7 @@ def main():
     for message_list in options.messages:
         for msgf in message_list:
             raw_msg = msgf.read()
+            msgf.close()
             msg = pad.message.Message(ruleset.ctxt, raw_msg)
 
             ruleset.match(msg)
@@ -156,7 +146,6 @@ def main():
             if options.report:
                 ruleset.ctxt.hook_report(msg)
 
-            msgf.close()
 
 if __name__ == "__main__":
     main()
