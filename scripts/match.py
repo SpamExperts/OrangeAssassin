@@ -152,9 +152,9 @@ def main():
                     print(ruleset.get_rule(name))
 
             if options.revoke:
-                ruleset.context.hook_revoke(raw_msg)
+                ruleset.ctxt.hook_revoke(msg)
             if options.report:
-                ruleset.context.hook_report(raw_msg)
+                ruleset.ctxt.hook_report(msg)
 
             msgf.close()
 

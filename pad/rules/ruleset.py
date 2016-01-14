@@ -13,14 +13,14 @@ import pad.errors
 
 class RuleSet(object):
     """A set of rules used to match against a message."""
-    def __init__(self, context, paranoid=False):
+    def __init__(self, ctxt, paranoid=False):
         """Create a new empty RuleSet if paranoid is set to False any
         invalid rule is ignored.
         """
         self.checked = collections.OrderedDict()
         self.not_checked = dict()
         self.paranoid = paranoid
-        self.ctxt = context
+        self.ctxt = ctxt
         # XXX Hardcoded at the moment, should be loaded from configuration.
         self.use_bayes = True
         self.use_network = True
