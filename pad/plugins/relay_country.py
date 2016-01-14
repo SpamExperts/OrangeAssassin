@@ -21,7 +21,7 @@ def ip2long(ipaddress):
         pass
 
 
-class RelayCountry(pad.plugins.base.BasePlugin):
+class RelayCountryPlugin(pad.plugins.base.BasePlugin):
     """This plugin exposes the countries that a mail was relayed from.
 
     There is an option to specify the path for the database, it is called
@@ -30,19 +30,23 @@ class RelayCountry(pad.plugins.base.BasePlugin):
     The database is a csv file that can be downloaded from maxmind server:
     http://geolite.maxmind.com/download/geoip/database/GeoIPCountryCSV.zip
     """
-    options = {"geodb": ("string", ""),}
+    options = {"geodb": ("str", ""),}
 
     def __init__(self, *args, **kwargs):
         self.ipranges = []
-        super(RelayCountry, self).__init__(*args, **kwargs)
+        self.logger = pad.config.setup_logging("pad-logger")
+        super(RelayCountryPlugin, self).__init__(*args, **kwargs)
 
     def load_database(self):
         """Load the csv file and create a list of items where to search the IP.
         """
         try:
-            databasecsv = csv.reader(open(self.get_global("geodb")), "rb")
+            databasecsv = csv.reader(open(self.get_global("geodb"), "rb"))
         except (IOError, OSError):
             # Can't open the file.
+            return
+        except csv.Error, e:
+            self.logger.warning("Unable to open geo database file: %r", e)
             return
         self.ipranges = []
         for item in databasecsv:
@@ -75,9 +79,11 @@ class RelayCountry(pad.plugins.base.BasePlugin):
         countries that a mail was relayed from
         """
         if not self.get_global("geodb"):
+            self.logger.info("Unable to locate the geo database")
             return
         all_received = msg.msg.get_all("Received")
         if not all_received:
+            self.logger.info("No 'Received' headers found")
             return
         all_received = "\n".join(all_received)
         ips = IPFRE.findall(all_received)
@@ -87,5 +93,5 @@ class RelayCountry(pad.plugins.base.BasePlugin):
             if country:
                 result.append(country)
         if result:
-            msg.headers.append("X-Relay-Country",
-                               " ".join(result))
+            msg.headers["X-Relay-Country"].append(" ".join(result))
+            self.logger.debug("X-Relay-Country: '%s'", msg.headers["X-Relay-Country"])
