@@ -45,7 +45,7 @@ class RelayCountryPlugin(pad.plugins.base.BasePlugin):
         except (IOError, OSError):
             # Can't open the file.
             return
-        except csv.Error, e:
+        except csv.Error as e:
             self.logger.warning("Unable to open geo database file: %r", e)
             return
         self.ipranges = []
