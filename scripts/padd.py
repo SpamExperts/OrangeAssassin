@@ -141,12 +141,12 @@ def main():
     parser.add_argument("-r", "--pidfile", default="/var/run/padd.pid")
     parser.add_argument("--log-file", dest="log_file",
                         default="/var/log/padd.log")
-    parser.add_argument("-4", "--ipv4-only", "--ipv4", default=False,
-                        action="store_true", help="Use IPv4 where applicable, "
-                                                  "disables IPv6")
-    parser.add_argument("-6", default=False,
-                        action="store_true", help="Use IPv6 where applicable, "
-                                                  "disables IPv4")
+    # parser.add_argument("-4", "--ipv4-only", "--ipv4", default=False,
+    #                     action="store_true", help="Use IPv4 where applicable, "
+    #                                               "disables IPv6")
+    # parser.add_argument("-6", default=False,
+    #                     action="store_true", help="Use IPv6 where applicable, "
+    #                                               "disables IPv4")
     parser.add_argument("-v", "--version", action="version",
                         version=pad.__version__)
     args = parser.parse_args()
