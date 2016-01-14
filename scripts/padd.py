@@ -9,6 +9,8 @@ import os
 import sys
 import argparse
 
+import signal
+
 import pad
 import pad.config
 import pad.server
@@ -70,15 +72,57 @@ def detach(stdout="/dev/null", stderr=None, stdin="/dev/null", pidfile=None):
     os.dup2(stde.fileno(), sys.stderr.fileno())
 
 
+def run_daemon(args):
+    """Start the daemon."""
+    if args.daemonize:
+        detach(pidfile=args.pidfile)
+    address = (args.listen, args.port)
+    if args.prefork is not None:
+        server = pad.server.PreForkServer(
+            address, args.sitepath, args.configpath, paranoid=args.paranoid,
+            ignore_unknown=not args.show_unknown, prefork=args.prefork
+        )
+    else:
+        server = pad.server.Server(
+            address, args.sitepath, args.configpath,paranoid=args.paranoid,
+            ignore_unknown=not args.show_unknown
+        )
+    try:
+        server.serve_forever()
+    finally:
+        try:
+            os.remove(args.pidfile)
+        except OSError:
+            pass
+
+
+def send_action(args):
+    """Send a signal to an existing running daemon."""
+    if not os.path.exists(args.pidfile):
+        print("No pid file available: %s", args.pidfile, file=sys.stderr)
+        return
+    with open(args.pidfile) as pidf:
+        pid = int(pidf.read())
+
+    if args.action == "reload":
+        os.kill(pid, signal.SIGUSR1)
+    elif args.action == "stop":
+        os.kill(pid, signal.SIGTERM)
+
+
 def main():
     parser = argparse.ArgumentParser(
         description=__doc__,
         formatter_class=argparse.ArgumentDefaultsHelpFormatter
     )
+    parser.add_argument("action", nargs="?", choices=["reload", "stop"],
+                        help="Send a signal a running daemon.")
     parser.add_argument("-D", "--debug", action="store_true", default=False,
                         help="Enable debugging output")
     parser.add_argument("-P", "--paranoid", action="store_true", default=False,
                         help="Die upon user errors")
+    parser.add_argument("--show-unknown", action="store_true", default=False,
+                        help="Show warnings about unknown parsing errors")
     parser.add_argument("-d", "--daemonize", action="store_true", default=False,
                         help="Detach the process")
     parser.add_argument("--prefork", type=int, default=None,
@@ -108,23 +152,10 @@ def main():
     args = parser.parse_args()
     logger = pad.config.setup_logging("pad-logger", debug=args.debug,
                                       filepath=args.log_file)
-    if args.daemonize:
-        detach(pidfile=args.pidfile)
-    address = (args.listen, args.port)
-    if args.prefork is not None:
-        server = pad.server.PreForkServer(address, args.sitepath,
-                                          args.configpath,
-                                          args.paranoid, prefork=args.prefork)
+    if args.action:
+        send_action(args)
     else:
-        server = pad.server.Server(address, args.sitepath, args.configpath,
-                                   args.paranoid)
-    try:
-        server.serve_forever()
-    finally:
-        try:
-            os.remove(args.pidfile)
-        except OSError:
-            pass
+        run_daemon(args)
 
 
 if __name__ == "__main__":
