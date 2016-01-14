@@ -12,6 +12,7 @@ def suite():
     import tests.unit.test_rules as test_rules
     import tests.unit.test_match as test_match
     import tests.unit.test_daemon as test_daemon
+    import tests.unit.test_server as test_server
     import tests.unit.test_context as test_context
     import tests.unit.test_plugins as test_plugins
     import tests.unit.test_message as test_message
@@ -20,6 +21,7 @@ def suite():
     test_suite.addTest(test_regex.suite())
     test_suite.addTest(test_rules.suite())
     test_suite.addTest(test_match.suite())
+    test_suite.addTest(test_server.suite())
     test_suite.addTest(test_daemon.suite())
     test_suite.addTest(test_context.suite())
     test_suite.addTest(test_plugins.suite())

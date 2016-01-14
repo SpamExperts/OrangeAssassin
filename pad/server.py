@@ -123,7 +123,7 @@ class PreForkServer(Server):
     The parent process will then wait for all his child process to complete.
     """
     def __init__(self, address, sitepath, configpath, paranoid=False,
-                 prefork=4):
+                 prefork=6):
         """The same as Server.__init__ but requires a list of databases
         instead of a single database connection.
         """

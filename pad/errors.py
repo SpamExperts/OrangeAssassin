@@ -69,3 +69,13 @@ class InhibitCallbacks(Exception):
     """Stops the processing of the current callback, and prevent other plugins
     callbacks.
     """
+
+
+class ProtocolError(PADError):
+    """Something went wrong in the communication
+    protocol.
+    """
+
+
+class InvalidOption(ProtocolError):
+    """Invalid command option provided."""

@@ -3,6 +3,7 @@
 import zlib
 
 import pad
+import pad.errors
 import pad.message
 
 
@@ -31,7 +32,9 @@ class BaseProtocol(object):
             line = self.rfile.readline().strip()
             if not line:
                 break
-            name, value = line.split(":")
+            if ":" not in line:
+                raise pad.errors.InvalidOption("Invalid option: %s" % line)
+            name, value = line.split(":", 1)
             options[name.lower()] = value.strip()
         return options
 
