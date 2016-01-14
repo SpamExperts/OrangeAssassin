@@ -91,11 +91,18 @@ class TestImageCount(TestImageInfo):
 class TestImageNamed(TestImageInfo):
 
     def test_true(self):
-        pass
+        self.mock_msg.msg = None
+        plugin = pad.plugins.image_info.ImageInfoPlugin(self.mock_ctxt)
+        images = {1: self.new_image(1, 1, "jpg", "test.jpg")}
+        plugin.set_local(self.mock_msg, "images", images)
+        self.assertTrue(plugin.image_named(self.mock_msg, "test.jpg"))
 
     def test_false(self):
-        pass
-
+        self.mock_msg.msg = None
+        plugin = pad.plugins.image_info.ImageInfoPlugin(self.mock_ctxt)
+        images = {1: self.new_image(1, 1, "jpg", "test.jpg")}
+        plugin.set_local(self.mock_msg, "images", images)
+        self.assertFalse(plugin.image_named(self.mock_msg, "test2.jpg"))
 
 class TestImageNameRegex(TestImageInfo):
 
@@ -108,16 +115,32 @@ class TestImageNameRegex(TestImageInfo):
 class TestPixelCoverage(TestImageInfo):
 
     def test_min_true(self):
-        pass
+        self.mock_msg.msg = None
+        plugin = pad.plugins.image_info.ImageInfoPlugin(self.mock_ctxt)
+        images = {1: self.new_image(2, 2, "jpg", "test.jpg")}
+        plugin.set_local(self.mock_msg, "images", images)
+        self.assertTrue(plugin.pixel_coverage(self.mock_msg, "all", 3))
 
     def test_min_false(self):
-        pass
+        self.mock_msg.msg = None
+        plugin = pad.plugins.image_info.ImageInfoPlugin(self.mock_ctxt)
+        images = {1: self.new_image(2, 2, "jpg", "test.jpg")}
+        plugin.set_local(self.mock_msg, "images", images)
+        self.assertFalse(plugin.pixel_coverage(self.mock_msg, "all", 5))
 
     def test_max_true(self):
-        pass
+        self.mock_msg.msg = None
+        plugin = pad.plugins.image_info.ImageInfoPlugin(self.mock_ctxt)
+        images = {1: self.new_image(2, 2, "jpg", "test.jpg")}
+        plugin.set_local(self.mock_msg, "images", images)
+        self.assertTrue(plugin.pixel_coverage(self.mock_msg, "all", 3, 5))
 
     def test_max_false(self):
-        pass
+        self.mock_msg.msg = None
+        plugin = pad.plugins.image_info.ImageInfoPlugin(self.mock_ctxt)
+        images = {1: self.new_image(2, 2, "jpg", "test.jpg")}
+        plugin.set_local(self.mock_msg, "images", images)
+        self.assertFalse(plugin.pixel_coverage(self.mock_msg, "all", 3, 2))
 
 class TestImageSizeExact(TestImageInfo):
 
