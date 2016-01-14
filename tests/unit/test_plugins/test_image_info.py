@@ -142,19 +142,22 @@ class TestPixelCoverage(TestImageInfo):
         plugin.set_local(self.mock_msg, "images", images)
         self.assertFalse(plugin.pixel_coverage(self.mock_msg, "all", 3, 2))
 
+
 class TestImageSizeExact(TestImageInfo):
 
-    def test_min_true(self):
-        pass
+    def test_true(self):
+        self.mock_msg.msg = None
+        plugin = pad.plugins.image_info.ImageInfoPlugin(self.mock_ctxt)
+        images = {1: self.new_image(2, 2, "jpg", "test.jpg")}
+        plugin.set_local(self.mock_msg, "images", images)
+        self.assertTrue(plugin.image_size_exact(self.mock_msg, "all", 2, 2))
 
-    def test_min_false(self):
-        pass
-
-    def test_max_true(self):
-        pass
-
-    def test_max_false(self):
-        pass
+    def test_false(self):
+        self.mock_msg.msg = None
+        plugin = pad.plugins.image_info.ImageInfoPlugin(self.mock_ctxt)
+        images = {1: self.new_image(2, 2, "jpg", "test.jpg")}
+        plugin.set_local(self.mock_msg, "images", images)
+        self.assertFalse(plugin.image_size_exact(self.mock_msg, "all", 3, 2))
 
 
 def suite():
