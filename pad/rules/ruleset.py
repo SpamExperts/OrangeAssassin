@@ -24,6 +24,7 @@ class RuleSet(object):
         # XXX Hardcoded at the moment, should be loaded from configuration.
         self.use_bayes = True
         self.use_network = True
+        self.required_score = 5
 
     def add_rule(self, rule):
         """Add a rule to the ruleset, execute any pre and post processing
@@ -64,6 +65,9 @@ class RuleSet(object):
     def match(self, msg):
         """Match the message against all the rules in this ruleset."""
         for name, rule in self.checked.items():
-            self.ctxt.log.debug("Checking rule: %s", rule)
-            msg.rules_checked[name] = rule.match(msg)
+            result = rule.match(msg)
+            self.ctxt.log.debug("Checked rule %s: %s", rule, result)
+            msg.rules_checked[name] = result
+            if result:
+                msg.score += rule.score
         self.ctxt.hook_check_end(msg)

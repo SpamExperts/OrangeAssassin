@@ -1,4 +1,4 @@
-"""Implement a simple PING command."""
+"""Implement general "no operation" commands."""
 
 from __future__ import absolute_import
 
@@ -11,4 +11,13 @@ class PingCommand(pad.protocol.base.BaseProtocol):
 
     def handle(self, msg, options):
         return ""
+
+
+class SkipCommand(pad.protocol.base.BaseProtocol):
+    """The client changed his mind, do nothing."""
+
+    def get_and_handle(self):
+        """Do nothing."""
+
+
 

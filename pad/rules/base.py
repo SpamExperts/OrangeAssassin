@@ -25,13 +25,15 @@ class BaseRule(object):
 
     def __init__(self, name, score=None, desc=None):
         self.name = name
-        if score is None:
+        if name.startswith("__"):
+            score = [0.0]
+        elif score is None:
             score = [1.0]
         self._scores = score
 
         if len(self._scores) not in (1, 4):
             raise pad.errors.InvalidRule(name, "Expected 1 or 4 values for the "
-                                        "score and got %s" % len(self._scores))
+                                         "score and got %s" % len(self._scores))
 
         if desc is None:
             desc = "No description available."
@@ -41,8 +43,11 @@ class BaseRule(object):
         self.score = self._scores[0]
 
     def preprocess(self, ruleset):
-        """Runs before the rule is added to the Ruleset."""
-        if len(self._scores) == 1:
+        """Adjust the score for this rule taking into consideration
+        the advanced scoring, if there are 4 scores provided.
+        """
+        if len(self._scores) != 4:
+            # Nothing to do
             return
         flags = ruleset.use_bayes, ruleset.use_network
         self.score = _ADVANCED_SCORING[flags](self._scores)
@@ -64,6 +69,8 @@ class BaseRule(object):
     def should_check(self):
         """Check if the rule should be processed or not."""
         if self.name.startswith("__"):
+            # This might be checked in a META rule, but
+            # don't check it by default.
             return False
         elif self.score == 0:
             return False
