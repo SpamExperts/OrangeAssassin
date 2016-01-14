@@ -15,16 +15,18 @@ import pad.errors
 EXAMPLE_EMAIL = ()
 
 class TestRevokeReport(unittest.TestCase):
-    messages = [u"Message Stub 1",
-                u"Message Stub 2",
-                u"Message Stub 3",]
+    raw_messages = [u"Message Stub 1",
+                    u"Message Stub 2",
+                    u"Message Stub 3",]
 
     def setUp(self):
         ruleset = patch("scripts.match.pad.rules."
                         "parser.parse_pad_rules").start()
-        self.context = ruleset.return_value.context
+        self.ctxt = ruleset.return_value.ctxt
         patch("scripts.match.MessageList").start()
         patch("scripts.match.pad.config.get_config_files").start()
+        msg_class = patch("scripts.match.pad.message.Message").start()
+        self.messages = [msg_class(self.ctxt, x) for x in self.raw_messages]
 
     def tearDown(self):
         patch.stopall()
@@ -34,31 +36,31 @@ class TestRevokeReport(unittest.TestCase):
         options = scripts.match.parse_arguments(["--report",
                                                  "--siteconfigpath", ".",
                                                  "--configpath", "."])
-        options.messages = [[StringIO(x) for x in self.messages]]
+        options.messages = [[StringIO(x) for x in self.raw_messages]]
         patch("scripts.match.parse_arguments",
               return_value=options).start()
         scripts.match.main()
         calls = [call(x) for x in self.messages]
-        self.context.hook_report.assert_has_calls(calls)
-        self.context.hook_revoke.assert_not_called()
+        self.ctxt.hook_report.assert_has_calls(calls)
+        self.ctxt.hook_revoke.assert_not_called()
 
     def test_revoke(self):
         options = scripts.match.parse_arguments(["--revoke",
                                                  "--siteconfigpath", ".",
                                                  "--configpath", "."])
-        options.messages = [[StringIO(x) for x in self.messages]]
+        options.messages = [[StringIO(x) for x in self.raw_messages]]
         patch("scripts.match.parse_arguments",
               return_value=options).start()
         scripts.match.main()
         calls = [call(x) for x in self.messages]
-        self.context.hook_revoke.assert_has_calls(calls)
-        self.context.hook_report.assert_not_called()
+        self.ctxt.hook_revoke.assert_has_calls(calls)
+        self.ctxt.hook_report.assert_not_called()
 
     def test_max_recursion_exception(self):
         options = scripts.match.parse_arguments(["--revoke",
                                                  "--siteconfigpath", ".",
                                                  "--configpath", "."])
-        options.messages = [[StringIO(x) for x in self.messages]]
+        options.messages = [[StringIO(x) for x in self.raw_messages]]
         patch("scripts.match.parse_arguments",
               return_value=options).start()
         self.mock_parse = patch(
@@ -71,7 +73,7 @@ class TestRevokeReport(unittest.TestCase):
         options = scripts.match.parse_arguments(["--revoke",
                                                  "--siteconfigpath", ".",
                                                  "--configpath", "."])
-        options.messages = [[StringIO(x) for x in self.messages]]
+        options.messages = [[StringIO(x) for x in self.raw_messages]]
         patch("scripts.match.parse_arguments",
               return_value=options).start()
         self.mock_parse = patch(
