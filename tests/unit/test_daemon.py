@@ -21,6 +21,9 @@ class TestDaemon(unittest.TestCase):
         self.argv = ["padd.py"]
         patch("scripts.padd.sys.exit", create=True).start()
         patch("scripts.padd.sys.argv", self.argv, create=True).start()
+        patch("scripts.padd.pad.config.get_default_configs",
+              return_value={"default": "/etc/mail/spamassassin",
+                            "required": False}).start()
 
     def tearDown(self):
         unittest.TestCase.tearDown(self)
@@ -30,7 +33,7 @@ class TestDaemon(unittest.TestCase):
         scripts.padd.main()
         self.mock_s.assert_called_with(
             ("0.0.0.0", 783), '/etc/mail/spamassassin',
-            '/usr/share/spamassassin', paranoid=False,
+            '/etc/mail/spamassassin', paranoid=False,
             ignore_unknown=True,
         )
         self.mock_s.return_value.serve_forever.assert_called_with()
@@ -40,7 +43,7 @@ class TestDaemon(unittest.TestCase):
         scripts.padd.main()
         self.mock_pfs.assert_called_with(
             ("0.0.0.0", 783), '/etc/mail/spamassassin',
-            '/usr/share/spamassassin', paranoid=False,
+            '/etc/mail/spamassassin', paranoid=False,
             ignore_unknown=True, prefork=6
         )
         self.mock_pfs.return_value.serve_forever.assert_called_with()
