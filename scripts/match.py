@@ -17,25 +17,6 @@ import pad.errors
 import pad.message
 import pad.rules.parser
 
-CONFIG_PATHS = (
-    '/var/lib/spamassassin/3.004001',
-    '/usr/local/share/spamassassin',
-    '/usr/local/share/spamassassin',
-    '/usr/local/share/spamassassin',
-    '/usr/share/spamassassin',
-)
-
-SITE_RULES_PATHS = (
-    '/etc/mail/spamassassin',
-    '/usr/local/etc/mail/spamassassin',
-    '/usr/local/etc/spamassassin',
-    '/usr/local/etc/spamassassin',
-    '/usr/pkg/etc/spamassassin',
-    '/usr/etc/spamassassin',
-    '/etc/mail/spamassassin',
-    '/etc/spamassassin',
-)
-
 
 class MessageList(argparse.FileType):
     def __call__(self, string):
@@ -53,9 +34,10 @@ def parse_arguments(args):
 
     parser.add_argument("-n", "--nice", type=int, help="set 'nice' level",
                         default=0)
-    parser.add_argument("--paranoid", action="store_true",
-                        help="If errors are found in the ruleset stop "
-                             "processing", default=False)
+    parser.add_argument("-P", "--paranoid", action="store_true", default=False,
+                        help="Die upon user errors")
+    parser.add_argument("--show-unknown", action="store_true", default=False,
+                        help="Show warnings about unknown parsing errors")
     group = parser.add_mutually_exclusive_group()
     group.add_argument("-r", "--report", action="store_true",
                        help="Report the message as spam", default=False)
@@ -63,36 +45,14 @@ def parse_arguments(args):
                        help="Revoke the message as spam ", default=False)
     parser.add_argument("-D", "--debug", action="store_true",
                         help="Enable debugging output", default=False)
-    parser.add_argument("-v", "--version", action="store_true",
-                        help="Print version", default=False)
-
-    config_paths = [x for x in CONFIG_PATHS if os.path.exists(x)]
-
-    try:
-        default_config = config_paths[0]
-        require_config = False
-    except (IndexError):
-        default_config = None
-        require_config = True
-
-    parser.add_argument("-C", "--configpath", "--config-file", action="store",
+    parser.add_argument("-v", "--version", action="version",
+                        version=pad.__version__)
+    parser.add_argument("-C", "--configpath", action="store",
                         help="Path to standard configuration directory",
-                        default=default_config, required=require_config)
-
-    available_siteconfig_paths = [x for x in SITE_RULES_PATHS if
-                                  os.path.exists(x)]
-
-    try:
-        default_siteconfig = available_siteconfig_paths[0]
-        require_siteconfig = False
-    except (IndexError):
-        default_siteconfig = None
-        require_siteconfig = True
-
-    parser.add_argument("--siteconfigpath", action="store",
+                        **pad.config.get_default_configs(site=False))
+    parser.add_argument("--sitepath", "--siteconfigpath", action="store",
                         help="Path to standard configuration directory",
-                        default=default_siteconfig, required=require_siteconfig)
-
+                        **pad.config.get_default_configs(site=True))
     parser.add_argument("messages", type=MessageList(), nargs="*",
                         metavar="path", help="Paths to messages or "
                                              "directories containing messages",
@@ -103,18 +63,14 @@ def parse_arguments(args):
 
 def main():
     options = parse_arguments(sys.argv[1:])
-
-    if options.version:
-        print(pad.__version__)
-
     logger = pad.config.setup_logging("pad-logger", debug=options.debug)
-
     config_files = pad.config.get_config_files(options.configpath,
-                                               options.siteconfigpath)
+                                               options.sitepath)
 
     try:
-        ruleset = pad.rules.parser.parse_pad_rules(config_files,
-                                                   options.paranoid)
+        ruleset = pad.rules.parser.parse_pad_rules(
+            config_files, options.paranoid, options.ignore_unknown
+        )
     except pad.errors.MaxRecursionDepthExceeded as e:
         print(e.recursion_list, file=sys.stderr)
         sys.exit(1)
