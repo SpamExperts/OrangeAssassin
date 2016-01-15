@@ -3,12 +3,26 @@
 from __future__ import absolute_import
 
 import re
+import socket
+import struct
 
 import geoip2.database
 
 import pad.plugins.base
 
 IPFRE = re.compile(r"[\[\(\s\/]((?:[0-9]{1,3}\.){3}[0-9]{1,3})[\s\]\)\/]")
+LOWER_172_IP = 2886729728
+UPPER_172_IP = 2887778303
+
+def ip2long(ip):
+    """
+    Convert an IP string to long
+    """
+    try:
+        packedIP = socket.inet_aton(ip)
+        return struct.unpack("!L", packedIP)[0]
+    except (socket.error, struct.error):
+        pass
 
 class RelayCountryPlugin(pad.plugins.base.BasePlugin):
     """This plugin exposes the countries that a mail was relayed from.
@@ -39,10 +53,14 @@ class RelayCountryPlugin(pad.plugins.base.BasePlugin):
         network range database.
         """
         if (ipaddress.startswith("10") or
-                ipaddress.startswith("172.16.") or
                 ipaddress.startswith("192.168.") or
                 ipaddress.startswith("127.0.0.1")):
             return "**"
+        if ipaddress.startswith("172"):
+            #The 20-bit block goes from 172.16.0.0 to 172.32.255.255
+            longip = ip2long(ipaddress)
+            if longip >= LOWER_172_IP and longip <= UPPER_172_IP:
+                return "**"
         try:
             response = self.reader.country(ipaddress)
         except geoip2.errors.AddressNotFoundError:
@@ -67,6 +85,7 @@ class RelayCountryPlugin(pad.plugins.base.BasePlugin):
         all_received = "\n".join(all_received)
         ips = IPFRE.findall(all_received)
         result = []
+        self.ctxt.log.debug("IPS found: %r", ips)
         for ipaddress in ips:
             country = self.get_country(ipaddress)
             result.append(str(country))
