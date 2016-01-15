@@ -9,7 +9,6 @@ from __future__ import print_function
 
 import os
 import sys
-import glob
 import argparse
 
 import pad
@@ -18,15 +17,13 @@ import pad.errors
 import pad.message
 import pad.rules.parser
 
-
 CONFIG_PATHS = (
     '/var/lib/spamassassin/3.004001',
     '/usr/local/share/spamassassin',
     '/usr/local/share/spamassassin',
     '/usr/local/share/spamassassin',
     '/usr/share/spamassassin',
-    )
-
+)
 
 SITE_RULES_PATHS = (
     '/etc/mail/spamassassin',
@@ -37,11 +34,10 @@ SITE_RULES_PATHS = (
     '/usr/etc/spamassassin',
     '/etc/mail/spamassassin',
     '/etc/spamassassin',
-    )
+)
 
 
 class MessageList(argparse.FileType):
-
     def __call__(self, string):
         if os.path.isdir(string):
             for x in os.listdir(string):
@@ -59,17 +55,16 @@ def parse_arguments(args):
                         default=0)
     parser.add_argument("--paranoid", action="store_true",
                         help="If errors are found in the ruleset stop "
-                        "processing", default=False)
+                             "processing", default=False)
     group = parser.add_mutually_exclusive_group()
     group.add_argument("-r", "--report", action="store_true",
-                        help="Report the message as spam", default=False)
+                       help="Report the message as spam", default=False)
     group.add_argument("-k", "--revoke", action="store_true",
-                        help="Revoke the message as spam ", default=False)
+                       help="Revoke the message as spam ", default=False)
     parser.add_argument("-D", "--debug", action="store_true",
                         help="Enable debugging output", default=False)
     parser.add_argument("-v", "--version", action="store_true",
                         help="Print version", default=False)
-
 
     config_paths = [x for x in CONFIG_PATHS if os.path.exists(x)]
 
@@ -80,12 +75,12 @@ def parse_arguments(args):
         default_config = None
         require_config = True
 
-
     parser.add_argument("-C", "--configpath", "--config-file", action="store",
                         help="Path to standard configuration directory",
                         default=default_config, required=require_config)
 
-    available_siteconfig_paths = [x for x in SITE_RULES_PATHS if os.path.exists(x)]
+    available_siteconfig_paths = [x for x in SITE_RULES_PATHS if
+                                  os.path.exists(x)]
 
     try:
         default_siteconfig = available_siteconfig_paths[0]
@@ -98,17 +93,15 @@ def parse_arguments(args):
                         help="Path to standard configuration directory",
                         default=default_siteconfig, required=require_siteconfig)
 
-
-
     parser.add_argument("messages", type=MessageList(), nargs="*",
                         metavar="path", help="Paths to messages or "
-                        "directories containing messages",
+                                             "directories containing messages",
                         default=[[sys.stdin]])
 
     return parser.parse_args(args)
 
-def main():
 
+def main():
     options = parse_arguments(sys.argv[1:])
 
     if options.version:
@@ -117,7 +110,7 @@ def main():
     logger = pad.config.setup_logging("pad-logger", debug=options.debug)
 
     config_files = pad.config.get_config_files(options.configpath,
-                                           options.siteconfigpath)
+                                               options.siteconfigpath)
 
     try:
         ruleset = pad.rules.parser.parse_pad_rules(config_files,
@@ -151,7 +144,5 @@ def main():
     print("%s message(s) examined" % count)
 
 
-
 if __name__ == "__main__":
     main()
-
