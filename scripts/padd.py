@@ -132,12 +132,12 @@ def main():
     parser.add_argument("-p", "--port", type=int, default=783,
                         help="Listen on specified port, "
                              "may be overridden by -i")
-    parser.add_argument("-C", "--configpath", "--config-file", action="store",
+    parser.add_argument("-C", "--configpath", action="store",
                         help="Path to standard configuration directory",
-                        default="/usr/share/spamassassin")
-    parser.add_argument("--sitepath", "--siteconfig", action="store",
+                        **pad.config.get_default_configs(site=False))
+    parser.add_argument("--sitepath", "--siteconfigpath", action="store",
                         help="Path to standard configuration directory",
-                        default="/etc/mail/spamassassin")
+                        **pad.config.get_default_configs(site=True))
     parser.add_argument("-r", "--pidfile", default="/var/run/padd.pid")
     parser.add_argument("--log-file", dest="log_file",
                         default="/var/log/padd.log")
