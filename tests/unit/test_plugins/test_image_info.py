@@ -78,7 +78,7 @@ class TestImageInfoPlugin(TestImageInfoBase):
             image.pop("data", None)
 
         extracted_images = self.plugin.get_local(self.mock_msg, "images")
-        self.assertListEqual(images.values(), extracted_images.values())
+        self.assertListEqual(list(images.values()), list(extracted_images.values()))
 
 
     def test_get_local_images_empty(self):
