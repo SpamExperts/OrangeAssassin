@@ -6,7 +6,12 @@ import re
 import socket
 import struct
 
-import geoip2.database
+import pad.errors
+try:
+    import geoip2.database
+except ImportError:
+    raise pad.errors.PluginLoadError(
+            "RelayCountryPlugin not loaded, You must install geoip2 to use this plugin")
 
 import pad.plugins.base
 
@@ -44,9 +49,9 @@ class RelayCountryPlugin(pad.plugins.base.BasePlugin):
         """
         try:
             self.reader = geoip2.database.Reader(self.get_global("geodb"))
+            return True
         except IOError as exc:
             self.ctxt.log.warning("Unable to open geo database file: %r", exc)
-        return True
 
     def get_country(self, ipaddress):
         """Return the country corresponding to an IP based on the
