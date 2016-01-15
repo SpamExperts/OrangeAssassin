@@ -16,6 +16,7 @@ from builtins import dict
 from builtins import object
 
 import re
+import warnings
 import contextlib
 import collections
 
@@ -107,9 +108,14 @@ class PADParser(object):
 
         with open(filename, "rb") as rulef:
             for line_no, line in enumerate(rulef):
-                with self._paranoid(pad.errors.InvalidSyntax,
-                                    pad.errors.PluginLoadError):
-                    self._handle_line(filename, line, line_no + 1, _depth)
+                try:
+                    with self._paranoid(pad.errors.InvalidSyntax):
+                            self._handle_line(filename, line, line_no + 1, _depth)
+                except pad.errors.PluginLoadError as e:
+                    warnings.warn(e.message)
+                    self.ctxt.log.warn(e.message)
+
+
 
     def _handle_line(self, filename, line, line_no, _depth=0):
         """Handles a single line."""

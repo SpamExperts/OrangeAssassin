@@ -5,7 +5,13 @@ from __future__ import absolute_import, print_function
 import re
 from io import BytesIO
 
-import PIL.Image
+import pad.errors
+
+try:
+    import PIL.Image
+except ImportError:
+    raise pad.errors.PluginLoadError(
+        "ImageInfoPlugin not loaded, You must install Pillow to use this plugin")
 
 import pad.regex
 import pad.plugins.base
