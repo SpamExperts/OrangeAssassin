@@ -3,23 +3,12 @@
 from __future__ import absolute_import
 
 import re
-import csv
-import socket
-import struct
+
+import geoip2.database
 
 import pad.plugins.base
 
 IPFRE = re.compile(r"[\[\(\s\/]((?:[0-9]{1,3}\.){3}[0-9]{1,3})[\s\]\)\/]")
-
-def ip2long(ipaddress):
-    """Convert an IP string to long
-    """
-    try:
-        packedip = socket.inet_aton(ipaddress)
-        return struct.unpack("!L", packedip)[0]
-    except (struct.error, socket.error):
-        pass
-
 
 class RelayCountryPlugin(pad.plugins.base.BasePlugin):
     """This plugin exposes the countries that a mail was relayed from.
@@ -28,70 +17,59 @@ class RelayCountryPlugin(pad.plugins.base.BasePlugin):
     "geodb", is a string and points to the file where the database is.
 
     The database is a csv file that can be downloaded from maxmind server:
-    http://geolite.maxmind.com/download/geoip/database/GeoIPCountryCSV.zip
+    http://geolite.maxmind.com/download/geoip/database/GeoLite2-Country.mmdb.gz
     """
     options = {"geodb": ("str", ""),}
 
     def __init__(self, *args, **kwargs):
-        self.ipranges = []
-        self.logger = pad.config.setup_logging("pad-logger")
+        self.reader = None
         super(RelayCountryPlugin, self).__init__(*args, **kwargs)
 
     def load_database(self):
         """Load the csv file and create a list of items where to search the IP.
         """
         try:
-            databasecsv = csv.reader(open(self.get_global("geodb"), "rb"))
-        except (IOError, OSError):
-            # Can't open the file.
-            return
-        except csv.Error as e:
-            self.logger.warning("Unable to open geo database file: %r", e)
-            return
-        self.ipranges = []
-        for item in databasecsv:
-            ip_range_start, country_code = ip2long(item[0]), item[4]
-            self.ipranges.append((ip_range_start, country_code))
+            self.reader = geoip2.database.Reader(self.get_global("geodb"))
+        except IOError as exc:
+            self.ctxt.log.warning("Unable to open geo database file: %r", exc)
+        return True
 
     def get_country(self, ipaddress):
         """Return the country corresponding to an IP based on the
         network range database.
         """
-        if not self.ipranges:
-            self.load_database()
         if (ipaddress.startswith("10") or
-                ipaddress.startswith("172.16") or
-                ipaddress.startswith("192.168") or
+                ipaddress.startswith("172.16.") or
+                ipaddress.startswith("192.168.") or
                 ipaddress.startswith("127.0.0.1")):
             return "**"
-        ipl = ip2long(ipaddress)
-        for index, item in enumerate(self.ipranges):
-            try:
-                nextitem = self.ipranges[index + 1]
-            except IndexError:
-                nextitem = (0, "NONE")
-            if ipl >= item[0] and ipl <= nextitem[0]:
-                return item[1]
-        return "XX"
+        try:
+            response = self.reader.country(ipaddress)
+        except geoip2.errors.AddressNotFoundError:
+            self.ctxt.log.info("Can't locate IP '%s' in database", ipaddress)
+            #Cant locate the IP in database.
+            return "XX"
+        return response.country.iso_code # pylint: disable=maybe-no-member
 
     def check_start(self, msg):
         """Check the X-Relay-Countries in the message and exposes the
         countries that a mail was relayed from
         """
         if not self.get_global("geodb"):
-            self.logger.info("Unable to locate the geo database")
+            self.ctxt.log.info("Unable to locate the geo database")
+            return
+        if not self.load_database():
             return
         all_received = msg.msg.get_all("Received")
         if not all_received:
-            self.logger.info("No 'Received' headers found")
+            self.ctxt.log.info("No 'Received' headers found")
             return
         all_received = "\n".join(all_received)
         ips = IPFRE.findall(all_received)
         result = []
         for ipaddress in ips:
             country = self.get_country(ipaddress)
-            if country:
-                result.append(country)
+            result.append(str(country))
         if result:
             msg.headers["X-Relay-Country"].append(" ".join(result))
-            self.logger.debug("X-Relay-Country: '%s'", msg.headers["X-Relay-Country"])
+            self.ctxt.log.debug("X-Relay-Country: '%s'", msg.headers["X-Relay-Country"])
