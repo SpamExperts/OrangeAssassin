@@ -40,7 +40,6 @@ class ImageInfoPlugin(pad.plugins.base.BasePlugin):
                 images = self.get_local(msg, "images")
             except KeyError:
                 images = {}
-            print(count)
 
             imginfo = self._image_info(part.get_payload(decode=True))
             imginfo['name'] = part.get_param("name")
