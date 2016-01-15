@@ -168,6 +168,6 @@ class ImageInfoPlugin(pad.plugins.base.BasePlugin):
                     if ratio >= min_ratio and ratio <= max_ratio:
                         return True
                 else:
-                    if ratio >= max_ratio:
+                    if ratio >= min_ratio:
                         return True
         return False
