@@ -53,6 +53,9 @@ def parse_arguments(args):
     parser.add_argument("--sitepath", "--siteconfigpath", action="store",
                         help="Path to standard configuration directory",
                         **pad.config.get_default_configs(site=True))
+    parser.add_argument("-t", "--test-mode", action="store_true", default=False,
+                        help="Pipe message through and add extra report to the "
+                             "bottom")
     parser.add_argument("messages", type=MessageList(), nargs="*",
                         metavar="path", help="Paths to messages or "
                                              "directories containing messages",
@@ -69,7 +72,7 @@ def main():
 
     try:
         ruleset = pad.rules.parser.parse_pad_rules(
-            config_files, options.paranoid, options.ignore_unknown
+            config_files, options.paranoid, not options.show_unknown
         )
     except pad.errors.MaxRecursionDepthExceeded as e:
         print(e.recursion_list, file=sys.stderr)
@@ -91,10 +94,9 @@ def main():
                 ruleset.ctxt.hook_report(msg)
             else:
                 ruleset.match(msg)
-
-                for name, result in msg.rules_checked.items():
-                    if result:
-                        print(ruleset.get_rule(name))
+                print(msg.get_adjusted_message(ruleset))
+                if options.test_mode:
+                    print(ruleset.get_report(msg))
         count += 1
 
     print("%s message(s) examined" % count)

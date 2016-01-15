@@ -35,7 +35,8 @@ class TestProcessCommand(unittest.TestCase):
         cmd = pad.protocol.process.ProcessCommand(self.mockr, self.mockw,
                                                   self.mockrules)
         result = list(cmd.handle(self.msg, {}))
-        self.assertEqual(result, [self.msg.get_adjusted_message()])
+        self.assertEqual(result,
+                         [self.msg.get_adjusted_message(self.mockrules)])
 
     def test_headers(self):
         cmd = pad.protocol.process.HeadersCommand(self.mockr, self.mockw,
@@ -47,8 +48,10 @@ class TestProcessCommand(unittest.TestCase):
         cmd = pad.protocol.process.HeadersCommand(self.mockr, self.mockw,
                                                   self.mockrules)
         result = list(cmd.handle(self.msg, {}))
-        self.assertEqual(result,
-                         [self.msg.get_adjusted_message(headers_only=True)])
+        self.assertEqual(
+            result,
+            [self.msg.get_adjusted_message(self.mockrules, headers_only=True)]
+        )
 
 def suite():
     """Gather all the tests from this package in a test suite."""

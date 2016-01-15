@@ -10,11 +10,16 @@ standard_library.install_hooks()
 
 import re
 import email
+import socket
 import email.utils
 import html.parser
 import collections
 import email.header
+import email.mime.base
+import email.mime.text
+import email.mime.multipart
 
+import pad
 import pad.context
 
 URL_RE = re.compile(r"""
@@ -121,11 +126,43 @@ class Message(pad.context.MessageContext):
         self.rules_checked = dict()
         self.score = 0
 
-    def get_adjusted_message(self, header_only=False):
+    def get_adjusted_message(self, ruleset, header_only=False):
         """Get message adjusted by the rules."""
-        # XXX We don't have support yet for actually modifying
-        # XXX the message.
-        return self.msg.as_string()
+        # XXX This only had partial support, we cannot add
+        # XXX add header, remove headers etc..
+        spam = self.score >= ruleset.required_score
+        if not spam:
+            return self.msg.as_string()
+
+        newmsg = email.mime.multipart.MIMEMultipart("mixed")
+
+        newmsg["Received"] = (
+            "from localhost by %s with SpamPad (version %s); %s" %
+            (socket.gethostname(), pad.__version__,
+             email.utils.formatdate(localtime=True))
+        )
+        # Switched around
+        newmsg["From"] = self.msg['To']
+        newmsg["To"] = self.msg['From']
+        newmsg["Subject"] = self.msg["Subject"]
+        newmsg["Date"] = self.msg["Date"] or email.utils.formatdate(
+            localtime=True)
+        newmsg["X-Spam-Checker-Version"] = "SpamPad %s (%s) on %s" % (
+            pad.__version__, pad.__release_date__, socket.gethostname()
+        )
+        newmsg.preamble = "This is a multi-part message in MIME format."
+        newmsg.epilogue = ""
+
+        newmsg.attach(email.mime.text.MIMEText(ruleset.get_report(self)))
+
+        original_attachment = email.mime.base.MIMEBase("message", "rfc822",
+                                                       x_spam_type="original")
+        original_attachment.add_header("Content-Disposition", "inline")
+        original_attachment.add_header("Content-Description",
+                                       "original message before SpamPAD")
+        original_attachment.set_payload(self.raw_msg)
+        newmsg.attach(original_attachment)
+        return newmsg.as_string()
 
     @staticmethod
     def translate_line_breaks(text):

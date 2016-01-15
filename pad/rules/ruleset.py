@@ -5,7 +5,7 @@ from builtins import object
 
 from future import standard_library
 standard_library.install_hooks()
-
+import socket
 import collections
 
 import pad.errors
@@ -18,12 +18,20 @@ class RuleSet(object):
         invalid rule is ignored.
         """
         self.ctxt = ctxt
+        self.report = []
         self.checked = collections.OrderedDict()
         self.not_checked = dict()
         # XXX Hardcoded at the moment, should be loaded from configuration.
         self.use_bayes = True
         self.use_network = True
         self.required_score = 5
+
+    def _interpolate(self, text, msg):
+        # XXX Some plugins might define custom tags here.
+        # XXX We need to check them as well.
+        text = text.replace("_HOSTNAME_", socket.gethostname())
+        text = text.replace("_REPORT_", self.get_matched_report(msg))
+        return text
 
     def add_rule(self, rule):
         """Add a rule to the ruleset, execute any pre and post processing
@@ -35,6 +43,31 @@ class RuleSet(object):
         else:
             self.not_checked[rule.name] = rule
         rule.postprocess(self)
+
+    def add_report(self, text):
+        """Add some text to the report used when the message
+        is classified as Spam.
+        """
+        self.report.append(text)
+
+    def get_report(self, msg):
+        """Get the Spam report for this message
+
+        :return: A string representing the report for this
+        Spam message.
+        """
+        return self._interpolate("\n".join(self.report), msg) + "\n"
+
+    def get_matched_report(self, msg):
+        """Get a report of rules that matched this message."""
+        report = "\n".join(str(self.get_rule(name))
+                           for name, result in msg.rules_checked.items()
+                           if result)
+        return "\n%s" % report
+
+    def clear_report_template(self):
+        """Reset the report."""
+        self.report = []
 
     def get_rule(self, name, checked_only=False):
         """Gets the rule with the given name. If checked_only is set to True
