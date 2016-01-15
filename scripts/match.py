@@ -129,22 +129,27 @@ def main():
         print(e, file=sys.stderr)
         sys.exit(1)
 
+    count = 0
     for message_list in options.messages:
         for msgf in message_list:
             raw_msg = msgf.read()
             msgf.close()
             msg = pad.message.Message(ruleset.ctxt, raw_msg)
 
-            ruleset.match(msg)
-
-            for name, result in msg.rules_checked.items():
-                if result:
-                    print(ruleset.get_rule(name))
-
             if options.revoke:
                 ruleset.ctxt.hook_revoke(msg)
-            if options.report:
+            elif options.report:
                 ruleset.ctxt.hook_report(msg)
+            else:
+                ruleset.match(msg)
+
+                for name, result in msg.rules_checked.items():
+                    if result:
+                        print(ruleset.get_rule(name))
+        count += 1
+
+    print("%s message(s) examined" % count)
+
 
 
 if __name__ == "__main__":
