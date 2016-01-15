@@ -38,15 +38,19 @@ class ImageInfoPlugin(pad.plugins.base.BasePlugin):
         img_io.close()
         return imginfo
 
+    def _get_local_images(self, msg):
+        try:
+            return self.get_local(msg, "images")
+        except KeyError:
+            return {}
+
+
     def extract_metadata(self, msg, payload, part):
         """Extend to extract image metadata"""
 
         if part.get_content_maintype() == "image":
-            try:
-                images = self.get_local(msg, "images")
-            except KeyError:
-                images = {}
 
+            images = self._get_local_images(msg)
             imginfo = self._image_info(part.get_payload(decode=True))
             imginfo['name'] = part.get_param("name")
             imginfo['subtype'] = part.get_content_subtype()
@@ -55,10 +59,8 @@ class ImageInfoPlugin(pad.plugins.base.BasePlugin):
 
     def image_named(self, msg, name, target=None):
         """Match if the image matches a name."""
-        try:
-            images = self.get_local(msg, "images")
-        except:
-            images = {}
+
+        images = self._get_local_images(msg)
         for cid, image in images.items():
             if image['name'] == name:
                 return True
@@ -68,10 +70,7 @@ class ImageInfoPlugin(pad.plugins.base.BasePlugin):
         """Match if the name matches a regular expression."""
         pregex = pad.regex.perl2re(regex)
         name_re = re.compile(regex)
-        try:
-            images = self.get_local(msg, "images")
-        except:
-            images = {}
+        images = self._get_local_images(msg)
         for cid, image in images.items():
             if name_re.match(name):
                 return True
@@ -80,10 +79,7 @@ class ImageInfoPlugin(pad.plugins.base.BasePlugin):
     def image_size_exact(self, msg, img_type, height, width,
                          target=None):
         """Match by image size."""
-        try:
-            images = self.get_local(msg, "images")
-        except:
-            images = {}
+        images = self._get_local_images(msg)
         for cid, image in images.items():
             if img_type == "all" or img_type == image['subtype']:
                 if image['width'] == width and image['height'] == height:
@@ -93,10 +89,7 @@ class ImageInfoPlugin(pad.plugins.base.BasePlugin):
     def image_count(self, msg, img_type, min_count, max_count=None, target=None):
         """Match number of images all or by type."""
         count = 0
-        try:
-            images = self.get_local(msg, "images")
-        except:
-            images = {}
+        images = self._get_local_images(msg)
         for cid, image in images.items():
             if img_type == "all" or img_type == image['subtype']:
                 count+=1
@@ -109,10 +102,7 @@ class ImageInfoPlugin(pad.plugins.base.BasePlugin):
     def pixel_coverage(self, msg, img_type, min_coverage, max_coverage=None,
                        target=None):
         """Determine the pixel coverage"""
-        try:
-            images = self.get_local(msg, "images")
-        except:
-            images = {}
+        images = self._get_local_images(msg)
         for cid, img in images.items():
             if img_type == "all" or img_type == img['subtype']:
                 if max_coverage:
@@ -126,11 +116,7 @@ class ImageInfoPlugin(pad.plugins.base.BasePlugin):
     def image_size_range(self, msg, img_type, min_height, min_width,
                          max_height=None, max_width=None, target=None):
         """Minimum/ranged dimensions matches"""
-        try:
-            images = self.get_local(msg, "images")
-        except:
-            images = {}
-
+        images = self._get_local_images(msg)
         for cid, img in images.items():
             if img_type == "all" or img_type == img['subtype']:
 
@@ -153,10 +139,7 @@ class ImageInfoPlugin(pad.plugins.base.BasePlugin):
     def image_to_text_ratio(self, msg, img_type, min_ratio, max_ratio=None,
                             target=None):
         """Image to text or html ratio"""
-        try:
-            images = self.get_local(msg, "images")
-        except:
-            images = {}
+        images = self._get_local_images(msg)
         for cid, img in images.items():
             if img_type == "all" or img_type == img['subtype']:
                 try:
