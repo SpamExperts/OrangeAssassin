@@ -2,7 +2,7 @@ language: python
 sudo: false
 os:
   - linux
-  - osx
+#  - osx # Travis-CI doesn't work well with OSX + python yet
 python:
   - "2.7"
   - "3.4"
