@@ -33,6 +33,7 @@ class ImageInfoPlugin(pad.plugins.base.BasePlugin):
         img_io = BytesIO(content)
         image = PIL.Image.open(img_io)
 
+
         imginfo['width'],imginfo['height'] = image.size
         imginfo['coverage'] = imginfo['width']*imginfo['height']
         img_io.close()
