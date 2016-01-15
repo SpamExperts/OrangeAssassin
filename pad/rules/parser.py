@@ -53,6 +53,8 @@ KNOWN_2_RTYPE = frozenset(
 # Rules that require 1 arguments
 KNOWN_1_RTYPE = frozenset(
     (
+        "else",  # For IF-ELSE-END statements.
+        "endif",  # For IF-ELSE-END statements.
         "include",  # Include another file in the current one
         "ifplugin",  # Check if plugin is loaded.
         "loadplugin",  # Load a plugin.
@@ -115,8 +117,6 @@ class PADParser(object):
                     warnings.warn(e.message)
                     self.ctxt.log.warn(e.message)
 
-
-
     def _handle_line(self, filename, line, line_no, _depth=0):
         """Handles a single line."""
         try:
@@ -127,6 +127,13 @@ class PADParser(object):
 
         if line.startswith("endif"):
             self._ignore = False
+            return
+
+        if line.startswith("else"):
+            if self._ignore:
+                self._ignore = False
+            else:
+                self._ignore = True
             return
 
         if not line or line.startswith("#") or self._ignore:
