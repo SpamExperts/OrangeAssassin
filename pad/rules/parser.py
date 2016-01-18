@@ -54,6 +54,8 @@ KNOWN_2_RTYPE = frozenset(
 KNOWN_1_RTYPE = frozenset(
     (
         "report", # Add some text to the report template
+        "add_header", # Adds a header to the message
+        "remove_header", # Remove header from message
         "include",  # Include another file in the current one
         "ifplugin",  # Check if plugin is loaded.
         "loadplugin",  # Load a plugin.
@@ -128,6 +130,9 @@ class PADParser(object):
         if line.startswith("clear_report_template"):
             self.ruleset.clear_report_template()
             return
+        if line.startswith("clear_headers"):
+            self.ruleset.clear_headers()
+            return
         if line.startswith("if can"):
             # XXX We don't support for this check, simply
             # XXX skip everything for now.
@@ -170,6 +175,10 @@ class PADParser(object):
             self._handle_loadplugin(value)
         elif rtype == "report":
             self.ruleset.add_report(value)
+        elif rtype == "add_header":
+            self.ruleset.add_header_rule(value, False)
+        elif rtype == "remove_header":
+            self.ruleset.add_header_rule(value, True)
         elif rtype in KNOWN_2_RTYPE:
             try:
                 rtype, name, value = line.split(None, 2)

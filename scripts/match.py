@@ -94,7 +94,7 @@ def main():
                 ruleset.ctxt.hook_report(msg)
             else:
                 ruleset.match(msg)
-                print(msg.get_adjusted_message(ruleset))
+                print(ruleset.get_adjusted_message(msg))
                 if options.test_mode:
                     print(ruleset.get_report(msg))
         count += 1

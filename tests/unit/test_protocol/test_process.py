@@ -36,7 +36,7 @@ class TestProcessCommand(unittest.TestCase):
                                                   self.mockrules)
         result = list(cmd.handle(self.msg, {}))
         self.assertEqual(result,
-                         [self.msg.get_adjusted_message(self.mockrules)])
+                         [self.mockrules.get_adjusted_message(self.msg)])
 
     def test_headers(self):
         cmd = pad.protocol.process.HeadersCommand(self.mockr, self.mockw,
@@ -50,7 +50,7 @@ class TestProcessCommand(unittest.TestCase):
         result = list(cmd.handle(self.msg, {}))
         self.assertEqual(
             result,
-            [self.msg.get_adjusted_message(self.mockrules, headers_only=True)]
+            [self.mockrules.get_adjusted_message(self.msg, headers_only=True)]
         )
 
 def suite():

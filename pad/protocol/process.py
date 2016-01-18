@@ -15,7 +15,7 @@ class ProcessCommand(pad.protocol.base.BaseProtocol):
 
     def handle(self, msg, options):
         self.ruleset.match(msg)
-        yield msg.get_adjusted_message(self.ruleset)
+        yield self.ruleset.get_adjusted_message(msg)
 
 
 class HeadersCommand(ProcessCommand):
@@ -25,4 +25,4 @@ class HeadersCommand(ProcessCommand):
 
     def handle(self, msg, options):
         self.ruleset.match(msg)
-        yield msg.get_adjusted_message(self.ruleset, header_only=True)
+        yield self.ruleset.get_adjusted_message(msg, header_only=True)
