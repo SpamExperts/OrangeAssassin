@@ -30,7 +30,7 @@ class TestNoopCommand(unittest.TestCase):
         pad.protocol.noop.PingCommand(self.mockr, self.mockw, self.mockrules)
 
         calls = [
-            call("SPAMD/%s 0 PONG\r\n" % pad.__version__),
+            call(("SPAMD/%s 0 PONG\r\n" % pad.__version__).encode("utf8")),
         ]
 
         self.mockw.write.assert_has_calls(calls)
