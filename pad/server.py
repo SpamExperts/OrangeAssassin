@@ -50,7 +50,7 @@ class RequestHandler(socketserver.StreamRequestHandler):
         """Get the command from the client and pass it to the
         correct handler.
         """
-        line = self.rfile.readline().strip()
+        line = self.rfile.readline().decode("utf8").strip()
         command, proto_version = line.split()
         COMMANDS[command.upper()](self.rfile, self.wfile, self.server.ruleset)
 
