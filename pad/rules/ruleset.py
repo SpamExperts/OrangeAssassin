@@ -33,6 +33,8 @@ class RuleSet(object):
         self.ctxt = ctxt
         self.tags = set()
         self.report = []
+        self.report_contact = ""
+        self.report_safe = 1
         # Store modification that need to be done to the message in
         # the following format:
         # (True/False, header_name, value)
@@ -62,6 +64,7 @@ class RuleSet(object):
         # Initialize all tags with a empty value
         for tag in self.tags:
             data[tag] = "@@%s@@" % tag
+        data["CONTACTADDRESS"] = self.report_contact
         data["HOSTNAME"] = socket.gethostname()
         data["REPORT"] = self.get_matched_report(msg)
         data["YESNOCAPS"] = "YES" if spam else "FALSE"
@@ -153,10 +156,13 @@ class RuleSet(object):
     def get_adjusted_message(self, msg, header_only=False):
         """Get message adjusted by the rules."""
         spam = msg.score >= self.required_score
-        if not spam or header_only:
+        if not spam or header_only or self.report_safe == 0:
             newmsg = email.message_from_string(msg.raw_msg)
         else:
             newmsg = self._get_bounce_message(msg)
+        if self.report_safe == 0:
+            newmsg.add_header("X-Spam-Report",
+                              self.get_matched_report(msg))
         self._adjust_headers(msg, newmsg, self.header_mod["all"])
         if spam:
             self._adjust_headers(msg, newmsg, self.header_mod["spam"])
@@ -202,9 +208,14 @@ class RuleSet(object):
         newmsg.preamble = "This is a multi-part message in MIME format."
         newmsg.epilogue = ""
 
+        attach_type = ("message", "rfc882")
+        if self.report_safe == 2:
+            attach_type = ("text", "plain")
+
         newmsg.attach(email.mime.text.MIMEText(self.get_report(msg)))
-        original_attachment = email.mime.base.MIMEBase("message", "rfc822",
-                                                   x_spam_type="original")
+        original_attachment = email.mime.base.MIMEBase(
+            *attach_type, x_spam_type="original"
+        )
         original_attachment.add_header("Content-Disposition", "inline")
         original_attachment.add_header("Content-Description",
                                        "original message before SpamPAD")

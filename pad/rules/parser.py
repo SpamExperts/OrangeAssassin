@@ -60,6 +60,10 @@ KNOWN_1_RTYPE = frozenset(
         "ifplugin",  # Check if plugin is loaded.
         "loadplugin",  # Load a plugin.
         "require_version",  # Only load this file if the version matches
+        "required_score", # Set the required score for this ruleset
+        "report_safe", # Set the method of reporting spam
+        "report_contact", # Set the contact address
+        "required_score", # Set the required score (default 5)
     )
 )
 
@@ -150,7 +154,7 @@ class PADParser(object):
                 self._ignore = True
             return
 
-        if line.startswith("required_version"):
+        if line.startswith("require_version"):
             # XXX We don't really have any use for this now
             # XXX Just skip it.
             return
@@ -175,10 +179,20 @@ class PADParser(object):
             self._handle_loadplugin(value)
         elif rtype == "report":
             self.ruleset.add_report(value)
+        elif rtype == "report_contact":
+            self.ruleset.report_contact = value.strip()
         elif rtype == "add_header":
             self.ruleset.add_header_rule(value, False)
         elif rtype == "remove_header":
             self.ruleset.add_header_rule(value, True)
+        elif rtype == "required_score":
+            self.ruleset.required_score = float(value.strip())
+        elif rtype == "report_safe":
+            value = int(value.strip())
+            if value not in (0, 1, 2):
+                raise pad.errors.InvalidRule("report_safe",
+                                             "Invalid value: %s" % value)
+            self.ruleset.report_safe = value
         elif rtype in KNOWN_2_RTYPE:
             try:
                 rtype, name, value = line.split(None, 2)
