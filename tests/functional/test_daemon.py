@@ -71,7 +71,7 @@ class TestDaemon(unittest.TestCase):
         connection = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         connection.settimeout(5)
         connection.connect(("localhost", self.port))
-        connection.send(text)
+        connection.send(text.encode("utf8"))
         response = []
         while True:
             try:
@@ -80,7 +80,8 @@ class TestDaemon(unittest.TestCase):
                 return
             if not data:
                 break
-            response.append(data)
+            response.append(data.decode("utf8"))
+        connection.close()
         # Strip the SPAMD/<version> part of the response
         return "".join(response).split(None, 1)[1]
 
