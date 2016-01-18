@@ -73,33 +73,34 @@ Content-Type: multipart/mixed;
 """
 
 
-IPADDRESSES = {"10.107.130.85": "**",
-        "178.62.26.182": "GB",
-        }
 
-class MockGeoIPReader:
-    def __init__(self, *args, **kwargs):
-        self.response = None
 
+class MockGeoIP(object):
+    """Mocking GeoIP class"""
+    IPADDRESSES = {"10.107.130.85": "**",
+               "178.62.26.182": "GB",
+                  }
     def country_code_by_addr(self, addr):
-        return IPADDRESSES.get(addr, "")
+        """Mock country_code_by_addr the result is taken from the
+        IPADDRESSES dictionary above"""
+        return self.IPADDRESSES.get(addr, "")
 
 class TestRelayCountry(unittest.TestCase):
-
+    """Tests for the RelayCountryPlugin"""
     def setUp(self):
         unittest.TestCase.setUp(self)
         self.options = {}
         self.global_data = {"geodb":"/innexistent/location/"}
-        patch("pad.plugins.relay_country.RelayCountryPlugin.options", 
-                self.options).start()
+        patch("pad.plugins.relay_country.RelayCountryPlugin.options",
+              self.options).start()
         self.mock_ctxt = MagicMock(**{
             "get_plugin_data.side_effect": lambda p, k: self.global_data[k],
             "set_plugin_data.side_effect": lambda p, k, v: self.global_data.setdefault(k, v)}
-        )
-        patch("pad.plugins.relay_country.pygeoip.GeoIP", 
-                MockGeoIPReader).start()
+                                  )
+        patch("pad.plugins.relay_country.pygeoip.GeoIP",
+                MockGeoIP).start()
         self.plugin = pad.plugins.relay_country.RelayCountryPlugin(self.mock_ctxt)
-    
+
     def tearDown(self):
         unittest.TestCase.tearDown(self)
         patch.stopall()
@@ -118,7 +119,7 @@ class TestRelayCountry(unittest.TestCase):
         self.plugin.check_start(message)
         expected_result = []
         self.assertEqual(message.headers["X-Relay-Country"], expected_result)
-    
+
     def test_unknown_ipdaddress(self):
         """Test a message where there are no "Received" headers"""
         message = pad.message.Message(self.mock_ctxt, MSG_NORECEIVED)
@@ -128,7 +129,7 @@ class TestRelayCountry(unittest.TestCase):
         expected_result = ["XX"]
         self.assertEqual(message.headers["X-Relay-Country"], expected_result)
 
-    
+
 def suite():
     """Gather all the tests from this package in a test suite."""
     test_suite = unittest.TestSuite()
