@@ -157,17 +157,13 @@ class RuleSet(object):
             newmsg = email.message_from_string(msg.raw_msg)
         else:
             newmsg = self._get_bounce_message(msg)
-        newmsg["Received"] = (
-            "from localhost by %s with SpamPad (version %s); %s" %
-            (socket.gethostname(), pad.__version__,
-             email.utils.formatdate(localtime=True))
-        )
         self._adjust_headers(msg, newmsg, self.header_mod["all"])
         if spam:
             self._adjust_headers(msg, newmsg, self.header_mod["spam"])
         else:
             self._adjust_headers(msg, newmsg, self.header_mod["ham"])
-
+        if header_only:
+            return newmsg.as_string().split("\n\n", 1)[0] + "\n\n"
         return newmsg.as_string()
 
     def _adjust_headers(self, msg, newmsg, rules):
@@ -189,6 +185,11 @@ class RuleSet(object):
     def _get_bounce_message(self, msg):
         """Create a bounce message from the original."""
         newmsg = email.mime.multipart.MIMEMultipart("mixed")
+        newmsg["Received"] = (
+            "from localhost by %s with SpamPad (version %s); %s" %
+            (socket.gethostname(), pad.__version__,
+             email.utils.formatdate(localtime=True))
+        )
         # Switched around
         if "To" in msg.msg:
             newmsg["From"] = msg.msg['To']
