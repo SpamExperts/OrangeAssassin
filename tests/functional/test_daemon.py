@@ -28,7 +28,7 @@ class TestDaemon(unittest.TestCase):
     #daemon_script = "spamd"
     test_conf = os.path.abspath("test_padd_conf/")
     pre_config = PRE_CONFIG
-    port = 784
+    port = 30783
     config = CONFIG
     padd_procs = []
 
@@ -45,7 +45,7 @@ class TestDaemon(unittest.TestCase):
         with open(os.path.join(cls.test_conf, "10.cf"), "w") as conf:
             conf.write(cls.config)
         args = [cls.daemon_script, "-C", cls.test_conf, "--siteconfigpath",
-                cls.test_conf, "-p", str(cls.port)]
+                cls.test_conf, "-i", "127.0.0.1", "-p", str(cls.port)]
         if cls.daemon_script == "padd.py":
             args.append("--log-file")
             args.append(os.path.abspath("padd.log"))
