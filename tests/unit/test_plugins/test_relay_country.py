@@ -77,29 +77,12 @@ IPADDRESSES = {"10.107.130.85": "**",
         "178.62.26.182": "GB",
         }
 
-
-class AddressNotFoundError(Exception):
-    pass
-
-class MockCountry:
-    def __init__(self, ipd):
-        self.ipaddress = ipd
-    
-    @property
-    def iso_code(self):
-        return IPADDRESSES[self.ipaddress]
-class MockResponse:
-    def __init__(self, ipaddress):
-        self.country = MockCountry(ipaddress)
-
 class MockGeoIPReader:
     def __init__(self, *args, **kwargs):
         self.response = None
-    
-    def country(self, ipd):
-        if ipd not in IPADDRESSES:
-            raise AddressNotFoundError 
-        return MockResponse(ipd)
+
+    def country_code_by_addr(self, addr):
+        return IPADDRESSES.get(addr, "")
 
 class TestRelayCountry(unittest.TestCase):
 
@@ -113,10 +96,8 @@ class TestRelayCountry(unittest.TestCase):
             "get_plugin_data.side_effect": lambda p, k: self.global_data[k],
             "set_plugin_data.side_effect": lambda p, k, v: self.global_data.setdefault(k, v)}
         )
-        patch("pad.plugins.relay_country.geoip2.database.Reader", 
+        patch("pad.plugins.relay_country.pygeoip.GeoIP", 
                 MockGeoIPReader).start()
-        patch("pad.plugins.relay_country.geoip2.errors.AddressNotFoundError", 
-                AddressNotFoundError).start()
         self.plugin = pad.plugins.relay_country.RelayCountryPlugin(self.mock_ctxt)
     
     def tearDown(self):

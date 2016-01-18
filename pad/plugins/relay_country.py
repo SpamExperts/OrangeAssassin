@@ -7,11 +7,12 @@ import re
 import pad.errors
 
 try:
-    import geoip2.database
+    import pygeoip
 except ImportError:
     raise pad.errors.PluginLoadError(
-        "RelayCountryPlugin not loaded, You must install geoip2 to use "
+        "RelayCountryPlugin not loaded, You must install pygeoip to use "
         "this plugin")
+
 try:
     import ipaddress
 except ImportError:
@@ -44,7 +45,7 @@ class RelayCountryPlugin(pad.plugins.base.BasePlugin):
         """Load the csv file and create a list of items where to search the IP.
         """
         try:
-            self.reader = geoip2.database.Reader(self.get_global("geodb"))
+            self.reader = pygeoip.GeoIP(self.get_global("geodb"))
             return True
         except IOError as exc:
             self.ctxt.log.warning("Unable to open geo database file: %r", exc)
@@ -60,13 +61,12 @@ class RelayCountryPlugin(pad.plugins.base.BasePlugin):
             return ""
         if ipadobj.is_private:
             return "**"
-        try:
-            response = self.reader.country(ipaddr)
-        except geoip2.errors.AddressNotFoundError:
+        response = self.reader.country_code_by_addr(ipaddr)
+        if not response:
             self.ctxt.log.info("Can't locate IP '%s' in database", ipaddr)
             #Cant locate the IP in database.
             return "XX"
-        return response.country.iso_code # pylint: disable=maybe-no-member
+        return response
 
     def check_start(self, msg):
         """Check the X-Relay-Countries in the message and exposes the
