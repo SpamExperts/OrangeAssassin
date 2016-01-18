@@ -22,7 +22,7 @@ except ImportError:
 
 import pad.plugins.base
 
-IPFRE = re.compile(r"[\[\(\s\/]((?:[0-9]{1,3}\.){3}[0-9]{1,3})[\s\]\)\/]")
+IPFRE = re.compile(r"[\[\(\s\/]{0,1}((?:[0-9]{1,3}\.){3}[0-9]{1,3})[\s\]\)\/]{0,1}")
 
 
 class RelayCountryPlugin(pad.plugins.base.BasePlugin):
@@ -53,7 +53,11 @@ class RelayCountryPlugin(pad.plugins.base.BasePlugin):
         """Return the country corresponding to an IP based on the
         network range database.
         """
-        ipadobj = ipaddress.ip_address(ipaddr)
+        try:
+            ipadobj = ipaddress.ip_address(ipaddr)
+        except (ipaddress.AddressValueError, ValueError):
+            self.ctxt.log.log.warning("Invalid IP address: '%s', ipaddr")
+            return ""
         if ipadobj.is_private:
             return "**"
         try:
@@ -83,6 +87,8 @@ class RelayCountryPlugin(pad.plugins.base.BasePlugin):
         self.ctxt.log.debug("IPS found: %r", ips)
         for ipaddr in ips:
             country = self.get_country(ipaddr)
+            if not country: #Invalid IP address
+                continue
             result.append(str(country))
         if result:
             msg.headers["X-Relay-Country"].append(" ".join(result))
