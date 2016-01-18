@@ -5,9 +5,9 @@ from email.mime.image import MIMEImage
 from email.mime.multipart import MIMEMultipart
 
 try:
-    from unittest.mock import patch, Mock, MagicMock
+    from unittest.mock import patch, Mock, MagicMock, call
 except ImportError:
-    from mock import patch, Mock, MagicMock
+    from mock import patch, Mock, MagicMock, call
 
 from PIL import Image
 
@@ -61,145 +61,152 @@ class TestImageInfoBase(unittest.TestCase):
             msg.attach(mimg)
         return msg
 
+    def new_image_string(self, size, mode="RGB"):
+        image = Image.new(mode, size)
+        img_io = BytesIO()
+        image_io = image.save(img_io, format="JPEG")
+        image.close()
+        img_io.seek(0)
+        return img_io.read()
+
 
 class TestImageInfoPlugin(TestImageInfoBase):
 
     def test_extract_metadata(self):
-        images = {
-            x: self.new_image(1,1,"jpg", "%s.jpg"%x) for x in range(1)
-        }
+        patch("pad.plugins.image_info.ImageInfoPlugin._add_name").start()
+        patch("pad.plugins.image_info.ImageInfoPlugin._update_counts").start()
+        patch("pad.plugins.image_info.ImageInfoPlugin._save_stats").start()
+
+        add_name_calls = []
+        update_counts_calls = []
+        save_stats_calls = []
+        images = {}
+        for x in range(5):
+            images.update({
+                x: self.new_image(1,1,"jpg", "%s.jpg"%x)
+            })
+            add_name_calls.append(call(self.mock_msg, "%s.jpg" % x))
+            update_counts_calls.append(call(self.mock_msg, "jpg", by=1))
+            save_stats_calls.append(call(self.mock_msg,
+                                         self.new_image_string((1,1), "RGB"),
+                                         "jpg"))
+
         self.mock_msg.msg = self.new_email(images)
 
         for part in self.mock_msg.msg.walk():
             payload = part.get_payload(decode=True)
             self.plugin.extract_metadata(self.mock_msg, payload, part)
 
-        for image in images.values():
-            image.pop("data", None)
+        self.plugin._add_name.assert_has_calls(add_name_calls)
+        self.plugin._update_counts.assert_has_calls(update_counts_calls)
+        self.plugin._save_stats.assert_has_calls(save_stats_calls)
 
-        extracted_images = self.plugin.get_local(self.mock_msg, "images")
-        self.assertListEqual(list(images.values()), list(extracted_images.values()))
-
-
-    def test_get_local_images_empty(self):
-        images = self.plugin._get_local_images(self.mock_msg)
-        self.assertDictEqual({}, images)
-
-    def test_get_local_images(self):
-        expected = {x: self.new_image(1, 1, "jpg", "test") for x in range(5)}
-        self.plugin.set_local(self.mock_msg, "images", expected)
-
-        images = self.plugin._get_local_images(self.mock_msg)
-        self.assertDictEqual(images, expected)
-
-    def test_image_info(self):
-        img = Image.new("RGB", (3,4))
-        content = BytesIO()
-        img.save(content, format="JPEG")
-        content.seek(0)
-        result = self.plugin._image_info(content.read())
-        self.assertEquals(result, {"width":3, "height":4, "coverage":12})
 
 
 class TestImageCount(TestImageInfoBase):
 
+
     def test_min_true(self):
-        images = {x: self.new_image(1, 1, "jpg", "test") for x in range(5)}
-        self.plugin.set_local(self.mock_msg, "images", images)
+        self.plugin._update_counts(self.mock_msg, "jpg", 5)
         self.assertTrue(self.plugin.image_count(self.mock_msg, "all", 2))
 
     def test_min_false(self):
-        images = {x: self.new_image(1, 1, "jpg", "test") for x in range(5)}
-        self.plugin.set_local(self.mock_msg, "images", images)
+        self.plugin._update_counts(self.mock_msg, "jpg", 5)
         self.assertFalse(self.plugin.image_count(self.mock_msg, "all", 7))
 
     def test_max_true(self):
-        images = {x: self.new_image(1, 1, "jpg", "test") for x in range(5)}
-        self.plugin.set_local(self.mock_msg, "images", images)
+        self.plugin._update_counts(self.mock_msg, "jpg", 5)
         self.assertTrue(self.plugin.image_count(self.mock_msg, "all", 2, 6))
 
     def test_max_false(self):
-        images = {x: self.new_image(1, 1, "jpg", "test") for x in range(5)}
-        self.plugin.set_local(self.mock_msg, "images", images)
+        self.plugin._update_counts(self.mock_msg, "jpg", 5)
         self.assertFalse(self.plugin.image_count(self.mock_msg, "all", 2, 3))
 
 
 class TestImageNamed(TestImageInfoBase):
 
     def test_true(self):
-        images = {1: self.new_image(1, 1, "jpg", "test.jpg")}
-        self.plugin.set_local(self.mock_msg, "images", images)
-        self.assertTrue(self.plugin.image_named(self.mock_msg, "test.jpg"))
+        for x in ["test1.jpg", "test2.jpg", "test3.jpg"]:
+            self.plugin._add_name(self.mock_msg, x)
+        self.assertTrue(self.plugin.image_named(self.mock_msg, "test1.jpg"))
 
     def test_false(self):
-        images = {1: self.new_image(1, 1, "jpg", "test.jpg")}
-        self.plugin.set_local(self.mock_msg, "images", images)
-        self.assertFalse(self.plugin.image_named(self.mock_msg, "test2.jpg"))
+        for x in ["test1.jpg", "test2.jpg", "test3.jpg"]:
+            self.plugin._add_name(self.mock_msg, x)
+        self.assertFalse(self.plugin.image_named(self.mock_msg, "notexisting.jpg"))
 
 class TestImageNameRegex(TestImageInfoBase):
 
     def test_true(self):
-        pass
+        names = ["test.gif", "test..gif", "test...gif"]
+        self.plugin.set_local(self.mock_msg, "names", names)
+        doubledot_regex = "/^\w{1,9}\.\.gif$/i"
+        self.assertTrue(self.plugin.image_name_regex(self.mock_msg,
+                                                    doubledot_regex))
 
     def test_false(self):
-        pass
+        names = ["test.gif", "test.gif", "test.gif"]
+        self.plugin.set_local(self.mock_msg, "names", names)
+        doubledot_regex = "/^\w{2,9}\.\.gif$/i"
+        self.assertFalse(self.plugin.image_name_regex(self.mock_msg,
+                                                    doubledot_regex))
 
 class TestPixelCoverage(TestImageInfoBase):
 
     def test_min_true(self):
-        images = {1: self.new_image(2, 2, "jpg", "test.jpg")}
-        self.plugin.set_local(self.mock_msg, "images", images)
+        image = self.new_image_string((2,2))
+        self.plugin._save_stats(self.mock_msg, image, "jpg")
         self.assertTrue(self.plugin.pixel_coverage(self.mock_msg, "all", 3))
 
     def test_min_false(self):
-        images = {1: self.new_image(2, 2, "jpg", "test.jpg")}
-        self.plugin.set_local(self.mock_msg, "images", images)
+        image = self.new_image_string((2,2))
+        self.plugin._save_stats(self.mock_msg, image, "jpg")
         self.assertFalse(self.plugin.pixel_coverage(self.mock_msg, "all", 5))
 
     def test_max_true(self):
-        images = {1: self.new_image(2, 2, "jpg", "test.jpg")}
-        self.plugin.set_local(self.mock_msg, "images", images)
+        image = self.new_image_string((2,2))
+        self.plugin._save_stats(self.mock_msg, image, "jpg")
         self.assertTrue(self.plugin.pixel_coverage(self.mock_msg, "all", 3, 5))
 
     def test_max_false(self):
-        images = {1: self.new_image(2, 2, "jpg", "test.jpg")}
-        self.plugin.set_local(self.mock_msg, "images", images)
+        image = self.new_image_string((2,2))
+        self.plugin._save_stats(self.mock_msg, image, "jpg")
         self.assertFalse(self.plugin.pixel_coverage(self.mock_msg, "all", 3, 2))
 
 
 class TestImageSizeExact(TestImageInfoBase):
 
     def test_true(self):
-        images = {1: self.new_image(2, 2, "jpg", "test.jpg")}
-        self.plugin.set_local(self.mock_msg, "images", images)
+        image = self.new_image_string((2,2))
+        self.plugin._save_stats(self.mock_msg, image, "jpg")
         self.assertTrue(self.plugin.image_size_exact(self.mock_msg, "all", 2, 2))
 
     def test_false(self):
-        images = {1: self.new_image(2, 2, "jpg", "test.jpg")}
-        self.plugin.set_local(self.mock_msg, "images", images)
+        image = self.new_image_string((2,2))
+        self.plugin._save_stats(self.mock_msg, image, "jpg")
         self.assertFalse(self.plugin.image_size_exact(self.mock_msg, "all", 3, 2))
 
 class TestImageSizeRange(TestImageInfoBase):
 
     def test_min_true(self):
-        images = {1: self.new_image(2, 2, "jpg", "test.jpg")}
-        self.plugin.set_local(self.mock_msg, "images", images)
+        image = self.new_image_string((2,2))
+        self.plugin._save_stats(self.mock_msg, image, "jpg")
         self.assertTrue(self.plugin.image_size_range(self.mock_msg, "all", 1, 1))
 
     def test_min_false(self):
-        images = {1: self.new_image(2, 2, "jpg", "test.jpg")}
-        self.plugin.set_local(self.mock_msg, "images", images)
+        image = self.new_image_string((2,2))
+        self.plugin._save_stats(self.mock_msg, image, "jpg")
         self.assertFalse(self.plugin.image_size_range(self.mock_msg, "all", 3, 3))
 
     def test_max_true(self):
-        images = {1: self.new_image(2, 2, "jpg", "test.jpg")}
-        self.plugin.set_local(self.mock_msg, "images", images)
+        image = self.new_image_string((2,2))
+        self.plugin._save_stats(self.mock_msg, image, "jpg")
         self.assertTrue(self.plugin.image_size_range(self.mock_msg, "all", 1,
                                                      1, 3, 3))
 
     def test_max_false(self):
-        images = {1: self.new_image(2, 2, "jpg", "test.jpg")}
-        self.plugin.set_local(self.mock_msg, "images", images)
+        image = self.new_image_string((2,2))
+        self.plugin._save_stats(self.mock_msg, image, "jpg")
         self.assertFalse(self.plugin.image_size_range(self.mock_msg, "all", 3,
                                                       3, 1, 1))
 
@@ -207,29 +214,27 @@ class TestImageToTextRatio(TestImageInfoBase):
 
     def test_min_true(self):
         self.mock_msg.text = "A"*12
-        images = {1: self.new_image(2, 2, "jpg", "test.jpg")}
-        self.plugin.set_local(self.mock_msg, "images", images)
-        self.assertTrue(self.plugin.image_to_text_ratio(self.mock_msg, "all", 2))
+        self.plugin._update_coverage(self.mock_msg, "jpg", 4)
+        self.assertTrue(self.plugin.image_to_text_ratio(self.mock_msg, "all",
+                                                        2, target="body"))
 
     def test_min_false(self):
         self.mock_msg.text = "A"*12
-        images = {1: self.new_image(2, 2, "jpg", "test.jpg")}
-        self.plugin.set_local(self.mock_msg, "images", images)
-        self.assertFalse(self.plugin.image_to_text_ratio(self.mock_msg, "all", 4))
+        self.plugin._update_coverage(self.mock_msg, "jpg", 4)
+        self.assertFalse(self.plugin.image_to_text_ratio(self.mock_msg, "all",
+                                                         4, target="body"))
 
     def test_max_true(self):
         self.mock_msg.text = "A"*12
-        images = {1: self.new_image(2, 2, "jpg", "test.jpg")}
-        self.plugin.set_local(self.mock_msg, "images", images)
+        self.plugin._update_coverage(self.mock_msg, "jpg", 4)
         self.assertTrue(self.plugin.image_to_text_ratio(self.mock_msg, "all",
-                                                        2, 4))
+                                                        2, 4, target="body"))
 
     def test_max_false(self):
         self.mock_msg.text = "A"*12
-        images = {1: self.new_image(2, 2, "jpg", "test.jpg")}
-        self.plugin.set_local(self.mock_msg, "images", images)
+        self.plugin._update_coverage(self.mock_msg, "jpg", 4)
         self.assertFalse(self.plugin.image_to_text_ratio(self.mock_msg, "all",
-                                                        1, 2))
+                                                        1, 2, target="body"))
 
 def suite():
     """Gather all the tests from this package in a test suite."""
