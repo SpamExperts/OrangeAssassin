@@ -111,6 +111,8 @@ class RuleSet(object):
         :return: A string representing the report for this
         Spam message.
         """
+        if not self.report:
+            return "\n(no report template found)\n"
         return self._interpolate("\n".join(self.report), msg) + "\n"
 
     def clear_report_template(self):
