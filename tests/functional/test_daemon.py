@@ -46,6 +46,9 @@ class TestDaemon(unittest.TestCase):
             conf.write(cls.config)
         args = [cls.daemon_script, "-C", cls.test_conf, "--siteconfigpath",
                 cls.test_conf, "-p", str(cls.port)]
+        if cls.daemon_script == "padd.py":
+            args.append("--log-file")
+            args.append(os.path.abspath("padd.log"))
         cls.padd_procs.append(subprocess.Popen(args))
         # Allow time for server to initialize
         time.sleep(0.5)
