@@ -9,6 +9,7 @@ standard_library.install_hooks()
 import socket
 import email.utils
 import collections
+import email.message
 import email.mime.text
 import email.mime.base
 import email.mime.multipart
@@ -40,6 +41,7 @@ class RuleSet(object):
         self.checked = collections.OrderedDict()
         self.not_checked = dict()
         # XXX Hardcoded at the moment, should be loaded from configuration.
+        self.autolearn = False
         self.use_bayes = True
         self.use_network = True
         self.required_score = 5
@@ -47,8 +49,23 @@ class RuleSet(object):
     def _interpolate(self, text, msg):
         # XXX Some plugins might define custom tags here.
         # XXX We need to check them as well.
+        spam = msg.score >= self.required_score
+        # XXX We can probably do this smarter than just
+        # XXX replacing.
         text = text.replace("_HOSTNAME_", socket.gethostname())
         text = text.replace("_REPORT_", self.get_matched_report(msg))
+        text = text.replace("_YESNOCAPS_", "YES" if spam else "FALSE")
+        text = text.replace("_YESNO_", "Yes" if spam else "False")
+        text = text.replace("_SCORE_", str(msg.score))
+        text = text.replace("_REQD_", str(self.required_score))
+        text = text.replace(
+            "_TESTS_", ",".join(
+                name for name, result in msg.rules_checked.items() if result
+            )
+        )
+        text = text.replace("_SUBVERSION_", pad.__release_date__)
+        text = text.replace("_VERSION_", pad.__version__)
+        text = text.replace("_SUMMARY_", self.get_summary_report(msg))
         return text
 
     def add_rule(self, rule):
@@ -78,10 +95,27 @@ class RuleSet(object):
 
     def get_matched_report(self, msg):
         """Get a report of rules that matched this message."""
-        report = "\n".join(str(self.get_rule(name))
-                           for name, result in msg.rules_checked.items()
-                           if result)
-        return "\n%s" % report
+        report = "\r\n".join(str(self.get_rule(name))
+                             for name, result in msg.rules_checked.items()
+                             if result)
+        return "\r\n%s" % report
+
+    def get_summary_report(self, msg):
+        """Get summary report."""
+        summary = []
+        for name, result in msg.rules_checked.items():
+            if not result:
+                continue
+            rule = self.get_rule(name)
+            if rule.score == int(rule.score):
+                score = str(int(rule.score)).rjust(4)
+            else:
+                score = ("%0.1f" % rule.score).rjust(4)
+            summary.append(
+                "%s %s %s" %
+                (score, rule.name.ljust(22), rule.description)
+            )
+        return "\r\n".join(summary)
 
     def clear_report_template(self):
         """Reset the report."""
@@ -100,6 +134,7 @@ class RuleSet(object):
         self.ctxt.log.debug("Adding header rule: %s (%s)", value, remove)
         if not remove:
             msg_status, header_name, header_value = value.split(None, 2)
+            header_value = header_value.strip("'\"")
         else:
             msg_status, header_name = value.split(None, 1)
             header_value = None
@@ -124,9 +159,14 @@ class RuleSet(object):
         """Get message adjusted by the rules."""
         spam = msg.score >= self.required_score
         if not spam or header_only:
-            newmsg = msg.msg
+            newmsg = email.message_from_string(msg.raw_msg)
         else:
             newmsg = self._get_bounce_message(msg)
+        newmsg["Received"] = (
+            "from localhost by %s with SpamPad (version %s); %s" %
+            (socket.gethostname(), pad.__version__,
+             email.utils.formatdate(localtime=True))
+        )
         self._adjust_headers(msg, newmsg, self.header_mod["all"])
         if spam:
             self._adjust_headers(msg, newmsg, self.header_mod["spam"])
@@ -154,11 +194,6 @@ class RuleSet(object):
     def _get_bounce_message(self, msg):
         """Create a bounce message from the original."""
         newmsg = email.mime.multipart.MIMEMultipart("mixed")
-        newmsg["Received"] = (
-            "from localhost by %s with SpamPad (version %s); %s" %
-            (socket.gethostname(), pad.__version__,
-             email.utils.formatdate(localtime=True))
-        )
         # Switched around
         if "To" in msg.msg:
             newmsg["From"] = msg.msg['To']
