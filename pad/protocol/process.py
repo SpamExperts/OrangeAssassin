@@ -16,7 +16,6 @@ class ProcessCommand(pad.protocol.check.CheckCommand):
     def extra_details(self, msg, options):
         """Add any extra details to the response."""
         adjusted_msg = self.ruleset.get_adjusted_message(msg)
-        yield "Content-length: %s\r\n\r\n" % (len(adjusted_msg))
         yield adjusted_msg
 
 
@@ -28,6 +27,5 @@ class HeadersCommand(ProcessCommand):
     def extra_details(self, msg, options):
         """Add any extra details to the response."""
         adjusted_msg = self.ruleset.get_adjusted_message(msg, header_only=True)
-        yield "Content-length: %s\r\n\r\n" % (len(adjusted_msg))
         yield adjusted_msg
 

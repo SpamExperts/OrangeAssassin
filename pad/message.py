@@ -120,6 +120,7 @@ class Message(pad.context.MessageContext):
         self.rules_checked = dict()
         self._parse_message()
         self._hook_parsed_metadata()
+        self.interpolate_data = dict()
 
     def clear_matches(self):
         """Clear any already checked rules."""

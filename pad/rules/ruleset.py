@@ -6,6 +6,7 @@ from builtins import object
 from future import standard_library
 standard_library.install_hooks()
 
+import re
 import socket
 import email.utils
 import collections
@@ -18,6 +19,9 @@ import pad
 import pad.errors
 
 
+_TAG_RE = re.compile(r"(_([A-Z_]*?)_)")
+
+
 class RuleSet(object):
     """A set of rules used to match against a message."""
     header_start = "X-Spam-"
@@ -27,6 +31,7 @@ class RuleSet(object):
         invalid rule is ignored.
         """
         self.ctxt = ctxt
+        self.tags = set()
         self.report = []
         # Store modification that need to be done to the message in
         # the following format:
@@ -49,24 +54,29 @@ class RuleSet(object):
     def _interpolate(self, text, msg):
         # XXX Some plugins might define custom tags here.
         # XXX We need to check them as well.
+        if msg.interpolate_data:
+            return text % msg.interpolate_data
+
         spam = msg.score >= self.required_score
-        # XXX We can probably do this smarter than just
-        # XXX replacing.
-        text = text.replace("_HOSTNAME_", socket.gethostname())
-        text = text.replace("_REPORT_", self.get_matched_report(msg))
-        text = text.replace("_YESNOCAPS_", "YES" if spam else "FALSE")
-        text = text.replace("_YESNO_", "Yes" if spam else "False")
-        text = text.replace("_SCORE_", str(msg.score))
-        text = text.replace("_REQD_", str(self.required_score))
-        text = text.replace(
-            "_TESTS_", ",".join(
-                name for name, result in msg.rules_checked.items() if result
-            )
+        data = msg.interpolate_data
+        # Initialize all tags with a empty value
+        for tag in self.tags:
+            data[tag] = "@@%s@@" % tag
+        data["HOSTNAME"] = socket.gethostname()
+        data["REPORT"] = self.get_matched_report(msg)
+        data["YESNOCAPS"] = "YES" if spam else "FALSE"
+        data["YESNO"] = "Yes" if spam else "False"
+        data["SCORE"] = "%0.1f" % msg.score
+        data["REQD"] = "%0.1f" % self.required_score
+        data["TESTS"] = ",".join(
+            name for name, result in msg.rules_checked.items() if result
         )
-        text = text.replace("_SUBVERSION_", pad.__release_date__)
-        text = text.replace("_VERSION_", pad.__version__)
-        text = text.replace("_SUMMARY_", self.get_summary_report(msg))
-        return text
+        data["SUBVERSION"] = pad.__release_date__
+        data["VERSION"] = pad.__version__
+        data["SUMMARY"] = self.get_summary_report(msg)
+        preview = " ".join(msg.raw_text.split("\n", 3)[:3])[:200] + "[...]"
+        data["PREVIEW"] = preview
+        return text % msg.interpolate_data
 
     def add_rule(self, rule):
         """Add a rule to the ruleset, execute any pre and post processing
@@ -79,11 +89,18 @@ class RuleSet(object):
             self.not_checked[rule.name] = rule
         rule.postprocess(self)
 
+    def _convert_tags(self, text):
+        """Replace _TAGS_ with placeholeders. %(TAG)s"""
+        text = text.strip("'\"")
+        for tag in _TAG_RE.findall(text):
+            self.tags.add(tag[1])
+        return _TAG_RE.sub(r"%(\2)s", text)
+
     def add_report(self, text):
         """Add some text to the report used when the message
         is classified as Spam.
         """
-        self.report.append(text)
+        self.report.append(self._convert_tags(text))
 
     def get_report(self, msg):
         """Get the Spam report for this message
@@ -93,33 +110,17 @@ class RuleSet(object):
         """
         return self._interpolate("\n".join(self.report), msg) + "\n"
 
-    def get_matched_report(self, msg):
-        """Get a report of rules that matched this message."""
-        report = "\r\n".join(str(self.get_rule(name))
-                             for name, result in msg.rules_checked.items()
-                             if result)
-        return "\r\n%s" % report
-
-    def get_summary_report(self, msg):
-        """Get summary report."""
-        summary = []
-        for name, result in msg.rules_checked.items():
-            if not result:
-                continue
-            rule = self.get_rule(name)
-            if rule.score == int(rule.score):
-                score = str(int(rule.score)).rjust(4)
-            else:
-                score = ("%0.1f" % rule.score).rjust(4)
-            summary.append(
-                "%s %s %s" %
-                (score, rule.name.ljust(22), rule.description)
-            )
-        return "\r\n".join(summary)
-
     def clear_report_template(self):
         """Reset the report."""
         self.report = []
+
+    def clear_headers(self):
+        """Remove all rules that modify headers to the message."""
+        self.header_mod = {
+            "spam": [],
+            "ham": [],
+            "all": [],
+        }
 
     def add_header_rule(self, value, remove=False):
         """Add rule to add a header for the corresponding.
@@ -134,7 +135,7 @@ class RuleSet(object):
         self.ctxt.log.debug("Adding header rule: %s (%s)", value, remove)
         if not remove:
             msg_status, header_name, header_value = value.split(None, 2)
-            header_value = header_value.strip("'\"")
+            header_value = self._convert_tags(header_value)
         else:
             msg_status, header_name = value.split(None, 1)
             header_value = None
@@ -146,14 +147,6 @@ class RuleSet(object):
         header_name = self.header_start + header_name
 
         self.header_mod[msg_status].append((remove, header_name, header_value))
-
-    def clear_headers(self):
-        """Remove all rules that modify headers to the message."""
-        self.header_mod = {
-            "spam": [],
-            "ham": [],
-            "all": [],
-        }
 
     def get_adjusted_message(self, msg, header_only=False):
         """Get message adjusted by the rules."""
@@ -215,6 +208,30 @@ class RuleSet(object):
         original_attachment.set_payload(msg.raw_msg)
         newmsg.attach(original_attachment)
         return newmsg
+
+    def get_matched_report(self, msg):
+        """Get a report of rules that matched this message."""
+        report = "\r\n".join(str(self.get_rule(name))
+                             for name, result in msg.rules_checked.items()
+                             if result)
+        return "\r\n%s" % report
+
+    def get_summary_report(self, msg):
+        """Get summary report."""
+        summary = []
+        for name, result in msg.rules_checked.items():
+            if not result:
+                continue
+            rule = self.get_rule(name)
+            if rule.score == int(rule.score):
+                score = str(int(rule.score)).rjust(4)
+            else:
+                score = ("%0.1f" % rule.score).rjust(4)
+            summary.append(
+                "%s %s %s" %
+                (score, rule.name.ljust(22), rule.description)
+            )
+        return "\r\n".join(summary)
 
     def get_rule(self, name, checked_only=False):
         """Gets the rule with the given name. If checked_only is set to True
