@@ -19,8 +19,9 @@ class CheckCommand(pad.protocol.base.BaseProtocol):
             spam = False
         yield "Spam: %s ; %s / %s\r\n" % (spam, msg.score,
                                           self.ruleset.required_score)
-        for extra in self.extra_details(msg, options):
-            yield extra
+        result = "".join(self.extra_details(msg, options))
+        yield "Content-length: %s\r\n\r\n" % len(result)
+        yield result
 
     def extra_details(self, msg, options):
         """Add any extra details to the response."""
@@ -37,7 +38,6 @@ class SymbolsCommand(CheckCommand):
         """Return a list of rule names that matched the
         message.
         """
-        yield "\r\n"
         yield ",".join(name for name, result in msg.rules_checked.items()
                        if result)
 
@@ -53,11 +53,7 @@ class ReportCommand(CheckCommand):
         """Return a full report of rules that matched
         the message.
         """
-        yield "\r\n"
-        for name, result in msg.rules_checked.items():
-            if result:
-                yield str(self.ruleset.get_rule(name))
-                yield "\r\n"
+        yield self.ruleset.get_report(msg)
 
 
 class ReportIfSpamCommand(ReportCommand):

@@ -53,9 +53,17 @@ KNOWN_2_RTYPE = frozenset(
 # Rules that require 1 arguments
 KNOWN_1_RTYPE = frozenset(
     (
+        "report", # Add some text to the report template
+        "add_header", # Adds a header to the message
+        "remove_header", # Remove header from message
         "include",  # Include another file in the current one
         "ifplugin",  # Check if plugin is loaded.
         "loadplugin",  # Load a plugin.
+        "require_version",  # Only load this file if the version matches
+        "required_score", # Set the required score for this ruleset
+        "report_safe", # Set the method of reporting spam
+        "report_contact", # Set the contact address
+        "required_score", # Set the required score (default 5)
     )
 )
 
@@ -88,6 +96,7 @@ class PADParser(object):
                                               ignore_unknown=ignore_unknown)
         # XXX This could be a default OrderedDict
         self.results = collections.OrderedDict()
+        self.ruleset = pad.rules.ruleset.RuleSet(self.ctxt)
         self._ignore = False
 
     @contextlib.contextmanager
@@ -115,8 +124,6 @@ class PADParser(object):
                     warnings.warn(e.message)
                     self.ctxt.log.warn(e.message)
 
-
-
     def _handle_line(self, filename, line, line_no, _depth=0):
         """Handles a single line."""
         try:
@@ -124,9 +131,32 @@ class PADParser(object):
         except UnicodeDecodeError as e:
             raise pad.errors.InvalidSyntax(filename, line_no, line,
                                           "Decoding Error: %s" % e)
+        if line.startswith("clear_report_template"):
+            self.ruleset.clear_report_template()
+            return
+        if line.startswith("clear_headers"):
+            self.ruleset.clear_headers()
+            return
+        if line.startswith("if can"):
+            # XXX We don't support for this check, simply
+            # XXX skip everything for now.
+            self._ignore = True
+            return
 
         if line.startswith("endif"):
             self._ignore = False
+            return
+
+        if line.startswith("else"):
+            if self._ignore:
+                self._ignore = False
+            else:
+                self._ignore = True
+            return
+
+        if line.startswith("require_version"):
+            # XXX We don't really have any use for this now
+            # XXX Just skip it.
             return
 
         if not line or line.startswith("#") or self._ignore:
@@ -147,6 +177,22 @@ class PADParser(object):
             self._handle_ifplugin(value)
         elif rtype == "loadplugin":
             self._handle_loadplugin(value)
+        elif rtype == "report":
+            self.ruleset.add_report(value)
+        elif rtype == "report_contact":
+            self.ruleset.report_contact = value.strip()
+        elif rtype == "add_header":
+            self.ruleset.add_header_rule(value, False)
+        elif rtype == "remove_header":
+            self.ruleset.add_header_rule(value, True)
+        elif rtype == "required_score":
+            self.ruleset.required_score = float(value.strip())
+        elif rtype == "report_safe":
+            value = int(value.strip())
+            if value not in (0, 1, 2):
+                raise pad.errors.InvalidRule("report_safe",
+                                             "Invalid value: %s" % value)
+            self.ruleset.report_safe = value
         elif rtype in KNOWN_2_RTYPE:
             try:
                 rtype, name, value = line.split(None, 2)
@@ -206,7 +252,6 @@ class PADParser(object):
     def get_ruleset(self):
         """Create and return the corresponding ruleset for the parsed files."""
         self.ctxt.hook_parsing_start(self.results)
-        ruleset = pad.rules.ruleset.RuleSet(self.ctxt)
         for name, data in self.results.items():
             try:
                 rule_type = data["type"]
@@ -225,12 +270,12 @@ class PADParser(object):
                         rule_class = self.ctxt.cmds[rule_type]
                     self.ctxt.log.debug("Adding rule %s with: %s", name, data)
                     rule = rule_class.get_rule(name, data)
-                    ruleset.add_rule(rule)
+                    self.ruleset.add_rule(rule)
 
-        self.ctxt.hook_parsing_end(ruleset)
-        self.ctxt.log.info("%s rules loaded", len(ruleset.checked))
-        ruleset.post_parsing()
-        return ruleset
+        self.ctxt.hook_parsing_end(self.ruleset)
+        self.ctxt.log.info("%s rules loaded", len(self.ruleset.checked))
+        self.ruleset.post_parsing()
+        return self.ruleset
 
 
 def parse_pad_rules(files, paranoid=False, ignore_unknown=True):

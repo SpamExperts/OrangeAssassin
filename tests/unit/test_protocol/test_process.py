@@ -17,6 +17,7 @@ class TestProcessCommand(unittest.TestCase):
         self.mockr = Mock()
         self.mockw = Mock()
         self.mockrules = Mock()
+        self.mockrules.required_score = 5
         for klass in ("ProcessCommand", "HeadersCommand"):
             patch("pad.protocol.process.%s.get_and_handle" % klass).start()
         self.msg = Mock(score=0)
@@ -28,27 +29,37 @@ class TestProcessCommand(unittest.TestCase):
     def test_process(self):
         cmd = pad.protocol.process.ProcessCommand(self.mockr, self.mockw,
                                                   self.mockrules)
+        self.mockrules.get_adjusted_message.return_value = "Test"
         result = list(cmd.handle(self.msg, {}))
         self.mockrules.match.assert_called_with(self.msg)
 
     def test_process_result(self):
         cmd = pad.protocol.process.ProcessCommand(self.mockr, self.mockw,
                                                   self.mockrules)
+        self.mockrules.get_adjusted_message.return_value = "Test"
         result = list(cmd.handle(self.msg, {}))
-        self.assertEqual(result, [self.msg.get_adjusted_message()])
+        self.assertEqual(result, ['Spam: False ; 0 / 5\r\n',
+                                  'Content-length: 4\r\n\r\n', 'Test'])
+        self.mockrules.get_adjusted_message.assert_called_with(self.msg)
 
     def test_headers(self):
         cmd = pad.protocol.process.HeadersCommand(self.mockr, self.mockw,
                                                   self.mockrules)
+        self.mockrules.get_adjusted_message.return_value = "Test"
         result = list(cmd.handle(self.msg, {}))
         self.mockrules.match.assert_called_with(self.msg)
 
     def test_headers_result(self):
         cmd = pad.protocol.process.HeadersCommand(self.mockr, self.mockw,
                                                   self.mockrules)
+        self.mockrules.get_adjusted_message.return_value = "Test"
         result = list(cmd.handle(self.msg, {}))
-        self.assertEqual(result,
-                         [self.msg.get_adjusted_message(headers_only=True)])
+        self.assertEqual(result, ['Spam: False ; 0 / 5\r\n',
+                                  'Content-length: 4\r\n\r\n', 'Test'])
+        self.mockrules.get_adjusted_message.assert_called_with(
+            self.msg, header_only=True
+        )
+
 
 def suite():
     """Gather all the tests from this package in a test suite."""

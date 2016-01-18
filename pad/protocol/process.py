@@ -3,19 +3,20 @@
 from __future__ import absolute_import
 
 import pad.protocol
-import pad.protocol.base
+import pad.protocol.check
 
 
-class ProcessCommand(pad.protocol.base.BaseProtocol):
+class ProcessCommand(pad.protocol.check.CheckCommand):
     """Match the messages against the ruleset and
     return the adjusted message.
     """
     has_options = True
     has_message = True
 
-    def handle(self, msg, options):
-        self.ruleset.match(msg)
-        yield msg.get_adjusted_message()
+    def extra_details(self, msg, options):
+        """Add any extra details to the response."""
+        adjusted_msg = self.ruleset.get_adjusted_message(msg)
+        yield adjusted_msg
 
 
 class HeadersCommand(ProcessCommand):
@@ -23,6 +24,8 @@ class HeadersCommand(ProcessCommand):
     return the adjusted message (headers only).
     """
 
-    def handle(self, msg, options):
-        self.ruleset.match(msg)
-        yield msg.get_adjusted_message(header_only=True)
+    def extra_details(self, msg, options):
+        """Add any extra details to the response."""
+        adjusted_msg = self.ruleset.get_adjusted_message(msg, header_only=True)
+        yield adjusted_msg
+

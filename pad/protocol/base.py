@@ -32,6 +32,7 @@ class BaseProtocol(object):
             line = self.rfile.readline().strip()
             if not line:
                 break
+            self.log.debug("Got line: %s", line)
             if ":" not in line:
                 raise pad.errors.InvalidOption("Invalid option: %s" % line)
             name, value = line.split(":", 1)
@@ -72,6 +73,7 @@ class BaseProtocol(object):
             message = pad.message.Message(self.ruleset.ctxt, message)
         self.wfile.write("SPAMD/%s 0 %s\r\n" % (pad.__version__, self.ok_code))
         for response in self.handle(message, options):
+            self.log.debug("Writing response: %s", response)
             self.wfile.write(response)
 
     def handle(self, msg, options):
