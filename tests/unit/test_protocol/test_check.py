@@ -39,7 +39,7 @@ class TestCheckCommand(unittest.TestCase):
         self.msg.score = 2442
         result = list(cmd.handle(self.msg, {}))
         self.assertEqual(result, ["Spam: %s ; %s / %s\r\n" % (True, 2442, 5),
-                                  ""])
+                                  'Content-length: 0\r\n\r\n', ""])
 
     def test_check_score_not_spam(self):
         cmd = pad.protocol.check.CheckCommand(self.mockr, self.mockw,
@@ -47,7 +47,7 @@ class TestCheckCommand(unittest.TestCase):
         self.msg.score = 1
         result = list(cmd.handle(self.msg, {}))
         self.assertEqual(result, ["Spam: %s ; %s / %s\r\n" % (False, 1, 5),
-                                  ""])
+                                  'Content-length: 0\r\n\r\n', ""])
 
     def test_symbols_score(self):
         cmd = pad.protocol.check.SymbolsCommand(self.mockr, self.mockw,
@@ -59,7 +59,8 @@ class TestCheckCommand(unittest.TestCase):
         self.msg.rules_checked['TEST_RULE_3'] = True
         result = list(cmd.handle(self.msg, {}))
         self.assertEqual(result, ["Spam: %s ; %s / %s\r\n" % (True, 2442, 5),
-                                  "\r\n", "TEST_RULE_1,TEST_RULE_3"])
+                                  'Content-length: 23\r\n\r\n',
+                                  "TEST_RULE_1,TEST_RULE_3"])
 
     def test_symbols_score_not_spam(self):
         cmd = pad.protocol.check.SymbolsCommand(self.mockr, self.mockw,
@@ -71,73 +72,47 @@ class TestCheckCommand(unittest.TestCase):
         self.msg.rules_checked['TEST_RULE_3'] = True
         result = list(cmd.handle(self.msg, {}))
         self.assertEqual(result, ["Spam: %s ; %s / %s\r\n" % (False, 3, 5),
-                                  "\r\n", "TEST_RULE_1,TEST_RULE_3"])
+                                  'Content-length: 23\r\n\r\n',
+                                  "TEST_RULE_1,TEST_RULE_3"])
 
     def test_report_score(self):
         cmd = pad.protocol.check.ReportCommand(self.mockr, self.mockw,
                                                self.mockrules)
         self.msg.score = 2442
-        self.msg.rules_checked = collections.OrderedDict()
-        self.msg.rules_checked['TEST_RULE_1'] = True
-        self.msg.rules_checked['TEST_RULE_2'] = True
-
-        self.mockrules.get_rule.side_effect = [
-            MagicMock(__str__=lambda x: "test rule 1 desc"),
-            MagicMock(__str__=lambda x: "test rule 2 desc"),
-        ]
+        self.mockrules.get_report.return_value = "Test report"
         result = list(cmd.handle(self.msg, {}))
-        self.assertEqual(result, ["Spam: %s ; %s / %s\r\n" % (True, 2442, 5),
-                                  "\r\n", "test rule 1 desc", "\r\n",
-                                  "test rule 2 desc", "\r\n"])
+        expected = ['Spam: True ; 2442 / 5\r\n',
+                    'Content-length: 11\r\n\r\n', 'Test report']
+        self.assertEqual(result, expected)
 
     def test_report_score_not_spam(self):
         cmd = pad.protocol.check.ReportCommand(self.mockr, self.mockw,
                                                self.mockrules)
         self.msg.score = 4
-        self.msg.rules_checked = collections.OrderedDict()
-        self.msg.rules_checked['TEST_RULE_1'] = True
-        self.msg.rules_checked['TEST_RULE_2'] = True
-
-        self.mockrules.get_rule.side_effect = [
-            MagicMock(__str__=lambda x: "test rule 1 desc"),
-            MagicMock(__str__=lambda x: "test rule 2 desc"),
-        ]
+        self.mockrules.get_report.return_value = "Test report"
         result = list(cmd.handle(self.msg, {}))
-        self.assertEqual(result, ["Spam: %s ; %s / %s\r\n" % (False, 4, 5),
-                                  "\r\n", "test rule 1 desc", "\r\n",
-                                  "test rule 2 desc", "\r\n"])
+        expected = ['Spam: False ; 4 / 5\r\n',
+                    'Content-length: 11\r\n\r\n', 'Test report']
+        self.assertEqual(result, expected)
 
     def test_report_ifspam_score(self):
         cmd = pad.protocol.check.ReportIfSpamCommand(
                 self.mockr, self.mockw, self.mockrules)
         self.msg.score = 2442
-        self.msg.rules_checked = collections.OrderedDict()
-        self.msg.rules_checked['TEST_RULE_1'] = True
-        self.msg.rules_checked['TEST_RULE_2'] = True
-
-        self.mockrules.get_rule.side_effect = [
-            MagicMock(__str__=lambda x: "test rule 1 desc"),
-            MagicMock(__str__=lambda x: "test rule 2 desc"),
-        ]
+        self.mockrules.get_report.return_value = "Test report"
         result = list(cmd.handle(self.msg, {}))
-        self.assertEqual(result, ["Spam: %s ; %s / %s\r\n" % (True, 2442, 5),
-                                  "\r\n", "test rule 1 desc", "\r\n",
-                                  "test rule 2 desc", "\r\n"])
+        expected = ['Spam: True ; 2442 / 5\r\n',
+                    'Content-length: 11\r\n\r\n', 'Test report']
+        self.assertEqual(result, expected)
 
     def test_report_ifspam_score_not_spam(self):
         cmd = pad.protocol.check.ReportIfSpamCommand(
                 self.mockr, self.mockw, self.mockrules)
         self.msg.score = 4
-        self.msg.rules_checked = collections.OrderedDict()
-        self.msg.rules_checked['TEST_RULE_1'] = True
-        self.msg.rules_checked['TEST_RULE_2'] = True
-
-        self.mockrules.get_rule.side_effect = [
-            MagicMock(__str__=lambda x: "test rule 1 desc"),
-            MagicMock(__str__=lambda x: "test rule 2 desc"),
-        ]
+        self.mockrules.get_report.return_value = "Test report"
         result = list(cmd.handle(self.msg, {}))
-        self.assertEqual(result, ["Spam: %s ; %s / %s\r\n" % (False, 4, 5)])
+        expected = ['Spam: False ; 4 / 5\r\n', 'Content-length: 0\r\n\r\n', '']
+        self.assertEqual(result, expected)
 
 def suite():
     """Gather all the tests from this package in a test suite."""
