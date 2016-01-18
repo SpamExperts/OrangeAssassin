@@ -137,6 +137,15 @@ class TestRelayCountry(unittest.TestCase):
         self.plugin.check_start(message)
         expected_result = []
         self.assertEqual(message.headers["X-Relay-Country"], expected_result)
+    
+    def test_unknown_ipdaddress(self):
+        """Test a message where there are no "Received" headers"""
+        message = pad.message.Message(self.mock_ctxt, MSG_NORECEIVED)
+        message.msg["Received"] = "189.23.4.1"
+        message.headers["Received"] = "189.23.4.1"
+        self.plugin.check_start(message)
+        expected_result = ["XX"]
+        self.assertEqual(message.headers["X-Relay-Country"], expected_result)
 
     
 def suite():
