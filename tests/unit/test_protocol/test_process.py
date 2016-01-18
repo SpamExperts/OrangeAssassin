@@ -53,6 +53,7 @@ class TestProcessCommand(unittest.TestCase):
             [self.mockrules.get_adjusted_message(self.msg, headers_only=True)]
         )
 
+
 def suite():
     """Gather all the tests from this package in a test suite."""
     test_suite = unittest.TestSuite()

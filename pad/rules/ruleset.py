@@ -97,7 +97,8 @@ class RuleSet(object):
         If remove is set to True, then the header is removed
         instead of added.
         """
-        if remove:
+        self.ctxt.log.debug("Adding header rule: %s (%s)", value, remove)
+        if not remove:
             msg_status, header_name, header_value = value.split(None, 2)
         else:
             msg_status, header_name = value.split(None, 1)
@@ -126,7 +127,6 @@ class RuleSet(object):
             newmsg = msg.msg
         else:
             newmsg = self._get_bounce_message(msg)
-
         self._adjust_headers(msg, newmsg, self.header_mod["all"])
         if spam:
             self._adjust_headers(msg, newmsg, self.header_mod["spam"])
@@ -160,9 +160,12 @@ class RuleSet(object):
              email.utils.formatdate(localtime=True))
         )
         # Switched around
-        newmsg["From"] = msg.msg['To']
-        newmsg["To"] = msg.msg['From']
-        newmsg["Subject"] = msg.msg["Subject"]
+        if "To" in msg.msg:
+            newmsg["From"] = msg.msg['To']
+        if "From" in msg.msg:
+            newmsg["To"] = msg.msg['From']
+        if "Subject" in msg.msg:
+            newmsg["Subject"] = msg.msg["Subject"]
         msg_date = msg.msg["Date"] or email.utils.formatdate(localtime=True)
         newmsg["Date"] = msg_date
         newmsg.preamble = "This is a multi-part message in MIME format."
@@ -176,6 +179,7 @@ class RuleSet(object):
                                        "original message before SpamPAD")
         original_attachment.set_payload(msg.raw_msg)
         newmsg.attach(original_attachment)
+        return newmsg
 
     def get_rule(self, name, checked_only=False):
         """Gets the rule with the given name. If checked_only is set to True
