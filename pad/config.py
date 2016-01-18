@@ -36,7 +36,7 @@ def setup_logging(log_name, debug=False, filepath=None, sentry_dsn=None,
     object.
     """
     fmt = logging.Formatter(
-        '%(asctime)s (%(process)d) %(levelname)s %(message)s'
+        '%(asctime)s [%(process)d] %(levelname)s %(message)s'
     )
 
     stream_handler = logging.StreamHandler()

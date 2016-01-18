@@ -112,10 +112,12 @@ class RuleSet(object):
 
     def clear_report_template(self):
         """Reset the report."""
+        self.ctxt.log.debug("Clearing report template")
         self.report = []
 
     def clear_headers(self):
         """Remove all rules that modify headers to the message."""
+        self.ctxt.log.debug("Clearing headers")
         self.header_mod = {
             "spam": [],
             "ham": [],
