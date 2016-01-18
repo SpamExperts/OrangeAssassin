@@ -80,6 +80,11 @@ class MockGeoIP(object):
     IPADDRESSES = {"10.107.130.85": "**",
                "178.62.26.182": "GB",
                   }
+    def __init__(self, datfile):
+        """Constructore, requires to call with the path of the .dat file although
+        it is not currently used"""
+        pass
+    
     def country_code_by_addr(self, addr):
         """Mock country_code_by_addr the result is taken from the
         IPADDRESSES dictionary above"""
