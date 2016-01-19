@@ -10,7 +10,9 @@ python:
 #  - "pypy"
   - "pypy3"
 install:
-  - "pip install -r requirements.txt"
+  - "pip install -r requirements/base.txt"
+  - if [ `python -c 'import sys; print(sys.version_info[0])'` = '3' ]; then pip install -r requirements/python3.txt; fi
+  - if [ `python -c 'import sys; print(sys.version_info[0])'` = '2' ]; then pip install -r requirements/python2.txt; fi
   - "pip install -r tests/requirements.txt"
   - "python setup.py install"
 script:
