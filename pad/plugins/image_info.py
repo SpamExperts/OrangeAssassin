@@ -40,12 +40,6 @@ class ImageInfoPlugin(pad.plugins.base.BasePlugin):
         img_io.close()
         return imginfo
 
-    def _get_local_images(self, msg):
-        try:
-            return self.get_local(msg, "images")
-        except KeyError:
-            return {}
-
     def _get_image_names(self, msg):
 
         try:
@@ -57,7 +51,7 @@ class ImageInfoPlugin(pad.plugins.base.BasePlugin):
         """Get count for a subtype or all"""
         try:
             counts = self.get_local(msg, "counts")
-            return counts.get(subtype)
+            return counts.get(subtype, 0)
         except KeyError:
             return 0
 
@@ -81,16 +75,6 @@ class ImageInfoPlugin(pad.plugins.base.BasePlugin):
             names = set()
         names.add(name)
         self.set_local(msg, "names", names)
-
-    def _add_id(self, msg, image_id):
-        """Add an id to the id list to avoid unecessary work."""
-        try:
-            names = self.get_local(msg, "ids")
-        except KeyError:
-            ids = set()
-        ids.add(image_id)
-        self.set_local(msg, "ids", image_id)
-
 
     def _update_coverage(self, msg, subtype, by):
         """Updates the coverage for all and specific image types."""
@@ -140,26 +124,9 @@ class ImageInfoPlugin(pad.plugins.base.BasePlugin):
         try:
             sizes = self.get_local(msg, "sizes")
         except KeyError:
-            sizes = defaultdict(list)
+            sizes = defaultdict(dict)
 
-        return sizes.get(subtype, {})
-
-    def _get_pixel_coverage(self, msg, subtype):
-        try:
-            local_stats = self.get_local(msg, "pixel_coverage")
-        except KeyError:
-            local_stats = defaultdict(list)
-
-        return local_stats.get(subtype, [])
-
-
-
-    def _local_ids(self, msg):
-        """Set of image ids to avoid loading the same image twice in PIL."""
-        try:
-            return self.get_local(msg, "ids")
-        except KeyError:
-            return set()
+        return sizes.get(subtype, {}).values()
 
 
     def extract_metadata(self, msg, payload, part):
@@ -191,8 +158,8 @@ class ImageInfoPlugin(pad.plugins.base.BasePlugin):
     def image_size_exact(self, msg, img_type, height, width,
                          target=None):
         """Match by image size."""
-        stats = self._get_sizes(msg, img_type)
-        for img in stats.values():
+        sizes = self._get_sizes(msg, img_type)
+        for img in sizes:
             if (img['width'], img['height']) == (width, height):
                 return True
         return False
@@ -217,8 +184,8 @@ class ImageInfoPlugin(pad.plugins.base.BasePlugin):
     def image_size_range(self, msg, img_type, min_height, min_width,
                          max_height=None, max_width=None, target=None):
         """Minimum/ranged dimensions matches"""
-        stats = self._get_sizes(msg, img_type)
-        for img in stats.values():
+        sizes = self._get_sizes(msg, img_type)
+        for img in sizes:
 
             if img['width'] < min_width:
                 continue

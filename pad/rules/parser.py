@@ -130,7 +130,7 @@ class PADParser(object):
             line = line.decode("iso-8859-1").strip()
         except UnicodeDecodeError as e:
             raise pad.errors.InvalidSyntax(filename, line_no, line,
-                                          "Decoding Error: %s" % e)
+                                           "Decoding Error: %s" % e)
         if line.startswith("clear_report_template"):
             self.ruleset.clear_report_template()
             return

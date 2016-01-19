@@ -1,11 +1,12 @@
 """Tests for pad.rules.ruleset"""
 
+import email
 import unittest
 
 try:
-    from unittest.mock import patch, Mock, PropertyMock, MagicMock
+    from unittest.mock import patch, Mock, PropertyMock, MagicMock, call
 except ImportError:
-    from mock import patch, Mock, PropertyMock, MagicMock
+    from mock import patch, Mock, PropertyMock, MagicMock, call
 
 import pad.errors
 import pad.rules.ruleset
@@ -134,6 +135,305 @@ class TestRuleSet(unittest.TestCase):
 
         self.assertRaises(pad.errors.InvalidRule, ruleset.post_parsing)
 
+    def test_interpolate(self):
+        mock_msg = MagicMock(rules_checked={}, interpolate_data={}, score=4)
+        mock_rule = MagicMock()
+        ruleset = pad.rules.ruleset.RuleSet(self.mock_ctxt)
+        ruleset.checked = {"TEST_RULE": mock_rule}
+
+        result = ruleset._interpolate("test %(REQD)s test", mock_msg)
+        self.assertEqual(result, "test 5.0 test")
+
+    def test_interpolate_spam(self):
+        mock_msg = MagicMock(rules_checked={}, interpolate_data={}, score=6)
+        mock_rule = MagicMock()
+        ruleset = pad.rules.ruleset.RuleSet(self.mock_ctxt)
+        ruleset.checked = {"TEST_RULE": mock_rule}
+
+        result = ruleset._interpolate("test %(YESNO)s test", mock_msg)
+        self.assertEqual(result, "test Yes test")
+
+    def test_interpolate_not_spam(self):
+        mock_msg = MagicMock(rules_checked={}, interpolate_data={}, score=4)
+        mock_rule = MagicMock()
+        ruleset = pad.rules.ruleset.RuleSet(self.mock_ctxt)
+        ruleset.checked = {"TEST_RULE": mock_rule}
+
+        result = ruleset._interpolate("test %(YESNO)s test", mock_msg)
+        self.assertEqual(result, "test No test")
+
+    def test_interpolate_data_available(self):
+        mock_msg = MagicMock(rules_checked={}, interpolate_data={"REQD": "5.0"},
+                             score=4)
+        mock_rule = MagicMock()
+        ruleset = pad.rules.ruleset.RuleSet(self.mock_ctxt)
+        ruleset.checked = {"TEST_RULE": mock_rule}
+
+        result = ruleset._interpolate("test %(REQD)s test", mock_msg)
+        self.assertEqual(result, "test 5.0 test")
+
+    def test_convert_tags(self):
+        original = '"test _YESNO_ test"'
+        expected = 'test %(YESNO)s test'
+        ruleset = pad.rules.ruleset.RuleSet(self.mock_ctxt)
+
+        result = ruleset._convert_tags(original)
+        self.assertEqual(result, expected)
+
+    def test_convert_tags_check_empty(self):
+        original = '"test _YESNO_ test"'
+        ruleset = pad.rules.ruleset.RuleSet(self.mock_ctxt)
+
+        ruleset._convert_tags(original)
+        self.assertIn("YESNO", ruleset.tags)
+
+    def test_add_report(self):
+        mock_conv = patch("pad.rules.ruleset.RuleSet._convert_tags").start()
+        ruleset = pad.rules.ruleset.RuleSet(self.mock_ctxt)
+        ruleset.add_report("Some text")
+
+        self.assertEqual(ruleset.report, [mock_conv("Some text")])
+
+    def test_get_report(self):
+        mock_int = patch("pad.rules.ruleset.RuleSet._interpolate").start()
+        mock_msg = MagicMock()
+        ruleset = pad.rules.ruleset.RuleSet(self.mock_ctxt)
+        ruleset.report.append("Some report")
+
+        result = ruleset.get_report(mock_msg)
+        self.assertEqual(result, mock_int("Some report", mock_msg) + "\n")
+
+    def test_get_report_no_report(self):
+        mock_msg = MagicMock()
+        ruleset = pad.rules.ruleset.RuleSet(self.mock_ctxt)
+
+        result = ruleset.get_report(mock_msg)
+        self.assertEqual(result, "\n(no report template found)\n")
+
+    def test_clear_report_template(self):
+        ruleset = pad.rules.ruleset.RuleSet(self.mock_ctxt)
+        ruleset.report.append("Some report")
+        ruleset.clear_report_template()
+        self.assertEqual(ruleset.report, [])
+
+    def test_clear_headers(self):
+        expected = {
+            "spam": [],
+            "ham": [],
+            "all": [],
+        }
+        ruleset = pad.rules.ruleset.RuleSet(self.mock_ctxt)
+        ruleset.header_mod["spam"].append("Test")
+        ruleset.header_mod["ham"].append("Test")
+        ruleset.header_mod["all"].append("Test")
+
+        ruleset.clear_headers()
+        self.assertEqual(ruleset.header_mod, expected)
+
+    def test_add_header_rule_all(self):
+        line = "all Test my value"
+        ruleset = pad.rules.ruleset.RuleSet(self.mock_ctxt)
+        ruleset.add_header_rule(line, remove=False)
+
+        result = ruleset.header_mod["all"][0]
+        self.assertEqual(result, (False, "X-Spam-Test", "my value"))
+
+    def test_add_header_rule_spam(self):
+        line = "spam Test my value"
+        ruleset = pad.rules.ruleset.RuleSet(self.mock_ctxt)
+        ruleset.add_header_rule(line, remove=False)
+
+        result = ruleset.header_mod["spam"][0]
+        self.assertEqual(result, (False, "X-Spam-Test", "my value"))
+
+    def test_add_header_rule_ham(self):
+        line = "ham Test my value"
+        ruleset = pad.rules.ruleset.RuleSet(self.mock_ctxt)
+        ruleset.add_header_rule(line, remove=False)
+
+        result = ruleset.header_mod["ham"][0]
+        self.assertEqual(result, (False, "X-Spam-Test", "my value"))
+
+    def test_add_header_rule_invalid(self):
+        line = "bam Test my value"
+        ruleset = pad.rules.ruleset.RuleSet(self.mock_ctxt)
+
+        with self.assertRaises(pad.errors.InvalidRule):
+            ruleset.add_header_rule(line, remove=False)
+
+    def test_remove_header_rule_all(self):
+        line = "all Test"
+        ruleset = pad.rules.ruleset.RuleSet(self.mock_ctxt)
+        ruleset.add_header_rule(line, remove=True)
+
+        result = ruleset.header_mod["all"][0]
+        self.assertEqual(result, (True, "X-Spam-Test", None))
+
+    def test_remove_header_rule_spam(self):
+        line = "spam Test"
+        ruleset = pad.rules.ruleset.RuleSet(self.mock_ctxt)
+        ruleset.add_header_rule(line, remove=True)
+
+        result = ruleset.header_mod["spam"][0]
+        self.assertEqual(result, (True, "X-Spam-Test", None))
+
+    def test_remove_header_rule_ham(self):
+        line = "ham Test"
+        ruleset = pad.rules.ruleset.RuleSet(self.mock_ctxt)
+        ruleset.add_header_rule(line, remove=True)
+
+        result = ruleset.header_mod["ham"][0]
+        self.assertEqual(result, (True, "X-Spam-Test", None))
+
+    def test_remove_header_rule_invalid(self):
+        line = "bam Test"
+        ruleset = pad.rules.ruleset.RuleSet(self.mock_ctxt)
+
+        with self.assertRaises(pad.errors.InvalidRule):
+            ruleset.add_header_rule(line, remove=True)
+
+    def test_adjusted_all_spam(self):
+        mock_bounce = patch("pad.rules.ruleset.RuleSet."
+                            "_get_bounce_message").start()
+        mock_adjust = patch("pad.rules.ruleset.RuleSet."
+                            "_adjust_headers").start()
+        mock_msg = MagicMock(score=6)
+        ruleset = pad.rules.ruleset.RuleSet(self.mock_ctxt)
+        ruleset.header_mod["all"].append("All mod")
+        ruleset.header_mod["spam"].append("Spam mod")
+        result = ruleset.get_adjusted_message(mock_msg)
+
+        newmsg = mock_bounce(mock_msg)
+        self.assertEqual(result, newmsg.as_string())
+
+        calls = [
+            call(mock_msg, newmsg, ["All mod"]),
+            call(mock_msg, newmsg, ["Spam mod"])
+        ]
+
+        mock_adjust.assert_has_calls(calls)
+
+    def test_adjusted_all_not_spam(self):
+        mock_email = patch("pad.rules.ruleset."
+                           "email.message_from_string").start()
+        mock_bounce = patch("pad.rules.ruleset.RuleSet."
+                            "_get_bounce_message").start()
+        mock_adjust = patch("pad.rules.ruleset.RuleSet."
+                            "_adjust_headers").start()
+        mock_msg = MagicMock(score=4)
+        ruleset = pad.rules.ruleset.RuleSet(self.mock_ctxt)
+        ruleset.header_mod["all"].append("All mod")
+        ruleset.header_mod["ham"].append("Ham mod")
+        result = ruleset.get_adjusted_message(mock_msg)
+
+        newmsg = mock_email(mock_msg.raw_msg)
+        self.assertEqual(result, newmsg.as_string())
+
+        calls = [
+            call(mock_msg, newmsg, ["All mod"]),
+            call(mock_msg, newmsg, ["Ham mod"])
+        ]
+
+        mock_adjust.assert_has_calls(calls)
+
+    def test_adjusted_header_only_spam(self):
+        mock_email = patch("pad.rules.ruleset."
+                           "email.message_from_string").start()
+        mock_bounce = patch("pad.rules.ruleset.RuleSet."
+                            "_get_bounce_message").start()
+        mock_adjust = patch("pad.rules.ruleset.RuleSet."
+                            "_adjust_headers").start()
+        mock_msg = MagicMock(score=6)
+        ruleset = pad.rules.ruleset.RuleSet(self.mock_ctxt)
+        ruleset.header_mod["all"].append("All mod")
+        ruleset.header_mod["spam"].append("Spam mod")
+        result = ruleset.get_adjusted_message(mock_msg, True)
+
+        newmsg = mock_email(mock_msg.raw_msg)
+        self.assertEqual(
+            result, newmsg.as_string().split("\n\n", 1)[0] + "\n\n")
+
+        calls = [
+            call(mock_msg, newmsg, ["All mod"]),
+            call(mock_msg, newmsg, ["Spam mod"])
+        ]
+
+        mock_adjust.assert_has_calls(calls)
+
+    def test_adjusted_header_only_not_spam(self):
+        mock_email = patch("pad.rules.ruleset."
+                           "email.message_from_string").start()
+        mock_bounce = patch("pad.rules.ruleset.RuleSet."
+                            "_get_bounce_message").start()
+        mock_adjust = patch("pad.rules.ruleset.RuleSet."
+                            "_adjust_headers").start()
+        mock_msg = MagicMock(score=4)
+        ruleset = pad.rules.ruleset.RuleSet(self.mock_ctxt)
+        ruleset.header_mod["all"].append("All mod")
+        ruleset.header_mod["ham"].append("Ham mod")
+        result = ruleset.get_adjusted_message(mock_msg, True)
+
+        newmsg = mock_email(mock_msg.raw_msg)
+        self.assertEqual(
+            result, newmsg.as_string().split("\n\n", 1)[0] + "\n\n")
+
+        calls = [
+            call(mock_msg, newmsg, ["All mod"]),
+            call(mock_msg, newmsg, ["Ham mod"])
+        ]
+
+        mock_adjust.assert_has_calls(calls)
+
+    def test_adjust_headers(self):
+        rules = [(False, "X-Spam-Test", "value")]
+        mock_msg = MagicMock(interpolate_data={"TEST": "test"})
+        newmsg = MagicMock()
+        ruleset = pad.rules.ruleset.RuleSet(self.mock_ctxt)
+        ruleset._adjust_headers(mock_msg, newmsg, rules)
+
+        newmsg.add_header.assert_called_with("X-Spam-Test", "value")
+
+    def test_adjust_headers_remove(self):
+        rules = [(True, "X-Spam-Test", None)]
+        mock_msg = MagicMock(interpolate_data={"TEST": "test"})
+        newmsg = MagicMock()
+        ruleset = pad.rules.ruleset.RuleSet(self.mock_ctxt)
+        ruleset._adjust_headers(mock_msg, newmsg, rules)
+
+        newmsg.__delitem__.assert_called_with("X-Spam-Test")
+
+    def test_get_bounce_message(self):
+        text = ("Subject: Test\n"
+                "From: alex@example.com\n"
+                "To: chirila@example.com\n\n"
+                "This is a test.")
+        msg = email.message_from_string(text)
+        mock_msg = MagicMock(msg=msg)
+
+        ruleset = pad.rules.ruleset.RuleSet(self.mock_ctxt)
+        newmsg = ruleset._get_bounce_message(mock_msg)
+
+        self.assertEqual(newmsg['Subject'], "Test")
+        self.assertEqual(newmsg['From'], "chirila@example.com")
+        self.assertEqual(newmsg['To'], "alex@example.com")
+
+    def test_get_bounce_message_attach(self):
+        patch("pad.rules.ruleset.RuleSet.get_report",
+              return_value="Test report.").start()
+        text = ("Subject: Test\n"
+                "From: alex@example.com\n"
+                "To: chirila@example.com\n\n"
+                "This is a test.")
+        msg = email.message_from_string(text)
+        mock_msg = MagicMock(msg=msg, raw_msg=text)
+
+        ruleset = pad.rules.ruleset.RuleSet(self.mock_ctxt)
+        newmsg = ruleset._get_bounce_message(mock_msg)
+
+        parts = list(newmsg.walk())
+        self.assertEqual(parts[1].get_payload(decode=True),
+                         b"Test report.")
+        self.assertEqual(parts[2].get_payload(decode=True), text.encode("utf8"))
 
 def suite():
     """Gather all the tests from this package in a test suite."""

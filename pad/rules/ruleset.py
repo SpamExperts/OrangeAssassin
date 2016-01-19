@@ -67,8 +67,8 @@ class RuleSet(object):
         data["CONTACTADDRESS"] = self.report_contact
         data["HOSTNAME"] = socket.gethostname()
         data["REPORT"] = self.get_matched_report(msg)
-        data["YESNOCAPS"] = "YES" if spam else "FALSE"
-        data["YESNO"] = "Yes" if spam else "False"
+        data["YESNOCAPS"] = "YES" if spam else "NO"
+        data["YESNO"] = "Yes" if spam else "No"
         data["SCORE"] = "%0.1f" % msg.score
         data["REQD"] = "%0.1f" % self.required_score
         data["TESTS"] = ",".join(
