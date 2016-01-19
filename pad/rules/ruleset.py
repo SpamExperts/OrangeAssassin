@@ -93,7 +93,7 @@ class RuleSet(object):
         rule.postprocess(self)
 
     def _convert_tags(self, text):
-        """Replace _TAGS_ with placeholeders. %(TAG)s"""
+        """Replace _TAGS_ with placeholders. %(TAG)s"""
         text = text.strip("'\"")
         for tag in _TAG_RE.findall(text):
             self.tags.add(tag[1])
