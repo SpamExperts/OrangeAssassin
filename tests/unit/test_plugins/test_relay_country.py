@@ -73,52 +73,39 @@ Content-Type: multipart/mixed;
 """
 
 
-IPADDRESSES = {"10.107.130.85": "**",
-        "178.62.26.182": "GB",
-        }
 
 
-class AddressNotFoundError(Exception):
-    pass
-
-class MockCountry:
-    def __init__(self, ipd):
-        self.ipaddress = ipd
+class MockGeoIP(object):
+    """Mocking GeoIP class"""
+    IPADDRESSES = {"10.107.130.85": "**",
+               "178.62.26.182": "GB",
+                  }
+    def __init__(self, datfile):
+        """Constructore, requires to call with the path of the .dat file although
+        it is not currently used"""
+        pass
     
-    @property
-    def iso_code(self):
-        return IPADDRESSES[self.ipaddress]
-class MockResponse:
-    def __init__(self, ipaddress):
-        self.country = MockCountry(ipaddress)
-
-class MockGeoIPReader:
-    def __init__(self, *args, **kwargs):
-        self.response = None
-    
-    def country(self, ipd):
-        if ipd not in IPADDRESSES:
-            raise AddressNotFoundError 
-        return MockResponse(ipd)
+    def country_code_by_addr(self, addr):
+        """Mock country_code_by_addr the result is taken from the
+        IPADDRESSES dictionary above"""
+        return self.IPADDRESSES.get(addr, "")
 
 class TestRelayCountry(unittest.TestCase):
-
+    """Tests for the RelayCountryPlugin"""
     def setUp(self):
         unittest.TestCase.setUp(self)
         self.options = {}
         self.global_data = {"geodb":"/innexistent/location/"}
-        patch("pad.plugins.relay_country.RelayCountryPlugin.options", 
-                self.options).start()
+        patch("pad.plugins.relay_country.RelayCountryPlugin.options",
+              self.options).start()
         self.mock_ctxt = MagicMock(**{
             "get_plugin_data.side_effect": lambda p, k: self.global_data[k],
             "set_plugin_data.side_effect": lambda p, k, v: self.global_data.setdefault(k, v)}
-        )
-        patch("pad.plugins.relay_country.geoip2.database.Reader", 
-                MockGeoIPReader).start()
-        patch("pad.plugins.relay_country.geoip2.errors.AddressNotFoundError", 
-                AddressNotFoundError).start()
+                                  )
+        patch("pad.plugins.relay_country.pygeoip.GeoIP",
+                MockGeoIP).start()
         self.plugin = pad.plugins.relay_country.RelayCountryPlugin(self.mock_ctxt)
-    
+
     def tearDown(self):
         unittest.TestCase.tearDown(self)
         patch.stopall()
@@ -137,7 +124,7 @@ class TestRelayCountry(unittest.TestCase):
         self.plugin.check_start(message)
         expected_result = []
         self.assertEqual(message.headers["X-Relay-Country"], expected_result)
-    
+
     def test_unknown_ipdaddress(self):
         """Test a message where there are no "Received" headers"""
         message = pad.message.Message(self.mock_ctxt, MSG_NORECEIVED)
@@ -147,7 +134,7 @@ class TestRelayCountry(unittest.TestCase):
         expected_result = ["XX"]
         self.assertEqual(message.headers["X-Relay-Country"], expected_result)
 
-    
+
 def suite():
     """Gather all the tests from this package in a test suite."""
     test_suite = unittest.TestSuite()

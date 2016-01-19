@@ -44,7 +44,7 @@ class TestDaemon(unittest.TestCase):
             pref.write(cls.pre_config)
         with open(os.path.join(cls.test_conf, "10.cf"), "w") as conf:
             conf.write(cls.config)
-        args = [cls.daemon_script, "-C", cls.test_conf, "--siteconfigpath",
+        args = [cls.daemon_script, "-D", "-C", cls.test_conf, "--siteconfigpath",
                 cls.test_conf, "-i", "127.0.0.1", "-p", str(cls.port)]
         if cls.daemon_script == "padd.py":
             args.append("--log-file")
@@ -77,7 +77,7 @@ class TestDaemon(unittest.TestCase):
             try:
                 data = connection.recv(1024)
             except socket.error as e:
-                return
+                self.fail(e)
             if not data:
                 break
             response.append(data.decode("utf8"))

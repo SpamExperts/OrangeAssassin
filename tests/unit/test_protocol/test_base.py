@@ -38,43 +38,46 @@ class TestBaseCommand(unittest.TestCase):
     def test_init_options(self):
         """Test creating a new base protocol command."""
         pad.protocol.base.BaseProtocol.has_options = True
-        self.mockr.readline.side_effect = ["Content-Length: 20", "User: Alex",
-                                           ""]
+        self.mockr.readline.side_effect = [b"Content-Length: 20", b"User: Alex",
+                                           b""]
         base = self.get_base()
         self.mock_h.assert_called_with(None, {"content-length": "20",
                                               "user": "Alex"})
 
     def test_init_message(self):
         """Test creating a new base protocol command."""
-        message = "Subject: Test\n\nTest message"
+        message = b"Subject: Test\n\nTest message"
         pad.protocol.base.BaseProtocol.has_message = True
         self.mockr.read.side_effect = [message, None]
         base = self.get_base()
         self.mock_h.assert_called_with(self.mock_m.return_value, {})
-        self.mock_m.assert_called_with(self.mockrules.ctxt, message)
+        self.mock_m.assert_called_with(self.mockrules.ctxt,
+                                       message.decode("utf8"))
 
     def test_init_message_chunked(self):
         """Test creating a new base protocol command."""
-        message = "Subject: Test\n\nTest message"
+        message = b"Subject: Test\n\nTest message"
         pad.protocol.base.BaseProtocol.has_message = True
-        self.mockr.read.side_effect = ["Subject: Test\n\nT", "est message",
+        self.mockr.read.side_effect = [b"Subject: Test\n\nT", b"est message",
                                        None]
         base = self.get_base()
         self.mock_h.assert_called_with(self.mock_m.return_value, {})
-        self.mock_m.assert_called_with(self.mockrules.ctxt, message)
+        self.mock_m.assert_called_with(self.mockrules.ctxt,
+                                       message.decode("utf8"))
 
     def test_init_message_options(self):
         """Test creating a new base protocol command."""
-        message = "Subject: Test\n\nTest message"
+        message = b"Subject: Test\n\nTest message"
         pad.protocol.base.BaseProtocol.has_message = True
         pad.protocol.base.BaseProtocol.has_options = True
-        self.mockr.readline.side_effect = ["Content-Length: 27", "User: Alex",
-                                           ""]
+        self.mockr.readline.side_effect = [b"Content-Length: 27", b"User: Alex",
+                                           b""]
         self.mockr.read.side_effect = [message, None]
         base = self.get_base()
         self.mock_h.assert_called_with(
             self.mock_m.return_value, {"content-length": "27", "user": "Alex"})
-        self.mock_m.assert_called_with(self.mockrules.ctxt, message)
+        self.mock_m.assert_called_with(self.mockrules.ctxt,
+                                       message.decode("utf8"))
 
     def test_init_response(self):
         """Test creating a new base protocol command."""
@@ -82,9 +85,9 @@ class TestBaseCommand(unittest.TestCase):
         base = self.get_base()
 
         calls = [
-            call("SPAMD/%s 0 EX_OK\r\n" % (pad.__version__)),
-            call("Spam: True"),
-            call("\r\n"),
+            call(("SPAMD/%s 0 EX_OK\r\n" % (pad.__version__)).encode("utf8")),
+            call(b"Spam: True"),
+            call(b"\r\n"),
         ]
 
         self.mockw.write.assert_has_calls(calls)

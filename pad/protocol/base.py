@@ -29,7 +29,7 @@ class BaseProtocol(object):
         """Get any options added to the command."""
         options = dict()
         while True:
-            line = self.rfile.readline().strip()
+            line = self.rfile.readline().decode("utf8").strip()
             if not line:
                 break
             self.log.debug("Got line: %s", line)
@@ -55,7 +55,7 @@ class BaseProtocol(object):
                                         self.chunk_size))
             if not chunk:
                 break
-            message_chunks.append(chunk)
+            message_chunks.append(chunk.decode("utf8"))
             if content_length is not None:
                 content_length -= len(chunk)
         if options.get('compress') == "zlib":
@@ -71,10 +71,11 @@ class BaseProtocol(object):
         if self.has_message:
             message = self.get_message(options)
             message = pad.message.Message(self.ruleset.ctxt, message)
-        self.wfile.write("SPAMD/%s 0 %s\r\n" % (pad.__version__, self.ok_code))
+        ok_line = "SPAMD/%s 0 %s\r\n" % (pad.__version__, self.ok_code)
+        self.wfile.write(ok_line.encode("utf8"))
         for response in self.handle(message, options):
             self.log.debug("Writing response: %s", response)
-            self.wfile.write(response)
+            self.wfile.write(response.encode("utf8"))
 
     def handle(self, msg, options):
         """Perform the actual command and return a response for

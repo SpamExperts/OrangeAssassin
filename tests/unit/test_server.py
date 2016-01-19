@@ -35,7 +35,7 @@ class TestServer(unittest.TestCase):
     def test_handler(self):
         mock_check = MagicMock()
         mock_rfile = MagicMock()
-        mock_rfile.readline.return_value = "CHECK SPAMC/1.2"
+        mock_rfile.readline.return_value = b"CHECK SPAMC/1.2"
         mock_request = MagicMock()
         mock_request.makefile.return_value = mock_rfile
         mock_server = MagicMock()
