@@ -71,6 +71,7 @@ class TestImageInfoBase(unittest.TestCase):
 
 
 class TestImageInfoPlugin(TestImageInfoBase):
+    """Test plugin helper methods."""
 
     def test_extract_metadata(self):
         patch("pad.plugins.image_info.ImageInfoPlugin._add_name").start()
@@ -101,10 +102,144 @@ class TestImageInfoPlugin(TestImageInfoBase):
         self.plugin._update_counts.assert_has_calls(update_counts_calls)
         self.plugin._save_stats.assert_has_calls(save_stats_calls)
 
+    def test_get_image_sizes(self):
+        sizes = {'width': 2, "height": 2}
+        image = self.new_image_string((2,2), "RGB")
+        self.assertDictEqual(self.plugin._get_image_sizes(image),
+                             sizes)
+
+    def test_get_image_names(self):
+        self.assertEqual([], self.plugin._get_image_names(self.mock_msg))
+
+        self.plugin.set_local(self.mock_msg, "names", 
+                              ["test1.jpg","test2.jpg"])
+
+        self.assertEqual(["test1.jpg", "test2.jpg"], 
+                         self.plugin._get_image_names(self.mock_msg))
+
+    def test_get_count(self):
+        counts = {
+            "all":2,
+            "jpg":1,
+            "gif":1
+            }
+        self.plugin.set_local(self.mock_msg, "counts", counts)
+
+        for subtype, count in counts.items():
+            self.assertEqual(
+                self.plugin._get_count(self.mock_msg, subtype),
+                counts[subtype]
+            )
+
+        self.assertEqual(
+            self.plugin._get_count(self.mock_msg, "png"), 0)
+
+    def test_update_counts(self):
+        expected = {
+            "all":2,
+            "jpg":1,
+            "gif":1
+            }
+        self.plugin._update_counts(self.mock_msg, "jpg", 1)
+        self.plugin._update_counts(self.mock_msg, "gif", 1)
+        self.assertDictEqual(
+            self.plugin.get_local(self.mock_msg, "counts"),
+            expected)
+
+    def test_add_name(self):
+        self.plugin._add_name(self.mock_msg, "test.jpg")
+        self.plugin._add_name(self.mock_msg, "test1.jpg")
+        self.assertSetEqual(self.plugin.get_local(self.mock_msg, "names"),
+                            set(["test.jpg", "test1.jpg"]))
+
+    def test_update_coverage(self):
+        coverage = {
+            "all":8,
+            "jpg":8
+        }
+        self.plugin._update_coverage(self.mock_msg, "jpg", 8)
+
+        self.assertDictEqual(coverage,
+                             self.plugin.get_local(self.mock_msg, "coverage"))
+
+
+    def test_get_coverage(self):
+        coverage = {
+            "all":8,
+            "jpg":8
+        }
+        self.plugin.set_local(self.mock_msg, "coverage", coverage)
+
+        for subtype, sizes in coverage.items():
+            self.assertEqual(
+                self.plugin._get_coverage(self.mock_msg, subtype),
+                coverage[subtype]
+            )
+
+        self.assertEqual(
+            self.plugin._get_coverage(self.mock_msg, "png"), 0)
+
+
+    def test_save_stats(self):
+        image = self.new_image_string((2,2), mode="RGB")
+        self.plugin._save_stats(self.mock_msg, image, "jpg")
+        self.plugin._save_stats(self.mock_msg, image, "jpg")
+
+        expected_sizes = {
+            "all":{
+                1:{"width":2, "height":2},
+            },
+            "jpg":{
+                1:{"width":2, "height":2},
+            }
+        }
+        expected_coverage = {
+            "all":8,
+            "jpg":8
+        }
+
+        sizes = self.plugin.get_local(self.mock_msg, "sizes")
+
+        self.assertListEqual(sizes.keys(), expected_sizes.keys())
+        for subtype in sizes:
+            self.assertListEqual(sizes[subtype].values(),
+                                 expected_sizes[subtype].values())
+
+        coverage = self.plugin.get_local(self.mock_msg, "coverage")
+        self.assertDictEqual(expected_coverage, dict(coverage))
+
+
+    def test_get_sizes(self):
+        info = {
+            "all":{
+                1:{"width":1, "height":1},
+                2:{"width":2, "height":2},
+                3:{"width":3, "height":3},
+            },
+            "gif":{
+                2:{"width":2, "height":2},
+                3:{"width":3, "height":3},
+            },
+            "jpg":{
+                1:{"width":1, "height":1},
+            }
+        }
+
+        self.plugin.set_local(self.mock_msg, "sizes", info)
+
+        for subtype, sizes in info.items():
+            self.assertEqual(
+                self.plugin._get_sizes(self.mock_msg, subtype),
+                sizes.values()
+            )
+
+        self.assertEqual(
+            self.plugin._get_sizes(self.mock_msg, "png"),
+            [])
 
 
 class TestImageCount(TestImageInfoBase):
-
+    """Test image_count rule."""
 
     def test_min_true(self):
         self.plugin._update_counts(self.mock_msg, "jpg", 5)
@@ -124,6 +259,7 @@ class TestImageCount(TestImageInfoBase):
 
 
 class TestImageNamed(TestImageInfoBase):
+    """Test plugin image_named rule."""
 
     def test_true(self):
         for x in ["test1.jpg", "test2.jpg", "test3.jpg"]:
@@ -136,6 +272,7 @@ class TestImageNamed(TestImageInfoBase):
         self.assertFalse(self.plugin.image_named(self.mock_msg, "notexisting.jpg"))
 
 class TestImageNameRegex(TestImageInfoBase):
+    """Test plugin image_name_regex rule."""
 
     def test_true(self):
         names = ["test.gif", "test..gif", "test...gif"]
@@ -152,6 +289,7 @@ class TestImageNameRegex(TestImageInfoBase):
                                                     doubledot_regex))
 
 class TestPixelCoverage(TestImageInfoBase):
+    """Test plugin pixel_coverage rule."""
 
     def test_min_true(self):
         image = self.new_image_string((2,2))
@@ -175,6 +313,7 @@ class TestPixelCoverage(TestImageInfoBase):
 
 
 class TestImageSizeExact(TestImageInfoBase):
+    """Test plugin image_size_exact rule."""
 
     def test_true(self):
         image = self.new_image_string((2,2))
@@ -187,6 +326,7 @@ class TestImageSizeExact(TestImageInfoBase):
         self.assertFalse(self.plugin.image_size_exact(self.mock_msg, "all", 3, 2))
 
 class TestImageSizeRange(TestImageInfoBase):
+    """Test plugin image_size_range rule."""
 
     def test_min_true(self):
         image = self.new_image_string((2,2))
@@ -211,6 +351,7 @@ class TestImageSizeRange(TestImageInfoBase):
                                                       3, 1, 1))
 
 class TestImageToTextRatio(TestImageInfoBase):
+    """Test plugin image_to_text ratio rule."""
 
     def test_min_true(self):
         self.mock_msg.text = "A"*12
