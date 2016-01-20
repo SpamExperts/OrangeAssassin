@@ -66,6 +66,9 @@ class _Headers(collections.defaultdict):
     def __init__(self):
         collections.defaultdict.__init__(self, list)
 
+    def get(self, k, d=None):
+        return super(_Headers, self).get(k.lower(), d)
+
     def __setitem__(self, key, value):
         super(_Headers, self).__setitem__(key.lower(), value)
 
