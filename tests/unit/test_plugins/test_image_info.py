@@ -229,10 +229,10 @@ class TestImageInfoPlugin(TestImageInfoBase):
 
         sizes = self.plugin.get_local(self.mock_msg, "sizes")
 
-        self.assertListEqual(sizes.keys(), expected_sizes.keys())
+        self.assertListEqual(list(sizes.keys()), list(expected_sizes.keys()))
         for subtype in sizes:
-            self.assertListEqual(sizes[subtype].values(),
-                                 expected_sizes[subtype].values())
+            self.assertListEqual(list(sizes[subtype].values()),
+                                 list(expected_sizes[subtype].values()))
 
         coverage = self.plugin.get_local(self.mock_msg, "coverage")
         self.assertDictEqual(expected_coverage, dict(coverage))
@@ -257,13 +257,13 @@ class TestImageInfoPlugin(TestImageInfoBase):
 
         for subtype, sizes in info.items():
             self.assertEqual(
-                self.plugin._get_sizes(self.mock_msg, subtype),
-                sizes.values()
+                list(self.plugin._get_sizes(self.mock_msg, subtype)),
+                list(sizes.values())
             )
 
     def test_get_sizes_keyerror(self):
         self.assertEqual(
-            self.plugin._get_sizes(self.mock_msg, "png"), [])
+            list(self.plugin._get_sizes(self.mock_msg, "png")), [])
 
 
 class TestImageCount(TestImageInfoBase):
