@@ -70,6 +70,10 @@ def main():
     config_files = pad.config.get_config_files(options.configpath,
                                                options.sitepath)
 
+    if not config_files:
+        print("Config: no rules were found!", file=sys.stderr)
+        sys.exit(1)
+
     try:
         ruleset = pad.rules.parser.parse_pad_rules(
             config_files, options.paranoid, not options.show_unknown
