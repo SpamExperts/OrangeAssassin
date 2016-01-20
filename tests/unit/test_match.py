@@ -82,6 +82,19 @@ class TestRevokeReport(unittest.TestCase):
         with self.assertRaises(SystemExit):
             scripts.match.main()
 
+    def test_parse_no_configs(self):
+        """If no configs were found the script shouldn't be run"""
+        options = scripts.match.parse_arguments(["--revoke",
+                                                 "--siteconfigpath", ".",
+                                                 "--configpath", "."])
+        options.messages = [[StringIO(x) for x in self.raw_messages]]
+        patch("scripts.match.parse_arguments",
+              return_value=options).start()
+        self.mock_parse = patch(
+            "pad.config.get_config_files", return_value=[]).start()
+        with self.assertRaises(SystemExit):
+            scripts.match.main()
+
     def test_both(self):
         with self.assertRaises(SystemExit):
             with patch("sys.stderr"):

@@ -1,21 +1,14 @@
 """Test the match script."""
 
-import unittest
+from __future__ import absolute_import
+
+import tests.util
 
 
-class TestMatch(unittest.TestCase):
-    def setUp(self):
-        unittest.TestCase.setUp(self)
-
-    def tearDown(self):
-        unittest.TestCase.tearDown(self)
+class TestBodyRules(tests.util.TestBase):
 
     def test_pass(self):
-        pass
-
-
-def suite():
-    """Gather all the tests from this package in a test suite."""
-    test_suite = unittest.TestSuite()
-    test_suite.addTest(unittest.makeSuite(TestMatch, "test"))
-    return test_suite
+        """No rule matched here, no report"""
+        self.setup_conf()
+        result = self.check_pad("Subject: test\n\nThis is a test")
+        self.assertEqual(result, "")

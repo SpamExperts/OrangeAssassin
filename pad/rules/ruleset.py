@@ -71,9 +71,12 @@ class RuleSet(object):
         data["YESNO"] = "Yes" if spam else "No"
         data["SCORE"] = "%0.1f" % msg.score
         data["REQD"] = "%0.1f" % self.required_score
-        data["TESTS"] = ",".join(
-            name for name, result in msg.rules_checked.items() if result
-        )
+        matched_rules = [name for name, result in msg.rules_checked.items()
+                         if result]
+        if not matched_rules:
+            data["TESTS"] = "none"
+        else:
+            data["TESTS"] = ",".join(matched_rules)
         data["SUBVERSION"] = pad.__release_date__
         data["VERSION"] = pad.__version__
         data["SUMMARY"] = self.get_summary_report(msg)
@@ -93,7 +96,7 @@ class RuleSet(object):
         rule.postprocess(self)
 
     def _convert_tags(self, text):
-        """Replace _TAGS_ with placeholeders. %(TAG)s"""
+        """Replace _TAGS_ with placeholders. %(TAG)s"""
         text = text.strip("'\"")
         for tag in _TAG_RE.findall(text):
             self.tags.add(tag[1])

@@ -19,7 +19,6 @@ class TestParseGetRuleset(unittest.TestCase):
         logging.getLogger("pad-logger").handlers = [logging.NullHandler()]
         self.mock_results = {}
         self.mock_rules = {}
-
         self.mock_ruleset = patch("pad.rules.parser."
                                   "pad.rules.ruleset.RuleSet").start()
         patch("pad.rules.parser.RULES", self.mock_rules).start()
@@ -105,6 +104,8 @@ class TestParsePADLine(unittest.TestCase):
         unittest.TestCase.setUp(self)
         logging.getLogger("pad-logger").handlers = [logging.NullHandler()]
         self.plugins = {}
+        self.mock_ruleset = patch("pad.rules.parser."
+                                  "pad.rules.ruleset.RuleSet").start()
         self.mock_ctxt = patch(
             "pad.rules.parser.pad.context.GlobalContext",
             **{"return_value.plugins": self.plugins,
@@ -201,6 +202,27 @@ class TestParsePADLine(unittest.TestCase):
         parser = self.check_parse([b"ifplugin PyzorPlugin", b"endif"], {})
         self.assertEqual(parser._ignore, False)
 
+    def test_parse_line_ifelse_loaded(self):
+        self.plugins["PyzorPlugin"] = Mock()
+        self.check_parse([b"ifplugin PyzorPlugin",
+                          b"body TEST_RULE /test/",
+                          b"else",
+                          b"body TEST_RULE2 /test2/",
+                          b"endif"
+                          ],
+                         {"TEST_RULE": {"type": "body",
+                                        "value": "/test/"}})
+
+    def test_parse_line_ifelse_not_loaded(self):
+        self.check_parse([b"ifplugin PyzorPlugin",
+                          b"body TEST_RULE /test/",
+                          b"else",
+                          b"body TEST_RULE2 /test2/",
+                          b"endif"
+                          ],
+                         {"TEST_RULE2": {"type": "body",
+                                        "value": "/test2/"}})
+
     def test_parse_line_convert_evalrule(self):
         self.check_parse([b"body TEST_RULE eval:check_test()"],
                          {"TEST_RULE": {"type": "eval",
@@ -218,6 +240,59 @@ class TestParsePADLine(unittest.TestCase):
                          {})
         self.mock_ctxt.return_value.load_plugin.assert_called_with(
             "DumpText", "/etc/pad/plugins/dump_text.py")
+
+    def test_parse_line_load_plugin_reimplemented(self):
+        self.check_parse([b"loadplugin Mail::SpamAssassin::Plugin::DumpText"],
+                         {})
+        self.mock_ctxt.return_value.load_plugin.assert_called_with(
+            "pad.plugins.dump_text.DumpText", None)
+
+    def test_parse_line_report(self):
+        self.check_parse([b"report test report template"],
+                         {})
+        ruleset = self.mock_ruleset.return_value
+        ruleset.add_report.assert_called_with("test report template")
+
+    def test_parse_line_clear_report(self):
+        self.check_parse([b"clear_report_template"],
+                         {})
+        ruleset = self.mock_ruleset.return_value
+        ruleset.clear_report_template.assert_called_with()
+
+    def test_parse_line_add_header(self):
+        self.check_parse([b"add_header Some-Header value"], {})
+        ruleset = self.mock_ruleset.return_value
+        ruleset.add_header_rule.assert_called_with(u"Some-Header value", False)
+
+    def test_parse_line_remove_header(self):
+        self.check_parse([b"remove_header Some-Header value"], {})
+        ruleset = self.mock_ruleset.return_value
+        ruleset.add_header_rule.assert_called_with(u"Some-Header value", True)
+
+    def test_parse_line_clear_headers(self):
+        self.check_parse([b"clear_headers"],
+                         {})
+        ruleset = self.mock_ruleset.return_value
+        ruleset.clear_headers.assert_called_with()
+
+    def test_parse_line_report_contact(self):
+        self.check_parse([b"report_contact alex@example.com"], {})
+        ruleset = self.mock_ruleset.return_value
+        self.assertEqual(ruleset.report_contact, "alex@example.com")
+
+    def test_parse_line_required_score(self):
+        self.check_parse([b"required_score 5.6"], {})
+        ruleset = self.mock_ruleset.return_value
+        self.assertEqual(ruleset.required_score, 5.6)
+
+    def test_parse_line_report_safe(self):
+        self.check_parse([b"report_safe 2"], {})
+        ruleset = self.mock_ruleset.return_value
+        self.assertEqual(ruleset.report_safe, 2)
+
+    def test_parse_line_report_safe_invalid(self):
+        with self.assertRaises(pad.errors.InvalidRule):
+            self.check_parse([b"report_safe 3"], {})
 
     def test_parse_line_load_plugin_no_path(self):
         self.check_parse([b"loadplugin pad.plugins.dump_text.DumpText"], {})

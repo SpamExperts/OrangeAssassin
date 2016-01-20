@@ -56,6 +56,9 @@ def parse_arguments(args):
     parser.add_argument("-t", "--test-mode", action="store_true", default=False,
                         help="Pipe message through and add extra report to the "
                              "bottom")
+    parser.add_argument("-R", "--report-only", action="store_true",
+                        default=False, help="Only print the report instead of "
+                                            "the adjusted message.")
     parser.add_argument("messages", type=MessageList(), nargs="*",
                         metavar="path", help="Paths to messages or "
                                              "directories containing messages",
@@ -96,14 +99,17 @@ def main():
                 ruleset.ctxt.hook_revoke(msg)
             elif options.report:
                 ruleset.ctxt.hook_report(msg)
+            elif options.report_only:
+                ruleset.match(msg)
+                print(ruleset.get_report(msg))
             else:
                 ruleset.match(msg)
                 print(ruleset.get_adjusted_message(msg))
                 if options.test_mode:
                     print(ruleset.get_report(msg))
         count += 1
-
-    print("%s message(s) examined" % count)
+    if options.revoke or options.report:
+        print("%s message(s) examined" % count)
 
 
 if __name__ == "__main__":

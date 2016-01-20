@@ -14,6 +14,7 @@ from PIL import Image
 import pad.plugins
 from pad.plugins import image_info
 
+
 class TestImageInfoBase(unittest.TestCase):
 
     def setUp(self):
@@ -21,8 +22,11 @@ class TestImageInfoBase(unittest.TestCase):
         self.options = {}
         self.global_data = {}
         self.msg_data = {}
-        patch("pad.plugins.whitelist_subject.WhiteListSubjectPlugin.options", self.options).start()
-        patch("pad.plugins.whitelist_subject.WhiteListSubjectPlugin.inhibit_further_callbacks").start()
+        patch("pad.plugins.whitelist_subject.WhiteListSubjectPlugin.options",
+              self.options).start()
+        patch(
+            "pad.plugins.whitelist_subject.WhiteListSubjectPlugin."
+            "inhibit_further_callbacks").start()
 
         self.mock_ctxt = MagicMock(**{
             "get_plugin_data.side_effect": lambda p, k: self.global_data[k],
@@ -30,7 +34,8 @@ class TestImageInfoBase(unittest.TestCase):
         )
         self.mock_msg = MagicMock(**{
             "get_plugin_data.side_effect": lambda p, k: self.msg_data[k],
-            "set_plugin_data.side_effect": lambda p, k, v: self.msg_data.setdefault(k, v),
+            "set_plugin_data."
+            "side_effect": lambda p, k, v: self.msg_data.setdefault(k, v),
         })
         self.mock_msg.msg = None
         self.plugin = pad.plugins.image_info.ImageInfoPlugin(self.mock_ctxt)
@@ -39,8 +44,9 @@ class TestImageInfoBase(unittest.TestCase):
         unittest.TestCase.tearDown(self)
         patch.stopall()
 
-    def new_image(self, width, height, subtype, name):
-        image = Image.new("RGB", (width,height))
+    @staticmethod
+    def new_image(width, height, subtype, name):
+        image = Image.new("RGB", (width, height))
         img_io = BytesIO()
         image.save(img_io, format="JPEG")
         img_io.seek(0)
@@ -51,7 +57,8 @@ class TestImageInfoBase(unittest.TestCase):
                 "height": height,
                 "coverage": width*height}
 
-    def new_email(self, images):
+    @staticmethod
+    def new_email(images):
         msg = MIMEMultipart()
         for image in images.values():
             mimg = MIMEImage(image['data'].read(), _subtype=image['subtype'],
@@ -61,10 +68,11 @@ class TestImageInfoBase(unittest.TestCase):
             msg.attach(mimg)
         return msg
 
-    def new_image_string(self, size, mode="RGB"):
+    @staticmethod
+    def new_image_string(size, mode="RGB"):
         image = Image.new(mode, size)
         img_io = BytesIO()
-        image_io = image.save(img_io, format="JPEG")
+        image.save(img_io, format="JPEG")
         image.close()
         img_io.seek(0)
         return img_io.read()
@@ -84,12 +92,12 @@ class TestImageInfoPlugin(TestImageInfoBase):
         images = {}
         for x in range(5):
             images.update({
-                x: self.new_image(1,1,"jpg", "%s.jpg"%x)
+                x: self.new_image(1, 1, "jpg", "%s.jpg" % x)
             })
             add_name_calls.append(call(self.mock_msg, "%s.jpg" % x))
             update_counts_calls.append(call(self.mock_msg, "jpg", by=1))
             save_stats_calls.append(call(self.mock_msg,
-                                         self.new_image_string((1,1), "RGB"),
+                                         self.new_image_string((1, 1), "RGB"),
                                          "jpg"))
 
         self.mock_msg.msg = self.new_email(images)
@@ -109,39 +117,47 @@ class TestImageInfoPlugin(TestImageInfoBase):
                              sizes)
 
     def test_get_image_names(self):
-        self.assertEqual([], self.plugin._get_image_names(self.mock_msg))
-
-        self.plugin.set_local(self.mock_msg, "names", 
-                              ["test1.jpg","test2.jpg"])
-
-        self.assertEqual(["test1.jpg", "test2.jpg"], 
+        self.plugin.set_local(self.mock_msg, "names",
+                              ["test1.jpg", "test2.jpg"])
+        self.assertEqual(["test1.jpg", "test2.jpg"],
                          self.plugin._get_image_names(self.mock_msg))
+
+    def test_get_image_names_keyerror(self):
+        self.assertEqual([], self.plugin._get_image_names(self.mock_msg))
 
     def test_get_count(self):
         counts = {
-            "all":2,
-            "jpg":1,
-            "gif":1
-            }
+            "all": 2,
+            "jpg": 1,
+            "gif": 1
+        }
         self.plugin.set_local(self.mock_msg, "counts", counts)
-
         for subtype, count in counts.items():
             self.assertEqual(
                 self.plugin._get_count(self.mock_msg, subtype),
                 counts[subtype]
             )
 
+    def test_get_count_keyerror(self):
         self.assertEqual(
             self.plugin._get_count(self.mock_msg, "png"), 0)
 
     def test_update_counts(self):
         expected = {
-            "all":2,
-            "jpg":1,
-            "gif":1
-            }
+            "all": 2,
+            "jpg": 1,
+            "gif": 1
+        }
         self.plugin._update_counts(self.mock_msg, "jpg", 1)
         self.plugin._update_counts(self.mock_msg, "gif", 1)
+        self.assertDictEqual(
+            self.plugin.get_local(self.mock_msg, "counts"),
+            expected)
+
+    def test_update_counts_keyerror(self):
+        expected = {'all': 1, 'png': 1}
+        self.plugin.del_local(self.mock_msg, "counts")
+        self.plugin._update_counts(self.mock_msg, "png", 1)
         self.assertDictEqual(
             self.plugin.get_local(self.mock_msg, "counts"),
             expected)
@@ -152,50 +168,63 @@ class TestImageInfoPlugin(TestImageInfoBase):
         self.assertSetEqual(self.plugin.get_local(self.mock_msg, "names"),
                             set(["test.jpg", "test1.jpg"]))
 
+    def test_add_name_keyerror(self):
+        self.plugin._add_name(self.mock_msg, "test.jpg")
+        self.plugin._add_name(self.mock_msg, "test1.jpg")
+        self.assertSetEqual(self.plugin.get_local(self.mock_msg, "names"),
+                            set(["test.jpg", "test1.jpg"]))
+
     def test_update_coverage(self):
         coverage = {
-            "all":8,
-            "jpg":8
+            "all": 8,
+            "jpg": 8
         }
         self.plugin._update_coverage(self.mock_msg, "jpg", 8)
-
         self.assertDictEqual(coverage,
                              self.plugin.get_local(self.mock_msg, "coverage"))
 
+    def test_update_coverage_keyerror(self):
+        coverage = {
+            "all": 2,
+            "png": 2
+        }
+        self.plugin.del_local(self.mock_msg, "coverage")
+        self.plugin._update_coverage(self.mock_msg, "png", 2)
+        self.assertDictEqual(coverage,
+                             self.plugin.get_local(self.mock_msg, "coverage"))
 
     def test_get_coverage(self):
         coverage = {
-            "all":8,
-            "jpg":8
+            "all": 8,
+            "jpg":  8
         }
         self.plugin.set_local(self.mock_msg, "coverage", coverage)
-
         for subtype, sizes in coverage.items():
             self.assertEqual(
                 self.plugin._get_coverage(self.mock_msg, subtype),
                 coverage[subtype]
             )
 
+    def test_get_coverage_keyerror(self):
         self.assertEqual(
             self.plugin._get_coverage(self.mock_msg, "png"), 0)
 
-
     def test_save_stats(self):
-        image = self.new_image_string((2,2), mode="RGB")
+        image = self.new_image_string((2, 2), mode="RGB")
         self.plugin._save_stats(self.mock_msg, image, "jpg")
         self.plugin._save_stats(self.mock_msg, image, "jpg")
 
         expected_sizes = {
-            "all":{
-                1:{"width":2, "height":2},
+            "all": {
+                1: {"width": 2, "height": 2},
             },
-            "jpg":{
-                1:{"width":2, "height":2},
+            "jpg": {
+                1: {"width": 2, "height": 2},
             }
         }
         expected_coverage = {
-            "all":8,
-            "jpg":8
+            "all": 8,
+            "jpg": 8
         }
 
         sizes = self.plugin.get_local(self.mock_msg, "sizes")
@@ -208,20 +237,19 @@ class TestImageInfoPlugin(TestImageInfoBase):
         coverage = self.plugin.get_local(self.mock_msg, "coverage")
         self.assertDictEqual(expected_coverage, dict(coverage))
 
-
     def test_get_sizes(self):
         info = {
-            "all":{
-                1:{"width":1, "height":1},
-                2:{"width":2, "height":2},
-                3:{"width":3, "height":3},
+            "all": {
+                1: {"width": 1, "height": 1},
+                2: {"width": 2, "height": 2},
+                3: {"width": 3, "height": 3},
             },
-            "gif":{
-                2:{"width":2, "height":2},
-                3:{"width":3, "height":3},
+            "gif": {
+                2: {"width": 2, "height": 2},
+                3: {"width": 3, "height": 3},
             },
-            "jpg":{
-                1:{"width":1, "height":1},
+            "jpg": {
+                1: {"width": 1, "height": 1},
             }
         }
 
@@ -233,9 +261,9 @@ class TestImageInfoPlugin(TestImageInfoBase):
                 sizes.values()
             )
 
+    def test_get_sizes_keyerror(self):
         self.assertEqual(
-            self.plugin._get_sizes(self.mock_msg, "png"),
-            [])
+            self.plugin._get_sizes(self.mock_msg, "png"), [])
 
 
 class TestImageCount(TestImageInfoBase):
@@ -271,6 +299,7 @@ class TestImageNamed(TestImageInfoBase):
             self.plugin._add_name(self.mock_msg, x)
         self.assertFalse(self.plugin.image_named(self.mock_msg, "notexisting.jpg"))
 
+
 class TestImageNameRegex(TestImageInfoBase):
     """Test plugin image_name_regex rule."""
 
@@ -279,14 +308,15 @@ class TestImageNameRegex(TestImageInfoBase):
         self.plugin.set_local(self.mock_msg, "names", names)
         doubledot_regex = "/^\w{1,9}\.\.gif$/i"
         self.assertTrue(self.plugin.image_name_regex(self.mock_msg,
-                                                    doubledot_regex))
+                                                     doubledot_regex))
 
     def test_false(self):
         names = ["test.gif", "test.gif", "test.gif"]
         self.plugin.set_local(self.mock_msg, "names", names)
         doubledot_regex = "/^\w{2,9}\.\.gif$/i"
         self.assertFalse(self.plugin.image_name_regex(self.mock_msg,
-                                                    doubledot_regex))
+                                                      doubledot_regex))
+
 
 class TestPixelCoverage(TestImageInfoBase):
     """Test plugin pixel_coverage rule."""
@@ -318,25 +348,30 @@ class TestImageSizeExact(TestImageInfoBase):
     def test_true(self):
         image = self.new_image_string((2,2))
         self.plugin._save_stats(self.mock_msg, image, "jpg")
-        self.assertTrue(self.plugin.image_size_exact(self.mock_msg, "all", 2, 2))
+        self.assertTrue(self.plugin.image_size_exact(
+            self.mock_msg, "all", 2, 2))
 
     def test_false(self):
         image = self.new_image_string((2,2))
         self.plugin._save_stats(self.mock_msg, image, "jpg")
-        self.assertFalse(self.plugin.image_size_exact(self.mock_msg, "all", 3, 2))
+        self.assertFalse(self.plugin.image_size_exact(
+            self.mock_msg, "all", 3, 2))
+
 
 class TestImageSizeRange(TestImageInfoBase):
     """Test plugin image_size_range rule."""
 
     def test_min_true(self):
-        image = self.new_image_string((2,2))
+        image = self.new_image_string((2, 2))
         self.plugin._save_stats(self.mock_msg, image, "jpg")
-        self.assertTrue(self.plugin.image_size_range(self.mock_msg, "all", 1, 1))
+        self.assertTrue(self.plugin.image_size_range(
+            self.mock_msg, "all", 1, 1))
 
     def test_min_false(self):
-        image = self.new_image_string((2,2))
+        image = self.new_image_string((2, 2))
         self.plugin._save_stats(self.mock_msg, image, "jpg")
-        self.assertFalse(self.plugin.image_size_range(self.mock_msg, "all", 3, 3))
+        self.assertFalse(self.plugin.image_size_range(
+            self.mock_msg, "all", 3, 3))
 
     def test_max_true(self):
         image = self.new_image_string((2,2))
@@ -349,6 +384,7 @@ class TestImageSizeRange(TestImageInfoBase):
         self.plugin._save_stats(self.mock_msg, image, "jpg")
         self.assertFalse(self.plugin.image_size_range(self.mock_msg, "all", 3,
                                                       3, 1, 1))
+
 
 class TestImageToTextRatio(TestImageInfoBase):
     """Test plugin image_to_text ratio rule."""
@@ -375,7 +411,8 @@ class TestImageToTextRatio(TestImageInfoBase):
         self.mock_msg.text = "A"*12
         self.plugin._update_coverage(self.mock_msg, "jpg", 4)
         self.assertFalse(self.plugin.image_to_text_ratio(self.mock_msg, "all",
-                                                        1, 2, target="body"))
+                                                         1, 2, target="body"))
+
 
 def suite():
     """Gather all the tests from this package in a test suite."""

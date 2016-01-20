@@ -103,10 +103,11 @@ def get_config_files(config_path, siteconfig_path):
     config_files = []
     config_files.extend(
         sorted(get_files_with_extension(siteconfig_path, ".pre")))
-    config_files.extend(
-        sorted(get_files_with_extension(config_path, ".pre")))
-    config_files.extend(
-        sorted(get_files_with_extension(config_path, ".cf")))
+    if siteconfig_path != config_path:
+        config_files.extend(
+            sorted(get_files_with_extension(config_path, ".pre")))
+        config_files.extend(
+            sorted(get_files_with_extension(config_path, ".cf")))
     config_files.extend(
         sorted(get_files_with_extension(siteconfig_path, ".cf")))
 

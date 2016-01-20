@@ -1,6 +1,7 @@
 """Rules that check email headers."""
 
 import pad.regex
+import pad.errors
 import pad.rules.base
 
 
@@ -21,6 +22,8 @@ class MimeHeaderRule(pad.rules.base.BaseRule):
             match_op = "=~"
         elif "!~" in value:
             match_op = "!~"
+        else:
+            raise pad.errors.InvalidRule(name, "Missing match operator")
 
         header_name, pattern = value.split(match_op, 1)
         header_name = header_name.strip()
