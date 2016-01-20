@@ -23,10 +23,10 @@ GTUBE = "XJS*C4JDBQADN1.NSBN3*2IDNEN*GTUBE-STANDARD-ANTI-UBE-TEST-EMAIL*C.34X"
 
 class TestDaemon(unittest.TestCase):
 
-    daemon_script = "padd.py"
+    daemon_script = "scripts/padd.py"
     # Uncomment this to test under spamd
     #daemon_script = "spamd"
-    test_conf = os.path.abspath("test_padd_conf/")
+    test_conf = os.path.abspath("tests/test_padd_conf/")
     pre_config = PRE_CONFIG
     port = 30783
     config = CONFIG
@@ -46,7 +46,7 @@ class TestDaemon(unittest.TestCase):
             conf.write(cls.config)
         args = [cls.daemon_script, "-D", "-C", cls.test_conf, "--siteconfigpath",
                 cls.test_conf, "-i", "127.0.0.1", "-p", str(cls.port)]
-        if cls.daemon_script == "padd.py":
+        if cls.daemon_script == "scripts/padd.py":
             args.append("--log-file")
             args.append(os.path.abspath("padd.log"))
         cls.padd_procs.append(subprocess.Popen(args))

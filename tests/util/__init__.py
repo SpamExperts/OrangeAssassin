@@ -22,10 +22,10 @@ GTUBE = "XJS*C4JDBQADN1.NSBN3*2IDNEN*GTUBE-STANDARD-ANTI-UBE-TEST-EMAIL*C.34X"
 
 
 class TestBase(unittest.TestCase):
-    match_script = "match.py"
+    match_script = "scripts/match.py"
     # Uncomment this to test under SA
     #match_script = "spamassassin"
-    test_conf = os.path.abspath("test_match_conf")
+    test_conf = os.path.abspath("tests/test_match_conf/")
     # Add this at the beginning of the report to
     # easily split the message from the report.
     report_start = "---=PAD report start=---"
