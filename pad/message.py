@@ -5,9 +5,6 @@ from builtins import list
 from builtins import dict
 from builtins import object
 
-from future import standard_library
-standard_library.install_hooks()
-
 import re
 import email
 import socket

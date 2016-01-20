@@ -3,9 +3,6 @@
 from builtins import dict
 from builtins import object
 
-from future import standard_library
-standard_library.install_hooks()
-
 try:
     import importlib.machinery
 except ImportError:

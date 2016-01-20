@@ -9,8 +9,6 @@ the name as unique identifier.
 """
 
 from __future__ import absolute_import
-from future import standard_library
-standard_library.install_hooks()
 
 from builtins import dict
 from builtins import object

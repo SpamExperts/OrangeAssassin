@@ -3,9 +3,6 @@
 from builtins import dict
 from builtins import object
 
-from future import standard_library
-standard_library.install_hooks()
-
 import re
 import socket
 import email.utils
