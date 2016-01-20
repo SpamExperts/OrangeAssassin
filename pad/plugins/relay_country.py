@@ -2,6 +2,8 @@
 
 from __future__ import absolute_import
 
+from builtins import str
+
 import re
 
 import pad.errors
@@ -55,7 +57,7 @@ class RelayCountryPlugin(pad.plugins.base.BasePlugin):
         network range database.
         """
         try:
-            ipadobj = ipaddress.ip_address(ipaddr)
+            ipadobj = ipaddress.ip_address(str(ipaddr.encode('utf8'), "utf8"))
         except (ipaddress.AddressValueError, ValueError):
             self.ctxt.log.log.warning("Invalid IP address: '%s', ipaddr")
             return ""
