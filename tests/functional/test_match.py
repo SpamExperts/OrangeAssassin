@@ -89,6 +89,7 @@ class TestBodyRules(tests.util.TestBase):
 
     def test_match_show_unknown(self):
         """Rule should be matched with show-unknown option"""
+        # This will fail on SA
         self.setup_conf(config="body TEST_RULE /abcd/",
                         pre_config="report _SCORE_")
         result = self.check_pad("Subject: test\n\nTest abcd test.",
@@ -97,6 +98,7 @@ class TestBodyRules(tests.util.TestBase):
 
     def test_match_show_paranoid(self):
         """Rule should be matched with paranoid option"""
+        # This will fail on SA
         self.setup_conf(config="body TEST_RULE /abcd/",
                         pre_config="report _SCORE_")
         result = self.check_pad("Subject: test\n\nTest abcd test.",
@@ -162,4 +164,18 @@ class TestBodyRules(tests.util.TestBase):
         )
         result = self.check_pad("Subject: test\n\nTest abcd test.",
                                 report_only=False, extra_args=["--revoke", ])
+        self.assertEqual(result, expected)
+
+    def test_report_revoke_error(self):
+        # This will fail on SA
+        expected = ""
+        cwd = os.path.join(os.getcwd(), "tests", "util", "sample_plugin.py")
+        plugin_name = "TestPluginReportRevoke"
+        self.setup_conf(
+            config="",
+            pre_config="loadplugin %s %s" % (plugin_name, cwd)
+        )
+        result = self.check_pad("Subject: test\n\nTest abcd test.",
+                                report_only=False, extra_args=["--report",
+                                                               "--revoke"])
         self.assertEqual(result, expected)
