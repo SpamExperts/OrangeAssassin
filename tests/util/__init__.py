@@ -69,7 +69,7 @@ class TestBase(unittest.TestCase):
         if extra_args is not None:
             args.extend(extra_args)
         proc = subprocess.Popen(args, stdin=subprocess.PIPE,
-                                stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                                stdout=subprocess.PIPE)
         stdout, stderr = proc.communicate(message.encode("utf8"))
         result = stdout.decode("utf8")
         if report_only:

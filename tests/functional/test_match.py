@@ -1,6 +1,8 @@
 """Test the match script."""
 
-from __future__ import absolute_import
+from __future__ import absolute_import, print_function
+
+import os
 
 import tests.util
 
@@ -135,3 +137,29 @@ class TestBodyRules(tests.util.TestBase):
             pre_config="report _SCORE_")
         result = self.check_pad(MULTIPART_MSG)
         self.assertEqual(result, "0.0")
+
+    def test_report_plugin(self):
+        # This will fail on SA
+        expected = u"Reporting message.\n1 message(s) examined"
+        cwd = os.path.join(os.getcwd(), "tests", "util", "sample_plugin.py")
+        plugin_name = "TestPluginReportRevoke"
+        self.setup_conf(
+            config="",
+            pre_config="loadplugin %s %s" % (plugin_name, cwd)
+        )
+        result = self.check_pad("Subject: test\n\nTest abcd test.",
+                                report_only=False, extra_args=["--report", ])
+        self.assertEqual(result, expected)
+
+    def test_revoke_plugin(self):
+        # This will fail on SA
+        expected = u"Revoking message.\n1 message(s) examined"
+        cwd = os.path.join(os.getcwd(), "tests", "util", "sample_plugin.py")
+        plugin_name = "TestPluginReportRevoke"
+        self.setup_conf(
+            config="",
+            pre_config="loadplugin %s %s" % (plugin_name, cwd)
+        )
+        result = self.check_pad("Subject: test\n\nTest abcd test.",
+                                report_only=False, extra_args=["--revoke", ])
+        self.assertEqual(result, expected)
