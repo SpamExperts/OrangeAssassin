@@ -48,7 +48,7 @@ class TestImageInfo(tests.util.TestBase):
                         pre_config="loadplugin ImageInfoPlugin {0}\n"
                         "report _SCORE_".format(cwd))
         msg = TestImageInfoBase.new_email(
-            {1: TestImageInfoBase.new_image(264, 127, "gif", "image001.gif")})
+            {1: TestImageInfoBase.new_image(127, 264, "gif", "image001.gif")})
         result = self.check_pad(msg.as_string())
         self.assertEqual(result, '1.0')
 
@@ -59,8 +59,8 @@ class TestImageInfo(tests.util.TestBase):
                         pre_config="loadplugin ImageInfoPlugin {0}\n"
                         "report _SCORE_".format(cwd))
         msg = TestImageInfoBase.new_email(
-            {1: TestImageInfoBase.new_image(264, 127, "gif", "image001.gif"),
-             2: TestImageInfoBase.new_image(264, 127, "png", "image002.gif")})
+            {1: TestImageInfoBase.new_image(127, 264, "gif", "image001.gif"),
+             2: TestImageInfoBase.new_image(127, 264, "png", "image002.gif")})
         result = self.check_pad(msg.as_string())
         self.assertEqual(result, '1.0')
 
