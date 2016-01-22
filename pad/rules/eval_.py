@@ -9,7 +9,7 @@ import pad.rules.base
 # Used to extract the eval rule data
 _EVAL_RULE_P = re.compile(r"""
     ([_a-zA-Z]\w*)     # First matching group for the eval rule name
-    (\(.*\))           # Greedy matching group for the eval rule args
+    \((.*)\)           # Greedy matching group for the eval rule args
 """, re.VERBOSE)
 
 
@@ -20,7 +20,10 @@ class EvalRule(pad.rules.base.BaseRule):
         try:
             eval_rule_name, eval_args = _EVAL_RULE_P.match(eval_rule).groups()
             self._eval_rule = eval_rule_name
-            self._eval_args = eval(eval_args)
+            if eval_args:
+                self._eval_args = tuple(eval(arg) for arg in eval_args.split(","))
+            else:
+                self._eval_args = tuple()
         except (TypeError, ValueError, AttributeError):
             raise pad.errors.InvalidRule(self.name, "Invalid eval rule: %s" %
                                          eval_rule)

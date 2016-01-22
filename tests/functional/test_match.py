@@ -3,6 +3,7 @@
 from __future__ import absolute_import, print_function
 
 import os
+import unittest
 
 import tests.util
 
@@ -37,7 +38,7 @@ Testing rule one-two-three
 """
 
 
-class TestBodyRules(tests.util.TestBase):
+class TestMatchScript(tests.util.TestBase):
 
     def setUp(self):
         tests.util.TestBase.setUp(self)
@@ -89,6 +90,7 @@ class TestBodyRules(tests.util.TestBase):
 
     def test_match_show_unknown(self):
         """Rule should be matched with show-unknown option"""
+        # This will fail on SA
         self.setup_conf(config="body TEST_RULE /abcd/",
                         pre_config="report _SCORE_")
         result = self.check_pad("Subject: test\n\nTest abcd test.",
@@ -97,6 +99,7 @@ class TestBodyRules(tests.util.TestBase):
 
     def test_match_show_paranoid(self):
         """Rule should be matched with paranoid option"""
+        # This will fail on SA
         self.setup_conf(config="body TEST_RULE /abcd/",
                         pre_config="report _SCORE_")
         result = self.check_pad("Subject: test\n\nTest abcd test.",
@@ -163,3 +166,28 @@ class TestBodyRules(tests.util.TestBase):
         result = self.check_pad("Subject: test\n\nTest abcd test.",
                                 report_only=False, extra_args=["--revoke", ])
         self.assertEqual(result, expected)
+
+    def test_report_revoke_error(self):
+        # This will fail on SA
+        expected = ""
+        cwd = os.path.join(os.getcwd(), "tests", "util", "sample_plugin.py")
+        plugin_name = "TestPluginReportRevoke"
+        self.setup_conf(
+            config="",
+            pre_config="loadplugin %s %s" % (plugin_name, cwd)
+        )
+        result = self.check_pad("Subject: test\n\nTest abcd test.",
+                                report_only=False, extra_args=["--report",
+                                                               "--revoke"])
+        self.assertEqual(result, expected)
+
+
+def suite():
+    """Gather all the tests from this package in a test suite."""
+    test_suite = unittest.TestSuite()
+    test_suite.addTest(unittest.makeSuite(TestMatchScript, "test"))
+    return test_suite
+
+
+if __name__ == '__main__':
+    unittest.main(defaultTest='suite')
