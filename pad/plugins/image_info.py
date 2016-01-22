@@ -158,6 +158,8 @@ class ImageInfoPlugin(pad.plugins.base.BasePlugin):
     def image_size_exact(self, msg, img_type, height, width,
                          target=None):
         """Match by image size."""
+        height = int(height)
+        width = int(width)
         sizes = self._get_sizes(msg, img_type)
         for img in sizes:
             if (img['width'], img['height']) == (width, height):
@@ -168,7 +170,9 @@ class ImageInfoPlugin(pad.plugins.base.BasePlugin):
         """Match number of images all or by type."""
 
         count = self._get_count(msg, img_type)
+        min_count = int(min_count)
         if max_count:
+            max_count = int(max_count)
             return min_count <= count <= max_count
         else:
             return min_count <= count
@@ -177,7 +181,9 @@ class ImageInfoPlugin(pad.plugins.base.BasePlugin):
                        target=None):
         """Determine the pixel coverage"""
         coverage = self._get_coverage(msg, img_type)
+        min_coverage = int(min_coverage)
         if max_coverage:
+            max_coverage = int(max_coverage)
             return min_coverage <= coverage <= max_coverage
         return min_coverage <= coverage
 
@@ -187,16 +193,16 @@ class ImageInfoPlugin(pad.plugins.base.BasePlugin):
         sizes = self._get_sizes(msg, img_type)
         for img in sizes:
 
-            if img['width'] < min_width:
+            if img['width'] < int(min_width):
                 continue
 
-            if img['height'] < min_height:
+            if img['height'] < int(min_height):
                 continue
 
-            if max_width and img['width'] > max_width:
+            if max_width and img['width'] > int(max_width):
                 continue
 
-            if max_height and img['height'] > max_height:
+            if max_height and img['height'] > int(max_height):
                 continue
 
             return True
@@ -216,7 +222,9 @@ class ImageInfoPlugin(pad.plugins.base.BasePlugin):
             ratio = text_len/coverage
         except ZeroDivisionError:
             ratio = text_len
+        min_ratio = float(min_ratio)
         if max_ratio:
+            max_ratio = float(max_ratio)
             return min_ratio <= ratio <= max_ratio
 
         return min_ratio <= ratio
