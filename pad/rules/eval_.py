@@ -20,7 +20,10 @@ class EvalRule(pad.rules.base.BaseRule):
         try:
             eval_rule_name, eval_args = _EVAL_RULE_P.match(eval_rule).groups()
             self._eval_rule = eval_rule_name
-            self._eval_args = tuple(eval(arg) for arg in eval_args.split(","))
+            if eval_args:
+                self._eval_args = tuple(eval(arg) for arg in eval_args.split(","))
+            else:
+                self._eval_args = tuple()
         except (TypeError, ValueError, AttributeError):
             raise pad.errors.InvalidRule(self.name, "Invalid eval rule: %s" %
                                          eval_rule)
