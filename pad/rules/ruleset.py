@@ -48,7 +48,7 @@ class RuleSet(object):
         self.autolearn = False
         self.use_bayes = True
         self.use_network = True
-        self.required_score = 5
+        self.required_score = 5.0
 
     def _interpolate(self, text, msg):
         # XXX Some plugins might define custom tags here.

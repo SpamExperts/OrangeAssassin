@@ -21,6 +21,11 @@ score GTUBE     1000
 
 GTUBE = "XJS*C4JDBQADN1.NSBN3*2IDNEN*GTUBE-STANDARD-ANTI-UBE-TEST-EMAIL*C.34X"
 
+GTUBE_MSG = """Subject: test
+
+XJS*C4JDBQADN1.NSBN3*2IDNEN*GTUBE-STANDARD-ANTI-UBE-TEST-EMAIL*C.34X
+"""
+
 MULTIPART_MSG = r"""From: Marco Antonio Islas Cruz <marco@seinternal.com>
 Content-Type: multipart/alternative;
     boundary="Apple-Mail=_9311E301-2E56-423D-B730-30A522F3844C"
@@ -43,7 +48,11 @@ Content-Transfer-Encoding: 7bit
 Content-Type: text/html;
     charset=us-ascii
 
-<html><head></head><body style="word-wrap: break-word; -webkit-nbsp-mode: space; -webkit-line-break: after-white-space; "><div>This is a test?</div><div><br></div><img id="7c666adc-282a-46d4-9f3c-adce8a02b0be" height="339" width="530" apple-width="yes" apple-height="yes" src="cid:40808429-84C6-4DB6-982E-451F05730FE0@ubuntu"><br><br>
+<html><head></head><body style="word-wrap: break-word; -webkit-nbsp-mode:
+space; -webkit-line-break: after-white-space; "><div>This is a
+test?</div><div><br></div><img id="7c666adc-282a-46d4-9f3c-adce8a02b0be"
+height="339" width="530" apple-width="yes" apple-height="yes"
+src="cid:40808429-84C6-4DB6-982E-451F05730FE0@ubuntu"><br><br>
 Testing rule one-two-three
 <br></body></html>
 --Apple-Mail=_9311E301-2E56-423D-B730-30A522F3844C--
@@ -51,7 +60,6 @@ Testing rule one-two-three
 
 
 class TestDaemon(unittest.TestCase):
-
     daemon_script = "scripts/padd.py"
     # Uncomment this to test under spamd
     # daemon_script = "spamd"
@@ -60,13 +68,13 @@ class TestDaemon(unittest.TestCase):
     port = 30783
     config = CONFIG
     padd_procs = []
-    content_len = len(GTUBE)
+    content_len = len(GTUBE_MSG) + 2
     multipart_content_len = len(MULTIPART_MSG)
 
     @classmethod
     def setUpClass(cls):
         super(TestDaemon, cls).setUpClass()
-        cls.padd_procs =[]
+        cls.padd_procs = []
         try:
             os.makedirs(cls.test_conf)
         except:
@@ -75,7 +83,8 @@ class TestDaemon(unittest.TestCase):
             pref.write(cls.pre_config)
         with open(os.path.join(cls.test_conf, "10.cf"), "w") as conf:
             conf.write(cls.config)
-        args = [cls.daemon_script, "-D", "-C", cls.test_conf, "--siteconfigpath",
+        args = [cls.daemon_script, "-D", "-C", cls.test_conf,
+                "--siteconfigpath",
                 cls.test_conf, "-i", "127.0.0.1", "-p", str(cls.port)]
         if cls.daemon_script == "scripts/padd.py":
             args.append("--log-file")
@@ -123,63 +132,101 @@ class TestDaemon(unittest.TestCase):
         result = self.send_to_proc(command)
         self.assertEqual(result, "0 PONG\r\n")
 
-    def test_process(self):
-        """Process this message as described above and return modified message"""
-        expected_headers = ['message/rfc882; x-spam-type="original"', "inline", "original message before SpamPAD"]
+    def test_process_content_type(self):
+        """Process this message as described above and return modified
+        message"""
         process_row = "PROCESS"
         content_row = "Content-length: %s\r\n" % self.content_len
-        command = "%s SPAMC/1.2\r\n" % process_row + content_row + "\r\n" + GTUBE
+        command = ("%s SPAMC/1.2\r\n%s\r\n%s\r\n" %
+                   (process_row, content_row, GTUBE_MSG))
         result = self.send_to_proc(command).split("\r\n", 4)[4]
         msg = email.message_from_string(result)
+
         first_msg = list(msg.walk())[2]["Content-Type"]
+        self.assertEqual(first_msg, 'message/rfc882; x-spam-type="original"')
+
+    def test_process_content_disposition(self):
+        process_row = "PROCESS"
+        content_row = "Content-length: %s\r\n" % self.content_len
+        command = ("%s SPAMC/1.2\r\n%s\r\n%s\r\n" %
+                   (process_row, content_row, GTUBE_MSG))
+        result = self.send_to_proc(command).split("\r\n", 4)[4]
+        msg = email.message_from_string(result)
+
         sec_msg = list(msg.walk())[2]["Content-Disposition"]
+
+        self.assertEqual(sec_msg, "inline")
+
+    def test_process_content_disposition2(self):
+        process_row = "PROCESS"
+        content_row = "Content-length: %s\r\n" % self.content_len
+        command = ("%s SPAMC/1.2\r\n%s\r\n%s\r\n" %
+                   (process_row, content_row, GTUBE_MSG))
+        result = self.send_to_proc(command).split("\r\n", 4)[4]
+        msg = email.message_from_string(result)
+
         third_msg = list(msg.walk())[2]["Content-Description"]
+
+        self.assertEqual(third_msg, "original message before SpamPAD")
+
+    def test_process_content_body(self):
+        process_row = "PROCESS"
+        content_row = "Content-length: %s\r\n" % self.content_len
+        command = ("%s SPAMC/1.2\r\n%s\r\n%s\r\n" %
+                   (process_row, content_row, GTUBE_MSG))
+        result = self.send_to_proc(command).split("\r\n", 4)[4]
+        msg = email.message_from_string(result)
+
         body = list(msg.walk())[3].get_payload(decode=True)
-        self.assertEqual(first_msg, expected_headers[0])
-        self.assertEqual(sec_msg, expected_headers[1])
-        self.assertEqual(third_msg, expected_headers[2])
-        self.assertEqual(body, GTUBE)
+        self.assertEqual(body, GTUBE + "\n\n")
 
     def test_check_spam(self):
         """Just check if the passed message is spam and verify the result"""
-        msg = "Subject: test\n\n%s" % GTUBE
-
         process_row = "CHECK"
-        content_row = "Content-length: %s\r\n" % len(msg)
-        command = "%s SPAMC/1.2\r\n" % process_row + content_row + "\r\n" + msg
+        content_row = "Content-length: %s\r\n" % self.content_len
+        command = ("%s SPAMC/1.2\r\n%s\r\n%s\r\n" %
+                   (process_row, content_row, GTUBE_MSG))
         result = self.send_to_proc(command).split("\r\n", 4)
-        expected = [u'0 EX_OK', u'Spam: True ; 1000.0 / 5', u'Content-length: 0', u'', u'']
+        expected = [u'0 EX_OK', u'Spam: True ; 1000.0 / 5.0',
+                    u'Content-length: 0', u'', u'']
         self.assertEqual(result, expected)
 
     def test_symbols(self):
-        """Check if message is spam or not, and return score plus list of symbols hit"""
+        """Check if message is spam or not, and return score plus list of
+        symbols hit"""
         process_row = "SYMBOLS"
         content_row = "Content-length: %s\r\n" % self.content_len
-        command = "%s SPAMC/1.2\r\n" % process_row + content_row + "\r\n" + GTUBE
+        command = ("%s SPAMC/1.2\r\n%s\r\n%s\r\n" %
+                   (process_row, content_row, GTUBE_MSG))
         result = self.send_to_proc(command).split("\r\n")
-        expected = [u'0 EX_OK', u'Spam: True ; 1000.0 / 5', u'Content-length: 5', u'', u'GTUBE']
+        expected = [u'0 EX_OK', u'Spam: True ; 1000.0 / 5.0',
+                    u'Content-length: 5', u'', u'GTUBE']
         self.assertEqual(result, expected)
 
     def test_report(self):
         """Check if message is spam or not, and return score plus report"""
         process_row = "REPORT"
         content_row = "Content-length: %s\r\n" % self.content_len
-        command = "%s SPAMC/1.2\r\n" % process_row + content_row + "\r\n" + GTUBE
+        command = ("%s SPAMC/1.2\r\n%s\r\n%s\r\n" %
+                   (process_row, content_row, GTUBE_MSG))
         result = self.send_to_proc(command).split("\r\n")
         expected = [u'0 EX_OK',
-                    u'Spam: True ; 1000.0 / 5',
+                    u'Spam: True ; 1000.0 / 5.0',
                     u'Content-length: 28',
                     u'',
                     u'\n(no report template found)\n']
         self.assertEqual(expected, result)
 
     def test_report_if_spam(self):
-        """Check if message is spam or not, and return score plus report if the message is spam"""
+        """Check if message is spam or not, and return score plus report if
+        the message is spam"""
         process_row = "REPORT_IFSPAM"
         content_row = "Content-length: %s\r\n" % self.multipart_content_len
-        command = "%s SPAMC/1.2\r\n" % process_row + content_row + "\r\n" + MULTIPART_MSG
+        command = ("%s SPAMC/1.2\r\n%s\r\n%s\r\n" %
+                   (process_row, content_row, MULTIPART_MSG))
         result = self.send_to_proc(command).split("\r\n")
-        expected = [u'0 EX_OK', u'Spam: False ; 0 / 5', u'Content-length: 0', u'', u'']
+        expected = [u'0 EX_OK', u'Spam: False ; 0 / 5.0', u'Content-length: 0',
+                    u'', u'']
         self.assertEqual(expected, result)
 
 
