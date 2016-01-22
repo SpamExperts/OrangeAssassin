@@ -3,6 +3,7 @@
 from __future__ import absolute_import, print_function
 
 import os
+import unittest
 
 import tests.util
 
@@ -37,7 +38,7 @@ Testing rule one-two-three
 """
 
 
-class TestBodyRules(tests.util.TestBase):
+class TestMatchScript(tests.util.TestBase):
 
     def setUp(self):
         tests.util.TestBase.setUp(self)
@@ -179,3 +180,14 @@ class TestBodyRules(tests.util.TestBase):
                                 report_only=False, extra_args=["--report",
                                                                "--revoke"])
         self.assertEqual(result, expected)
+
+
+def suite():
+    """Gather all the tests from this package in a test suite."""
+    test_suite = unittest.TestSuite()
+    test_suite.addTest(unittest.makeSuite(TestMatchScript, "test"))
+    return test_suite
+
+
+if __name__ == '__main__':
+    unittest.main(defaultTest='suite')
