@@ -14,7 +14,12 @@ except ImportError:
 import pad.plugins.base
 import pad.rules.uri
 
+
+URI_DRREG = re.compile(r"(?P<key>\w*)\s+(?P<op>[\=\!\~]{1,2})\s+(?P<regex>/.*?/)")
+
 class URIDetailRule(pad.rules.uri.URIRule):
+    """Implements the uri_detail rule
+    """
     _rule_type = "uri_detail"
     def __init__(self, name, pattern, score=None, desc=None):
         super(URIDetailRule, self).__init__(name, pattern, score, desc)
@@ -24,25 +29,21 @@ class URIDetailRule(pad.rules.uri.URIRule):
         matches.
         """
         for key, regex in self._pattern:
-            if not key in value:
-                # Does not match... 
+            if key not in value:
+                # Does not match...
                 return False
             data = value[key]
             match = regex.match(data)
             # All items should match to return True.
-            # Since we need to find at least one match, we don't return
-            # False here, just continue with the next link
-            if not match: 
+            if not match:
                 return False
         return True
 
 
     def match(self, msg):
-        for ukey, value in msg.uri_detail_links.iteritems():
-            print value
+        for value in msg.uri_detail_links.itervalues():
             result = self.check_single_item(value)
             if result:
-                print value
                 # At least this link match, return True
                 return True
         return False
@@ -51,15 +52,14 @@ class URIDetailRule(pad.rules.uri.URIRule):
     def get_rule_kwargs(data):
         print data
         rule_value = data["value"]
-        r = re.compile("(?P<key>\w*)\s+(?P<op>[\=\!\~]{1,2})\s+(?P<regex>/.*?/)")
-        checks = r.findall(rule_value)
+        checks = URI_DRREG.findall(rule_value)
         patterns = []
-        for key, op, regex in checks:
-            pyregex = pad.regex.perl2re(regex, op)
+        for key, oper, regex in checks:
+            pyregex = pad.regex.perl2re(regex, oper)
             patterns.append((key, pyregex))
         kwargs = {"pattern": patterns}
         return kwargs
-    
+
 def parse_link(value):
     """ Returns a dictionary with information for the link"""
     link = {}
@@ -72,10 +72,13 @@ def parse_link(value):
     return link
 
 class HTML(HTMLParser.HTMLParser):
+    """HTML parser to fetch all links in the message with the
+    corresponding value of the anchor"""
     def __init__(self, logger):
         HTMLParser.HTMLParser.__init__(self)
         self.links = {}
         self.last_start_tag = None
+        self.current_link = None
         self.logger = logger
 
     def handle_starttag(self, tag, attrs):
@@ -91,11 +94,10 @@ class HTML(HTMLParser.HTMLParser):
                 link = parse_link(value)
                 self.links[value] = link
                 self.current_link = value
-    
+
     def handle_endtag(self, tag):
         self.last_start_tag = None
         self.current_link = None
-        pass
 
     def handle_data(self, data):
         """Handle the text in anchors"""
@@ -104,13 +106,15 @@ class HTML(HTMLParser.HTMLParser):
 
 
 class URIDetailPlugin(pad.plugins.base.BasePlugin):
+    """Implements URIDetail plugin.
+    """
     options = {'uri_detail': ("list", [])}
     cmds = {"uri_detail": URIDetailRule}
     def __init__(self, *args, **kwargs):
         super(URIDetailPlugin, self).__init__(*args, **kwargs)
 
     def parsed_metadata(self, msg):
-        """Goes through the URIs, parse them and store them locally in the 
+        """Goes through the URIs, parse them and store them locally in the
         message"""
         parser = HTML(self.ctxt.log)
         parser.feed(msg.raw_text)
