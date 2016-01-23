@@ -2,7 +2,7 @@
 import os
 import unittest
 import tests.util
-from tests.unit.test_plugins.test_image_info import TestImageInfoBase
+from tests.util.image_utils import new_email, new_image
 
 CONFIG_NAMED = r"""
 body         DC_IMAGE001_GIF         eval:image_named('image001.gif')
@@ -15,11 +15,11 @@ describe     DC_GIF_264_127          Found 264x127 pixel gif, possible pillz
 """
 
 CONFIG_COUNT = r"""
-body            __GIF_ATTACH_1          eval:image_count('gif','1','1')
-body            __GIF_ATTACH_2P         eval:image_count('gif','2')
+body            GIF_ATTACH_1          eval:image_count('gif','1','1')
+body            GIF_ATTACH_2P         eval:image_count('gif','2')
 
-body            __PNG_ATTACH_1          eval:image_count('png','1','1')
-body            __PNG_ATTACH_2P         eval:image_count('png','2')
+body            PNG_ATTACH_1          eval:image_count('png','1','1')
+body            PNG_ATTACH_2P         eval:image_count('png','2')
 """
 
 
@@ -36,8 +36,8 @@ class TestImageInfo(tests.util.TestBase):
         self.setup_conf(CONFIG_NAMED,
                         pre_config="loadplugin ImageInfoPlugin {0}\n"
                         "report _SCORE_".format(cwd))
-        msg = TestImageInfoBase.new_email(
-            {1: TestImageInfoBase.new_image(1, 1, "gif", "image001.gif")})
+        msg = new_email(
+            {1: new_image(1, 1, "gif", "image001.gif")})
         result = self.check_pad(msg.as_string())
         self.assertEqual(result, '1.0')
 
@@ -47,8 +47,8 @@ class TestImageInfo(tests.util.TestBase):
         self.setup_conf(CONFIG_SIZED,
                         pre_config="loadplugin ImageInfoPlugin {0}\n"
                         "report _SCORE_".format(cwd))
-        msg = TestImageInfoBase.new_email(
-            {1: TestImageInfoBase.new_image(127, 264, "gif", "image001.gif")})
+        msg = new_email(
+            {1: new_image(127, 264, "gif", "image001.gif")})
         result = self.check_pad(msg.as_string())
         self.assertEqual(result, '1.0')
 
@@ -58,9 +58,9 @@ class TestImageInfo(tests.util.TestBase):
         self.setup_conf(CONFIG_SIZED,
                         pre_config="loadplugin ImageInfoPlugin {0}\n"
                         "report _SCORE_".format(cwd))
-        msg = TestImageInfoBase.new_email(
-            {1: TestImageInfoBase.new_image(127, 264, "gif", "image001.gif"),
-             2: TestImageInfoBase.new_image(127, 264, "png", "image002.gif")})
+        msg = new_email(
+            {1: new_image(127, 264, "gif", "image001.gif"),
+             2: new_image(127, 264, "png", "image002.gif")})
         result = self.check_pad(msg.as_string())
         self.assertEqual(result, '1.0')
 
