@@ -110,6 +110,89 @@ class TestImageInfo(tests.util.TestBase):
         result = self.check_pad(msg.as_string())
         self.assertEqual(result, '1.0')
 
+    def test_image_count_fail(self):
+        """Fail for images count"""
+        cwd = os.path.join(os.getcwd(), "pad", "plugins", "image_info.py")
+        self.setup_conf(CONFIG_COUNT,
+                        pre_config="loadplugin ImageInfoPlugin {0}\n"
+                        "report _SCORE_".format(cwd))
+        msg = new_email(
+            {1: new_image(127, 264, "jpg", "image001.jpg"),
+             2: new_image(127, 264, "jpg", "image002.jpg")})
+        result = self.check_pad(msg.as_string())
+        self.assertEqual(result, '0.0')
+
+    def test_image_size_fail(self):
+        """Fail for image size"""
+        cwd = os.path.join(os.getcwd(), "pad", "plugins", "image_info.py")
+        self.setup_conf(CONFIG_SIZED,
+                        pre_config="loadplugin ImageInfoPlugin {0}\n"
+                        "report _SCORE_".format(cwd))
+        msg = new_email(
+            {1: new_image(127, 222, "gif", "image001.gif")})
+        result = self.check_pad(msg.as_string())
+        self.assertEqual(result, '0.0')
+
+    def test_pixel_coverage_fail(self):
+        """Fail for image pixel coverage"""
+        cwd = os.path.join(os.getcwd(), "pad", "plugins", "image_info.py")
+        self.setup_conf(CONFIG_COVERAGE,
+                        pre_config="loadplugin ImageInfoPlugin {0}\n"
+                        "report _SCORE_".format(cwd))
+        msg = new_email(
+            {1: new_image(2, 2, "gif", "image001.gif")})
+        result = self.check_pad(msg.as_string())
+        self.assertEqual(result, '0.0')
+
+    def test_image_name_fail(self):
+        """Fail for image name"""
+        cwd = os.path.join(os.getcwd(), "pad", "plugins", "image_info.py")
+        self.setup_conf(CONFIG_NAMED,
+                        pre_config="loadplugin ImageInfoPlugin {0}\n"
+                        "report _SCORE_".format(cwd))
+        msg = new_email(
+            {1: new_image(1, 1, "gif", "image0011.gif")})
+        result = self.check_pad(msg.as_string())
+        self.assertEqual(result, '0.0')
+
+    def test_many_rules_match(self):
+        """Check message for image name, size and count"""
+        cwd = os.path.join(os.getcwd(), "pad", "plugins", "image_info.py")
+        self.setup_conf(CONFIG_NAMED + "\n" + CONFIG_SIZED +
+                        "\n" + CONFIG_COUNT,
+                        pre_config="loadplugin ImageInfoPlugin {0}\n"
+                        "report _SCORE_".format(cwd))
+        msg = new_email(
+            {1: new_image(127, 264, "gif", "image001.gif")})
+        result = self.check_pad(msg.as_string())
+        self.assertEqual(result, '3.0')
+
+    def test_one_of_many_match(self):
+        """Check message for image name, size and coverage
+        and only name is equal"""
+        cwd = os.path.join(os.getcwd(), "pad", "plugins", "image_info.py")
+        self.setup_conf(CONFIG_NAMED + "\n" + CONFIG_SIZED +
+                        "\n" + CONFIG_COVERAGE,
+                        pre_config="loadplugin ImageInfoPlugin {0}\n"
+                        "report _SCORE_".format(cwd))
+        msg = new_email(
+            {1: new_image(100, 100, "gif", "image001.gif")})
+        result = self.check_pad(msg.as_string())
+        self.assertEqual(result, '1.0')
+
+    def test_no_matches_of_many(self):
+        """Check message for image name, size and coverage
+        and no matches"""
+        cwd = os.path.join(os.getcwd(), "pad", "plugins", "image_info.py")
+        self.setup_conf(CONFIG_NAMED + "\n" + CONFIG_SIZED + 
+                        "\n" + CONFIG_COVERAGE,
+                        pre_config="loadplugin ImageInfoPlugin {0}\n"
+                        "report _SCORE_".format(cwd))
+        msg = new_email(
+            {1: new_image(100, 100, "gif", "image002.gif")})
+        result = self.check_pad(msg.as_string())
+        self.assertEqual(result, '0.0')
+
 
 def suite():
     """Gather all the tests from this package in a test suite."""
