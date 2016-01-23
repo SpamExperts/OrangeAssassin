@@ -6,7 +6,6 @@ try:
 except ImportError:
     from mock import patch, Mock, MagicMock, call
 
-from PIL import Image
 
 import pad.plugins
 from pad.plugins import image_info
