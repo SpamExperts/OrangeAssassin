@@ -178,7 +178,7 @@ class TestDaemon(unittest.TestCase):
         msg = email.message_from_string(result)
 
         body = list(msg.walk())[3].get_payload(decode=True)
-        self.assertEqual(body, GTUBE + "\n\n")
+        self.assertEqual(body, GTUBE.encode("utf8") + b"\n\n")
 
     def test_check_spam(self):
         """Just check if the passed message is spam and verify the result"""
