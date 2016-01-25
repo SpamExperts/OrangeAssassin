@@ -121,6 +121,7 @@ class Message(pad.context.MessageContext):
         self._parse_message()
         self._hook_parsed_metadata()
         self.interpolate_data = dict()
+        self.plugin_tags = dict()
 
     def clear_matches(self):
         """Clear any already checked rules."""

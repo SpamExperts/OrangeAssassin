@@ -107,15 +107,23 @@ class TestGlobalContextLoadPlugin(unittest.TestCase):
                           "pad.plugins.test_plugin.TestPlugin")
 
     def test_load_plugin_from_path_py3(self):
-        self.mock_py3.PY3 = True
+        patch("pad.context.sys.version_info", (3, 4, 0)).start()
         ctxt = pad.context.GlobalContext()
         ctxt.load_plugin("TestPlugin", "/etc/pad/plugins/test_plugin.py")
         self.assertFalse(self.mock_import.import_module.called)
         self.assertFalse(self.mock_load2.called)
         self.mock_load3.assert_called_with("/etc/pad/plugins/test_plugin.py")
 
+    def test_load_plugin_from_path_py32(self):
+        patch("pad.context.sys.version_info", (3, 2, 4)).start()
+        ctxt = pad.context.GlobalContext()
+        ctxt.load_plugin("TestPlugin", "/etc/pad/plugins/test_plugin.py")
+        self.assertFalse(self.mock_import.import_module.called)
+        self.assertFalse(self.mock_load3.called)
+        self.mock_load2.assert_called_with("/etc/pad/plugins/test_plugin.py")
+
     def test_load_plugin_from_path_py2(self):
-        self.mock_py3.PY3 = False
+        patch("pad.context.sys.version_info", (2, 7, 9)).start()
         ctxt = pad.context.GlobalContext()
         ctxt.load_plugin("TestPlugin", "/etc/pad/plugins/test_plugin.py")
         self.assertFalse(self.mock_import.import_module.called)

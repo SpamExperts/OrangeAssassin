@@ -93,5 +93,8 @@ class RelayCountryPlugin(pad.plugins.base.BasePlugin):
                 continue
             result.append(str(country))
         if result:
-            msg.headers["X-Relay-Country"].append(" ".join(result))
-            self.ctxt.log.debug("X-Relay-Country: '%s'", msg.headers["X-Relay-Country"])
+            result = " ".join(result)
+            msg.headers["X-Relay-Country"].append(result)
+            self.ctxt.log.debug("X-Relay-Country: '%s'",
+                                msg.headers["X-Relay-Country"])
+            msg.plugin_tags["RELAYCOUNTRY"] = result

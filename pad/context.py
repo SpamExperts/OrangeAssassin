@@ -3,6 +3,8 @@
 from builtins import dict
 from builtins import object
 
+import sys
+
 try:
     import importlib.machinery
 except ImportError:
@@ -130,9 +132,11 @@ class GlobalContext(_Context):
             except ImportError as e:
                 raise pad.errors.PluginLoadError("Unable to load %s: %s" %
                                                  (module_name, e))
-        elif future.utils.PY3:
+        elif sys.version_info[0] == 3 and sys.version_info[1] > 2:
+            # For Python 3.3+
             module = self._load_module_py3(path)
         else:
+            # For Python 2 and < 3.3
             module = self._load_module_py2(path)
 
         plugin_class = getattr(module, class_name)
@@ -240,10 +244,10 @@ class GlobalContext(_Context):
             plugin.finish_parsing_end(ruleset)
 
     @_callback_chain
-    def hook_check_end(self, msg):
+    def hook_check_end(self, ruleset, msg):
         """Hook after the message is checked."""
         for plugin in self.plugins.values():
-            plugin.check_end(msg)
+            plugin.check_end(ruleset, msg)
 
     @_callback_chain
     def hook_report(self, msg, spam=True, local=True, remote=True):

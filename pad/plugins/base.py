@@ -216,7 +216,7 @@ class BasePlugin(object):
         May be overridden.
         """
 
-    def check_end(self, msg):
+    def check_end(self, ruleset, msg):
         """The message check operation has just finished, and the results are
         about to be returned to the caller
 

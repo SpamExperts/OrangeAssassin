@@ -191,7 +191,7 @@ class PADParser(object):
                 raise pad.errors.InvalidRule("report_safe",
                                              "Invalid value: %s" % value)
             self.ruleset.report_safe = value
-        elif rtype in KNOWN_2_RTYPE:
+        elif rtype in KNOWN_2_RTYPE or rtype in self.ctxt.cmds:
             try:
                 rtype, name, value = line.split(None, 2)
             except ValueError:
@@ -200,7 +200,7 @@ class PADParser(object):
             if name not in self.results:
                 self.results[name] = dict()
 
-            if rtype in RULES:
+            if rtype in RULES or rtype in self.ctxt.cmds:
                 if value.startswith("eval:"):
                     # This is for compatibility with SA ruleset
                     self.results[name]["target"] = rtype

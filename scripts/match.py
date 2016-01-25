@@ -30,8 +30,10 @@ class MessageList(argparse.FileType):
 
 
 def parse_arguments(args):
-    parser = argparse.ArgumentParser(description=__doc__)
-
+    parser = argparse.ArgumentParser(
+        description=__doc__,
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter
+    )
     parser.add_argument("-n", "--nice", type=int, help="set 'nice' level",
                         default=0)
     parser.add_argument("-P", "--paranoid", action="store_true", default=False,
