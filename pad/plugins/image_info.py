@@ -19,6 +19,10 @@ import pad.regex
 import pad.plugins.base
 
 
+class BadImageFile(Exception):
+    """Error while trying to open image file"""
+
+
 class ImageInfoPlugin(pad.plugins.base.BasePlugin):
 
 
@@ -34,8 +38,10 @@ class ImageInfoPlugin(pad.plugins.base.BasePlugin):
     def _get_image_sizes(self, payload):
         imginfo = {}
         img_io = BytesIO(payload)
-        image = PIL.Image.open(img_io)
-
+        try:
+            image = PIL.Image.open(img_io)
+        except IOError:
+            raise BadImageFile
         imginfo['width'],imginfo['height'] = image.size
         img_io.close()
         return imginfo
@@ -66,6 +72,25 @@ class ImageInfoPlugin(pad.plugins.base.BasePlugin):
         counts['all'] += by
         counts[subtype] += by
         self.set_local(msg, "counts", counts)
+
+    def _get_invalid_count(self, msg, subtype="all"):
+        try:
+            counts = self.get_local(msg, "invalid_counts")
+            return counts.get(subtype, 0)
+        except KeyError:
+            return 0
+
+    def _update_invalid_counts(self, msg, subtype, by):
+        """Update the cumulative and subtype image counts."""
+
+        try:
+            counts = self.get_local(msg, "invalid_counts")
+        except KeyError:
+            counts = defaultdict(int)
+
+        counts['all'] += by
+        counts[subtype] += by
+        self.set_local(msg, "invalid_counts", counts)
 
     def _add_name(self, msg, name):
         """Add a name to the names list."""
@@ -111,14 +136,16 @@ class ImageInfoPlugin(pad.plugins.base.BasePlugin):
             self._update_coverage(msg, subtype, area)
 
         else:
-            img = self._get_image_sizes(payload)
-
-            sizes['all'][image_id] = img
-            sizes[subtype][image_id] = img
-
-            self.set_local(msg, "sizes", sizes)
-            area = img['width']*img['height']
-            self._update_coverage(msg, subtype, area)
+            try:
+                img = self._get_image_sizes(payload)
+            except BadImageFile:
+                self._update_invalid_counts(msg, subtype, 1)
+            else:
+                sizes['all'][image_id] = img
+                sizes[subtype][image_id] = img
+                self.set_local(msg, "sizes", sizes)
+                area = img['width']*img['height']
+                self._update_coverage(msg, subtype, area)
 
     def _get_sizes(self, msg, subtype):
         try:
