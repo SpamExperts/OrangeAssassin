@@ -53,6 +53,9 @@ class TextCatPlugin(pad.plugins.base.BasePlugin):
         Add the result to the metadata and and trigger the
         rule if it is present in the config and the languages
         are not in the ok list.
+
+        :return True if the message language is unwanted and False
+        otherwise
         """
         prob = self.get_global("textcat_acceptable_prob")
         langs = [lang.lang for lang in langdetect.detect_langs(msg.body)
@@ -64,8 +67,8 @@ class TextCatPlugin(pad.plugins.base.BasePlugin):
         ok_languages = self.get_global("ok_languages")
         if "all" in ok_languages:
             # All good.
-            return True
+            return False
         for lang in langs:
             if lang not in ok_languages:
-                return False
-        return True
+                return True
+        return False
