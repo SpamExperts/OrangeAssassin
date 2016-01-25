@@ -6,13 +6,11 @@ import re
 import urllib
 import urlparse
 
-try:
-    import HTMLParser
-except ImportError:
-    from html.parser import HTMLParser
+from html.parser import HTMLParser
 
-import pad.plugins.base
+import pad.regex
 import pad.rules.uri
+import pad.plugins.base
 
 
 URI_DRREG = re.compile(r"(?P<key>\w*)\s+(?P<op>[\=\!\~]{1,2})\s+(?P<regex>/.*?/)")
