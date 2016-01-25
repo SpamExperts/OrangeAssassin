@@ -176,7 +176,7 @@ class TestDaemon(unittest.TestCase):
         msg = email.message_from_string(result)
 
         first_msg = list(msg.walk())[1]["Content-Type"]
-        self.assertEqual(first_msg, 'multipart/related; type="text/html";\n boundary="Apple-Mail=_7F2342CA-8904-478A-B198-D63EE91D8288"')
+        self.assertEqual(first_msg, 'multipart/related;\n    type="text/html";\n    boundary="Apple-Mail=_7F2342CA-8904-478A-B198-D63EE91D8288"')
 
     def test_process_content_disposition(self):
         """Process this message as described above and return content
@@ -249,7 +249,7 @@ class TestDaemon(unittest.TestCase):
         msg = email.message_from_string(result)
 
         body = list(msg.walk())[0].get_payload(decode=True)
-        self.assertEqual(body, "\nThis is a test message.\n\n\n")
+        self.assertEqual(body, b"\nThis is a test message.\n\n\n")
 
     def test_check_spam(self):
         """Just check if the passed message is spam and verify the result"""
@@ -379,8 +379,6 @@ class TestDaemon(unittest.TestCase):
         self.assertEqual(expected, result)
 
     def test_tell_spam(self):
-        """Check if message is spam, and return score plus report if
-        the message is spam"""
         command = ("TELL SPAMC/1.2\r\n"
                    "Message-class: spam\r\n"
                    "Set: local\r\n"
@@ -391,8 +389,6 @@ class TestDaemon(unittest.TestCase):
         self.assertEqual(expected, result)
 
     def test_tell_remove_spam(self):
-        """Check if message is spam, and return score plus report if
-        the message is spam"""
         command = ("TELL SPAMC/1.2\r\n"
                    "Message-class: spam\r\n"
                    "Remove: local\r\n"
@@ -400,6 +396,27 @@ class TestDaemon(unittest.TestCase):
                    (self.content_len, GTUBE_MSG))
         result = self.send_to_proc(command)
         expected = u"0 EX_OK\r\nDidRemove: local\r\n"
+        self.assertEqual(expected, result)
+
+    def test_tell_report_spam(self):
+        command = ("TELL SPAMC/1.2\r\n"
+                   "Message-class: spam\r\n"
+                   "Set: local, remove\r\n"
+                   "Content-length: %s\r\n\r\n%s\r\n" %
+                   (self.content_len, GTUBE_MSG))
+        result = self.send_to_proc(command)
+        expected = u"0 EX_OK\r\nDidSet: local, remove\r\n"
+        self.assertEqual(expected, result)
+
+    def test_tell_revoke_ham(self):
+        command = ("TELL SPAMC/1.2\r\n"
+                   "Message-class: spam\r\n"
+                   "Set: local\r\n"
+                   "Remove: remote\r\n"
+                   "Content-length: %s\r\n\r\n%s\r\n" %
+                   (self.content_len, GTUBE_MSG))
+        result = self.send_to_proc(command)
+        expected = u'0 EX_OK\r\nDidSet: local\r\nDidRemove: remote\r\n'
         self.assertEqual(expected, result)
 
 
