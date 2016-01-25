@@ -81,7 +81,7 @@ class MockGeoIP(object):
                "178.62.26.182": "GB",
                   }
     def __init__(self, datfile):
-        """Constructore, requires to call with the path of the .dat file although
+        """Initializer, requires to call with the path of the .dat file although
         it is not currently used"""
         pass
     
