@@ -40,9 +40,12 @@ class ImageInfoPlugin(pad.plugins.base.BasePlugin):
         img_io = BytesIO(payload)
         try:
             image = PIL.Image.open(img_io)
-        except IOError:
+        except (Image.DecompressionBombWarning, IOError, ValueError,
+                TypeError) as e:
+            self.ctxt.log.debug("Unable to process image: %s", e)
             raise BadImageFile
-        imginfo['width'],imginfo['height'] = image.size
+
+        imginfo['width'], imginfo['height'] = image.size
         img_io.close()
         return imginfo
 
