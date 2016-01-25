@@ -11,6 +11,7 @@ import logging
 import threading
 import socketserver
 
+import pad
 import pad.config
 import pad.protocol
 import pad.rules.parser
@@ -52,7 +53,14 @@ class RequestHandler(socketserver.StreamRequestHandler):
         """
         line = self.rfile.readline().decode("utf8").strip()
         command, proto_version = line.split()
-        COMMANDS[command.upper()](self.rfile, self.wfile, self.server.ruleset)
+        try:
+            # Run the command handler
+            COMMANDS[command.upper()](self.rfile, self.wfile,
+                                      self.server.ruleset)
+        except KeyError:
+            error_line = ("SPAMD/%s 76 Bad header line: %s\r\n" %
+                          (pad.__version__, line))
+            self.wfile.write(error_line.encode("utf8"))
 
 
 class Server(socketserver.TCPServer):

@@ -34,7 +34,9 @@ class BaseProtocol(object):
                 break
             self.log.debug("Got line: %s", line)
             if ":" not in line:
-                raise pad.errors.InvalidOption("Invalid option: %s" % line)
+                self.log.debug("Invalid option: %s", line)
+                error_msg = "header not in 'Name: value' format"
+                raise pad.errors.InvalidOption(error_msg)
             name, value = line.split(":", 1)
             options[name.lower()] = value.strip()
         return options
@@ -49,7 +51,13 @@ class BaseProtocol(object):
         # retrieve the data.
         content_length = options.get('content-length')
         if content_length is not None:
-            content_length = int(content_length)
+            error_msg = "Content-Length contains non-numeric bytes"
+            try:
+                content_length = int(content_length)
+            except ValueError:
+                raise pad.errors.InvalidOption(error_msg)
+            if content_length < 0:
+                raise pad.errors.InvalidOption(error_msg)
         while content_length is None or content_length > 0:
             chunk = self.rfile.read(min(content_length or self.chunk_size,
                                         self.chunk_size))
@@ -66,11 +74,18 @@ class BaseProtocol(object):
         """Get data from the client and call the handle method."""
         message = None
         options = dict()
-        if self.has_options:
-            options = self.get_options()
-        if self.has_message:
-            message = self.get_message(options)
-            message = pad.message.Message(self.ruleset.ctxt, message)
+        try:
+            if self.has_options:
+                options = self.get_options()
+            if self.has_message:
+                message = self.get_message(options)
+                message = pad.message.Message(self.ruleset.ctxt, message)
+        except pad.errors.InvalidOption as e:
+            error_line = ("SPAMD/%s 76 Bad header line: (%s)\r\n" %
+                          (pad.__version__, e))
+            self.wfile.write(error_line.encode("utf8"))
+            return
+
         ok_line = "SPAMD/%s 0 %s\r\n" % (pad.__version__, self.ok_code)
         self.wfile.write(ok_line.encode("utf8"))
         for response in self.handle(message, options):
