@@ -51,8 +51,6 @@ class RuleSet(object):
         self.required_score = 5.0
 
     def _interpolate(self, text, msg):
-        # XXX Some plugins might define custom tags here.
-        # XXX We need to check them as well.
         if msg.interpolate_data:
             return text % msg.interpolate_data
 
@@ -61,24 +59,37 @@ class RuleSet(object):
         # Initialize all tags with a empty value
         for tag in self.tags:
             data[tag] = "@@%s@@" % tag
+
         data["CONTACTADDRESS"] = self.report_contact
         data["HOSTNAME"] = socket.gethostname()
-        data["REPORT"] = self.get_matched_report(msg)
         data["YESNOCAPS"] = "YES" if spam else "NO"
         data["YESNO"] = "Yes" if spam else "No"
         data["SCORE"] = "%0.1f" % msg.score
         data["REQD"] = "%0.1f" % self.required_score
-        matched_rules = [name for name, result in msg.rules_checked.items()
-                         if result]
-        if not matched_rules:
-            data["TESTS"] = "none"
-        else:
-            data["TESTS"] = ",".join(matched_rules)
         data["SUBVERSION"] = pad.__release_date__
         data["VERSION"] = pad.__version__
-        data["SUMMARY"] = self.get_summary_report(msg)
-        preview = " ".join(msg.raw_text.split("\n", 3)[:3])[:200] + "[...]"
-        data["PREVIEW"] = preview
+
+        # Some of these tags are more expensive to create,
+        # so only add them if they are required.
+        if "REPORT" in self.tags:
+            data["REPORT"] = self.get_matched_report(msg)
+        if "TESTS" in self.tags:
+            matched_rules = [name for name, result in msg.rules_checked.items()
+                             if result]
+            if not matched_rules:
+                data["TESTS"] = "none"
+            else:
+                data["TESTS"] = ",".join(matched_rules)
+        if "SUMMARY" in self.tags:
+            data["SUMMARY"] = self.get_summary_report(msg)
+        if "PREVIEW" in self.tags:
+            preview = " ".join(msg.raw_text.split("\n", 3)[:3])[:200] + "[...]"
+            data["PREVIEW"] = preview
+
+        # Plugin can store custom tags in the the message
+        # after they perform check. Add them to the data
+        # as well.
+        data.update(msg.plugin_tags)
         return text % msg.interpolate_data
 
     def add_rule(self, rule):

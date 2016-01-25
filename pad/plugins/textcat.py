@@ -63,7 +63,7 @@ class TextCatPlugin(pad.plugins.base.BasePlugin):
         if len(langs) > self.get_global("textcat_max_languages"):
             self.ctxt.dbg("Too many languages.")
             return False
-        msg.headers["X-Language"].append(" ".join(langs))
+        msg.plugin_tags["LANGUAGES"] = " ".join(langs)
         ok_languages = self.get_global("ok_languages")
         if "all" in ok_languages:
             # All good.

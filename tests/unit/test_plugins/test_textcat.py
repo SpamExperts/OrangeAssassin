@@ -7,7 +7,6 @@ try:
 except ImportError:
     from mock import patch, Mock, MagicMock
 
-
 import pad.plugins.textcat
 
 
@@ -17,7 +16,7 @@ class TestTextCat(unittest.TestCase):
     def setUp(self):
         unittest.TestCase.setUp(self)
         self.mock_detect_langs = patch(
-            "pad.plugins.textcat.langdetect.detect_langs").start()
+                "pad.plugins.textcat.langdetect.detect_langs").start()
         self.mock_msg = MagicMock()
         self.msg_data = {}
         self.global_data = {
@@ -26,13 +25,17 @@ class TestTextCat(unittest.TestCase):
             "textcat_acceptable_prob": 0.70,
         }
         self.mock_msg = MagicMock(**{
-            "get_plugin_data.side_effect": lambda p, k: self.msg_data[k],
-            "set_plugin_data.side_effect": lambda p, k, v: self.msg_data.setdefault(k, v),
-            })
+            "get_plugin_data.side_effect":
+                lambda p, k: self.msg_data[k],
+            "set_plugin_data.side_effect":
+                lambda p, k, v: self.msg_data.setdefault(k, v),
+        })
         self.mock_ctxt = MagicMock(**{
-            "get_plugin_data.side_effect": lambda p, k: self.global_data[k],
-            "set_plugin_data.side_effect": lambda p, k, v: self.global_data.setdefault(k, v)}
-        )
+            "get_plugin_data.side_effect":
+                lambda p, k: self.global_data[k],
+            "set_plugin_data.side_effect":
+                lambda p, k, v: self.global_data.setdefault(k, v)
+        })
         self.mock_ruleset = MagicMock()
 
     def tearDown(self):
@@ -105,7 +108,7 @@ class TestTextCat(unittest.TestCase):
         plugin.set_list_option("my_key", "test1 test2 test3")
 
         self.mock_ctxt.set_plugin_data.assert_called_with(
-            "TextCatPlugin", "my_key", ["test1", "test2", "test3"]
+                "TextCatPlugin", "my_key", ["test1", "test2", "test3"]
         )
 
 
@@ -114,6 +117,7 @@ def suite():
     test_suite = unittest.TestSuite()
     test_suite.addTest(unittest.makeSuite(TestTextCat, "test"))
     return test_suite
+
 
 if __name__ == '__main__':
     unittest.main(defaultTest='suite')
