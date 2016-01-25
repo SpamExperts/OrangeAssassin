@@ -3,10 +3,15 @@
 from __future__ import absolute_import
 
 import re
-import urllib
-import urlparse
 
 from html.parser import HTMLParser
+
+try:
+    from urllib.parse import unquote
+    from urllib.parse import urlparse
+except ImportError:
+    from urllib import unquote
+    from urlparse import urlparse
 
 import pad.regex
 import pad.rules.uri
@@ -39,7 +44,8 @@ class URIDetailRule(pad.rules.uri.URIRule):
 
 
     def match(self, msg):
-        for value in msg.uri_detail_links.itervalues():
+        for key in msg.uri_detail_links:
+            value = msg.uri_detail_links[key]
             result = self.check_single_item(value)
             if result:
                 # At least this link match, return True
@@ -48,7 +54,6 @@ class URIDetailRule(pad.rules.uri.URIRule):
 
     @staticmethod
     def get_rule_kwargs(data):
-        print data
         rule_value = data["value"]
         checks = URI_DRREG.findall(rule_value)
         patterns = []
@@ -62,18 +67,18 @@ def parse_link(value):
     """ Returns a dictionary with information for the link"""
     link = {}
     link["raw"] = value
-    urlp = urlparse.urlparse(value)
+    urlp = urlparse(value)
     link["scheme"] = urlp.scheme
-    link["cleaned"] = urllib.unquote(value)
+    link["cleaned"] = unquote(value)
     link["type"] = "a"
     link["domain"] = urlp.netloc
     return link
 
-class HTML(HTMLParser.HTMLParser):
+class HTML(HTMLParser):
     """HTML parser to fetch all links in the message with the
     corresponding value of the anchor"""
     def __init__(self, logger):
-        HTMLParser.HTMLParser.__init__(self)
+        HTMLParser.__init__(self)
         self.links = {}
         self.last_start_tag = None
         self.current_link = None
