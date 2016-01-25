@@ -282,4 +282,4 @@ class RuleSet(object):
             msg.rules_checked[name] = result
             if result:
                 msg.score += rule.score
-        self.ctxt.hook_check_end(msg)
+        self.ctxt.hook_check_end(self, msg)

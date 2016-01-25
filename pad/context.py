@@ -244,10 +244,10 @@ class GlobalContext(_Context):
             plugin.finish_parsing_end(ruleset)
 
     @_callback_chain
-    def hook_check_end(self, msg):
+    def hook_check_end(self, ruleset, msg):
         """Hook after the message is checked."""
         for plugin in self.plugins.values():
-            plugin.check_end(msg)
+            plugin.check_end(ruleset, msg)
 
     @_callback_chain
     def hook_report(self, msg, spam=True, local=True, remote=True):
