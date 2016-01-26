@@ -197,7 +197,6 @@ class TestImageInfo(tests.util.TestBase):
         result = self.check_pad(msg.as_string())
         self.assertEqual(result, '0.0')
 
-    @unittest.skip("Skip until the issue is fixed #4.")
     def test_real_msg_with_errors(self):
         """Check real multipart message"""
         cwd = os.path.join(os.getcwd(), "pad", "plugins", "image_info.py")

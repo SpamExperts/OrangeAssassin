@@ -3,6 +3,7 @@
 from __future__ import absolute_import
 
 import re
+import warnings
 from io import BytesIO
 from hashlib import md5
 from collections import defaultdict
@@ -38,12 +39,15 @@ class ImageInfoPlugin(pad.plugins.base.BasePlugin):
     def _get_image_sizes(self, payload):
         imginfo = {}
         img_io = BytesIO(payload)
-        try:
-            image = PIL.Image.open(img_io)
-        except (Image.DecompressionBombWarning, IOError, ValueError,
-                TypeError) as e:
-            self.ctxt.log.debug("Unable to process image: %s", e)
-            raise BadImageFile
+        with warnings.catch_warnings():
+            warnings.filterwarnings(
+                "error", category=PIL.Image.DecompressionBombWarning)
+            try:
+                image = PIL.Image.open(img_io)
+            except (PIL.Image.DecompressionBombWarning, IOError, ValueError,
+                    TypeError) as e:
+                self.ctxt.log.debug("Unable to process image: %s", e)
+                raise BadImageFile
 
         imginfo['width'], imginfo['height'] = image.size
         img_io.close()
