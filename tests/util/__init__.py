@@ -89,7 +89,10 @@ class TestBase(unittest.TestCase):
             symbols = [symbol for symbol in symbols.split(",")
                        if symbol.lower() != "none"]
         except ValueError:
-            score = float(result.strip())
+            try:
+                score = float(result.strip())
+            except ValueError:
+                self.fail("Unable to parse report: %r" % result)
             symbols = []
         if expected_score is not None:
             self.assertEqual(score, expected_score)
