@@ -79,7 +79,11 @@ class HTML(HTMLParser):
     """HTML parser to fetch all links in the message with the
     corresponding value of the anchor"""
     def __init__(self, logger):
-        HTMLParser.__init__(self)
+        try:
+            HTMLParser.__init__(self, convert_charrefs=False)
+        except TypeError:
+            #Python 2 does not have the convert_charrefs argument
+            HTMLParser.__init__(self)
         self.links = {}
         self.last_start_tag = None
         self.current_link = None
