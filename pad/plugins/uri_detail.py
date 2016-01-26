@@ -63,14 +63,15 @@ class URIDetailRule(pad.rules.uri.URIRule):
         kwargs = {"pattern": patterns}
         return kwargs
 
-def parse_link(value):
+def parse_link(value, linktype=""):
     """ Returns a dictionary with information for the link"""
     link = {}
     link["raw"] = value
     urlp = urlparse(value)
     link["scheme"] = urlp.scheme
     link["cleaned"] = unquote(value)
-    link["type"] = "a"
+    if linktype:
+        link["type"] = linktype
     link["domain"] = urlp.netloc
     return link
 
@@ -88,13 +89,13 @@ class HTML(HTMLParser):
         '''
         Handle the start of a tag.
         '''
-        if tag == 'a':
-            self.last_start_tag = "a"
+        if tag in ('a', 'link'):
+            self.last_start_tag = tag
             for item in attrs:
                 prop, value = item
-                if prop != "href":
+                if prop not in  ("href", "src"):
                     continue
-                link = parse_link(value)
+                link = parse_link(value, tag)
                 self.links[value] = link
                 self.current_link = value
 
@@ -104,7 +105,7 @@ class HTML(HTMLParser):
 
     def handle_data(self, data):
         """Handle the text in anchors"""
-        if self.last_start_tag == "a":
+        if self.last_start_tag in ("a", "link"):
             self.links[self.current_link]["text"] = data
 
 
@@ -124,7 +125,7 @@ class URIDetailPlugin(pad.plugins.base.BasePlugin):
         for uri in msg.uri_list:
             if uri in parser.links:
                 continue
-            link = parse_link(uri)
+            link = parse_link(uri, "parsed")
             parser.links[uri] = link
         msg.uri_detail_links = parser.links
         self.ctxt.set_plugin_data("URIDetailPlugin", "links", parser.links)
