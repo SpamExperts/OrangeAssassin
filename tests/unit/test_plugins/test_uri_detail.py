@@ -1,13 +1,15 @@
 """Tests for pad.plugins.uri_detail plugin"""
+import collections
 import unittest
+
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
 
 try:
     from unittest.mock import patch, MagicMock, Mock, call
 except ImportError:
     from mock import patch, MagicMock, Mock, call
 
-from email.mime.multipart import MIMEMultipart
-from email.mime.text import MIMEText
 
 import pad.context
 import pad.message
@@ -59,8 +61,8 @@ class TestURIDetail(unittest.TestCase):
         """Test the plugin by asking it process one line of the configuration file"""
         htmltext = ("<html><body><a href='http://example.com'>example.com</a>"
                     "</body></html>")
-        msg = _get_basic_message(htmltext)
-        msg = pad.message.Message(self.mock_ctxt, msg.as_string())
+        emsg = _get_basic_message(htmltext)
+        msg = pad.message.Message(self.mock_ctxt, emsg.as_string())
         self.plugin.parsed_metadata(msg)
         expected = {u"http://example.com": {"raw": u"http://example.com",
                                             "scheme": u"http",
@@ -74,8 +76,8 @@ class TestURIDetail(unittest.TestCase):
     def test_parsed_metadata_no_html(self):
         """Test the plugin by asking it process one line of the configuration file"""
         htmltext = """http://example.com"""
-        msg = _get_basic_message(htmltext)
-        msg = pad.message.Message(self.mock_ctxt, msg.as_string())
+        emsg = _get_basic_message(htmltext)
+        msg = pad.message.Message(self.mock_ctxt, emsg.as_string())
         self.plugin.parsed_metadata(msg)
         expected = {u"http://example.com": {"raw": u"http://example.com",
                                             "scheme": u"http",
@@ -93,8 +95,8 @@ class TestURIDetail(unittest.TestCase):
                     "https://example.com"
                     "<link src='http://test%2Ecom'>exampletest.com</a>"
                     "</body></html>")
-        msg = _get_basic_message(htmltext)
-        msg = pad.message.Message(self.mock_ctxt, msg.as_string())
+        emsg = _get_basic_message(htmltext)
+        msg = pad.message.Message(self.mock_ctxt, emsg.as_string())
         self.plugin.parsed_metadata(msg)
         expected = {u"http://example.com": {"raw": u"http://example.com",
                                             "scheme": u"http",
@@ -125,31 +127,33 @@ class TestUriDetailRule(unittest.TestCase):
     """Test case for the URIDetailRule class"""
     def setUp(self):
         unittest.TestCase.setUp(self)
-        self.uri_detail_links = {u"http://example.com": {"raw": u"http://example.com",
-                                                         "scheme": u"http",
-                                                         "cleaned": u"http://example.com",
-                                                         "type": u"a",
-                                                         "domain": u"example.com",
-                                                         "text": u"link to example.com"
-                                                        },
-                                 u"https://example.com": {
-                                     "raw": u"https://example.com",
-                                     "scheme": u"https",
-                                     "cleaned": u"https://example.com",
-                                     "type": u"parsed",
-                                     "domain": u"example.com",
-                                     "text": ""
-                                 },
-                                 u"http://test.com": {
-                                     "raw": u"http://test%2Ecom",
-                                     "scheme": u"http",
-                                     "cleaned": u"http://test.com",
-                                     "type": u"link",
-                                     "domain": u"test.com",
-                                     "text": u"exampletest.com"
-                                     },
-                                }
-
+        items = {u"http://example.com": {
+            "raw": u"http://example.com",
+            "scheme": u"http",
+            "cleaned": u"http://example.com",
+            "type": u"a",
+            "domain": u"example.com",
+            "text": u"link to example.com"
+            },
+                 u"https://example.com": {
+                     "raw": u"https://example.com",
+                     "scheme": u"https",
+                     "cleaned": u"https://example.com",
+                     "type": u"parsed",
+                     "domain": u"example.com",
+                     "text": ""
+                 },
+                 u"http://test.com": {
+                     "raw": u"http://test%2Ecom",
+                     "scheme": u"http",
+                     "cleaned": u"http://test.com",
+                     "type": u"link",
+                     "domain": u"test.com",
+                     "text": u"exampletest.com"
+                 },
+                }
+        self.uri_detail_links = collections.OrderedDict(sorted(items.items(),
+                                                               key=lambda t: t[0]))
         self.mock_msg = Mock(uri_detail_links=self.uri_detail_links)
 
     def tearDown(self):
@@ -163,7 +167,7 @@ class TestUriDetailRule(unittest.TestCase):
         result = rule.match(self.mock_msg)
         for key, pattern in mock_pattern:
             pattern.match.assert_called_once_with(
-                    self.uri_detail_links[u"http://example.com"][key])
+                self.uri_detail_links[u"http://example.com"][key])
         self.assertEqual(result, True)
 
     def test_match_notmatched(self):
