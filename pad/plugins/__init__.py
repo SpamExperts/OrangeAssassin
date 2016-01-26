@@ -16,5 +16,5 @@ REIMPLEMENTED_PLUGINS = {
     "Mail::SpamAssassin::Plugin::URIDetail":
         "pad.plugins.uri_detail.URIDetailPlugin",
     "Mail::SpamAssassin::Plugin::TextCat":
-        "pad.plugins.texcat.TextCatPlugin",
+        "pad.plugins.textcat.TextCatPlugin",
 }

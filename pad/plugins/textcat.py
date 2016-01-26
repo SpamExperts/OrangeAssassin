@@ -58,7 +58,7 @@ class TextCatPlugin(pad.plugins.base.BasePlugin):
         otherwise
         """
         prob = self.get_global("textcat_acceptable_prob")
-        langs = [lang.lang for lang in langdetect.detect_langs(msg.body)
+        langs = [lang.lang for lang in langdetect.detect_langs(msg.text)
                  if lang.prob > prob]
         if len(langs) > self.get_global("textcat_max_languages"):
             self.ctxt.dbg("Too many languages.")
