@@ -6,12 +6,21 @@ try:
 except ImportError:
     from mock import patch, MagicMock, Mock, call
 
-from email.MIMEMultipart import MIMEMultipart
-from email.MIMEText import MIMEText
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
 
 import pad.context
 import pad.message
 import pad.plugins.uri_detail
+
+def _get_basic_message(text=""):
+    msg = MIMEMultipart()
+    msg["from"] = "sender@example.com"
+    msg["to"] = "recipient@example.com"
+    msg["subject"] = "test"
+    if text:
+        msg.attach(MIMEText(text))
+    return msg
 
 
 class TestURIDetail(unittest.TestCase):
@@ -35,15 +44,7 @@ class TestURIDetail(unittest.TestCase):
         unittest.TestCase.tearDown(self)
         patch.stopall()
 
-    def _get_basic_message(self, text = ""):
-        msg = MIMEMultipart()
-        msg["from"] = "sender@example.com"
-        msg["to"] = "recipient@example.com"
-        msg["subject"] = "test"
-        if text:
-            msg.attach(MIMEText(text))
-        return msg
-            
+
 
     def _check_parsed_links(self, keys, result, expected):
         """Check the results agains the expected result"""
@@ -53,114 +54,120 @@ class TestURIDetail(unittest.TestCase):
             self.assertEqual(result[key]["cleaned"], expected[key]["cleaned"], result[key])
             self.assertEqual(result[key]["type"], expected[key]["type"], result[key])
             self.assertEqual(result[key]["domain"], expected[key]["domain"], result[key])
-            
+
     def test_parsed_metadata_one_link(self):
         """Test the plugin by asking it process one line of the configuration file"""
         htmltext = ("<html><body><a href='http://example.com'>example.com</a>"
-                   "</body></html>")
-        msg = self._get_basic_message(htmltext)
+                    "</body></html>")
+        msg = _get_basic_message(htmltext)
         msg = pad.message.Message(self.mock_ctxt, msg.as_string())
         self.plugin.parsed_metadata(msg)
         expected = {u"http://example.com": {"raw": u"http://example.com",
-                     "scheme": u"http",
-                     "cleaned": u"http://example.com",
-                     "type": u"a",
-                     "domain": u"example.com",
-                   }}
+                                            "scheme": u"http",
+                                            "cleaned": u"http://example.com",
+                                            "type": u"a",
+                                            "domain": u"example.com",
+                                           }}
         keys = [u"http://example.com",]
-        self._check_parsed_links(keys, msg.uri_detail_links, expected)
+        self._check_parsed_links(keys, msg.uri_detail_links, expected)# pylint: disable=no-member
 
-    def test_parsed_metadata_one_link_no_html(self):
+    def test_parsed_metadata_no_html(self):
         """Test the plugin by asking it process one line of the configuration file"""
         htmltext = """http://example.com"""
-        msg = self._get_basic_message(htmltext)
+        msg = _get_basic_message(htmltext)
         msg = pad.message.Message(self.mock_ctxt, msg.as_string())
         self.plugin.parsed_metadata(msg)
         expected = {u"http://example.com": {"raw": u"http://example.com",
-                     "scheme": u"http",
-                     "cleaned": u"http://example.com",
-                     "type": u"parsed",
-                     "domain": u"example.com",
-                   }}
+                                            "scheme": u"http",
+                                            "cleaned": u"http://example.com",
+                                            "type": u"parsed",
+                                            "domain": u"example.com",
+                                           }}
         keys = [u"http://example.com",]
-        self._check_parsed_links(keys, msg.uri_detail_links, expected)
+        self._check_parsed_links(keys, msg.uri_detail_links, expected)# pylint: disable=no-member
 
-    def test_parsed_metadata_multiple_links(self):
+    def test_pm_multiple_links(self):
         """Test the plugin by asking it process one line of the configuration file"""
         htmltext = ("<html><body>"
-                "<a href='http://example.com'>link to example.com</a>"
-                "https://example.com"
-                "<link src='http://test%2Ecom'>exampletest.com</a>"
-                "</body></html>")
-        msg = self._get_basic_message(htmltext)
+                    "<a href='http://example.com'>link to example.com</a>"
+                    "https://example.com"
+                    "<link src='http://test%2Ecom'>exampletest.com</a>"
+                    "</body></html>")
+        msg = _get_basic_message(htmltext)
         msg = pad.message.Message(self.mock_ctxt, msg.as_string())
         self.plugin.parsed_metadata(msg)
         expected = {u"http://example.com": {"raw": u"http://example.com",
-                     "scheme": u"http",
-                     "cleaned": u"http://example.com",
-                     "type": u"a",
-                     "domain": u"example.com",
-                     "text": u"link to example.com"
-                     },
+                                            "scheme": u"http",
+                                            "cleaned": u"http://example.com",
+                                            "type": u"a",
+                                            "domain": u"example.com",
+                                            "text": u"link to example.com"
+                                           },
                     u"https://example.com": {"raw": u"https://example.com",
-                     "scheme": u"https",
-                     "cleaned": u"https://example.com",
-                     "type": u"parsed",
-                     "domain": u"example.com",
-                     "text": ""
-                     },
+                                             "scheme": u"https",
+                                             "cleaned": u"https://example.com",
+                                             "type": u"parsed",
+                                             "domain": u"example.com",
+                                             "text": ""
+                                            },
                     u"http://test.com": {"raw": u"http://test%2Ecom",
-                     "scheme": u"http",
-                     "cleaned": u"http://test.com",
-                     "type": u"link",
-                     "domain": u"test.com",
-                     "text": u"exampletest.com"
-                     },
-                    }
+                                         "scheme": u"http",
+                                         "cleaned": u"http://test.com",
+                                         "type": u"link",
+                                         "domain": u"test.com",
+                                         "text": u"exampletest.com"
+                                        },
+                   }
         keys = [u"http://example.com",]
-        self._check_parsed_links(keys, msg.uri_detail_links, expected)
+        self._check_parsed_links(keys, msg.uri_detail_links, expected)# pylint: disable=no-member
 
 class TestUriDetailRule(unittest.TestCase):
+    """Test case for the URIDetailRule class"""
     def setUp(self):
         unittest.TestCase.setUp(self)
         self.uri_detail_links = {u"http://example.com": {"raw": u"http://example.com",
-                     "scheme": u"http",
-                     "cleaned": u"http://example.com",
-                     "type": u"a",
-                     "domain": u"example.com",
-                     "text": u"link to example.com"
-                     },
-                    u"https://example.com": {"raw": u"https://example.com",
-                     "scheme": u"https",
-                     "cleaned": u"https://example.com",
-                     "type": u"parsed",
-                     "domain": u"example.com",
-                     "text": ""
-                     },
-                    u"http://test.com": {"raw": u"http://test%2Ecom",
-                     "scheme": u"http",
-                     "cleaned": u"http://test.com",
-                     "type": u"link",
-                     "domain": u"test.com",
-                     "text": u"exampletest.com"
-                     },
-                    }
+                                                         "scheme": u"http",
+                                                         "cleaned": u"http://example.com",
+                                                         "type": u"a",
+                                                         "domain": u"example.com",
+                                                         "text": u"link to example.com"
+                                                        },
+                                 u"https://example.com": {
+                                     "raw": u"https://example.com",
+                                     "scheme": u"https",
+                                     "cleaned": u"https://example.com",
+                                     "type": u"parsed",
+                                     "domain": u"example.com",
+                                     "text": ""
+                                 },
+                                 u"http://test.com": {
+                                     "raw": u"http://test%2Ecom",
+                                     "scheme": u"http",
+                                     "cleaned": u"http://test.com",
+                                     "type": u"link",
+                                     "domain": u"test.com",
+                                     "text": u"exampletest.com"
+                                     },
+                                }
 
-        self.mock_msg = Mock(uri_detail_links = self.uri_detail_links)
+        self.mock_msg = Mock(uri_detail_links=self.uri_detail_links)
 
     def tearDown(self):
         unittest.TestCase.tearDown(self)
         patch.stopall()
 
     def test_match(self):
+        """Test the match method in the Rule, the result of the match is True"""
         mock_pattern = (("domain", Mock(**{"match.return_value": True})),)
         rule = pad.plugins.uri_detail.URIDetailRule("TEST", pattern=mock_pattern)
         result = rule.match(self.mock_msg)
         for key, pattern in mock_pattern:
-            pattern.match.assert_called_with(self.uri_detail_links["http://example.com"][key])
+            pattern.match.assert_called_once_with(
+                    self.uri_detail_links[u"http://example.com"][key])
         self.assertEqual(result, True)
 
     def test_match_notmatched(self):
+        """Test the match method in the Rule, the result of the match is False"""
         mock_pattern = (("domain", Mock(**{"match.return_value": False})),)
         rule = pad.plugins.uri_detail.URIDetailRule("TEST", pattern=mock_pattern)
         result = rule.match(self.mock_msg)
@@ -173,11 +180,13 @@ class TestUriDetailRule(unittest.TestCase):
         self.assertEqual(result, False)
 
     def test_get_rule_kwargs(self):
+        """Test getting the kwargs for the rule, the rule have keys (what to match in the
+        link) and the value to be used in against the regex"""
         mock_perl2re = patch("pad.rules.uri.pad.regex.perl2re").start()
         data = {"value": r'domain =~ /\bexample.com\b/'}
-        expected = {"pattern": [("domain",mock_perl2re("/example.com/")),]}
+        expected = {"pattern": [("domain", mock_perl2re("/example.com/")),]}
         kwargs = pad.plugins.uri_detail.URIDetailRule.get_rule_kwargs(data)
-        mock_perl2re.assert_called_with(r'/\bexample.com\b/',"=~")
+        mock_perl2re.assert_called_with(r'/\bexample.com\b/', "=~")
         self.assertEqual(kwargs, expected)
 
 def suite():
