@@ -1,8 +1,12 @@
 """Test the image_info plugin"""
+import email
 import os
 import unittest
 import tests.util
 from tests.util.image_utils import new_email, new_image
+
+TESTDATA_DIR = os.path.join(os.getcwd(), "tests", "functional",
+                            "test_plugin", "test_data")
 
 CONFIG_NAMED = r"""
 body         DC_IMAGE001_GIF         eval:image_named('image001.gif')
@@ -191,6 +195,18 @@ class TestImageInfo(tests.util.TestBase):
         msg = new_email(
             {1: new_image(100, 100, "gif", "image002.gif")})
         result = self.check_pad(msg.as_string())
+        self.assertEqual(result, '0.0')
+
+    def test_real_msg_with_errors(self):
+        """Check real multipart message"""
+        cwd = os.path.join(os.getcwd(), "pad", "plugins", "image_info.py")
+        self.setup_conf(CONFIG_NAMED + "\n" + CONFIG_SIZED +
+                "\n" + CONFIG_COVERAGE,
+                pre_config="loadplugin ImageInfoPlugin {0}\n"
+                "report _SCORE_".format(cwd))
+        with open(os.path.join(TESTDATA_DIR, "multipart.eml")) as m:
+            msg = email.message_from_file(m)
+            result = self.check_pad(msg.as_string())
         self.assertEqual(result, '0.0')
 
 
