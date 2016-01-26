@@ -12,6 +12,9 @@ score UNWANTED_LANGUAGE_BODY 2.800
 PRE_CONFIG = """
 loadplugin     Mail::SpamAssassin::Plugin::TextCat
 ok_languages   %s
+
+report _SCORE_
+report _TESTS_
 """
 
 
