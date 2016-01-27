@@ -58,10 +58,11 @@ class TextCatPlugin(pad.plugins.base.BasePlugin):
         otherwise
         """
         prob = self.get_global("textcat_acceptable_prob")
-        langs = [lang.lang for lang in langdetect.detect_langs(msg.text)
-                 if lang.prob > prob]
+        results = langdetect.detect_langs(msg.text)
+        self.ctxt.log.debug("TextCat results: %s", results)
+        langs = [lang.lang for lang in results if lang.prob > prob]
         if len(langs) > self.get_global("textcat_max_languages"):
-            self.ctxt.dbg("Too many languages.")
+            self.ctxt.log.debug("Too many languages.")
             return False
         msg.plugin_tags["LANGUAGES"] = " ".join(langs)
         ok_languages = self.get_global("ok_languages")
