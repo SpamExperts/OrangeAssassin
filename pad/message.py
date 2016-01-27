@@ -8,6 +8,7 @@ from builtins import object
 import re
 import email
 import socket
+import ipaddress
 import email.utils
 import html.parser
 import collections
@@ -33,6 +34,10 @@ URL_RE = re.compile(r"""
     (?:[^\s<>"'\x7f-\xff]+)  # capture the guts
 )
 """, re.VERBOSE)
+
+#IPFRE = re.compile(r"[\[\(\s\/]{0,1}((?:[0-9]{1,3}\.){3}[0-9]{1,3})[\s\]\)\/]{0,1}")
+#IPFRE = re.compile(r"[\[ ]{1}[a-f\d]{1,4}[.:]{1,2}[a-f\d]{1,4}[.:]{1,2}[a-f\d]{1,4}[.:]{1,2}[a-f\d]{1,4}[.:]{0,2}[a-f\d]{0,4}[.:]{0,2}[\] ;\n]{1}")
+IPFRE = re.compile(r"[\[ ]{1}[a-fA-F\d\.\:]{7,}?[\] \n;]{1}")
 
 STRICT_CHARSETS = frozenset(("quopri-codec", "quopri", "quoted-printable",
                              "quotedprintable"))
@@ -112,7 +117,9 @@ class Message(pad.context.MessageContext):
         self.addr_headers = _Headers()
         self.name_headers = _Headers()
         self.mime_headers = _Headers()
+        self.received_headers = _Headers()
         self.raw_mime_headers = _Headers()
+        self.header_ips = _Headers()
         self.text = ""
         self.raw_text = ""
         self.uri_list = set()
@@ -179,6 +186,25 @@ class Message(pad.context.MessageContext):
         values = list()
         for value in self.get_raw_header(header_name):
             values.append(self._decode_header(value))
+        return values
+
+    def get_header_ips(self):
+        values = list()
+        for value in self.get_received_headers("Received"):
+            ips = IPFRE.findall(value)
+            for ip in ips:
+                clean_ip = ip.strip("[ ];\n")
+                try:
+                    values.append(ipaddress.ip_address(clean_ip))
+                except ValueError:
+                    continue
+        return values
+
+    @_memoize("received_headers")
+    def get_received_headers(self, header_name="Received"):
+        values = list()
+        for value in self.get_decoded_header(header_name):
+            values.append(value)
         return values
 
     @_memoize("addr_headers")

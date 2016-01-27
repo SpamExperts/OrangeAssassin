@@ -25,8 +25,6 @@ except ImportError:
 
 import pad.plugins.base
 
-IPFRE = re.compile(r"[\[\(\s\/]{0,1}((?:[0-9]{1,3}\.){3}[0-9]{1,3})[\s\]\)\/]{0,1}")
-
 
 class RelayCountryPlugin(pad.plugins.base.BasePlugin):
     """This plugin exposes the countries that a mail was relayed from.
@@ -56,21 +54,16 @@ class RelayCountryPlugin(pad.plugins.base.BasePlugin):
         """Return the country corresponding to an IP based on the
         network range database.
         """
-        try:
-            ipadobj = ipaddress.ip_address(str(ipaddr.encode('utf8'), "utf8"))
-        except (ipaddress.AddressValueError, ValueError):
-            self.ctxt.log.log.warning("Invalid IP address: '%s', ipaddr")
-            return ""
-        if ipadobj.is_private:
+        if ipaddr.is_private:
             return "**"
-        response = self.reader.country_code_by_addr(ipaddr)
+        response = self.reader.country_code_by_addr(str(ipaddr))
         if not response:
             self.ctxt.log.info("Can't locate IP '%s' in database", ipaddr)
             #Cant locate the IP in database.
             return "XX"
         return response
 
-    def check_start(self, msg):
+    def parsed_metadata(self, msg):
         """Check the X-Relay-Countries in the message and exposes the
         countries that a mail was relayed from
         """
@@ -79,18 +72,10 @@ class RelayCountryPlugin(pad.plugins.base.BasePlugin):
             return
         if not self.load_database():
             return
-        all_received = msg.msg.get_all("Received")
-        if not all_received:
-            self.ctxt.log.info("No 'Received' headers found")
-            return
-        all_received = "\n".join(all_received)
-        ips = IPFRE.findall(all_received)
+        ips = msg.get_header_ips()
         result = []
-        self.ctxt.log.debug("IPS found: %r", ips)
         for ipaddr in ips:
             country = self.get_country(ipaddr)
-            if not country: #Invalid IP address
-                continue
             result.append(str(country))
         if result:
             result = " ".join(result)
