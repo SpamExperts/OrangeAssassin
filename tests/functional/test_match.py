@@ -1,3 +1,5 @@
+# -*- coding: UTF-8 -*-
+
 """Test the match script."""
 
 from __future__ import absolute_import, print_function
@@ -35,6 +37,17 @@ Content-Type: text/html;
 Testing rule one-two-three
 <br></body></html>
 --Apple-Mail=_9311E301-2E56-423D-B730-30A522F3844C--
+"""
+
+BAD_ENCODING = u"""Received: from example.com ([2a01:4f8:d12:1380::1337])
+ by server1.com with esmtp (Exim 4.76)
+ (envelope-from <test@example.com>) id 1SlXJV-0006Vp-GB
+ for testuser@example.com; Mon, 02 Jul 2012 05:28:37 +0200
+From: test@example.com
+To: testuser@example.com
+Subject: Test message тест
+
+Test
 """
 
 
@@ -139,6 +152,18 @@ class TestMatchScript(tests.util.TestBase):
                    "EN\*GTUBE-STANDARD-ANTI-UBE-TEST-EMAIL\*C\.34X/",
             pre_config="report _SCORE_")
         result = self.check_pad(MULTIPART_MSG)
+        self.assertEqual(result, "0.0")
+
+    @unittest.SkipTest
+    def test_no_match_bad_encoding(self):
+        """Rule shouldn't be matched but score reported.
+        No errors should occur."""
+        self.setup_conf(
+            config="body TEST_RULE /abcd/\n"
+                   "body GTUBE /XJS\*C4JDBQADN1\.NSBN3\*2IDN"
+                   "EN\*GTUBE-STANDARD-ANTI-UBE-TEST-EMAIL\*C\.34X/",
+            pre_config="report _SCORE_")
+        result = self.check_pad(BAD_ENCODING)
         self.assertEqual(result, "0.0")
 
     def test_report_plugin(self):
