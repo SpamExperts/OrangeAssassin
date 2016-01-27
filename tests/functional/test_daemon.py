@@ -319,15 +319,14 @@ class TestDaemon(unittest.TestCase):
         expected = u"76 Bad header line: (header not in 'Name: value' format)\r\n"
         self.assertEqual(result, expected)
 
-    @unittest.skip("We don't care if the version is missing.")
-    def test_symbols_missing_content_error(self):
+    def test_symbols_bad_header_line(self):
         """Check bad command sent scenario """
-        process_row = "SYMBOLS"
+        process_row = "SYMBOL"
         content_row = "Content-length: %s\r\n" % self.content_len
-        command = ("%s SPAMC\r\n%s\r\n%s\r\n" %
+        command = ("%s SPAMC/1.2\r\n%s\r\n%s\r\n" %
                    (process_row, content_row, GTUBE_MSG))
         result = self.send_to_proc(command)
-        expected = u"76 Bad header line: SYMBOLS SPAMC\r\n"
+        expected = u"76 Bad header line: SYMBOL SPAMC/1.2\r\n"
         self.assertEqual(result, expected)
 
     def test_symbols_non_spam(self):
