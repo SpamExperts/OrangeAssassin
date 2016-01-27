@@ -62,6 +62,12 @@ class TestFunctionalTextCat(tests.util.TestBase):
         result = self.check_pad("Body: Why?\n\nWhy? Are you doing this?\n\nQue est-ce que tu fait mon ami?")
         self.check_report(result, 0.0, [])
 
+    def test_all_languages(self):
+        self.setup_conf(config=LANG_CONFIG,
+                        pre_config=PRE_CONFIG % ("all", "0.70"))
+        result = self.check_pad("Body: Why?\n\nWhy? Are you doing this?\n\nQue est-ce que tu fait mon ami?")
+        self.check_report(result, 0.0, [])
+
 
 def suite():
     """Gather all the tests from this package in a test suite."""
