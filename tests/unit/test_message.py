@@ -246,7 +246,13 @@ class TestMessageVarious(unittest.TestCase):
     def test_translate_line_breaks(self):
         text = "Test1\nTest2\r\nTest3\r"
         expected = "Test1\nTest2\nTest3\n"
+        result = pad.message.Message.translate_line_breaks(text)
+        self.assertEqual(result, expected)
 
+    @unittest.SkipTest
+    def test_translate_line_breaks_nonascii(self):
+        text = "X-Envelope-Sender: 'ant㮩o.parreira'@credimedia.pt"
+        expected = "X-Envelope-Sender: 'ant㮩o.parreira'@credimedia.pt"
         result = pad.message.Message.translate_line_breaks(text)
         self.assertEqual(result, expected)
 
