@@ -21,6 +21,7 @@ class TestAWLBase(unittest.TestCase):
         self.options = {}
         self.global_data = {}
         self.msg_data = {}
+        patch("pad.plugins.awl.getpass.getuser", return_value="test").start()
 
         self.mock_ctxt = MagicMock(**{
             "get_plugin_data.side_effect": lambda p, k: self.global_data[k],
@@ -60,7 +61,7 @@ class TestAWLBase(unittest.TestCase):
 
     def test_eval_rule_first_seen_address(self):
         data = {"email": "test@example.com",
-                "username": "kostas",
+                "username": "test",
                 "signedby": "",
                 "totscore": 5,
                 "ip": "8.8",
@@ -81,7 +82,7 @@ class TestAWLBase(unittest.TestCase):
 
     def test_eval_rule_existing_address(self):
         data = {"email": "test@example.com",
-                "username": "kostas",
+                "username": "test",
                 "signedby": "",
                 "totscore": 5,
                 "ip": "8.8",
