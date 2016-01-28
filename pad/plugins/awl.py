@@ -12,38 +12,31 @@ CREATE TABLE `awl` (
 
 
 """
-
 from __future__ import absolute_import
+
+from builtins import str
 
 import re
 import email
+import getpass
 import ipaddress
-from io import BytesIO
-from sqlalchemy.schema import MetaData
-from sqlalchemy.ext.declarative.api import declarative_base
+
 from sqlalchemy import Column
-from sqlalchemy.types import Text
+from sqlalchemy.types import Float
 from sqlalchemy.types import String
 from sqlalchemy.types import Integer
-from sqlalchemy.types import Unicode
-from sqlalchemy.types import Float
 from sqlalchemy.sql.schema import PrimaryKeyConstraint
+from sqlalchemy.ext.declarative.api import declarative_base
 
-
-from hashlib import md5
-from collections import defaultdict
-
-
-import pad.regex
 import pad.plugins.base
 
-import pprint
-
-pp = pprint.PrettyPrinter()
 
 Base = declarative_base()
 
+IPV4SUFFIXRE = re.compile("(\.0){1,3}$")
+
 class AWL(Base):
+    """Schema for the awl table"""
 
     __tablename__ = 'awl'
 
@@ -58,8 +51,8 @@ class AWL(Base):
         PrimaryKeyConstraint("username", "email", "signedby", "ip"),)
 
 
-
 class AutoWhiteListPlugin(pad.plugins.base.BasePlugin):
+    """Reimplementation of the awl spamassassin plugin"""
 
     dsn_name = "user_awl"
 
@@ -68,7 +61,7 @@ class AutoWhiteListPlugin(pad.plugins.base.BasePlugin):
     options = {
         "auto_whitelist_factor": ("float", 0.5),
         "auto_whitelist_ipv4_mask_len": ("int", 16),
-        "auto_whitelist_ipv6_mask_len": ("int", 48),
+        "auto_whitelist_ipv6_mask_len": ("int", 32),
     }
 
 
@@ -95,28 +88,28 @@ class AutoWhiteListPlugin(pad.plugins.base.BasePlugin):
         self.set_local(msg, "originip", origin_ip)
 
 
-
     def ip_to_awl_key(self, ip):
-        if type(ip) == ipaddress.IPv4Address:
+        if ip.version == 4:
             mask = self.get_global("auto_whitelist_ipv4_mask_len")
         else:
             mask = self.get_global("auto_whitelist_ipv6_mask_len")
 
         interface = ipaddress.ip_interface("%s/%s" % (ip, mask))
         network = interface.network.network_address
-        return network
-
+        return IPV4SUFFIXRE.sub("", str(network))
 
     def get_entry(self, address, ip, signed_by):
         session = self.get_session()
-        meta = MetaData()
-        result = session.query(AWL).filter(AWL.email==address,
-                                           AWL.signedby==signed_by,
-                                           AWL.ip==ip).first()
+        result = session.query(AWL).filter(
+            AWL.username==getpass.getuser(),
+            AWL.email==address,
+            AWL.signedby==signed_by,
+            AWL.ip==ip).first()
 
         session.close()
         if not result:
             result = AWL()
+            result.username = getpass.getuser()
             result.count = 0
             result.totscore = 0
             result.email = address
@@ -129,18 +122,41 @@ class AutoWhiteListPlugin(pad.plugins.base.BasePlugin):
         score =  msg.score
         factor = self.get_global("auto_whitelist_factor")
         origin_ip = self.get_local(msg, "originip")
-        awl_key_ip = self.ip_to_awl_key(origin_ip)
+        if origin_ip:
+            awl_key_ip = self.ip_to_awl_key(origin_ip)
+        else:
+            awl_key_ip = "none"
         addr = self.get_local(msg, "from")
         signed_by = self.get_local(msg, "signedby")
-
-        print addr, origin_ip, awl_key_ip, signed_by
 
         entry = self.get_entry(addr, awl_key_ip, signed_by)
 
         try:
             mean = entry.totscore/entry.count
         except ZeroDivisionError:
-            mean = 0
+            mean = None
+
+
+        log_msg = ("auto-whitelist: AWL active, pre-score: %s, "
+                   "mean: %s, IP: %s, address: %s %s")
+
+        self.ctxt.log.debug(log_msg,
+                            msg.score,
+                            "%.3f" % mean if mean else "undef",
+                            origin_ip if origin_ip else "undef",
+                            addr,
+                            "signed by %s" % signed_by if signed_by
+                            else "(not signed)")
+
+        if mean:
+            delta = mean - score
+            delta *= factor
+            msg.plugin_tags["AWL"] = "%2.1f" % delta
+            msg.plugin_tags["AWLMEAN"] = "%2.1f" % mean
+            msg.plugin_tags["AWLCOUNT"] = "%2.1f" % entry.count
+            msg.plugin_tags["AWLPRESCORE"] = "%2.1f" % msg.score
+
+            msg.score += delta
 
         entry.count += 1
         entry.totscore += score
@@ -148,14 +164,11 @@ class AutoWhiteListPlugin(pad.plugins.base.BasePlugin):
         session = self.get_session()
         session.merge(entry)
         session.commit()
+        session.close()
 
-        delta = mean - score
-        delta *= factor
-        #set tags
+        self.ctxt.log.debug("auto-whitelist: post auto-whitelist score %.3f", msg.score)
 
-        msg.score += delta
-        print msg.score
-        return 0
+        return False
 
 
 
