@@ -71,7 +71,7 @@ class TestAWLBase(unittest.TestCase):
         self.plugin.set_local(self.mock_msg, "signedby", "")
 
         self.plugin.set_local(self.mock_msg, "originip",
-                              ipaddress.IPv4Address("8.8.8.8"))
+                              ipaddress.IPv4Address(u"8.8.8.8"))
 
         self.plugin.check_from_in_auto_whitelist(self.mock_msg,
                                                  target="header")
@@ -94,7 +94,7 @@ class TestAWLBase(unittest.TestCase):
         self.plugin.set_local(self.mock_msg, "from", "test@example.com")
         self.plugin.set_local(self.mock_msg, "signedby", "")
         self.plugin.set_local(self.mock_msg, "originip",
-                              ipaddress.IPv4Address("8.8.8.8"))
+                              ipaddress.IPv4Address(u"8.8.8.8"))
         self.plugin.check_from_in_auto_whitelist(self.mock_msg,
                                                  target="header")
         data.update({"totscore":15, "count":2})
