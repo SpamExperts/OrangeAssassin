@@ -170,7 +170,7 @@ class Message(pad.context.MessageContext):
             if encoding:
                 try:
                     parts.append(value.decode(encoding, "ignore"))
-                except (LookupError, UnicodeDecodeError):
+                except (LookupError, UnicodeDecodeError, AssertionError):
                     continue
             else:
                 parts.append(value)
