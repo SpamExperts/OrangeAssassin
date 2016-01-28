@@ -6,6 +6,8 @@ import re
 import operator
 from functools import reduce
 
+import pad.errors
+
 # Map of perl flags and the corresponding re ones.
 FLAGS = {
     "i": re.IGNORECASE,
@@ -81,15 +83,22 @@ def perl2re(pattern, match_op="=~"):
     # We don't need to consider the pre-flags
     pattern = pattern.strip().lstrip("mgs")
     delim = pattern[0]
-    rev_delim = DELIMS[delim]
+    try:
+        rev_delim = DELIMS[delim]
+    except KeyError:
+        raise pad.errors.InvalidRegex("Invalid regex delimiter %r in %r" %
+                                      (delim, pattern))
     pattern, flags_str = pattern.lstrip(delim).rsplit(rev_delim, 1)
     for conv_p, repl in _CONVERTS:
         pattern = conv_p.sub(repl, pattern)
 
     flags = reduce(operator.or_, (FLAGS.get(flag, 0) for flag in flags_str), 0)
 
-    if match_op == "=~":
-        return MatchPattern(re.compile(pattern, flags))
-    elif match_op == "!~":
-        return NotMatchPattern(re.compile(pattern, flags))
+    try:
+        if match_op == "=~":
+            return MatchPattern(re.compile(pattern, flags))
+        elif match_op == "!~":
+            return NotMatchPattern(re.compile(pattern, flags))
+    except re.error as e:
+        raise pad.errors.InvalidRegex("Invalid regex %r: %s" % (pattern, e))
 

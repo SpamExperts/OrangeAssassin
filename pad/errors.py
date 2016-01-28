@@ -11,6 +11,10 @@ class ParsingError(PADError):
     """An error occurred while parsing rules."""
 
 
+class InvalidRegex(ParsingError):
+    """An error has occured while parsing the regex."""
+
+
 class InvalidRule(ParsingError):
     """The rule syntax seems valid but the usage is incorrect."""
     def __init__(self, rule_name, description=""):

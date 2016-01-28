@@ -64,7 +64,7 @@ class TestBase(unittest.TestCase):
          report only. Otherwise return the message and report.
         :return: The result of the script.
         """
-        args = [self.match_script, "-t", "-C", self.test_conf,
+        args = [self.match_script, "-D", "-t", "-C", self.test_conf,
                 "--siteconfigpath", self.test_conf]
         if extra_args is not None:
             args.extend(extra_args)

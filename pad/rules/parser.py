@@ -259,7 +259,8 @@ class PADParser(object):
                 if self.ctxt.paranoid:
                     raise e
             else:
-                with self._paranoid(pad.errors.InvalidRule, re.error):
+                with self._paranoid(pad.errors.InvalidRule,
+                                    pad.errors.InvalidRegex):
                     try:
                         rule_class = RULES[rule_type]
                     except KeyError:
