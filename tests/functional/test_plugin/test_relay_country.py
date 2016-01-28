@@ -1,7 +1,7 @@
 """Tests for pad.plugins.relay_country. In order to run this test you have to
 download the geodb database (GeoLite2-Country.mmdb) :
-wget http://geolite.maxmind.com/download/geoip/database/GeoLite2-Country.mmdb.gz
-gunzip GeoLite2-Country.mmdb.gz
+wget http://geolite.maxmind.com/download/geoip/database/GeoLiteCountry/GeoIP.dat.gz
+gunzip GeoIP.dat.gz
 """
 
 import unittest
@@ -10,7 +10,7 @@ import tests.util
 PRE_CONFIG = r"""
 # Plugins and settings here
 loadplugin Mail::SpamAssassin::Plugin::RelayCountry
-geodb ./GeoLite2-Country.mmdb
+geodb ./GeoIP.dat
 
 report _SCORE_
 report _TESTS_

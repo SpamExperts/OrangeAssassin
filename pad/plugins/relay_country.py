@@ -33,7 +33,7 @@ class RelayCountryPlugin(pad.plugins.base.BasePlugin):
     "geodb", is a string and points to the file where the database is.
 
     The database is a csv file that can be downloaded from maxmind server:
-    http://geolite.maxmind.com/download/geoip/database/GeoLite2-Country.mmdb.gz
+    http://geolite.maxmind.com/download/geoip/database/GeoLiteCountry/GeoIP.dat.gz
     """
     options = {"geodb": ("str", ""),}
 
