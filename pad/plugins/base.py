@@ -133,6 +133,12 @@ class BasePlugin(object):
         """Parse and set a list option."""
         self.set_global(global_key, value.split(separator))
 
+    def set_append_option(self, key, value):
+        """Append the key to the whitelist_subject option
+        """
+        self.options[key][1].append(value)
+        self.set_global(key, self.options[key][1])
+
     def inhibit_further_callbacks(self):
         """Tells the plugin handler to inhibit calling into other plugins in
         the plugin chain for the current callback.
