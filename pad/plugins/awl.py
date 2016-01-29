@@ -61,7 +61,7 @@ class AutoWhiteListPlugin(pad.plugins.base.BasePlugin):
     options = {
         "auto_whitelist_factor": ("float", 0.5),
         "auto_whitelist_ipv4_mask_len": ("int", 16),
-        "auto_whitelist_ipv6_mask_len": ("int", 32),
+        "auto_whitelist_ipv6_mask_len": ("int", 48),
     }
 
 

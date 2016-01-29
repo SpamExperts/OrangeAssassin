@@ -45,10 +45,20 @@ class TestAWLBase(unittest.TestCase):
         patch.stopall()
 
     def test_parsed_metadata(self):
+
         pass
 
-    def test_ip_to_awl_key(self):
-        pass
+    def test_ip_to_awl_key_ipv4(self):
+        ip = ipaddress.ip_address(u"192.168.1.1")
+        result = self.plugin.ip_to_awl_key(ip)
+        expected = u"192.168"
+        self.assertEqual(result, expected)
+
+    def test_ip_to_awl_key_ipv6(self):
+        ip = ipaddress.ip_address(u"2001:0db8:85a3::8a2e:0370:7334")
+        result = self.plugin.ip_to_awl_key(ip)
+        expected = u"2001:db8:85a3::"
+        self.assertEqual(result, expected)
 
     def check_db(self, username, email, ip, signedby, totscore, count):
         result = self.session.query(awl.AWL).filter(
