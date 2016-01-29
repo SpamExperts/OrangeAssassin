@@ -65,26 +65,31 @@ class AutoWhiteListPlugin(pad.plugins.base.BasePlugin):
     }
 
 
-    def parsed_metadata(self, msg):
-        from_addr = msg.msg['From']
-        self.set_local(msg, "from", email.utils.parseaddr(from_addr)[1])
+    def _get_origin_ip(self, msg):
+        for ip in msg.get_header_ips():
+            if not ip.is_private:
+                return ip
+        return None
 
+    def _get_signed_by(self, msg):
         dkim = msg.msg.get('DKIM-Signature', "")
         for param in dkim.split(";"):
             if param.strip().startswith("d="):
-                dkim_domain = param.split("=", 1)[1].strip(" ;\r\n")
-                break
-        else:
-            dkim_domain = ""
-        self.set_local(msg, "signedby", dkim_domain)
+                return param.split("=", 1)[1].strip(" ;\r\n")
+        return ""
 
-        for ip in msg.get_header_ips():
-            if not ip.is_private:
-                origin_ip = ip
-                break
-        else:
-            origin_ip = None
+    def _get_from(self, msg):
+        from_addr = msg.msg['From']
+        return email.utils.parseaddr(from_addr)[1]
 
+    def parsed_metadata(self, msg):
+        from_addr = self._get_from(msg)
+        self.set_local(msg, "from", from_addr)
+
+        signedby = self._get_signed_by(msg)
+        self.set_local(msg, "signedby", signedby)
+
+        origin_ip = self._get_origin_ip(msg)
         self.set_local(msg, "originip", origin_ip)
 
 
