@@ -8,6 +8,7 @@ except ImportError:
 
 import pad.context
 import pad.message
+import pad.plugins.relay_country
 
 MSGTEST="""Delivered-To: user@example.com
 Received: by 10.107.130.85 with SMTP id e82csp671450iod;
@@ -32,15 +33,15 @@ Message-ID: <20160108-18272230-3030-0@DSVR021489>
 List-Unsubscribe: <mailto:tr16147476@web2.mpmailserv.co.uk>, <http://web2.mpmailserv.co.uk/bg/unsubscribe.asp?sid=16147476&cid=52463>
 Feedback-ID: 52463:16147476:Campaign:70955
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-	d=mpmailserver.co.uk; s=dkim1;
-	h=From:To:Subject:Date:Message-ID:MIME-Version:Content-Type;
-	bh=OAQ8l70XSu555kegpIQDGx0twRMltOiKK9/pzRATUT0=;
-	b=G4p5eIlu7dXOD9krH5BosMOJksrKgkBB85BgVZeyh0l0JfLhwve7WVMfR5jtDgae
-		ET9Rh9rfmIEnXv4cb5Hy727huDWTLZionBaoJCx+gIIRBQTfJDn1Jxyq/XAZMuot
-		BF2IOcAnjgkb8AXCz7zSIbw475llXxcwB5o44vxuHxE=
+ d=mpmailserver.co.uk; s=dkim1;
+ h=From:To:Subject:Date:Message-ID:MIME-Version:Content-Type;
+ bh=OAQ8l70XSu555kegpIQDGx0twRMltOiKK9/pzRATUT0=;
+ b=G4p5eIlu7dXOD9krH5BosMOJksrKgkBB85BgVZeyh0l0JfLhwve7WVMfR5jtDgae
+  ET9Rh9rfmIEnXv4cb5Hy727huDWTLZionBaoJCx+gIIRBQTfJDn1Jxyq/XAZMuot
+  BF2IOcAnjgkb8AXCz7zSIbw475llXxcwB5o44vxuHxE=
 MIME-Version: 1.0
 Content-Type: multipart/mixed;
-	boundary="--=7879796F323D48C3BF41_0C5C_5373_A518"
+ boundary="--=7879796F323D48C3BF41_0C5C_5373_A518"
 
 """
 
@@ -60,21 +61,21 @@ Message-ID: <20160108-18272230-3030-0@DSVR021489>
 List-Unsubscribe: <mailto:tr16147476@web2.mpmailserv.co.uk>, <http://web2.mpmailserv.co.uk/bg/unsubscribe.asp?sid=16147476&cid=52463>
 Feedback-ID: 52463:16147476:Campaign:70955
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-	d=mpmailserver.co.uk; s=dkim1;
-	h=From:To:Subject:Date:Message-ID:MIME-Version:Content-Type;
-	bh=OAQ8l70XSu555kegpIQDGx0twRMltOiKK9/pzRATUT0=;
-	b=G4p5eIlu7dXOD9krH5BosMOJksrKgkBB85BgVZeyh0l0JfLhwve7WVMfR5jtDgae
-		ET9Rh9rfmIEnXv4cb5Hy727huDWTLZionBaoJCx+gIIRBQTfJDn1Jxyq/XAZMuot
-		BF2IOcAnjgkb8AXCz7zSIbw475llXxcwB5o44vxuHxE=
+ d=mpmailserver.co.uk; s=dkim1;
+ h=From:To:Subject:Date:Message-ID:MIME-Version:Content-Type;
+ bh=OAQ8l70XSu555kegpIQDGx0twRMltOiKK9/pzRATUT0=;
+ b=G4p5eIlu7dXOD9krH5BosMOJksrKgkBB85BgVZeyh0l0JfLhwve7WVMfR5jtDgae
+ ET9Rh9rfmIEnXv4cb5Hy727huDWTLZionBaoJCx+gIIRBQTfJDn1Jxyq/XAZMuot
+ BF2IOcAnjgkb8AXCz7zSIbw475llXxcwB5o44vxuHxE=
 MIME-Version: 1.0
 Content-Type: multipart/mixed;
-	boundary="--=7879796F323D48C3BF41_0C5C_5373_A518"
+ boundary="--=7879796F323D48C3BF41_0C5C_5373_A518"
 
 """
 
 MSG_UNKNOWN="""Delivered-To: user@example.com
 Received: by [189.23.4.1] with SMTP id e82csp671450iod;
-        Fri, 8 Jan 2016 10:27:27 -0800 (PST)
+ Fri, 8 Jan 2016 10:27:27 -0800 (PST)
 From: "=?utf-8?B?UENIIE1heW9yZW8=?=" <ventas@pch-mayoreo.com.mx>
 To: user@example.com
 Subject: =?utf-8?B?TGlxdWlkYWNpb24gZGVsIDIwMTUg?=
@@ -83,38 +84,37 @@ Subject: =?utf-8?B?TGlxdWlkYWNpb24gZGVsIDIwMTUg?=
 """
 
 
-
-
 class MockGeoIP(object):
     """Mocking GeoIP class"""
     IPADDRESSES = {"10.107.130.85": "**",
                    "178.62.26.182": "GB",
-                  }
-    def __init__(self, datfile):
-        """Initializer, requires to call with the path of the .dat file although
-        it is not currently used"""
-        pass
-    
+                   }
+
     def country_code_by_addr(self, addr):
         """Mock country_code_by_addr the result is taken from the
         IPADDRESSES dictionary above"""
         return self.IPADDRESSES.get(addr, "")
 
+
 class TestRelayCountry(unittest.TestCase):
     """Tests for the RelayCountryPlugin"""
+
     def setUp(self):
         unittest.TestCase.setUp(self)
         self.options = {}
-        self.global_data = {"geodb":"/innexistent/location/"}
+        self.global_data = {"ipv4": MockGeoIP(),
+                            "ipv6": MockGeoIP()}
         patch("pad.plugins.relay_country.RelayCountryPlugin.options",
               self.options).start()
         self.mock_ctxt = MagicMock(**{
             "get_plugin_data.side_effect": lambda p, k: self.global_data[k],
-            "set_plugin_data.side_effect": lambda p, k, v: self.global_data.setdefault(k, v)}
-                                  )
-        patch("pad.plugins.relay_country.pygeoip.GeoIP",
-              MockGeoIP).start()
-        self.plugin = pad.plugins.relay_country.RelayCountryPlugin(self.mock_ctxt)
+            "set_plugin_data.side_effect": lambda p, k,
+                                                  v: 
+            self.global_data.setdefault(
+                k, v)}
+                                   )
+        self.plugin = pad.plugins.relay_country.RelayCountryPlugin(
+            self.mock_ctxt)
 
     def tearDown(self):
         unittest.TestCase.tearDown(self)
@@ -125,22 +125,21 @@ class TestRelayCountry(unittest.TestCase):
         message = pad.message.Message(self.mock_ctxt, MSGTEST)
         self.plugin.parsed_metadata(message)
         expected_result = ['** GB']
-        self.assertEqual(message.headers["X-Relay-Country"], expected_result)
-
+        self.assertEqual(message.headers["X-Relay-Countries"], expected_result)
 
     def test_no_received_headers(self):
         """Test a message where there are no "Received" headers"""
         message = pad.message.Message(self.mock_ctxt, MSG_NORECEIVED)
         self.plugin.parsed_metadata(message)
         expected_result = []
-        self.assertEqual(message.headers["X-Relay-Country"], expected_result)
+        self.assertEqual(message.headers["X-Relay-Countries"], expected_result)
 
     def test_unknown_ipdaddress(self):
         """Test a message where there are no "Received" headers"""
         message = pad.message.Message(self.mock_ctxt, MSG_UNKNOWN)
         self.plugin.parsed_metadata(message)
         expected_result = ["XX"]
-        self.assertEqual(message.headers["X-Relay-Country"], expected_result)
+        self.assertEqual(message.headers["X-Relay-Countries"], expected_result)
 
 
 def suite():
@@ -148,6 +147,7 @@ def suite():
     test_suite = unittest.TestSuite()
     test_suite.addTest(unittest.makeSuite(TestRelayCountry, "test"))
     return test_suite
+
 
 if __name__ == '__main__':
     unittest.main(defaultTest='suite')
