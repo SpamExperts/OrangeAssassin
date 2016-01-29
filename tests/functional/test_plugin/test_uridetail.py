@@ -19,7 +19,7 @@ report _TESTS_
 
 class TestFunctionalUriDetail(tests.util.TestBase):
 
-    @unittest.SkipTest("Skipped until issue #23 is fixed")
+    @unittest.skip("Skipped until issue #23 is fixed")
     def test_basic_uri_rule(self):
             self.setup_conf(config=URI_DETAIL,
                             pre_config=PRE_CONFIG)
