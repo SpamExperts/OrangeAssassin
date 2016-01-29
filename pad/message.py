@@ -127,10 +127,10 @@ class Message(pad.context.MessageContext):
         self.uri_list = set()
         self.score = 0
         self.rules_checked = dict()
-        self._parse_message()
-        self._hook_parsed_metadata()
         self.interpolate_data = dict()
         self.plugin_tags = dict()
+        self._parse_message()
+        self._hook_parsed_metadata()
 
     def clear_matches(self):
         """Clear any already checked rules."""
