@@ -79,11 +79,14 @@ class AutoWhiteListPlugin(pad.plugins.base.BasePlugin):
         return ""
 
     def _get_from(self, msg):
-        from_addr = msg.msg['From']
-        return email.utils.parseaddr(from_addr)[1]
+        try:
+            return msg.get_addr_header("From")[0]
+        except IndexError:
+            return ""
+
 
     def parsed_metadata(self, msg):
-        from_addr = msg.get_addr_header("From")[0]
+        from_addr = self._get_from(msg)
         self.set_local(msg, "from", from_addr)
 
         signedby = self._get_signed_by(msg)
@@ -111,15 +114,25 @@ class AutoWhiteListPlugin(pad.plugins.base.BasePlugin):
             AWL.signedby==signed_by,
             AWL.ip==ip).first()
 
+        if not result:
+            result = session.query(AWL).filter(
+                AWL.username==getpass.getuser(),
+                AWL.email==address,
+                AWL.signedby==signed_by,
+                AWL.ip=="none").first()
+            if result:
+                result.ip = ip
+
         session.close()
+
         if not result:
             result = AWL()
-            result.username = getpass.getuser()
             result.count = 0
             result.totscore = 0
+            result.username = getpass.getuser()
             result.email = address
-            result.ip = ip
             result.signedby = signed_by
+            result.ip = ip
         return result
 
 
