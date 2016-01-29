@@ -18,5 +18,4 @@ distutils.core.setup(
         'pad.plugins',
         'pad.protocol',
     ],
-    test_suite="tests.suite"
 )
