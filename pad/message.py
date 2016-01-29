@@ -193,7 +193,7 @@ class Message(pad.context.MessageContext):
         for value in self.get_received_headers("Received"):
             ips = IPFRE.findall(value)
             for ip in ips:
-                clean_ip = ip.strip("[ ];\n")
+                clean_ip = ip.strip("[ ]();\n")
                 try:
                     values.append(ipaddress.ip_address(clean_ip))
                 except ValueError:
