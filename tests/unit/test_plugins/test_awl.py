@@ -44,10 +44,6 @@ class TestAWLBase(unittest.TestCase):
         unittest.TestCase.tearDown(self)
         patch.stopall()
 
-    def test_parsed_metadata(self):
-
-        pass
-
     def test_ip_to_awl_key_ipv4(self):
         ip = ipaddress.ip_address(u"192.168.1.1")
         result = self.plugin.ip_to_awl_key(ip)
@@ -59,6 +55,23 @@ class TestAWLBase(unittest.TestCase):
         result = self.plugin.ip_to_awl_key(ip)
         expected = u"2001:db8:85a3::"
         self.assertEqual(result, expected)
+
+    def test_get_entry(self):
+        data = {"email": "test@example.com",
+                "username": "test",
+                "signedby": "",
+                "totscore": 5,
+                "ip": "none",
+                "count": 1}
+        self.session.add(awl.AWL(**data))
+        self.session.commit()
+        entry = self.plugin.get_entry("test@example.com",
+                              "8.8",
+                              "")
+        self.assertEqual(entry.totscore, 5)
+        self.assertEqual(entry.count, 1)
+        self.assertEqual(entry.ip, "8.8")
+
 
     def check_db(self, username, email, ip, signedby, totscore, count):
         result = self.session.query(awl.AWL).filter(
