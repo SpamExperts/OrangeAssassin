@@ -18,6 +18,3 @@ class SkipCommand(pad.protocol.base.BaseProtocol):
 
     def get_and_handle(self):
         """Do nothing."""
-
-
-

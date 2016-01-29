@@ -35,34 +35,34 @@ MAX_RECURSION = 10
 
 # Rules that require 2 arguments
 KNOWN_2_RTYPE = frozenset(
-    (
-        "score",  # Specifies the score adjustment if the rule matches
-        "describe",  # Specifies a comment describing the rule
-        "full",  # Specifies a FullRule
-        "body",  # Specifies a BodyRule
-        "rawbody",  # Specifies a RawBodyRule
-        "uri",  # Specifies a URIRule
-        "header",  # Specifies a HeaderRule
-        "mimeheader",  # Specifies a MimeHeaderRule
-        "meta",  # Specifies a MetaRule
-        "eval",  # Specifies a EvalRule
-    )
+        (
+            "score",  # Specifies the score adjustment if the rule matches
+            "describe",  # Specifies a comment describing the rule
+            "full",  # Specifies a FullRule
+            "body",  # Specifies a BodyRule
+            "rawbody",  # Specifies a RawBodyRule
+            "uri",  # Specifies a URIRule
+            "header",  # Specifies a HeaderRule
+            "mimeheader",  # Specifies a MimeHeaderRule
+            "meta",  # Specifies a MetaRule
+            "eval",  # Specifies a EvalRule
+        )
 )
 # Rules that require 1 arguments
 KNOWN_1_RTYPE = frozenset(
-    (
-        "report", # Add some text to the report template
-        "add_header", # Adds a header to the message
-        "remove_header", # Remove header from message
-        "include",  # Include another file in the current one
-        "ifplugin",  # Check if plugin is loaded.
-        "loadplugin",  # Load a plugin.
-        "require_version",  # Only load this file if the version matches
-        "required_score", # Set the required score for this ruleset
-        "report_safe", # Set the method of reporting spam
-        "report_contact", # Set the contact address
-        "required_score", # Set the required score (default 5)
-    )
+        (
+            "report",  # Add some text to the report template
+            "add_header",  # Adds a header to the message
+            "remove_header",  # Remove header from message
+            "include",  # Include another file in the current one
+            "ifplugin",  # Check if plugin is loaded.
+            "loadplugin",  # Load a plugin.
+            "require_version",  # Only load this file if the version matches
+            "required_score",  # Set the required score for this ruleset
+            "report_safe",  # Set the method of reporting spam
+            "report_contact",  # Set the contact address
+            "required_score",  # Set the required score (default 5)
+        )
 )
 
 # These are the types of rules that we know how to interpret, ignore anything
@@ -89,6 +89,7 @@ class PADParser(object):
 
     Note that this is not thread-safe.
     """
+
     def __init__(self, paranoid=False, ignore_unknown=True):
         self.ctxt = pad.context.GlobalContext(paranoid=paranoid,
                                               ignore_unknown=ignore_unknown)
@@ -117,7 +118,7 @@ class PADParser(object):
             for line_no, line in enumerate(rulef):
                 try:
                     with self._paranoid(pad.errors.InvalidSyntax):
-                            self._handle_line(filename, line, line_no + 1, _depth)
+                        self._handle_line(filename, line, line_no + 1, _depth)
                 except pad.errors.PluginLoadError as e:
                     warnings.warn(e.message)
                     self.ctxt.log.warn(e.message)
@@ -196,7 +197,7 @@ class PADParser(object):
                 rtype, name, value = line.split(None, 2)
             except ValueError:
                 raise pad.errors.InvalidSyntax(filename, line_no, line,
-                                              "Missing argument")
+                                               "Missing argument")
             if name not in self.results:
                 self.results[name] = dict()
 

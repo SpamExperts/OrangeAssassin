@@ -17,6 +17,7 @@ class InvalidRegex(ParsingError):
 
 class InvalidRule(ParsingError):
     """The rule syntax seems valid but the usage is incorrect."""
+
     def __init__(self, rule_name, description=""):
         ParsingError.__init__(self)
         self.name = rule_name
@@ -28,6 +29,7 @@ class InvalidRule(ParsingError):
 
 class InvalidSyntax(ParsingError):
     """The rule syntax is invalid."""
+
     def __init__(self, filename, line_number, line, description=""):
         ParsingError.__init__(self)
         self.filename = filename
@@ -44,6 +46,7 @@ class MaxRecursionDepthExceeded(ParsingError):
     """The maximum recursion depth has been exceeded while parsing include
     directives.
     """
+
     def __init__(self):
         ParsingError.__init__(self)
         self._recursion_list = list()

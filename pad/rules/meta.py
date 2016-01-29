@@ -42,7 +42,8 @@ class MetaRule(pad.rules.base.BaseRule):
         """
         if _depth > MAX_RECURSION:
             raise pad.errors.InvalidRule(self.name, "Maximum recursion depth "
-                                        "for meta rules has been exceeded.")
+                                                    "for meta rules has been "
+                                                    "exceeded.")
         if "match" in self._location:
             # The rule has already been processed.
             return
@@ -56,7 +57,8 @@ class MetaRule(pad.rules.base.BaseRule):
                 subrule.postparsing(ruleset, _depth=_depth + 1)
             except KeyError:
                 raise pad.errors.InvalidRule(self.name, "Undefined subrule "
-                                            "referenced %r" % subrule_name)
+                                                        "referenced %r" %
+                                             subrule_name)
             self._location[subrule_name] = subrule.match
         exec(self._code_obj, self._location)
         assert "match" in self._location

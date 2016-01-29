@@ -8,7 +8,8 @@ CREATE TABLE `awl` (
   `totscore` float NOT NULL DEFAULT '0',
   `signedby` varchar(255) NOT NULL DEFAULT '',
   PRIMARY KEY (`username`,`email`,`signedby`,`ip`)
-) ENGINE=MyISAM DEFAULT CHARSET=latin1 COMMENT='Used by SpamAssassin for the auto-whitelist functionality'
+) ENGINE=MyISAM DEFAULT CHARSET=latin1 COMMENT='Used by SpamAssassin for the
+ auto-whitelist functionality'
 
 
 """
@@ -30,10 +31,10 @@ from sqlalchemy.ext.declarative.api import declarative_base
 
 import pad.plugins.base
 
-
 Base = declarative_base()
 
 IPV4SUFFIXRE = re.compile("(\.0){1,3}$")
+
 
 class AWL(Base):
     """Schema for the awl table"""
@@ -63,7 +64,6 @@ class AutoWhiteListPlugin(pad.plugins.base.BasePlugin):
         "auto_whitelist_ipv4_mask_len": ("int", 16),
         "auto_whitelist_ipv6_mask_len": ("int", 48),
     }
-
 
     def _get_origin_ip(self, msg):
         for ip in msg.get_header_ips():
@@ -95,7 +95,6 @@ class AutoWhiteListPlugin(pad.plugins.base.BasePlugin):
         origin_ip = self._get_origin_ip(msg)
         self.set_local(msg, "originip", origin_ip)
 
-
     def ip_to_awl_key(self, ip):
         if ip.version == 4:
             mask = self.get_global("auto_whitelist_ipv4_mask_len")
@@ -109,10 +108,10 @@ class AutoWhiteListPlugin(pad.plugins.base.BasePlugin):
     def get_entry(self, address, ip, signed_by):
         session = self.get_session()
         result = session.query(AWL).filter(
-            AWL.username==getpass.getuser(),
-            AWL.email==address,
-            AWL.signedby==signed_by,
-            AWL.ip==ip).first()
+                AWL.username == getpass.getuser(),
+                AWL.email == address,
+                AWL.signedby == signed_by,
+                AWL.ip == ip).first()
 
         if not result:
             result = session.query(AWL).filter(
@@ -135,9 +134,8 @@ class AutoWhiteListPlugin(pad.plugins.base.BasePlugin):
             result.ip = ip
         return result
 
-
     def check_from_in_auto_whitelist(self, msg, target=None):
-        score =  msg.score
+        score = msg.score
         factor = self.get_global("auto_whitelist_factor")
         origin_ip = self.get_local(msg, "originip")
         if origin_ip:
@@ -150,10 +148,9 @@ class AutoWhiteListPlugin(pad.plugins.base.BasePlugin):
         entry = self.get_entry(addr, awl_key_ip, signed_by)
 
         try:
-            mean = entry.totscore/entry.count
+            mean = entry.totscore / entry.count
         except ZeroDivisionError:
             mean = None
-
 
         log_msg = ("auto-whitelist: AWL active, pre-score: %s, "
                    "mean: %s, IP: %s, address: %s %s")
@@ -184,10 +181,7 @@ class AutoWhiteListPlugin(pad.plugins.base.BasePlugin):
         session.commit()
         session.close()
 
-        self.ctxt.log.debug("auto-whitelist: post auto-whitelist score %.3f", msg.score)
+        self.ctxt.log.debug("auto-whitelist: post auto-whitelist score %.3f",
+                            msg.score)
 
         return False
-
-
-
-

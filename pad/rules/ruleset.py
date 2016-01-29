@@ -15,7 +15,6 @@ import email.mime.multipart
 import pad
 import pad.errors
 
-
 _TAG_RE = re.compile(r"(_([A-Z_]*?)_)")
 
 
@@ -227,7 +226,7 @@ class RuleSet(object):
 
         newmsg.attach(email.mime.text.MIMEText(self.get_report(msg)))
         original_attachment = email.mime.base.MIMEBase(
-            *attach_type, x_spam_type="original"
+                *attach_type, x_spam_type="original"
         )
         original_attachment.add_header("Content-Disposition", "inline")
         original_attachment.add_header("Content-Description",
@@ -255,8 +254,8 @@ class RuleSet(object):
             else:
                 score = ("%0.1f" % rule.score).rjust(4)
             summary.append(
-                "%s %s %s" %
-                (score, rule.name.ljust(22), rule.description)
+                    "%s %s %s" %
+                    (score, rule.name.ljust(22), rule.description)
             )
         return "\r\n".join(summary)
 

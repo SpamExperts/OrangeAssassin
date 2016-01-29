@@ -101,8 +101,8 @@ class Server(socketserver.TCPServer):
     def load_config(self):
         """Reads the configuration files and reloads the ruleset."""
         self.ruleset = pad.rules.parser.parse_pad_rules(
-            pad.config.get_config_files(self.configpath, self.sitepath),
-            paranoid=self.paranoid, ignore_unknown=self.ignore_unknown
+                pad.config.get_config_files(self.configpath, self.sitepath),
+                paranoid=self.paranoid, ignore_unknown=self.ignore_unknown
         )
 
     def shutdown_handler(self, *args, **kwargs):
@@ -132,6 +132,7 @@ class PreForkServer(Server):
 
     The parent process will then wait for all his child process to complete.
     """
+
     def __init__(self, address, sitepath, configpath, paranoid=False,
                  ignore_unknown=True, prefork=6):
         """The same as Server.__init__ but requires a list of databases

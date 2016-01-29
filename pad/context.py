@@ -71,6 +71,7 @@ def _callback_chain(func):
     """Decorate the function as a callback chain ignores any InhibitCallbacks
     exceptions.
     """
+
     def wrapped_func(*args, **kwargs):
         """Ignore any InhibitCallbacks exceptions."""
         try:
@@ -78,6 +79,7 @@ def _callback_chain(func):
         except pad.errors.InhibitCallbacks:
             return True
         return False
+
     return wrapped_func
 
 
@@ -145,7 +147,7 @@ class GlobalContext(_Context):
                                              (class_name, path))
         if not issubclass(plugin_class, pad.plugins.base.BasePlugin):
             raise pad.errors.PluginLoadError("%s is not a subclass of "
-                                            "BasePlugin" % class_name)
+                                             "BasePlugin" % class_name)
         # Initialize the plugin and load any additional data
         plugin = plugin_class(self)
         self._load_cmds(plugin, class_name)
@@ -165,7 +167,7 @@ class GlobalContext(_Context):
             eval_rule = getattr(plugin, rule)
             if eval_rule is None:
                 raise pad.errors.PluginLoadError("Undefined eval rule %s in "
-                                                "%s" % (rule, class_name))
+                                                 "%s" % (rule, class_name))
             self.eval_rules[rule] = eval_rule
 
     def _load_cmds(self, plugin, class_name):

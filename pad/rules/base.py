@@ -32,8 +32,9 @@ class BaseRule(object):
         self._scores = score
 
         if len(self._scores) not in (1, 4):
-            raise pad.errors.InvalidRule(name, "Expected 1 or 4 values for the "
-                                         "score and got %s" % len(self._scores))
+            err_msg = ("Expected 1 or 4 values for the score and got %s" %
+                       len(self._scores))
+            raise pad.errors.InvalidRule(name, err_msg)
 
         if desc is None:
             desc = "No description available."
@@ -103,8 +104,3 @@ class BaseRule(object):
         return "* %s %s %s%s" % (self.score, self.name, self._rule_type,
                                  self.description)
 
-
-class _NOOPRule(BaseRule):
-    """Placeholder for rules we don't have support yet."""
-    def match(self, dummy):
-        return False

@@ -59,6 +59,7 @@ _CONVERTS = (
 
 class Pattern(object):
     """Abstract class for rule regex matching."""
+
     def __init__(self, pattern):
         self._pattern = pattern
 
@@ -68,12 +69,14 @@ class Pattern(object):
 
 class MatchPattern(Pattern):
     """This pattern does a search on the text and returns either 1 or 0."""
+
     def match(self, text):
         return 1 if self._pattern.search(text) else 0
 
 
 class NotMatchPattern(Pattern):
     """This pattern does a search on the text and returns either 1 or 0."""
+
     def match(self, text):
         return 0 if self._pattern.search(text) else 1
 
@@ -101,4 +104,3 @@ def perl2re(pattern, match_op="=~"):
             return NotMatchPattern(re.compile(pattern, flags))
     except re.error as e:
         raise pad.errors.InvalidRegex("Invalid regex %r: %s" % (pattern, e))
-

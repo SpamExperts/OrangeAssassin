@@ -42,6 +42,7 @@ class _PatternMimeHeaderRule(MimeHeaderRule):
     """Matches a MIME header by name and a regular expression for the value.
     The headers are decoded, and the header name is NOT included.
     """
+
     def __init__(self, name, pattern=None, header_name=None, score=None,
                  desc=None):
         super(_PatternMimeHeaderRule, self).__init__(name, score=score,
@@ -60,6 +61,7 @@ class _PatternMimeRawHeaderRule(_PatternMimeHeaderRule):
     """Matches a header by name and a regular expression for the value. The
     headers are NOT decoded, and the header name is NOT included.
     """
+
     def match(self, msg):
         for value in msg.get_raw_mime_header(self._header_name):
             if self._pattern.match(value):
@@ -69,6 +71,7 @@ class _PatternMimeRawHeaderRule(_PatternMimeHeaderRule):
 
 class HeaderRule(pad.rules.base.BaseRule):
     """Abstract base class for all header rules."""
+
     def match(self, msg):
         raise NotImplementedError()
 
@@ -113,6 +116,7 @@ class HeaderRule(pad.rules.base.BaseRule):
 
 class _ExistsHeaderRule(HeaderRule):
     """Simple check if header exists."""
+
     def __init__(self, name, header_name, score=None, desc=None):
         HeaderRule.__init__(self, name, score=score, desc=desc)
         self._header_name = header_name
@@ -125,6 +129,7 @@ class _PatternHeaderRule(HeaderRule):
     """Matches a header by name and a regular expression for the value. The
     headers are decoded, and the header name is NOT included.
     """
+
     def __init__(self, name, pattern=None, header_name=None, score=None,
                  desc=None):
         super(_PatternHeaderRule, self).__init__(name, score=score, desc=desc)
@@ -142,6 +147,7 @@ class _PatternRawHeaderRule(_PatternHeaderRule):
     """Matches a header by name and a regular expression for the value. The
     headers are NOT decoded, and the header name is NOT included.
     """
+
     def match(self, msg):
         for value in msg.get_raw_header(self._header_name):
             if self._pattern.match(value):
@@ -153,6 +159,7 @@ class _PatternAddrHeaderRule(_PatternHeaderRule):
     """Matches a header by name and a regular expression for the value. The
     value checked is the first address that appears in the header's value.
     """
+
     def match(self, msg):
         for value in msg.get_addr_header(self._header_name):
             if self._pattern.match(value):
@@ -164,6 +171,7 @@ class _PatternNameHeaderRule(_PatternHeaderRule):
     """Matches a header by name and a regular expression for the value. The
     value checked is the first name that appears in the header's value.
     """
+
     def match(self, msg):
         for value in msg.get_name_header(self._header_name):
             if self._pattern.match(value):
@@ -205,6 +213,7 @@ class _AllHeaderRule(HeaderRule):
     """Matches the pattern against all headers. In this case the header
     name IS included in the search, and headers are decoded.
     """
+
     def __init__(self, name, pattern, score=None, desc=None):
         HeaderRule.__init__(self, name, score=score, desc=desc)
         self._pattern = pattern

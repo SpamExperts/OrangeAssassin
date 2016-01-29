@@ -12,16 +12,15 @@ try:
     import pygeoip
 except ImportError:
     raise pad.errors.PluginLoadError(
-        "RelayCountryPlugin not loaded, You must install pygeoip to use "
-        "this plugin")
+            "RelayCountryPlugin not loaded. You must install pygeoip to use "
+            "this plugin")
 
 try:
     import ipaddress
 except ImportError:
     raise pad.errors.PluginLoadError(
-        "RelayCountryPlugin not loaded, You must install py2-ipaddress to "
-        "use this plugin")
-
+            "RelayCountryPlugin not loaded. You must install py2-ipaddress to "
+            "use this plugin")
 
 import pad.plugins.base
 
@@ -33,7 +32,8 @@ class RelayCountryPlugin(pad.plugins.base.BasePlugin):
     "geodb", is a string and points to the file where the database is.
 
     The database is a csv file that can be downloaded from maxmind server:
-    http://geolite.maxmind.com/download/geoip/database/GeoLiteCountry/GeoIP.dat.gz
+    http://geolite.maxmind.com/download/geoip/database/GeoLiteCountry/GeoIP
+    .dat.gz
     """
     options = {"geodb": ("str", "GeoIP.dat"),
                "geodb-ipv6": ("str", "GeoIPv6.dat")}

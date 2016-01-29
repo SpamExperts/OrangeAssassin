@@ -5,10 +5,10 @@ import logging
 
 try:
     from raven.handlers.logging import SentryHandler
+
     _HAS_RAVEN = True
 except ImportError:
     _HAS_RAVEN = False
-
 
 CONFIG_PATHS = (
     '/var/lib/spamassassin/3.004001',
@@ -36,7 +36,7 @@ def setup_logging(log_name, debug=False, filepath=None, sentry_dsn=None,
     object.
     """
     fmt = logging.Formatter(
-        '%(asctime)s [%(process)d] %(levelname)s %(message)s'
+            '%(asctime)s [%(process)d] %(levelname)s %(message)s'
     )
 
     stream_handler = logging.StreamHandler()
@@ -102,17 +102,13 @@ def get_config_files(config_path, siteconfig_path):
     """Return the .pre and .cf files in the correct order."""
     config_files = []
     config_files.extend(
-        sorted(get_files_with_extension(siteconfig_path, ".pre")))
+            sorted(get_files_with_extension(siteconfig_path, ".pre")))
     if siteconfig_path != config_path:
         config_files.extend(
-            sorted(get_files_with_extension(config_path, ".pre")))
+                sorted(get_files_with_extension(config_path, ".pre")))
         config_files.extend(
-            sorted(get_files_with_extension(config_path, ".cf")))
+                sorted(get_files_with_extension(config_path, ".cf")))
     config_files.extend(
-        sorted(get_files_with_extension(siteconfig_path, ".cf")))
+            sorted(get_files_with_extension(siteconfig_path, ".cf")))
 
     return config_files
-
-
-
-

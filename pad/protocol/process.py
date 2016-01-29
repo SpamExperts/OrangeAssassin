@@ -28,4 +28,3 @@ class HeadersCommand(ProcessCommand):
         """Add any extra details to the response."""
         adjusted_msg = self.ruleset.get_adjusted_message(msg, header_only=True)
         yield adjusted_msg
-

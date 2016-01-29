@@ -30,8 +30,9 @@ URL_RE = re.compile(r"""
             (?:https? | ftp)  # capture the protocol
             ://               # skip the boilerplate
         )|
-        (?= ftp\.[^\.\s<>"'\x7f-\xff] )|  # allow the protocol to be missing, but only if
-        (?= www\.[^\.\s<>"'\x7f-\xff] )   # the rest of the url starts "www.x" or "ftp.x"
+        (?= ftp\.[^\.\s<>"'\x7f-\xff] )|  # allow the protocol to be missing,
+        (?= www\.[^\.\s<>"'\x7f-\xff] )   # but only if the rest of the url
+                                          # starts with "www.x" or "ftp.x"
     )
     (?:[^\s<>"'\x7f-\xff]+)  # capture the guts
 )
@@ -45,6 +46,7 @@ STRICT_CHARSETS = frozenset(("quopri-codec", "quopri", "quoted-printable",
 
 class _ParseHTML(html.parser.HTMLParser):
     """Extract data from HTML parts."""
+
     def __init__(self, collector):
         try:
             html.parser.HTMLParser.__init__(self, convert_charrefs=False)
@@ -65,6 +67,7 @@ class _Headers(collections.defaultdict):
     """Like a defaultdict that returns an empty list by default, but the
     keys are all case insensitive.
     """
+
     def __init__(self):
         collections.defaultdict.__init__(self, list)
 
@@ -85,6 +88,7 @@ class _memoize(object):
     """Memoize the result of the function in a cache. Used to prevent
     superfluous parsing of headers.
     """
+
     def __init__(self, cache_name):
         self._cache_name = cache_name
 
@@ -92,6 +96,7 @@ class _memoize(object):
         """Check if the information is available in a cache, if not call the
         function and cache the result.
         """
+
         def wrapped_func(fself, name):
             cache = getattr(fself, self._cache_name)
             result = cache.get(name)
@@ -99,11 +104,13 @@ class _memoize(object):
                 result = func(fself, name)
                 cache[name] = result
             return result
+
         return wrapped_func
 
 
 class Message(pad.context.MessageContext):
     """Internal representation of an email message. Used for rule matching."""
+
     def __init__(self, global_context, raw_msg):
         """Parse the message, extracts and decode all headers and all
         text parts.

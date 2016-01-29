@@ -17,13 +17,15 @@ import pad.regex
 import pad.rules.uri
 import pad.plugins.base
 
+URI_DRREG = re.compile(
+    r"(?P<key>\w*)\s+(?P<op>[\=\!\~]{1,2})\s+(?P<regex>/.*?/)")
 
-URI_DRREG = re.compile(r"(?P<key>\w*)\s+(?P<op>[\=\!\~]{1,2})\s+(?P<regex>/.*?/)")
 
 class URIDetailRule(pad.rules.uri.URIRule):
     """Implements the uri_detail rule
     """
     _rule_type = "uri_detail"
+
     def __init__(self, name, pattern, score=None, desc=None):
         super(URIDetailRule, self).__init__(name, pattern, score, desc)
 
@@ -41,7 +43,6 @@ class URIDetailRule(pad.rules.uri.URIRule):
             if not match:
                 return False
         return True
-
 
     def match(self, msg):
         for key in msg.uri_detail_links:
@@ -63,6 +64,7 @@ class URIDetailRule(pad.rules.uri.URIRule):
         kwargs = {"pattern": patterns}
         return kwargs
 
+
 def parse_link(value, linktype=""):
     """ Returns a dictionary with information for the link"""
     link = {}
@@ -75,14 +77,16 @@ def parse_link(value, linktype=""):
     link["domain"] = urlp.netloc
     return link
 
+
 class HTML(HTMLParser):
     """HTML parser to fetch all links in the message with the
     corresponding value of the anchor"""
+
     def __init__(self, logger):
         try:
             HTMLParser.__init__(self, convert_charrefs=False)
         except TypeError:
-            #Python 2 does not have the convert_charrefs argument
+            # Python 2 does not have the convert_charrefs argument
             HTMLParser.__init__(self)
         self.links = {}
         self.last_start_tag = None
@@ -97,7 +101,7 @@ class HTML(HTMLParser):
             self.last_start_tag = tag
             for item in attrs:
                 prop, value = item
-                if prop not in  ("href", "src"):
+                if prop not in ("href", "src"):
                     continue
                 link = parse_link(value, tag)
                 self.links[value] = link
@@ -118,6 +122,7 @@ class URIDetailPlugin(pad.plugins.base.BasePlugin):
     """
     options = {'uri_detail': ("list", [])}
     cmds = {"uri_detail": URIDetailRule}
+
     def __init__(self, *args, **kwargs):
         super(URIDetailPlugin, self).__init__(*args, **kwargs)
 

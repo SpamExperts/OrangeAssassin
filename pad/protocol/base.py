@@ -97,4 +97,3 @@ class BaseProtocol(object):
         the client.
         """
         raise NotImplementedError()
-

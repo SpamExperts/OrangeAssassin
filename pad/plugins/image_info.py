@@ -14,7 +14,8 @@ try:
     import PIL.Image
 except ImportError:
     raise pad.errors.PluginLoadError(
-        "ImageInfoPlugin not loaded, You must install Pillow to use this plugin")
+            "ImageInfoPlugin not loaded. You must install Pillow to use this "
+            "plugin")
 
 import pad.regex
 import pad.plugins.base
@@ -25,8 +26,6 @@ class BadImageFile(Exception):
 
 
 class ImageInfoPlugin(pad.plugins.base.BasePlugin):
-
-
     eval_rules = ("image_count",
                   "image_named",
                   "pixel_coverage",
@@ -35,13 +34,12 @@ class ImageInfoPlugin(pad.plugins.base.BasePlugin):
                   "image_to_text_ratio")
     options = {}
 
-
     def _get_image_sizes(self, payload):
         imginfo = {}
         img_io = BytesIO(payload)
         with warnings.catch_warnings():
             warnings.filterwarnings(
-                "error", category=PIL.Image.DecompressionBombWarning)
+                    "error", category=PIL.Image.DecompressionBombWarning)
             try:
                 image = PIL.Image.open(img_io)
             except (PIL.Image.DecompressionBombWarning, IOError, ValueError,
@@ -126,7 +124,6 @@ class ImageInfoPlugin(pad.plugins.base.BasePlugin):
 
         return coverage.get(subtype, 0)
 
-
     def _save_stats(self, msg, payload, subtype):
         """Extracts and saves image stats once per unique image."""
 
@@ -139,7 +136,7 @@ class ImageInfoPlugin(pad.plugins.base.BasePlugin):
 
         if image_id in sizes['all']:
             img = sizes['all'][image_id]
-            area = img['width']*img['height']
+            area = img['width'] * img['height']
             self._update_coverage(msg, subtype, area)
 
         else:
@@ -151,7 +148,7 @@ class ImageInfoPlugin(pad.plugins.base.BasePlugin):
                 sizes['all'][image_id] = img
                 sizes[subtype][image_id] = img
                 self.set_local(msg, "sizes", sizes)
-                area = img['width']*img['height']
+                area = img['width'] * img['height']
                 self._update_coverage(msg, subtype, area)
 
     def _get_sizes(self, msg, subtype):
@@ -161,7 +158,6 @@ class ImageInfoPlugin(pad.plugins.base.BasePlugin):
             sizes = defaultdict(dict)
 
         return sizes.get(subtype, {}).values()
-
 
     def extract_metadata(self, msg, payload, part):
         """Extend to extract image metadata"""
@@ -174,7 +170,6 @@ class ImageInfoPlugin(pad.plugins.base.BasePlugin):
             self._add_name(msg, name)
             self._update_counts(msg, subtype, by=1)
             self._save_stats(msg, part.get_payload(decode=True), subtype)
-
 
     def image_named(self, msg, name, target=None):
         """Match if the image matches a name."""
@@ -200,7 +195,8 @@ class ImageInfoPlugin(pad.plugins.base.BasePlugin):
                 return True
         return False
 
-    def image_count(self, msg, img_type, min_count, max_count=None, target=None):
+    def image_count(self, msg, img_type, min_count, max_count=None,
+                    target=None):
         """Match number of images all or by type."""
 
         count = self._get_count(msg, img_type)
@@ -247,13 +243,13 @@ class ImageInfoPlugin(pad.plugins.base.BasePlugin):
                             target=None):
         """Image to text or html ratio"""
 
-        if target=="body":
+        if target == "body":
             text_len = len(msg.text)
         else:
             text_len = len(msg.raw_text)
         coverage = float(self._get_coverage(msg, img_type))
         try:
-            ratio = text_len/coverage
+            ratio = text_len / coverage
         except ZeroDivisionError:
             ratio = text_len
         min_ratio = float(min_ratio)
