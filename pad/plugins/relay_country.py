@@ -35,20 +35,24 @@ class RelayCountryPlugin(pad.plugins.base.BasePlugin):
     The database is a csv file that can be downloaded from maxmind server:
     http://geolite.maxmind.com/download/geoip/database/GeoLiteCountry/GeoIP.dat.gz
     """
-    options = {"geodb": ("str", ""),}
+    options = {"geodb": ("str", "GeoIP.dat"),
+               "geodb-ipv6": ("str", "GeoIPv6.dat")}
 
-    def __init__(self, *args, **kwargs):
-        self.reader = None
-        super(RelayCountryPlugin, self).__init__(*args, **kwargs)
+    def finish_parsing_end(self, ruleset):
+        super(RelayCountryPlugin, self).finish_parsing_end(ruleset)
+        reader_ipv4 = self.load_database()
+        reader_ipv6 = self.load_database("-ipv6")
+        self.set_global("ipv4", reader_ipv4)
+        self.set_global("ipv6", reader_ipv6)
 
-    def load_database(self):
+    def load_database(self, which=""):
         """Load the csv file and create a list of items where to search the IP.
         """
         try:
-            self.reader = pygeoip.GeoIP(self.get_global("geodb"))
-            return True
+            return pygeoip.GeoIP(self.get_global("geodb" + which))
         except IOError as exc:
             self.ctxt.log.warning("Unable to open geo database file: %r", exc)
+        return None
 
     def get_country(self, ipaddr):
         """Return the country corresponding to an IP based on the
@@ -56,10 +60,17 @@ class RelayCountryPlugin(pad.plugins.base.BasePlugin):
         """
         if ipaddr.is_private:
             return "**"
-        response = self.reader.country_code_by_addr(str(ipaddr))
+        if ipaddr.version == 4:
+            reader = self.get_global("ipv4")
+        else:
+            reader = self.get_global("ipv6")
+        if not reader:
+            self.ctxt.log.warning("Database not loaded.")
+            return "XX"
+        response = reader.country_code_by_addr(str(ipaddr))
         if not response:
             self.ctxt.log.info("Can't locate IP '%s' in database", ipaddr)
-            #Cant locate the IP in database.
+            # Cant locate the IP in database.
             return "XX"
         return response
 
@@ -67,11 +78,6 @@ class RelayCountryPlugin(pad.plugins.base.BasePlugin):
         """Check the X-Relay-Countries in the message and exposes the
         countries that a mail was relayed from
         """
-        if not self.get_global("geodb"):
-            self.ctxt.log.info("Unable to locate the geo database")
-            return
-        if not self.load_database():
-            return
         ips = msg.get_header_ips()
         result = []
         for ipaddr in ips:
