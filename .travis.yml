@@ -24,5 +24,7 @@ install:
 script:
   - "py.test tests/unit/ --cov pad --cov scripts --cov-report term-missing"
   - "py.test tests/functional/"
+after_script:
+  - pep8 --show-source pad
 after_success:
   - coveralls
