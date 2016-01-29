@@ -1,5 +1,6 @@
 """Tests body rules."""
 from __future__ import absolute_import
+import unittest
 
 import tests.util
 
@@ -29,6 +30,16 @@ class TestBodyRules(tests.util.TestBase):
         self.check_symbols("Subject: test\n\nTest abcd test.",
                            config=config,
                            score=4.2, symbols=["TEST_RULE"])
+
+    @unittest.skip('Temporary skipped until the issue it checks is fixed.')
+    def test_invalid_body_rule_score_match(self):
+        config = ("body TEST_RULE /#$%#$/ \n"
+                  "score TEST_RULE 4.2")
+        message = "Subject: test\n\nTest #$%#$ test."
+        self.setup_conf(config=config)
+        result = self.check_pad(message)
+        expected = ""
+        self.assertEqual(expected, result)
 
     def test_body_rule_score_no_match(self):
         config = ("body TEST_RULE /abcd/ \n"
