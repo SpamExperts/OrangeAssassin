@@ -177,7 +177,8 @@ class GlobalContext(_Context):
         if not plugin.cmds:
             return
         for rule_type, rule_class in plugin.cmds.items():
-            self.log.debug("Registering CMD rule: %s.%s", class_name, rule_type)
+            self.log.debug("Registering CMD rule: %s.%s", class_name,
+                           rule_type)
             if rule_type in self.cmds:
                 self.log.warning("Redefining CMD rule: %s", rule_type)
             if not issubclass(rule_class, pad.rules.base.BaseRule):

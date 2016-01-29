@@ -18,7 +18,7 @@ import pad.rules.uri
 import pad.plugins.base
 
 URI_DRREG = re.compile(
-    r"(?P<key>\w*)\s+(?P<op>[\=\!\~]{1,2})\s+(?P<regex>/.*?/)")
+        r"(?P<key>\w*)\s+(?P<op>[\=\!\~]{1,2})\s+(?P<regex>/.*?/)")
 
 
 class URIDetailRule(pad.rules.uri.URIRule):

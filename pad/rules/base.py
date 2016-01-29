@@ -103,4 +103,3 @@ class BaseRule(object):
     def __str__(self):
         return "* %s %s %s%s" % (self.score, self.name, self._rule_type,
                                  self.description)
-

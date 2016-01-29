@@ -29,8 +29,8 @@ class EvalRule(pad.rules.base.BaseRule):
             raise pad.errors.InvalidRule(self.name, "Invalid eval rule: %s" %
                                          eval_rule)
         except SyntaxError:
-            raise pad.errors.InvalidRule(self.name, "Invalid arguments for "
-                                                    "eval rule: %s" % eval_rule)
+            err_msg = "Invalid arguments for eval rule: %s" % eval_rule
+            raise pad.errors.InvalidRule(self.name, err_msg)
 
         self.target = target
         self.eval_rule = None

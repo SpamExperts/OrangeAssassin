@@ -84,7 +84,6 @@ class AutoWhiteListPlugin(pad.plugins.base.BasePlugin):
         except IndexError:
             return ""
 
-
     def parsed_metadata(self, msg):
         from_addr = self._get_from(msg)
         self.set_local(msg, "from", from_addr)
@@ -115,10 +114,10 @@ class AutoWhiteListPlugin(pad.plugins.base.BasePlugin):
 
         if not result:
             result = session.query(AWL).filter(
-                AWL.username==getpass.getuser(),
-                AWL.email==address,
-                AWL.signedby==signed_by,
-                AWL.ip=="none").first()
+                    AWL.username == getpass.getuser(),
+                    AWL.email == address,
+                    AWL.signedby == signed_by,
+                    AWL.ip == "none").first()
             if result:
                 result.ip = ip
 

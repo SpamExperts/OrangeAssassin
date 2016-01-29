@@ -20,7 +20,7 @@ class WhiteListSubjectPlugin(pad.plugins.base.BasePlugin):
 
     def parse_config(self, key, value):
         """ Parse a config line, instead of using the regular
-        set_?_option we need to use set_append_option because 
+        set_?_option we need to use set_append_option because
         we need to append the setting to the current existing one instead
         of adding one more.
         """
@@ -40,12 +40,12 @@ class WhiteListSubjectPlugin(pad.plugins.base.BasePlugin):
         self.set_global(key, self.options[key][1])
 
     def check_subject_in_whitelist(self, msg, target=None):
-        """Check the subject in the blacklist subjects list 
+        """Check the subject in the blacklist subjects list
         """
         return self._check_subject(msg, self.options["whitelist_subject"][1])
 
     def check_subject_in_blacklist(self, msg, target=None):
-        """Check the subject in the blacklist subjects list 
+        """Check the subject in the blacklist subjects list
         """
         return self._check_subject(msg, self.options["blacklist_subject"][1])
 
