@@ -37,9 +37,7 @@ URL_RE = re.compile(r"""
 )
 """, re.VERBOSE)
 
-#IPFRE = re.compile(r"[\[\(\s\/]{0,1}((?:[0-9]{1,3}\.){3}[0-9]{1,3})[\s\]\)\/]{0,1}")
-#IPFRE = re.compile(r"[\[ ]{1}[a-f\d]{1,4}[.:]{1,2}[a-f\d]{1,4}[.:]{1,2}[a-f\d]{1,4}[.:]{1,2}[a-f\d]{1,4}[.:]{0,2}[a-f\d]{0,4}[.:]{0,2}[\] ;\n]{1}")
-IPFRE = re.compile(r"[\[ ]{1}[a-fA-F\d\.\:]{7,}?[\] \n;]{1}")
+IPFRE = re.compile(r"[\[ \(]{1}[a-fA-F\d\.\:]{7,}?[\] \n;\)]{1}")
 
 STRICT_CHARSETS = frozenset(("quopri-codec", "quopri", "quoted-printable",
                              "quotedprintable"))
