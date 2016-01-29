@@ -25,6 +25,10 @@ Content-Type: text/plain; charset=UTF-8
 
 Hello,
 
+http://www.example.com
+http://www.example.org
+http://www.example.fn
+hacker@example.co.uk
 dwdwdwd
 
 --001a11c39d507b0142052155ffb1
@@ -32,6 +36,10 @@ Content-Type: text/html; charset=UTF-8
 Content-Transfer-Encoding: quoted-printable
 
 <html>https://www.example.com</html>
+<html>http://www.example.com</html>
+<html>http://www.example.org</html>
+<html>http://www.example.fn</html>
+<html>hacker@example.co.uk</html>
 
 --001a11c39d507b0142052155ffb1--
 """
@@ -92,6 +100,19 @@ class TestFunctionalUriDetail(tests.util.TestBase):
                         pre_config=PRE_CONFIG)
         result = self.check_pad("Body: Test\n\nhttps://www.example.com\n\nBad URI")
         self.check_report(result, 1.0, ["TEST"])
+
+    def test_all_key_types_with_score(self):
+        self.setup_conf(config=URI_DETAIL % "raw =~ /www(w|ww|www|www\.)?/ domain =~ ([a-z0-9\-]+\.){1,2}[a-z]{2,4} text =~ ^(http(s)?)\:\/\/((www)|([a-z0-9]+))?\.[a-z0-9]+\.[a-z]{2,4}$ type =~ ([a-z0-9_\-]{1,5}:\/\/)?(([a-z0-9_\-]{1,}):([a-z0-9_\-]{1,})\@)?((www\.)|([a-z0-9_\-]{1,}\.)+)?([a-z0-9_\-]{3,})(\.[a-z]{2,4})(\/([a-z0-9_\-]{1,}\/)+)?([a-z0-9_\-]{1,})?(\.[a-z]{2,})?(\?)?(((\&)?[a-z0-9_\-]{1,}(\=[a-z0-9_\-]{1,})?)+)?",
+                        pre_config=PRE_CONFIG)
+        result = self.check_pad(MSG_MULTIPART)
+        self.check_report(result, 1.0, ["TEST"])
+
+    def test_all_key_types_with_no_score(self):
+        self.setup_conf(config=URI_DETAIL % "raw =~ /www(w|ww|www|www\.)?/ domain =~ ([a-z0-9\-]+\.){1,2}[a-z]{2,4} text =~ ^(http(s)?)\:\/\/((www)|([a-z0-9]+))?\.[a-z0-9]+\.[a-z]{2,4}$ type =~ ([a-z0-9_\-]{1,5}:\/\/)?(([a-z0-9_\-]{1,}):([a-z0-9_\-]{1,})\@)?((www\.)|([a-z0-9_\-]{1,}\.)+)?([a-z0-9_\-]{3,})(\.[a-z]{2,4})(\/([a-z0-9_\-]{1,}\/)+)?([a-z0-9_\-]{1,})?(\.[a-z]{2,})?(\?)?(((\&)?[a-z0-9_\-]{1,}(\=[a-z0-9_\-]{1,})?)+)?",
+                        pre_config=PRE_CONFIG)
+        result = self.check_pad("Body: Test\n\nhttps://test.exampledomain.com\n\nBad URI")
+        self.check_report(result, 0.0)
+
 
 def suite():
     """Gather all the tests from this package in a test suite."""
