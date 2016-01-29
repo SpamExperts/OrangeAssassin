@@ -6,6 +6,7 @@ import os
 import sqlite3
 import unittest
 import tests.util
+import getpass
 
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS `awl` (
@@ -82,7 +83,7 @@ class TestFunctionalAWLPlugin(tests.util.TestBase):
     def test_check_existing_msg_rule(self):
         db = sqlite3.connect("iRezult.db")
         c = db.cursor()
-        c.execute("INSERT INTO awl ('username', 'email', 'ip', 'count', 'totscore', 'signedby') VALUES ('root', 'test@example.com', 'none', 3, 10, '')")
+        c.execute("INSERT INTO awl ('username', 'email', 'ip', 'count', 'totscore', 'signedby') VALUES (?, 'test@example.com', 'none', 3, 10, '')", (getpass.getuser(),))
         db.commit()
         self.setup_conf(config=AWL_URI_RULESET % "raw =~ /www(w|ww|www|www\.)?/",
                         pre_config=PRE_CONFIG)
@@ -94,7 +95,7 @@ class TestFunctionalAWLPlugin(tests.util.TestBase):
     def test_check_ip_rule(self):
         db = sqlite3.connect("iRezult.db")
         c = db.cursor()
-        c.execute("INSERT INTO awl ('username', 'email', 'ip', 'count', 'totscore', 'signedby') VALUES ('root', 'test@example.com', '8.8.8.8', 3, 10, '')")
+        c.execute("INSERT INTO awl ('username', 'email', 'ip', 'count', 'totscore', 'signedby') VALUES (?, 'test@example.com', '8.8.8.8', 3, 10, '')", (getpass.getuser(),))
         db.commit()
         self.setup_conf(config=AWL_URI_RULESET % "raw =~ /www(w|ww|www|www\.)?/",
                         pre_config=PRE_CONFIG)
