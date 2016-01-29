@@ -83,7 +83,7 @@ class AutoWhiteListPlugin(pad.plugins.base.BasePlugin):
         return email.utils.parseaddr(from_addr)[1]
 
     def parsed_metadata(self, msg):
-        from_addr = self._get_from(msg)
+        from_addr = msg.get_addr_header("From")[0]
         self.set_local(msg, "from", from_addr)
 
         signedby = self._get_signed_by(msg)
