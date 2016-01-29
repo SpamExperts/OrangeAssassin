@@ -24,7 +24,7 @@ GTUBE = "XJS*C4JDBQADN1.NSBN3*2IDNEN*GTUBE-STANDARD-ANTI-UBE-TEST-EMAIL*C.34X"
 class TestBase(unittest.TestCase):
     match_script = "scripts/match.py"
     # Uncomment this to test under SA
-    #match_script = "spamassassin"
+    # match_script = "spamassassin"
     test_conf = os.path.abspath("tests/test_match_conf/")
     # Add this at the beginning of the report to
     # easily split the message from the report.
@@ -56,7 +56,7 @@ class TestBase(unittest.TestCase):
         with open(os.path.join(self.test_conf, "20.cf"), "w") as conf:
             conf.write(config)
 
-    def check_pad(self, message, report_only=True, extra_args=None):
+    def check_pad(self, message, message_only=False, report_only=True, extra_args=None):
         """Run the match script and return the result.
 
         :param message: Pipe this message to the script
@@ -75,6 +75,11 @@ class TestBase(unittest.TestCase):
         if report_only:
             try:
                 return result.rsplit(self.report_start, 1)[1].strip()
+            except IndexError:
+                self.fail("Failed: %s %s" % (stdout, stderr))
+        if message_only:
+            try:
+                return result.rsplit(self.report_start, 1)[0].strip()
             except IndexError:
                 self.fail("Failed: %s %s" % (stdout, stderr))
         return result.strip()
