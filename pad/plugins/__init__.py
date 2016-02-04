@@ -19,4 +19,6 @@ REIMPLEMENTED_PLUGINS = {
         "pad.plugins.textcat.TextCatPlugin",
     "Mail::SpamAssassin::Plugin::AWL":
         "pad.plugins.awl.AutoWhiteListPlugin",
+    "Mail::SpamAssassin::Plugin::ReplaceTags":
+        "pad.plugins.replace_tags.ReplaceTags",
 }

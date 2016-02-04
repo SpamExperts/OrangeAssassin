@@ -62,7 +62,8 @@ class BasePlugin(object):
     # Defines any new rules that the plugins implements.
     cmds = None
     # Dictionary that matches options to tuples like (type, default_value)
-    # Supported types are "int", "float", "bool", "str", "list".
+    # Supported types are "int", "float", "bool", "str", "list", "append",
+    # "append_split".
     options = None
     # The name of the DSN options
     dsn_name = None
@@ -134,9 +135,20 @@ class BasePlugin(object):
         self.set_global(global_key, value.split(separator))
 
     def set_append_option(self, key, value):
-        """Append the key to the whitelist_subject option
+        """This option can be specified multiple times and the
+        result are appended to the list.
         """
         self.get_global(key).append(value)
+
+    def set_append_split_option(self, key, value, separator=None):
+        """This option can be specified multiple times and the
+        result are appended to the list.
+
+        The values themselves can also be list of separated by
+        whitespace.
+        """
+        # WHY?! :/ Who would think this is a good idea?
+        self.get_global(key).extend(value.split(separator))
 
     def inhibit_further_callbacks(self):
         """Tells the plugin handler to inhibit calling into other plugins in
