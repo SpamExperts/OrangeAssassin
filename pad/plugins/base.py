@@ -136,8 +136,7 @@ class BasePlugin(object):
     def set_append_option(self, key, value):
         """Append the key to the whitelist_subject option
         """
-        self.options[key][1].append(value)
-        self.set_global(key, self.options[key][1])
+        self.get_global(key).append(value)
 
     def inhibit_further_callbacks(self):
         """Tells the plugin handler to inhibit calling into other plugins in
