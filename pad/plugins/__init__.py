@@ -21,4 +21,6 @@ REIMPLEMENTED_PLUGINS = {
         "pad.plugins.awl.AutoWhiteListPlugin",
     "Mail::SpamAssassin::Plugin::ReplaceTags":
         "pad.plugins.replace_tags.ReplaceTags",
+    "Mail::SpamAssassin::Plugin::Shortcircuit":
+        "pad.plugins.short_circuit.ShortCircuit"
 }

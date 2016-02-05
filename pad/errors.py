@@ -73,9 +73,13 @@ class PluginLoadError(PluginError):
 
 
 class InhibitCallbacks(Exception):
-    """Stops the processing of the current callback, and prevent other plugins
-    callbacks.
+    """Stops the processing of the current callback, and prevent
+    other plugins callbacks.
     """
+
+
+class StopProcessing(Exception):
+    """Stop processing the current message."""
 
 
 class ProtocolError(PADError):

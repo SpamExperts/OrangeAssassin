@@ -286,10 +286,14 @@ class RuleSet(object):
 
     def match(self, msg):
         """Match the message against all the rules in this ruleset."""
-        for name, rule in self.checked.items():
-            result = rule.match(msg)
-            self.ctxt.log.debug("Checked rule %s: %s", rule, result)
-            msg.rules_checked[name] = result
-            if result:
-                msg.score += rule.score
+        try:
+            for name, rule in self.checked.items():
+                result = rule.match(msg)
+                self.ctxt.log.debug("Checked rule %s: %s", rule, result)
+                msg.rules_checked[name] = result
+                if result:
+                    msg.score += rule.score
+        except pad.errors.StopProcessing as e:
+            self.ctxt.log.debug("Stop processing the messages as "
+                                "requested: %s", e)
         self.ctxt.hook_check_end(self, msg)
