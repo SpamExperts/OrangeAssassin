@@ -155,7 +155,7 @@ class TestReplaceTags(unittest.TestCase):
 
         rule = "<TEXT><NR>"
         expected = "[a-zA-Z][0-9]"
-        import pdb;pdb.set_trace()
+
         result = self.plugin.replace_tags(rule)
         self.assertEqual(result, expected)
 
