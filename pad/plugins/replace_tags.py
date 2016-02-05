@@ -5,7 +5,6 @@ import re
 import pad.errors
 import pad.plugins.base
 
-
 # This splits value in the corresponding tags
 SPLIT_TAGS = re.compile(r"(<[^<>]+>)")
 
@@ -100,7 +99,7 @@ class ReplaceTags(pad.plugins.base.BasePlugin):
             # Check the next value in the list to see if
             # it's also a tag. If so then add the INTER.
             try:
-                if splits[i + 1] == '':
+                if splits[i + 1] == '' and splits[i + 2] in replace_tags:
                     # The split will actually return a empty string
                     # in these cases.
                     results.append(inter_replace)
