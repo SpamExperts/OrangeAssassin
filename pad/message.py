@@ -10,6 +10,7 @@ from builtins import object
 import re
 import email
 import socket
+import functools
 import ipaddress
 import email.utils
 import html.parser
@@ -96,7 +97,7 @@ class _memoize(object):
         """Check if the information is available in a cache, if not call the
         function and cache the result.
         """
-
+        @functools.wraps(func)
         def wrapped_func(fself, name):
             cache = getattr(fself, self._cache_name)
             result = cache.get(name)

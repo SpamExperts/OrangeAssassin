@@ -3,6 +3,8 @@ Shortcircuiting a test will force all other pending rules to be
 skipped, if that test is hit.
 """
 
+import functools
+
 import pad.errors
 import pad.plugins.base
 
@@ -37,6 +39,7 @@ class ShortCircuit(pad.plugins.base.BasePlugin):
         # create a infinite recursive function.
         match_func = rule.match
 
+        @functools.wraps(match_func)
         def short_circuited_match(msg):
             """Wraps the original method to trigger an
             exception that will stop processing if it

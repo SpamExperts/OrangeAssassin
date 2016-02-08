@@ -13,6 +13,7 @@ except ImportError:
 import os
 import imp
 import logging
+import functools
 import importlib
 import collections
 
@@ -71,7 +72,7 @@ def _callback_chain(func):
     """Decorate the function as a callback chain ignores any InhibitCallbacks
     exceptions.
     """
-
+    @functools.wraps(func)
     def wrapped_func(*args, **kwargs):
         """Ignore any InhibitCallbacks exceptions."""
         try:
