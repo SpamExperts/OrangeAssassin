@@ -1,13 +1,14 @@
 pad Package
 ===========
 
-:mod:`pad` Package
-------------------
+Subpackages
+-----------
 
-.. automodule:: pad.__init__
-    :members:
-    :undoc-members:
-    :show-inheritance:
+.. toctree::
+
+    pad.plugins
+    pad.protocol
+    pad.rules
 
 :mod:`config` Module
 --------------------
@@ -56,13 +57,3 @@ pad Package
     :members:
     :undoc-members:
     :show-inheritance:
-
-Subpackages
------------
-
-.. toctree::
-
-    pad.plugins
-    pad.protocol
-    pad.rules
-
