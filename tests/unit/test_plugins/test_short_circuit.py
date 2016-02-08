@@ -139,7 +139,7 @@ class TestShortCircuit(unittest.TestCase):
 
     def test_finish_parsing_on(self):
         mock_wrap = MagicMock()
-        self.plugin.get_wrapped_method =mock_wrap
+        self.plugin.get_wrapped_method = mock_wrap
         self.global_data["shortcircuit"] = [
             "TEST on"
         ]
@@ -150,7 +150,7 @@ class TestShortCircuit(unittest.TestCase):
 
     def test_finish_parsing_spam(self):
         mock_wrap = MagicMock()
-        self.plugin.get_wrapped_method =mock_wrap
+        self.plugin.get_wrapped_method = mock_wrap
         self.global_data["shortcircuit"] = [
             "TEST spam"
         ]
@@ -161,7 +161,7 @@ class TestShortCircuit(unittest.TestCase):
 
     def test_finish_parsing_ham(self):
         mock_wrap = MagicMock()
-        self.plugin.get_wrapped_method =mock_wrap
+        self.plugin.get_wrapped_method = mock_wrap
         self.global_data["shortcircuit"] = [
             "TEST ham"
         ]
@@ -172,7 +172,7 @@ class TestShortCircuit(unittest.TestCase):
 
     def test_finish_parsing_off(self):
         mock_wrap = MagicMock()
-        self.plugin.get_wrapped_method =mock_wrap
+        self.plugin.get_wrapped_method = mock_wrap
         self.global_data["shortcircuit"] = [
             "TEST off"
         ]
@@ -181,7 +181,7 @@ class TestShortCircuit(unittest.TestCase):
 
     def test_finish_parsing_invalid(self):
         mock_wrap = MagicMock()
-        self.plugin.get_wrapped_method =mock_wrap
+        self.plugin.get_wrapped_method = mock_wrap
         self.global_data["shortcircuit"] = [
             "TESTham"
         ]
@@ -191,7 +191,7 @@ class TestShortCircuit(unittest.TestCase):
     def test_finish_parsing_no_rule(self):
         self.mock_ruleset.get_rule.side_effect = KeyError
         mock_wrap = MagicMock()
-        self.plugin.get_wrapped_method =mock_wrap
+        self.plugin.get_wrapped_method = mock_wrap
         self.global_data["shortcircuit"] = [
             "TEST ham"
         ]
@@ -200,7 +200,7 @@ class TestShortCircuit(unittest.TestCase):
 
     def test_finish_parsing_invalid_stype(self):
         mock_wrap = MagicMock()
-        self.plugin.get_wrapped_method =mock_wrap
+        self.plugin.get_wrapped_method = mock_wrap
         self.global_data["shortcircuit"] = [
             "TEST spam-ham"
         ]
