@@ -176,7 +176,7 @@ class TestShortCircuit(unittest.TestCase):
         self.global_data["shortcircuit"] = [
             "TEST off"
         ]
-
+        self.plugin.finish_parsing_end(self.mock_ruleset)
         self.assertFalse(mock_wrap.called)
 
     def test_finish_parsing_invalid(self):
@@ -185,7 +185,7 @@ class TestShortCircuit(unittest.TestCase):
         self.global_data["shortcircuit"] = [
             "TESTham"
         ]
-
+        self.plugin.finish_parsing_end(self.mock_ruleset)
         self.assertFalse(mock_wrap.called)
 
     def test_finish_parsing_no_rule(self):
@@ -195,7 +195,7 @@ class TestShortCircuit(unittest.TestCase):
         self.global_data["shortcircuit"] = [
             "TEST ham"
         ]
-
+        self.plugin.finish_parsing_end(self.mock_ruleset)
         self.assertFalse(mock_wrap.called)
 
     def test_finish_parsing_invalid_stype(self):
@@ -204,5 +204,5 @@ class TestShortCircuit(unittest.TestCase):
         self.global_data["shortcircuit"] = [
             "TEST spam-ham"
         ]
-
+        self.plugin.finish_parsing_end(self.mock_ruleset)
         self.assertFalse(mock_wrap.called)
