@@ -26,6 +26,7 @@ class TestShortCircuit(unittest.TestCase):
         self.mock_ruleset = MagicMock()
         self.mock_msg = MagicMock(plugin_tags={}, score=0, rules_checked={})
         self.mock_rule = MagicMock(score=5)
+        self.mock_rule.match.__name__ = "match"
         # "name" is an argument of Mock, need to treat it
         # separately here
         self.mock_rule.configure_mock(name="TEST")
