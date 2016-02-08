@@ -97,13 +97,11 @@ class TestDaemon(unittest.TestCase):
         with open(os.path.join(cls.test_conf, "10.cf"), "w") as conf:
             conf.write(cls.config)
         args = [cls.daemon_script, "-D", "-C", cls.test_conf,
-                "--siteconfigpath",
-                cls.test_conf, "-i", "127.0.0.1", "-p", str(cls.port)]
+                "--siteconfigpath", cls.test_conf, "--allow-tell",
+                "-i", "127.0.0.1", "-p", str(cls.port)]
         if cls.daemon_script == "scripts/padd.py":
             args.append("--log-file")
             args.append(os.path.abspath("padd.log"))
-        else:
-            args.append("--allow-tell")
         cls.padd_procs.append(subprocess.Popen(args))
         # Allow time for server to initialize
         sleep_time = 1.0

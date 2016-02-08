@@ -123,6 +123,8 @@ def main():
                         help="Die upon user errors")
     parser.add_argument("--show-unknown", action="store_true", default=False,
                         help="Show warnings about unknown parsing errors")
+    parser.add_argument("-l", "--allow-tell", action="store_true", default=False,
+                        help="Allow learning/reporting")
     parser.add_argument("-d", "--daemonize", action="store_true", default=False,
                         help="Detach the process")
     parser.add_argument("--prefork", type=int, default=None,
