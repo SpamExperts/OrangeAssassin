@@ -20,9 +20,9 @@ class WhiteListSubjectPlugin(pad.plugins.base.BasePlugin):
 
     def parse_config(self, key, value):
         """ Parse a config line, instead of using the regular
-        set_?_option we need to use set_append_option because
-        we need to append the setting to the current existing one instead
-        of adding one more.
+        `set_?_option` we need to use set_append_option because
+        we need to append the setting to the current existing
+        one instead of adding one more.
         """
         # Need to check if the option is a valid regular expression.
         if key in self.options:

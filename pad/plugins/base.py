@@ -47,9 +47,9 @@ class BasePlugin(object):
     in the "global" context and the "local" context.
 
      * The "global" context is loaded once when the configuration is parsed
-     and persists throughout until the plugin is reloaded.
+       and persists throughout until the plugin is reloaded.
      * The "local" context is stored per message and each new message parsed
-     has its one context.
+       has its one context.
 
     The methods automatically stores the data under the plugin names to ensure
     that there are no name clashes between plugins.
@@ -177,9 +177,10 @@ class BasePlugin(object):
         This can be used to insert new data after parsing.
 
         :param results: A dictionary that maps the rule names to the
-        rest of the data extracted from the configuration (e.g. the
-        score, description etc.)
+          rest of the data extracted from the configuration (e.g. the
+          score, description etc.)
         :return: Nothing
+
         """
 
     # XXX The name method for this is horrible, but it's likely better to have

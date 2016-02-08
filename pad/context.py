@@ -87,12 +87,14 @@ class GlobalContext(_Context):
     """Context available globally.
 
     Stores the global plugin data currently loaded including:
+
      * plugins - the actual code loaded
      * eval_rules - the methods for the "eval" rules currently
-      defined
+       defined
      * cmds - additional RULES that are handled by plugins.
-      This maps the rule type (e.g. "body") to the Rule class.
-      These must inherit from pad.rules.base.BaseRule.
+       This maps the rule type (e.g. "body") to the Rule class.
+       These must inherit from pad.rules.base.BaseRule.
+
     """
 
     def __init__(self, paranoid=False, ignore_unknown=True):

@@ -119,7 +119,8 @@ class RuleSet(object):
         """Get the Spam report for this message
 
         :return: A string representing the report for this
-        Spam message.
+          Spam message.
+
         """
         if not self.report:
             return "\n(no report template found)\n"

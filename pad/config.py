@@ -76,7 +76,8 @@ def get_default_configs(site=False):
 
     :param site: If True return the Site path instead
     :return: A dictionary with two keys "default" and
-    "required"
+      "required"
+
     """
 
     paths = SITE_RULES_PATHS if site else CONFIG_PATHS
