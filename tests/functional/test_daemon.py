@@ -1,10 +1,12 @@
 """Test the daemon protocol."""
 import os
+import sys
 import time
 import email
 import socket
 import shutil
 import unittest
+import platform
 import subprocess
 
 PRE_CONFIG = r"""
@@ -104,7 +106,15 @@ class TestDaemon(unittest.TestCase):
             args.append("--allow-tell")
         cls.padd_procs.append(subprocess.Popen(args))
         # Allow time for server to initialize
-        time.sleep(1.0)
+        sleep_time = 1.0
+        if (platform.python_implementation().lower() == "pypy" and
+                sys.version_info.major == 2):
+            # PyPy is much slower at initialization, so allow
+            # for more time. This is only ran once so the impact
+            # is minimal anyway.
+            # This should prevent random test failures on PyPy.
+            sleep_time = 2.0
+        time.sleep(sleep_time)
 
     @classmethod
     def tearDownClass(cls):
