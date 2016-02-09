@@ -1,9 +1,6 @@
 pad Package
 ===========
 
-Subpackages
------------
-
 .. toctree::
 
     pad.plugins
