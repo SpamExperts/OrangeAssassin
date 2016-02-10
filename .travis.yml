@@ -28,3 +28,7 @@ after_script:
   - pep8 --show-source pad
 after_success:
   - coveralls
+notifications:
+  email:
+    - NOTIFICATIONS_RCPT_1
+    - NOTIFICATIONS_RCPT_2
