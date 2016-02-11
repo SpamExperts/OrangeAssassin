@@ -36,7 +36,7 @@ Plugin :mod:`image_info`
 Plugin :mod:`pdf_info`
 ----------------------
 
-.. automodule:: pad.plugins.uri_detail
+.. automodule:: pad.plugins.pdf_info
     :members:
     :undoc-members:
     :show-inheritance:

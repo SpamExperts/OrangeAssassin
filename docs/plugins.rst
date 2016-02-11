@@ -22,6 +22,14 @@ Available plugins
 =================
 
 .. toctree::
+    :maxdepth: 1
+
+    pad.plugins.short_circuit
+
+Plugin reference
+================
+
+.. toctree::
 
     pad.plugins
 

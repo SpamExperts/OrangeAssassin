@@ -41,7 +41,7 @@ class TestShortCircuit(unittest.TestCase):
         self.plugin.parsed_metadata(self.mock_msg)
         self.assertEqual(self.mock_msg.plugin_tags, {
             "SCRULE": "none",
-            "SCTYPE": "no",
+            "SCTYPE": "off",
             "SC": "no"
         })
 
