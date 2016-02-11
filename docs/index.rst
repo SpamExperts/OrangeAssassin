@@ -9,6 +9,7 @@ Contents:
    intro
    rules
    rule.types
+   plugins
    modules
 
 Indices and tables

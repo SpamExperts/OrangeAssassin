@@ -48,6 +48,10 @@ To run the project's tests you will need to first:
     wget http://geolite.maxmind.com/download/geoip/database/GeoIPv6.dat.gz
     gunzip GeoIPv6.dat.gz
 
+#. Run the `setup.py` script
+
+    python setup.py install
+
 The SpamPAD tests are split into *unittest* and *functional* tests.
 
 *Unitests* perform checks against the current source code and **not**
@@ -64,7 +68,7 @@ To run the full suite of functional tests::
 
 Or you can run *all* the tests with just::
 
-    py.tests
+    py.test
 
 .. note::
 

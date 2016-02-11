@@ -1,23 +1,7 @@
 plugins Package
 ===============
 
-:mod:`plugins` Package
-----------------------
-
-.. automodule:: pad.plugins
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-:mod:`awl` Module
------------------
-
-.. automodule:: pad.plugins.awl
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-:mod:`base` Module
+Module :mod:`base`
 ------------------
 
 .. automodule:: pad.plugins.base
@@ -25,7 +9,15 @@ plugins Package
     :undoc-members:
     :show-inheritance:
 
-:mod:`dump_text` Module
+Plugin :mod:`awl`
+-----------------
+
+.. automodule:: pad.plugins.awl
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+Plugin :mod:`dump_text`
 -----------------------
 
 .. automodule:: pad.plugins.dump_text
@@ -33,7 +25,7 @@ plugins Package
     :undoc-members:
     :show-inheritance:
 
-:mod:`image_info` Module
+Plugin :mod:`image_info`
 ------------------------
 
 .. automodule:: pad.plugins.image_info
@@ -41,7 +33,15 @@ plugins Package
     :undoc-members:
     :show-inheritance:
 
-:mod:`pyzor` Module
+Plugin :mod:`pdf_info`
+----------------------
+
+.. automodule:: pad.plugins.uri_detail
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+Plugin :mod:`pyzor`
 -------------------
 
 .. automodule:: pad.plugins.pyzor
@@ -49,7 +49,7 @@ plugins Package
     :undoc-members:
     :show-inheritance:
 
-:mod:`relay_country` Module
+Plugin :mod:`relay_country`
 ---------------------------
 
 .. automodule:: pad.plugins.relay_country
@@ -57,7 +57,7 @@ plugins Package
     :undoc-members:
     :show-inheritance:
 
-:mod:`replace_tags` Module
+Plugin :mod:`replace_tags`
 --------------------------
 
 .. automodule:: pad.plugins.replace_tags
@@ -65,7 +65,7 @@ plugins Package
     :undoc-members:
     :show-inheritance:
 
-:mod:`short_circuit` Module
+Plugin :mod:`short_circuit`
 ---------------------------
 
 .. automodule:: pad.plugins.short_circuit
@@ -73,7 +73,7 @@ plugins Package
     :undoc-members:
     :show-inheritance:
 
-:mod:`textcat` Module
+Plugin :mod:`textcat`
 ---------------------
 
 .. automodule:: pad.plugins.textcat
@@ -81,7 +81,7 @@ plugins Package
     :undoc-members:
     :show-inheritance:
 
-:mod:`uri_detail` Module
+Plugin :mod:`uri_detail`
 ------------------------
 
 .. automodule:: pad.plugins.uri_detail
@@ -89,7 +89,7 @@ plugins Package
     :undoc-members:
     :show-inheritance:
 
-:mod:`whitelist_subject` Module
+Plugin :mod:`whitelist_subject`
 -------------------------------
 
 .. automodule:: pad.plugins.whitelist_subject
