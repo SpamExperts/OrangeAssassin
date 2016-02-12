@@ -9,3 +9,4 @@ Python Antispam Daemon
   :target: https://coveralls.io/github/SpamExperts/SpamPAD?branch=master
 
 
+See our `Documentation <http://spampad.readthedocs.org/>`_ for more details.

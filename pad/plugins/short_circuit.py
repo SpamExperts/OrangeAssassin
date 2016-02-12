@@ -1,5 +1,5 @@
 """This plugin implements simple, test-based shortcircuiting.
-Shortcircuiting a test will force all other pending rules to be
+Short-circuiting a test will force all other pending rules to be
 skipped, if that test is hit.
 """
 
@@ -26,7 +26,7 @@ class ShortCircuit(pad.plugins.base.BasePlugin):
         """Add default tags to the message."""
         super(ShortCircuit, self).parsed_metadata(msg)
         msg.plugin_tags["SCRULE"] = "none"
-        msg.plugin_tags["SCTYPE"] = "no"
+        msg.plugin_tags["SCTYPE"] = "off"
         msg.plugin_tags["SC"] = "no"
 
     def get_wrapped_method(self, rule, stype):
