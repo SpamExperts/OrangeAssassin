@@ -262,6 +262,8 @@ class PDFInfoPlugin(pad.plugins.base.BasePlugin):
                 resources = page["/Resources"]
             except KeyError:
                 continue
+            if not "/Xobject" in resources:
+                continue
             for key in resources["/XObject"]:
                 obj = resources["/Xobject"][key]
                 typ = obj["/Subtype"]
@@ -275,7 +277,7 @@ class PDFInfoPlugin(pad.plugins.base.BasePlugin):
 
     def extract_metadata(self, msg, payload, part):
         """Extend to extract the PDF metadata"""
-        if part.get_content_maintype() == "pdf":
+        if part.get_content_type() == "application/pdf":
             name = part.get_param("name")
             self._add_name(msg, name)
             self._update_counts(msg, incr=1)
