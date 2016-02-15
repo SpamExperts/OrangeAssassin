@@ -8,17 +8,33 @@ import collections
 
 import pad.plugins.base
 
+SPACE_COUNT = re.compile(r"\s")
 SPLIT_WORDS = re.compile(r"\s+")
 REMOVE_OTHER = re.compile(r"[^\w]")
+STOCK_RE = re.compile(r"""
+    ^trad(?:e|ing)date|
+    company(?:name)?|
+    s\w?(?:t\w?o\w?c\w?k|y\w?m(?:\w?b\w?o\w?l)?)|
+    t(?:arget|icker)|
+    (?:opening|current)p(?:rice)?|
+    p(?:rojected|osition)|
+    expectations|
+    weeks?high|
+    marketperformance|
+    (?:year|week|month|day|price)(?:target|estimates?)|
+    sector|
+    r(?:ecommendation|ating)
+""", re.I | re.S | re.X | re.M)
+
 
 
 class BodyEval(pad.plugins.base.BasePlugin):
     eval_rules = (
         "multipart_alternative_difference",
         "multipart_alternative_difference_count",
-        # "check_blank_line_ratio",
-        # "tvd_vertical_words",
-        # "check_stock_info",
+        "check_blank_line_ratio",
+        "tvd_vertical_words",
+        "check_stock_info",
     )
 
     def check_start(self, msg):
@@ -84,7 +100,10 @@ class BodyEval(pad.plugins.base.BasePlugin):
                             "diff=%.2f", len(text_tokens), len(html_tokens),
                             valid_count, diff)
 
-    def multipart_alternative_difference(self, msg, min, max, target=None):
+        self.set_local(msg, "line_count", msg.raw_text.count("\n"))
+        self.set_local(msg, "blank_line_count", msg.raw_text.count("\n\n"))
+
+    def multipart_alternative_difference(self, msg, minr, maxr, target=None):
         """Check the difference between the text and html parts of
         the message. Every word seen in the text part of the
         message should also exist at least as many times in the
@@ -99,14 +118,14 @@ class BodyEval(pad.plugins.base.BasePlugin):
         Note that this excludes any HTML tags from the count.
 
         :param msg: the message that's being checked
-        :param min: the inferior value of the threshold
-        :param max: the superior value of the threshold
+        :param minr: the inferior value of the threshold
+        :param maxr: the superior value of the threshold
         :return: True if the ratio is between the two values
           and False otherwise.
 
         """
-        min, max = float(min), float(max)
-        return min <= self.get_local(msg, "madiff") <= max
+        minr, maxr = float(minr), float(maxr)
+        return minr <= self.get_local(msg, "madiff") <= maxr
 
     def multipart_alternative_difference_count(self, msg, ratio, minhtml,
                                                target=None):
@@ -138,3 +157,70 @@ class BodyEval(pad.plugins.base.BasePlugin):
             return (text_tokens / html_tokens) > ratio
         except ZeroDivisionError:
             return False
+
+    def check_blank_line_ratio(self, msg, minr, maxr, minlines=1, target=None):
+        """Check the ratio of blank lines to the number of
+        lines in the message body.
+
+        :param msg: the message that's being checked
+        :param minr: the inferior value of the threshold
+        :param maxr: the superior value of the threshold
+        :param minlines: this rule will match only if the
+          message has at least this number of lines.
+        :return: True if the ratio is between the two values
+          and False otherwise.
+
+        """
+        minr, maxr, minlines = float(minr), float(maxr), int(minlines)
+        minlines = max(minlines, 1)
+        line_count = self.get_local(msg, "line_count")
+        blank_line_count = self.get_local(msg, "blank_line_count")
+
+        if self.get_local(msg, "line_count") < minlines:
+            return False
+        try:
+            ratio = blank_line_count / line_count * 100
+        except ZeroDivisionError:
+            return False
+        return minr <= ratio <= maxr
+
+    # XXX Strange name?
+    def tvd_vertical_words(self, msg, minr, maxr, target=None):
+        """Check the ratio of spaces to non-spaces.
+
+        :param msg: the message that's being checked
+        :param minr: the inferior value of the threshold
+        :param maxr: the superior value of the threshold
+        :return: True if the ratio is between the two values
+          and False otherwise.
+
+        """
+        if target == "raw":
+            text = msg.raw_text
+        else:
+            text = msg.text
+
+        space_count = sum(1 for _ in SPACE_COUNT.finditer(text))
+        try:
+            ratio = space_count / (len(text) - space_count) * 100
+        except ZeroDivisionError:
+            return False
+
+        return minr <= ratio <= maxr
+
+    def check_stock_info(self, msg, minwords, target=None):
+        """Check the message for common stock market words.
+
+        :param msg: the message that's being checked
+        :param minwords: the minimum number of words to be
+          found for this rule to match.
+        :return: True if there are at least `minwords` found
+          in the message, and False otherwise.
+        """
+        minwords = int(minwords)
+        if target == "raw":
+            text = msg.raw_text
+        else:
+            text = msg.text
+        stock_count = sum(1 for _ in SPACE_COUNT.finditer(text))
+        return stock_count >= minwords
