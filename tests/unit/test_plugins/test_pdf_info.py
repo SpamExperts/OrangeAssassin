@@ -62,7 +62,7 @@ class TestPDFInfo(PDFInfoBase):
                 {"details": {"/Author":"Author4", "/Creator":"unittest","/Created":"2016-02-11",
                     "/Title": "pdftest4"}, "images": ("image1", (100,100))},
                 )
-        for x in xrange(len(allpdfinfo)):
+        for x in iter(range(len(allpdfinfo))):
             pdfinfo = allpdfinfo[x]
             name = "%d.pdf" % x
             if "images" not in pdfinfo:
@@ -210,7 +210,7 @@ class TestPDFInfo(PDFInfoBase):
         """Test pdf_image_count (extract the images from the PDF and count them)
         """
         self.plugin.set_local(self.mock_msg, "pixel_coverage", 3)       
-        self.assertTrue(self.plugin.pdf_pixel_coverage(self.mock_msg,3, 5))
+        self.assertTrue(self.plugin.pdf_pixel_coverage(self.mock_msg, 3, 5))
 
     def test_add_name(self):
         """Test the pdf_add_name"""
