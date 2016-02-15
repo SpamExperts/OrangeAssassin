@@ -269,7 +269,7 @@ class TestMessageVarious(unittest.TestCase):
         self.assertEqual(result, header)
 
     def test_decode_header_bad_encoding(self):
-        header = u"Subject: =?BASE64?B?Y2FtZXJh?="
+        header = "Subject: =?BASE64?B?Y2FtZXJh?="
         enc_header = email.header.make_header([(header, "utf-8"), ])
         result = pad.message.Message._decode_header(enc_header)
         self.assertEqual(result, header)
