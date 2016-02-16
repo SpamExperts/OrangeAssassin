@@ -61,6 +61,11 @@ Options
     The score applied for short-circuited rules with the `ham`
     type
 
+EVAL rules
+==========
+
+None
+
 Tags
 ====
 

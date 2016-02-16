@@ -24,6 +24,7 @@ Available plugins
 .. toctree::
     :maxdepth: 1
 
+    pad.plugins.body_eval
     pad.plugins.short_circuit
 
 Plugin reference
