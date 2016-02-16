@@ -1,7 +1,8 @@
 """Tests for pad.plugins.pdf_info."""
+import PyPDF2
 import unittest
-import collections
 
+from io import BytesIO
 from hashlib import md5
 from tests.util.pdf_utils import new_email, new_pdf, PDFWithAttachments
 from tests.util.image_utils import new_image_string
@@ -45,7 +46,6 @@ class TestPDFInfo(PDFInfoBase):
         patch("pad.plugins.pdf_info.PDFInfoPlugin._add_name").start()
         patch("pad.plugins.pdf_info.PDFInfoPlugin._update_counts").start()
         patch("pad.plugins.pdf_info.PDFInfoPlugin._save_stats").start()
-
         add_name_calls = []
         update_counts_calls = []
         save_stats_calls = []
@@ -90,43 +90,25 @@ class TestPDFInfo(PDFInfoBase):
         patch("pad.plugins.pdf_info.PDFInfoPlugin._update_details").start()
         patch("pad.plugins.pdf_info.PDFInfoPlugin._update_image_counts").start()
         patch("pad.plugins.pdf_info.PDFInfoPlugin._update_pixel_coverage").start()
-
         update_details_calls= []
         update_image_count_calls = []
         update_pixel_coverage_calls = []
         pdfs = {}
-        allpdfinfo = (
-                {"details": {"/Author":"Author1", "/Creator":"unittest",
-                    "/Producer":"2016-02-11", "/Title": "pdftest"}},
-                {"details": {"/Author":"Author2", "/Creator":"unittest",
-                    "/Producer":"2016-02-11", "/Title": "pdftest2"}},
-                {"details": {"/Author":"Author3", "/Creator":"unittest",
-                    "/Producer":"2016-02-11", "/Title": "pdftest3"}},
-                {"details": {"/Author":"Author4", "/Creator":"unittest",
-                    "/Producer":"2016-02-11", "/Title": "pdftest4"}, 
-                    "images": ("image1", (100,100))},
-                )
-        for x in range(len(allpdfinfo)):
-            pdfinfo = allpdfinfo[x]
-            name = "%d.pdf" % x
-            if "images" not in pdfinfo:
-                pdfobj = new_pdf(details = pdfinfo["details"], name=name)
-            else:
-                pdfc = PDFWithAttachments(details = pdfinfo["details"], name=name)
-                image = new_image_string(pdfinfo["images"][1])
-                pdfc.addAttachment(pdfinfo["images"][0], image)
-                pdfobj = {"data": pdfc.as_file(), "name": name}
-            pdfs.update({x: pdfobj})
-            pdf_id = md5(pdfobj["data"].getvalue()).hexdigest()
-            for det in ("/Author", "/Creator","/Producer", "/Title"):
-                value  = pdfinfo["details"][det]
-                update_details_calls.append(call(self.mock_msg, pdf_id, det.lower()[1:],
-                    value))
-            if "images" in pdfinfo:
-                update_image_count_calls.append(call(self.mock_msg, incr = 1))
-                width, height = pdfinfo["images"][1]
-                update_pixel_coverage_calls.append(call(self.mock_msg, width * height))
-
+        datastore = BytesIO()
+        with open("tests/data/pdftest.pdf","rb") as fp:
+            datastore.write(fp.read())
+        if not datastore.getvalue():
+            return
+        pdf_id = md5(datastore.getvalue()).hexdigest()
+        pdfobj = PyPDF2.PdfFileReader(datastore)
+        info = pdfobj.getDocumentInfo()
+        update_image_count_calls.append(call(self.mock_msg, incr=1))
+        update_pixel_coverage_calls.append(call(self.mock_msg, incr=360800))
+        update_details_calls.append(call(self.mock_msg, pdf_id, "author", info.author))
+        update_details_calls.append(call(self.mock_msg, pdf_id, "creator", info.creator))
+        update_details_calls.append(call(self.mock_msg, pdf_id, "producer", info.producer))
+        update_details_calls.append(call(self.mock_msg, pdf_id, "title", info.title))
+        pdfs = {1: {"data":datastore, "name": "pdftest.pdf"}}
         self.mock_msg.msg = new_email(pdfs)
 
         for part in self.mock_msg.msg.walk():
@@ -136,10 +118,8 @@ class TestPDFInfo(PDFInfoBase):
             self.plugin._save_stats(self.mock_msg, payload)
 
         self.plugin._update_details.assert_has_calls(update_details_calls)
-        # I need to know how to attach an image to the PDF seems like I need 
-        # to draw the PDF in ReportLab then write it to PDF
-        #self.plugin._update_image_counts.assert_has_calls(update_image_count_calls)
-        #self.plugin._update_pixel_coverage.assert_has_calls(update_pixel_coverage_calls)
+        self.plugin._update_image_counts.assert_has_calls(update_image_count_calls)
+        self.plugin._update_pixel_coverage.assert_has_calls(update_pixel_coverage_calls)
 
     def test_pdf_count(self):
         """Test the pdf_count"""
