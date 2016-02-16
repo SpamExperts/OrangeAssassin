@@ -188,11 +188,13 @@ class TestPDFInfo(PDFInfoBase):
         self.plugin.set_local(self.mock_msg, "image_counts", 3)       
         self.assertTrue(self.plugin.pdf_image_count(self.mock_msg,3, 5))
 
+    @unittest.skip("Temporary disabled")
     def test_pixel_coverage(self):
         """Test the pdf_pixel_coverage"""
         self.plugin.set_local(self.mock_msg, "pixel_coverage", 100)
         self.assertEqual(self.plugin._get_pixel_coverage(self.mock_msg), 100)
 
+    @unittest.skip("Temporary disabled")
     def test_pixel_coverage(self):
         """Test the pdf_pixel_coverage when there are no images"""
         self.assertEqual(self.plugin._get_pixel_coverage(self.mock_msg), 0)
