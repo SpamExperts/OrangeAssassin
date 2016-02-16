@@ -251,10 +251,10 @@ class PDFInfoPlugin(pad.plugins.base.BasePlugin):
                 resources = page["/Resources"]
             except KeyError:
                 continue
-            if not "/Xobject" in resources:
+            if not "/XObject" in resources:
                 continue
             for key in resources["/XObject"]:
-                obj = resources["/Xobject"][key]
+                obj = resources["/XObject"][key]
                 typ = obj["/Subtype"]
                 if typ != "/Image":
                     continue
