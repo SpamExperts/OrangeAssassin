@@ -274,8 +274,7 @@ class PDFInfoPlugin(pad.plugins.base.BasePlugin):
                 height = obj["/Height"]
                 self._update_pixel_coverage(msg, incr=width * height)
 
-
-    def extract_metadata(self, msg, payload, part):
+    def extract_metadata(self, msg, payload, text, part):
         """Extend to extract the PDF metadata"""
         if part.get_content_type() == "application/pdf":
             name = part.get_param("name")

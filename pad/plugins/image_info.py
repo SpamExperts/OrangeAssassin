@@ -159,7 +159,7 @@ class ImageInfoPlugin(pad.plugins.base.BasePlugin):
 
         return sizes.get(subtype, {}).values()
 
-    def extract_metadata(self, msg, payload, part):
+    def extract_metadata(self, msg, payload, text, part):
         """Extend to extract image metadata"""
 
         if part.get_content_maintype() == "image":

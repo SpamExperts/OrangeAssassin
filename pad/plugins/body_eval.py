@@ -27,7 +27,6 @@ STOCK_RE = re.compile(r"""
 """, re.I | re.S | re.X | re.M)
 
 
-
 class BodyEval(pad.plugins.base.BasePlugin):
     eval_rules = (
         "multipart_alternative_difference",
@@ -46,9 +45,9 @@ class BodyEval(pad.plugins.base.BasePlugin):
         self.set_local(msg, "text_tokens", collections.Counter())
         self.set_local(msg, "html_tokens", collections.Counter())
 
-    def extract_metadata(self, msg, payload, part):
+    def extract_metadata(self, msg, payload, text, part):
         """Parse each part and extract the relevant tokens."""
-        super(BodyEval, self).extract_metadata(msg, payload, part)
+        super(BodyEval, self).extract_metadata(msg, payload, text, part)
         multiparts = self.get_local(msg, "multiparts")
         if part.get_content_type() == "multipart/alternative":
             # The actual parts and text will come after
@@ -58,20 +57,20 @@ class BodyEval(pad.plugins.base.BasePlugin):
             return
 
         content_type = part.get_content_type()
-        if (id(part) not in multiparts or not payload or
+        if (id(part) not in multiparts or not text or
                 content_type not in ("text/plain", "text/html")):
             # Unknown part or empty part, skip it.
             return
 
         words = (REMOVE_OTHER.sub('', word)
-                 for word in SPLIT_WORDS.split(payload))
+                 for word in SPLIT_WORDS.split(text))
         if content_type.lower() == "text/plain":
             self.get_local(msg, "text_tokens").update(
-                word for word in words if word
+                word.lower() for word in words if word
             )
         elif content_type.lower() == "text/html":
             self.get_local(msg, "html_tokens").update(
-                word for word in words if word
+                word.lower() for word in words if word
             )
 
     def parsed_metadata(self, msg):

@@ -81,7 +81,7 @@ class TestPDFInfo(PDFInfoBase):
 
         for part in self.mock_msg.msg.walk():
             payload = part.get_payload(decode=True)
-            self.plugin.extract_metadata(self.mock_msg, payload, part)
+            self.plugin.extract_metadata(self.mock_msg, payload, None, part)
 
         self.plugin._add_name.assert_has_calls(add_name_calls)
         self.plugin._update_counts.assert_has_calls(update_counts_calls)
