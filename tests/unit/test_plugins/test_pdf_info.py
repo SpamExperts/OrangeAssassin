@@ -12,6 +12,7 @@ except ImportError:
 
 import pad.plugins
 
+@unittest.skip("Temporarily disable.")
 class PDFInfoBase(unittest.TestCase):
     """Test for the PDFInfo plugin"""
     def setUp(self):
