@@ -159,7 +159,7 @@ class PDFInfoPlugin(pad.plugins.base.BasePlugin):
         try:
             return self.get_local(msg, "md5hashes")
         except KeyError:
-            return []
+            return set()
 
     def _update_pdf_hashes(self, msg, newhash):
         try:
@@ -202,7 +202,8 @@ class PDFInfoPlugin(pad.plugins.base.BasePlugin):
         for pdfid in details:
             allpdfs = details[pdfid]
             for pdf in allpdfs:
-                if detail_re.match(pdf.get(detail, "")):
+                value = allpdfs[pdf]
+                if detail_re.match(value):
                     return True
         return False
 
@@ -246,6 +247,7 @@ class PDFInfoPlugin(pad.plugins.base.BasePlugin):
         pdf_id = md5(payload).hexdigest()
         self._update_pdf_hashes(msg, pdf_id)
         pdffobject = BytesIO(payload)
+        self._update_pdf_size(msg, incr=len(pdffobject.getvalue()))
         pdfobject = PyPDF2.PdfFileReader(pdffobject)
         self._update_is_encrypted(msg, pdfobject.isEncrypted)
         if pdfobject.isEncrypted:
