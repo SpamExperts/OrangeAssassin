@@ -1,26 +1,26 @@
                                                                                                                                                                                                                                                                
-Delivered-To: support@spamexperts.com
+Delivered-To: support@example.com
 Received: by 10.216.244.5 with SMTP id l5csp117570wer;
         Tue, 18 Dec 2012 04:42:14 -0800 (PST)
 X-Received: by 10.14.218.69 with SMTP id j45mr5251670eep.35.1355834534076;
         Tue, 18 Dec 2012 04:42:14 -0800 (PST)
-Return-Path: <spexps3@gmail.com>
-Received: from delivery.antispamcloud.com (delivery.antispamcloud.com. [31.25.103.16])
+Return-Path: <testone@example.com>
+Received: from delivery.example.com (delivery.example.com. [31.25.103.16])
         by mx.google.com with ESMTPS id g47si4104168eep.63.2012.12.18.04.42.13
         (version=TLSv1/SSLv3 cipher=OTHER);
         Tue, 18 Dec 2012 04:42:14 -0800 (PST)
-Received-SPF: neutral (google.com: 31.25.103.16 is neither permitted nor denied by domain of spexps3@gmail.com) client-ip=31.25.103.16;
-Authentication-Results: mx.google.com; spf=neutral (google.com: 31.25.103.16 is neither permitted nor denied by domain of spexps3@gmail.com) smtp.mail=spexps3@gmail.com; dkim=pass header.i=@gmail.com
+Received-SPF: neutral (google.com: 31.25.103.16 is neither permitted nor denied by domain of testone@example.com) client-ip=31.25.103.16;
+Authentication-Results: mx.google.com; spf=neutral (google.com: 31.25.103.16 is neither permitted nor denied by domain of testone@example.com) smtp.mail=testone@example.com; dkim=pass header.i=@example.com
 Received: from mail-ob0-f178.google.com ([209.85.214.178])
-	by mx11.antispamcloud.com with esmtps (TLSv1:RC4-SHA:128)
+	by mx11.example.com with esmtps (TLSv1:RC4-SHA:128)
 	(Exim 4.80.1)
-	(envelope-from <spexps3@gmail.com>)
+	(envelope-from <testone@example.com>)
 	id 1TkwUu-0004St-4t
-	for support@spamexperts.com; Tue, 18 Dec 2012 13:42:13 +0100
+	for support@example.com; Tue, 18 Dec 2012 13:42:13 +0100
 Received: by mail-ob0-f178.google.com with SMTP id eh20so536115obb.37
-        for <support@spamexperts.com>; Tue, 18 Dec 2012 04:42:10 -0800 (PST)
+        for <support@example.com>; Tue, 18 Dec 2012 04:42:10 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
+        d=example.com; s=20120113;
         h=mime-version:date:message-id:subject:from:to:content-type;
         bh=NvCE6QH4wkBg/+35aFeT8UO9NqRvdcxyrKRNCOsxWgc=;
         b=QzQ+bxfIKBpeTcK/mR95PeI6X3JUefpwwaK1yPeQN+QvD0ny4nCcKs2Kb4kLueIibx
@@ -34,13 +34,13 @@ Received: by 10.60.21.131 with SMTP id v3mr1427586oee.32.1355834530650; Tue,
  18 Dec 2012 04:42:10 -0800 (PST)
 Received: by 10.76.162.68 with HTTP; Tue, 18 Dec 2012 04:42:10 -0800 (PST)
 Date: Tue, 18 Dec 2012 13:42:10 +0100
-Message-ID: <CAEf13+m7tFSGF8a-g3+=7Fpkx=9nKA7HOP5CZ4yqK7k+2UJgiA@mail.gmail.com>
+Message-ID: <CAEf13+m7tFSGF8a-g3+=7Fpkx=9nKA7HOP5CZ4yqK7k+2UJgiA@mail.example.com>
 Subject: Test ticket 1
-From: SpamExperts Playstation <spexps3@gmail.com>
-To: support@spamexperts.com
+From: example Playstation <testone@example.com>
+To: support@example.com
 Content-Type: multipart/alternative; boundary=e89a8fb1ef4492dad404d11fd3bc
-Received-SPF: pass (mx11.antispamcloud.com: domain of gmail.com designates 209.85.214.178 as permitted sender) client-ip=209.85.214.178; envelope-from=spexps3@gmail.com; helo=mail-ob0-f178.google.com;
-X-SPF-Result: mx11.antispamcloud.com: domain of gmail.com designates 209.85.214.178 as permitted sender
+Received-SPF: pass (mx11.example.com: domain of example.com designates 209.85.214.178 as permitted sender) client-ip=209.85.214.178; envelope-from=testone@example.com; helo=mail-ob0-f178.google.com;
+X-SPF-Result: mx11.example.com: domain of example.com designates 209.85.214.178 as permitted sender
 X-Filter-ID: XtLePq6GTMn8G68F0EmQvUKW+Mvk3FqBhsNYA10N+Mo30TOeNnpMT5uM0AU/mBfVMLsUEmqK4hN1
  6H9C8BO1LDzcpbhDULLs2Csc47fri2x2CjmHmyNpq+Xk8APPqXJfLiPw8YgtO4k2C8LN+YA0IkkP
  2lriwUyOscvwBUPrCc3pTuwQh68OC42Yst2oGCqwi/1NUMQf/0myq8aEHxGSRz+uIRtdejHvG7Dd
@@ -49,11 +49,11 @@ X-Filter-ID: XtLePq6GTMn8G68F0EmQvUKW+Mvk3FqBhsNYA10N+Mo30TOeNnpMT5uM0AU/mBfVMLs
  L2k4i+jJGjKfMJkKJ80uEplT3qBacVJJzJNUmhIIdyGd7OfJaaL/jTaUKvJuUlYD3/korSOIPpeq
  wlm2NDGXIJ2x7J9+clq8d+DCHBQbpbc2dOG+fkqWCACns6xmns733t24iqLW1AZPOXUTegi8FwDv
  OJwUQPiGdhgFDWRCp0Hx+Cr2OKHH5lr9xXvSM4nM3avg
-Authentication-Results: antispamcloud.com;
- spf=pass smtp.mailfrom=spexps3@gmail.com
-Authentication-Results: antispamcloud.com; dkim=pass () header.i=gmail.com
-X-SpamExperts-Class: ham
-X-SpamExperts-Evidence: SB/antispamcloud_com (0.00325574630959)
+Authentication-Results: example.com;
+ spf=pass smtp.mailfrom=testone@example.com
+Authentication-Results: example.com; dkim=pass () header.i=example.com
+X-example-Class: ham
+X-example-Evidence: SB/example_com (0.00325574630959)
 X-Recommended-Action: accept
 
 --e89a8fb1ef4492dad404d11fd3bc
