@@ -119,7 +119,7 @@ class TestPDFInfo(PDFInfoBase):
             pdfs.update({x: pdfobj})
             pdf_id = md5(pdfobj["data"].getvalue()).hexdigest()
             for det in ("/Author", "/Creator","/Producer", "/Title"):
-                value  = unicode(pdfinfo["details"][det])
+                value  = pdfinfo["details"][det]
                 update_details_calls.append(call(self.mock_msg, pdf_id, det.lower()[1:],
                     value))
             if "images" in pdfinfo:
