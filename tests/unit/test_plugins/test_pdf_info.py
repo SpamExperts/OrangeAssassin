@@ -51,14 +51,15 @@ class TestPDFInfo(PDFInfoBase):
         save_stats_calls = []
         pdfs = {}
         allpdfinfo = (
-                {"details": {"/Author":"Author1", "/Creator":"unittest","/Created":"2016-02-11",
-                    "/Title": "pdftest"}},
-                {"details": {"/Author":"Author2", "/Creator":"unittest","/Created":"2016-02-11",
-                    "/Title": "pdftest2"}},
-                {"details": {"/Author":"Author3", "/Creator":"unittest","/Created":"2016-02-11",
-                    "/Title": "pdftest3"}},
-                {"details": {"/Author":"Author4", "/Creator":"unittest","/Created":"2016-02-11",
-                    "/Title": "pdftest4"}, "images": ("image1", (100,100))},
+                {"details": {"/Author":"Author1", "/Creator":"unittest",
+                    "/Created":"2016-02-11", "/Title": "pdftest"}},
+                {"details": {"/Author":"Author2", "/Creator":"unittest",
+                    "/Created":"2016-02-11", "/Title": "pdftest2"}},
+                {"details": {"/Author":"Author3", "/Creator":"unittest",
+                    "/Created":"2016-02-11", "/Title": "pdftest3"}},
+                {"details": {"/Author":"Author4", "/Creator":"unittest",
+                    "/Created":"2016-02-11", "/Title": "pdftest4"}, 
+                    "images": ("image1", (100,100))},
                 )
         for x in iter(range(len(allpdfinfo))):
             pdfinfo = allpdfinfo[x]
@@ -95,14 +96,15 @@ class TestPDFInfo(PDFInfoBase):
         update_pixel_coverage_calls = []
         pdfs = {}
         allpdfinfo = (
-                {"details": {"/Author":"Author1", "/Creator":"unittest","/Producer":"2016-02-11",
-                    "/Title": "pdftest"}},
-                {"details": {"/Author":"Author2", "/Creator":"unittest","/Producer":"2016-02-11",
-                    "/Title": "pdftest2"}},
-                {"details": {"/Author":"Author3", "/Creator":"unittest","/Producer":"2016-02-11",
-                    "/Title": "pdftest3"}},
-                {"details": {"/Author":"Author4", "/Creator":"unittest","/Producer":"2016-02-11",
-                    "/Title": "pdftest4"}, "images": ("image1", (100,100))},
+                {"details": {"/Author":"Author1", "/Creator":"unittest",
+                    "/Producer":"2016-02-11", "/Title": "pdftest"}},
+                {"details": {"/Author":"Author2", "/Creator":"unittest",
+                    "/Producer":"2016-02-11", "/Title": "pdftest2"}},
+                {"details": {"/Author":"Author3", "/Creator":"unittest",
+                    "/Producer":"2016-02-11", "/Title": "pdftest3"}},
+                {"details": {"/Author":"Author4", "/Creator":"unittest",
+                    "/Producer":"2016-02-11", "/Title": "pdftest4"}, 
+                    "images": ("image1", (100,100))},
                 )
         for x in xrange(len(allpdfinfo)):
             pdfinfo = allpdfinfo[x]
@@ -236,11 +238,13 @@ class TestPDFInfo(PDFInfoBase):
         self.assertTrue(self.plugin.pdf_named(self.mock_msg, "first"))
 
     def test_pdf_named_regex(self):
-        """Test pdf_named_regex (extract the images from the PDF and count them)
+        """Test pdf_named_regex 
+        (extract the images from the PDF and count them)
         """
         names = ["test.pdf", "test..pdf", "test...pdf"]
         self.plugin.set_local(self.mock_msg, "names", names)       
-        self.assertTrue(self.plugin.pdf_name_regex(self.mock_msg, "/^\w{1,9}\.\.pdf$/i"))
+        self.assertTrue(self.plugin.pdf_name_regex(self.mock_msg, 
+            "/^\w{1,9}\.\.pdf$/i"))
 
     def test_pdf_update_md5hash(self):
         """Test adding several hashes to the "md5hashes local value"""
