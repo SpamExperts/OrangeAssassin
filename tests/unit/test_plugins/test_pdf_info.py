@@ -106,7 +106,7 @@ class TestPDFInfo(PDFInfoBase):
                     "/Producer":"2016-02-11", "/Title": "pdftest4"}, 
                     "images": ("image1", (100,100))},
                 )
-        for x in xrange(len(allpdfinfo)):
+        for x in range(len(allpdfinfo)):
             pdfinfo = allpdfinfo[x]
             name = "%d.pdf" % x
             if "images" not in pdfinfo:
