@@ -87,7 +87,7 @@ class BodyEval(pad.plugins.base.BasePlugin):
             # If the token appears at least as many
             # times in the text part as in the html
             # part then it is valid.
-            if count >= html_tokens[token]:
+            if token in html_tokens and count >= html_tokens[token]:
                 valid_count += 1
         try:
             token_count = len(html_tokens)
@@ -177,10 +177,7 @@ class BodyEval(pad.plugins.base.BasePlugin):
 
         if self.get_local(msg, "line_count") < minlines:
             return False
-        try:
-            ratio = blank_line_count / line_count * 100
-        except ZeroDivisionError:
-            return False
+        ratio = blank_line_count / line_count * 100
         return minr <= ratio <= maxr
 
     # XXX Strange name?
@@ -194,7 +191,7 @@ class BodyEval(pad.plugins.base.BasePlugin):
           and False otherwise.
 
         """
-        if target == "raw":
+        if target == "rawbody":
             text = msg.raw_text
         else:
             text = msg.text
@@ -204,7 +201,6 @@ class BodyEval(pad.plugins.base.BasePlugin):
             ratio = space_count / (len(text) - space_count) * 100
         except ZeroDivisionError:
             return False
-
         return minr <= ratio <= maxr
 
     def check_stock_info(self, msg, minwords, target=None):
@@ -217,9 +213,9 @@ class BodyEval(pad.plugins.base.BasePlugin):
           in the message, and False otherwise.
         """
         minwords = int(minwords)
-        if target == "raw":
+        if target == "rawbody":
             text = msg.raw_text
         else:
             text = msg.text
-        stock_count = sum(1 for _ in SPACE_COUNT.finditer(text))
+        stock_count = sum(1 for _ in STOCK_RE.finditer(text))
         return stock_count >= minwords
