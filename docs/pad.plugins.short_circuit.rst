@@ -16,6 +16,9 @@ Example usage
     report Details: _SCORE_/_REQD_ (_SCTYPE_)
     add_header all Status "_YESNO_, score=_SCORE_ shortcircuit=_SCTYPE_"
 
+    shortcircuit_spam_score 100
+    shortcircuit_ham_score -100
+
     body            TEST_RULE   /test/
     describe        TEST_RULE   Test Rule
     score           TEST_RULE   0.01
@@ -24,8 +27,9 @@ Example usage
 Usage
 =====
 
-To short circuit a rule simply add the `shortcircuit` command to
-the configuration file::
+The plugin adds a new :ref:`rule option <rule-options>`
+`shortcircuit`. To short circuit a rule simply add  to the
+configuration file::
 
     shortcircuit    <rule identifier>   [on|off|ham|spam]
 
@@ -53,13 +57,18 @@ behaviour is applied:
 Options
 =======
 
-**shortcircuit_spam_score** `float` 100.0
+**shortcircuit_spam_score** 100.0 (type `float`)
     The score applied for short-circuited rules with the `spam`
     type
 
-**shortcircuit_ham_score** `float` -100.0
+**shortcircuit_ham_score** -100.0 (type `float`)
     The score applied for short-circuited rules with the `ham`
     type
+
+EVAL rules
+==========
+
+None
 
 Tags
 ====

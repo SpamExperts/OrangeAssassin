@@ -219,7 +219,7 @@ class BasePlugin(object):
         May be overridden.
         """
 
-    def extract_metadata(self, msg, paylod, part):
+    def extract_metadata(self, msg, payload, text, part):
         """Called while the message metadata is extracted for every message
         part. If the part contains text, corresponding payload is provided,
         else it will be None.

@@ -27,7 +27,6 @@ STOCK_RE = re.compile(r"""
 """, re.I | re.S | re.X | re.M)
 
 
-
 class BodyEval(pad.plugins.base.BasePlugin):
     eval_rules = (
         "multipart_alternative_difference",
@@ -46,9 +45,9 @@ class BodyEval(pad.plugins.base.BasePlugin):
         self.set_local(msg, "text_tokens", collections.Counter())
         self.set_local(msg, "html_tokens", collections.Counter())
 
-    def extract_metadata(self, msg, payload, part):
+    def extract_metadata(self, msg, payload, text, part):
         """Parse each part and extract the relevant tokens."""
-        super(BodyEval, self).extract_metadata(msg, payload, part)
+        super(BodyEval, self).extract_metadata(msg, payload, text, part)
         multiparts = self.get_local(msg, "multiparts")
         if part.get_content_type() == "multipart/alternative":
             # The actual parts and text will come after
@@ -58,20 +57,20 @@ class BodyEval(pad.plugins.base.BasePlugin):
             return
 
         content_type = part.get_content_type()
-        if (id(part) not in multiparts or not payload or
+        if (id(part) not in multiparts or not text or
                 content_type not in ("text/plain", "text/html")):
             # Unknown part or empty part, skip it.
             return
 
         words = (REMOVE_OTHER.sub('', word)
-                 for word in SPLIT_WORDS.split(payload))
+                 for word in SPLIT_WORDS.split(text))
         if content_type.lower() == "text/plain":
             self.get_local(msg, "text_tokens").update(
-                word for word in words if word
+                word.lower() for word in words if word
             )
         elif content_type.lower() == "text/html":
             self.get_local(msg, "html_tokens").update(
-                word for word in words if word
+                word.lower() for word in words if word
             )
 
     def parsed_metadata(self, msg):
@@ -88,7 +87,7 @@ class BodyEval(pad.plugins.base.BasePlugin):
             # If the token appears at least as many
             # times in the text part as in the html
             # part then it is valid.
-            if count >= html_tokens[token]:
+            if token in html_tokens and count >= html_tokens[token]:
                 valid_count += 1
         try:
             token_count = len(html_tokens)
@@ -117,7 +116,6 @@ class BodyEval(pad.plugins.base.BasePlugin):
 
         Note that this excludes any HTML tags from the count.
 
-        :param msg: the message that's being checked
         :param minr: the inferior value of the threshold
         :param maxr: the superior value of the threshold
         :return: True if the ratio is between the two values
@@ -138,7 +136,6 @@ class BodyEval(pad.plugins.base.BasePlugin):
         will be larger than 1.0. If more tokens are seen in the
         HTML version, the ration will be smaller then 1.0.
 
-        :param msg: the message that's being checked
         :param ratio: the inferior threshold value of the ratio
         :param minhtml: if there are less than this number
           of HTML tokens, the rule won't match
@@ -162,7 +159,6 @@ class BodyEval(pad.plugins.base.BasePlugin):
         """Check the ratio of blank lines to the number of
         lines in the message body.
 
-        :param msg: the message that's being checked
         :param minr: the inferior value of the threshold
         :param maxr: the superior value of the threshold
         :param minlines: this rule will match only if the
@@ -178,24 +174,20 @@ class BodyEval(pad.plugins.base.BasePlugin):
 
         if self.get_local(msg, "line_count") < minlines:
             return False
-        try:
-            ratio = blank_line_count / line_count * 100
-        except ZeroDivisionError:
-            return False
+        ratio = blank_line_count / line_count * 100
         return minr <= ratio <= maxr
 
     # XXX Strange name?
     def tvd_vertical_words(self, msg, minr, maxr, target=None):
         """Check the ratio of spaces to non-spaces.
 
-        :param msg: the message that's being checked
         :param minr: the inferior value of the threshold
         :param maxr: the superior value of the threshold
         :return: True if the ratio is between the two values
           and False otherwise.
 
         """
-        if target == "raw":
+        if target == "rawbody":
             text = msg.raw_text
         else:
             text = msg.text
@@ -205,22 +197,20 @@ class BodyEval(pad.plugins.base.BasePlugin):
             ratio = space_count / (len(text) - space_count) * 100
         except ZeroDivisionError:
             return False
-
         return minr <= ratio <= maxr
 
     def check_stock_info(self, msg, minwords, target=None):
         """Check the message for common stock market words.
 
-        :param msg: the message that's being checked
         :param minwords: the minimum number of words to be
           found for this rule to match.
         :return: True if there are at least `minwords` found
           in the message, and False otherwise.
         """
         minwords = int(minwords)
-        if target == "raw":
+        if target == "rawbody":
             text = msg.raw_text
         else:
             text = msg.text
-        stock_count = sum(1 for _ in SPACE_COUNT.finditer(text))
+        stock_count = sum(1 for _ in STOCK_RE.finditer(text))
         return stock_count >= minwords

@@ -159,7 +159,7 @@ class PDFInfoPlugin(pad.plugins.base.BasePlugin):
         try:
             return self.get_local(msg, "md5hashes")
         except KeyError:
-            return []
+            return set()
 
     def _update_pdf_hashes(self, msg, newhash):
         try:
@@ -183,7 +183,9 @@ class PDFInfoPlugin(pad.plugins.base.BasePlugin):
             details = self.get_local(msg, "details")
         except KeyError:
             details = collections.defaultdict()
-        if not details.has_key(pdfid):
+        try:
+            details[pdfid]
+        except KeyError:
             details[pdfid] = collections.defaultdict()
         details[pdfid][detail] = value
         self.set_local(msg, "details", details)
@@ -202,7 +204,8 @@ class PDFInfoPlugin(pad.plugins.base.BasePlugin):
         for pdfid in details:
             allpdfs = details[pdfid]
             for pdf in allpdfs:
-                if detail_re.match(pdf.get(detail, "")):
+                value = allpdfs[pdf]
+                if detail_re.match(value):
                     return True
         return False
 
@@ -246,6 +249,7 @@ class PDFInfoPlugin(pad.plugins.base.BasePlugin):
         pdf_id = md5(payload).hexdigest()
         self._update_pdf_hashes(msg, pdf_id)
         pdffobject = BytesIO(payload)
+        self._update_pdf_size(msg, incr=len(pdffobject.getvalue()))
         pdfobject = PyPDF2.PdfFileReader(pdffobject)
         self._update_is_encrypted(msg, pdfobject.isEncrypted)
         if pdfobject.isEncrypted:
@@ -274,8 +278,7 @@ class PDFInfoPlugin(pad.plugins.base.BasePlugin):
                 height = obj["/Height"]
                 self._update_pixel_coverage(msg, incr=width * height)
 
-
-    def extract_metadata(self, msg, payload, part):
+    def extract_metadata(self, msg, payload, text, part):
         """Extend to extract the PDF metadata"""
         if part.get_content_type() == "application/pdf":
             name = part.get_param("name")

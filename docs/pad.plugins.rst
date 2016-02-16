@@ -17,6 +17,14 @@ Plugin :mod:`awl`
     :undoc-members:
     :show-inheritance:
 
+Plugin :mod:`body_eval`
+-----------------------
+
+.. automodule:: pad.plugins.body_eval
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 Plugin :mod:`dump_text`
 -----------------------
 
