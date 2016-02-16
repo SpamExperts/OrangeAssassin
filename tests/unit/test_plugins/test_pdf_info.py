@@ -208,7 +208,7 @@ class TestPDFInfo(PDFInfoBase):
             "pixel_coverage"), expected)
 
     def test_pdf_pixel_coverage(self):
-        """Test pdf_pixel_coverate
+        """Test pdf_pixel_coverage
         """
         self.plugin.set_local(self.mock_msg, "pixel_coverage", 3)       
         self.assertTrue(self.plugin.pdf_pixel_coverage(self.mock_msg, 3, 5))
