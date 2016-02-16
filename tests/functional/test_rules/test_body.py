@@ -19,6 +19,11 @@ class TestBodyRules(tests.util.TestBase):
                            config="body TEST_RULE /abcd/",
                            score=1.0, symbols=["TEST_RULE"])
 
+    def test_body_rule_case_insensitive_match(self):
+        self.check_symbols("Subject: test\n\nTest ABCD test.",
+                           config="body TEST_RULE /abcd/i",
+                           score=1.0, symbols=["TEST_RULE"])
+
     def test_body_rule_no_match(self):
         self.check_symbols("Subject: test\n\nTest abc test.",
                            config="body TEST_RULE /abcd/",
