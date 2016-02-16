@@ -116,7 +116,6 @@ class BodyEval(pad.plugins.base.BasePlugin):
 
         Note that this excludes any HTML tags from the count.
 
-        :param msg: the message that's being checked
         :param minr: the inferior value of the threshold
         :param maxr: the superior value of the threshold
         :return: True if the ratio is between the two values
@@ -137,7 +136,6 @@ class BodyEval(pad.plugins.base.BasePlugin):
         will be larger than 1.0. If more tokens are seen in the
         HTML version, the ration will be smaller then 1.0.
 
-        :param msg: the message that's being checked
         :param ratio: the inferior threshold value of the ratio
         :param minhtml: if there are less than this number
           of HTML tokens, the rule won't match
@@ -161,7 +159,6 @@ class BodyEval(pad.plugins.base.BasePlugin):
         """Check the ratio of blank lines to the number of
         lines in the message body.
 
-        :param msg: the message that's being checked
         :param minr: the inferior value of the threshold
         :param maxr: the superior value of the threshold
         :param minlines: this rule will match only if the
@@ -184,7 +181,6 @@ class BodyEval(pad.plugins.base.BasePlugin):
     def tvd_vertical_words(self, msg, minr, maxr, target=None):
         """Check the ratio of spaces to non-spaces.
 
-        :param msg: the message that's being checked
         :param minr: the inferior value of the threshold
         :param maxr: the superior value of the threshold
         :return: True if the ratio is between the two values
@@ -206,7 +202,6 @@ class BodyEval(pad.plugins.base.BasePlugin):
     def check_stock_info(self, msg, minwords, target=None):
         """Check the message for common stock market words.
 
-        :param msg: the message that's being checked
         :param minwords: the minimum number of words to be
           found for this rule to match.
         :return: True if there are at least `minwords` found
