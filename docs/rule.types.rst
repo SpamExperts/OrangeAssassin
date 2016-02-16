@@ -257,3 +257,8 @@ a plugin and apply the score if function returns True. Example::
 See the specific plugins documentation for all the EVAL methods it exposes and
 any other relevant details.
 
+.. note::
+
+    When checking the method code reference ignore the **msg** and **target**
+    parameters as those are passed by default to all eval methods.
+
