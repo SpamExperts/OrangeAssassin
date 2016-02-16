@@ -11,7 +11,7 @@ except ImportError:
 import pad.plugins.body_eval
 
 
-class TestReplaceTags(unittest.TestCase):
+class TestBodyEval(unittest.TestCase):
     def setUp(self):
         unittest.TestCase.setUp(self)
         self.local_data = {
@@ -287,3 +287,13 @@ class TestReplaceTags(unittest.TestCase):
             self.mock_msg, 3, "body"
         )
         self.assertFalse(result)
+
+
+def suite():
+    """Gather all the tests from this package in a test suite."""
+    test_suite = unittest.TestSuite()
+    test_suite.addTest(unittest.makeSuite(TestBodyEval, "test"))
+    return test_suite
+
+if __name__ == '__main__':
+    unittest.main(defaultTest='suite')
