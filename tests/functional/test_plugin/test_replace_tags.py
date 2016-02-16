@@ -69,7 +69,7 @@ This rule should mathch: %s
 
 
 class TestFunctionalReplaceTags(tests.util.TestBase):
-    """Functional Tests for the RelayCountryPlugin"""
+    """Functional Tests for the ReplaceTagsPlugin"""
 
     def setUp(self):
         tests.util.TestBase.setUp(self)
