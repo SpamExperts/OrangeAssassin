@@ -2,6 +2,8 @@
 Rule Types
 **********
 
+.. _full-rule:
+
 Full Rule
 =========
 
@@ -14,6 +16,8 @@ Example rule::
 The `full` rule type matches a regular expression against the full raw
 message. This means that no parts are decoded and the message is in the same
 format as it was received.
+
+.. _body-rule:
 
 Body Rules
 ==========
@@ -55,6 +59,8 @@ parts or removing any HTML tags.
 The message is:
 
 - decoded and stripped of any headers
+
+.. _header-rule:
 
 Header Rule
 ===========
@@ -173,6 +179,7 @@ header names that will change the behaviour.
     header      ONE_EXAMPLE_ID   MESSAGEID =~ /example.com/
     describe    ONE_EXAMPLE_ID   Message ID from example.com
 
+.. _mime-header-rule:
 
 MimeHeader Rule
 ===============
@@ -188,6 +195,7 @@ The only modifier available for the `mimeheader` is **RAW**. Examples::
     mimeheader  HAS_PDF_ATTACHMENT  Content-Type:raw =~ /^application\/pdf/i
     describe    HAS_PDF_ATTACHMENT  Message has pdf attachments
 
+.. _uri-rule:
 
 URI Rule
 ========
@@ -197,6 +205,8 @@ the message. Example::
 
     uri         HAS_EXAMPLE_HTTPS   /^https:\/\/example.com$/\
     describe    HAS_EXAMPLE_HTTPS   Message has HTTPS link to example.com
+
+.. _meta-rule:
 
 Meta Rule
 =========
@@ -232,6 +242,7 @@ Examples::
     describe    NO_DKIM_AND_URL         No DKIM signature and example.com URL
     score       NO_DKIM_AND_URL         3.5
 
+.. _eval-rule:
 
 Eval Rule
 =========

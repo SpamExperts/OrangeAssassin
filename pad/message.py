@@ -317,20 +317,22 @@ class Message(pad.context.MessageContext):
         body = list(self.get_decoded_header("Subject"))
         raw_body = list()
         for payload, part in self._iter_parts(self.msg):
-            self._hook_extract_metadata(payload, part)
             # Extract any MIME headers
             for name, raw_value in part._headers:
                 self.raw_mime_headers[name].append(raw_value)
+            text = None
             if payload is not None:
                 # this must be a text part
                 self.uri_list.update(set(URL_RE.findall(payload)))
                 if part.get_content_subtype() == "html":
-                    body.extend(self.normalize_html_part(payload.replace("\n",
-                                                                         " ")))
+                    text = self.normalize_html_part(payload.replace("\n", " "))
+                    body.extend(text)
                     raw_body.append(payload)
                 else:
-                    body.append(payload.replace("\n", " "))
+                    text = payload.replace("\n", " ")
+                    body.append(text)
                     raw_body.append(payload)
+            self._hook_extract_metadata(payload, text, part)
         self.text = " ".join(body)
         self.raw_text = "\n".join(raw_body)
 
