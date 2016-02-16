@@ -13,7 +13,7 @@ full path to the file::
     loadplugin MyCustomPlugin /home/pad/my_plugins/custom_plugin.py
 
 Some plugins are reimplementing existing ones from SA. The full list can be
-seen in :py:mod:`pad.plugins`::
+seen in :mod:`pad.plugins.__init__`::
 
     loadplugin Mail::SpamAssassin::Plugin::Pyzor
 
