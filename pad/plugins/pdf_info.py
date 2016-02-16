@@ -184,7 +184,7 @@ class PDFInfoPlugin(pad.plugins.base.BasePlugin):
         except KeyError:
             details = collections.defaultdict()
         try:
-            details.has_key(pdfid)
+            details[pdfid]
         except KeyError:
             details[pdfid] = collections.defaultdict()
         details[pdfid][detail] = value
