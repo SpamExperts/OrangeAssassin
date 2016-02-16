@@ -159,7 +159,7 @@ class PDFInfoPlugin(pad.plugins.base.BasePlugin):
         try:
             return self.get_local(msg, "md5hashes")
         except KeyError:
-            return []
+            return set()
 
     def _update_pdf_hashes(self, msg, newhash):
         try:
