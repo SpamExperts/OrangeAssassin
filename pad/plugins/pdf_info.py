@@ -58,12 +58,7 @@ class PDFInfoPlugin(pad.plugins.base.BasePlugin):
         maximum: optional, if specified, must not contain more than x pdf mime parts
         """
         count = self._get_count(msg)
-        match = False
-        if count >= minimum:
-            match = True
-            if maximum:
-                match = count <= maximum
-        return match
+        return minimum <= count <= (maximum or float("inf"))
 
     def _get_image_count(self, msg):
         """Get the number of Images in PDF attachments"""
@@ -87,13 +82,8 @@ class PDFInfoPlugin(pad.plugins.base.BasePlugin):
         maximum: optional, if specified, must not contain more than x pdf images
         """
         count = self._get_image_count(msg)
-        match = False
-        if count >= minimum:
-            match = True
-            if maximum:
-                match = count <= maximum
-        return match
-
+        return minimum <= count <= (maximum or float("inf"))
+        
     def _get_pixel_coverage(self, msg):
         """Return the cumulative pixel coverage"""
         try:
@@ -118,12 +108,7 @@ class PDFInfoPlugin(pad.plugins.base.BasePlugin):
         much pixel area
         """
         coverage = self._get_pixel_coverage(msg)
-        match = False
-        if coverage >= minimum:
-            match = True
-            if maximum:
-                match = coverage <= maximum
-        return match
+        return minimum <= coverage <= (maximum or float("inf"))
 
     def _get_pdf_names(self, msg):
         try:
@@ -183,7 +168,9 @@ class PDFInfoPlugin(pad.plugins.base.BasePlugin):
             details = self.get_local(msg, "details")
         except KeyError:
             details = collections.defaultdict()
-        if not details.has_key(pdfid):
+        try:
+            details[pdfid]
+        except KeyError:
             details[pdfid] = collections.defaultdict()
         details[pdfid][detail] = value
         self.set_local(msg, "details", details)
@@ -264,10 +251,10 @@ class PDFInfoPlugin(pad.plugins.base.BasePlugin):
                 resources = page["/Resources"]
             except KeyError:
                 continue
-            if not "/Xobject" in resources:
+            if not "/XObject" in resources:
                 continue
             for key in resources["/XObject"]:
-                obj = resources["/Xobject"][key]
+                obj = resources["/XObject"][key]
                 typ = obj["/Subtype"]
                 if typ != "/Image":
                     continue

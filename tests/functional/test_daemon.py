@@ -105,8 +105,7 @@ class TestDaemon(unittest.TestCase):
         cls.padd_procs.append(subprocess.Popen(args))
         # Allow time for server to initialize
         sleep_time = 1.0
-        if (platform.python_implementation().lower() == "pypy" and
-                sys.version_info.major == 2):
+        if platform.python_implementation().lower() == "pypy":
             # PyPy is much slower at initialization, so allow
             # for more time. This is only ran once so the impact
             # is minimal anyway.
