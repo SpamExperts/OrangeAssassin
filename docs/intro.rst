@@ -41,16 +41,13 @@ To run the project's tests you will need to first:
 #. Install the the dependencies for the python version you are using from the
    `requirements` folder
 #. Install the dependencies for running tests from `requirements/tests.txt`
-#. Download the GeoIP database::
-
-    wget http://geolite.maxmind.com/download/geoip/database/GeoLiteCountry/GeoIP.dat.gz
-    gunzip GeoIP.dat.gz
-    wget http://geolite.maxmind.com/download/geoip/database/GeoIPv6.dat.gz
-    gunzip GeoIPv6.dat.gz
-
+#. Download the GeoIP databases (for IPv4 and IPv6)
 #. Run the `setup.py` script
 
-    python setup.py install
+.. note::
+
+    Some requirements (e.g. Pillow) require some additional build
+    dependencies when installing them.
 
 The SpamPAD tests are split into *unittest* and *functional* tests.
 
@@ -70,11 +67,48 @@ Or you can run *all* the tests with just::
 
     py.test
 
+
+An example for Python3 would be:
+
+.. code-block:: bash
+
+    sudo apt-get install python3-dev libjpeg-dev build-essential zlib1g-dev
+    virtualenv -p /usr/bin/python3 ~/pad-env
+    source ~/pad-env/bin/activate
+    git clone https://github.com/SpamExperts/SpamPAD
+    cd SpamPAD
+    pip install -r requirements/base.txt
+    pip install -r requirements/python3.txt
+    pip install -r requirements/tests.txt
+    wget http://geolite.maxmind.com/download/geoip/database/GeoLiteCountry/GeoIP.dat.gz
+    gunzip GeoIP.dat.gz
+    wget http://geolite.maxmind.com/download/geoip/database/GeoIPv6.dat.gz
+    gunzip GeoIPv6.dat.gz
+    python setup.py install
+    py.test
+
+
 .. note::
 
     See also the `.travis.yml` file where all these instructions are set
     for the automatic builds.
 
+Building documentation
+======================
+
+In order to build the documentation based on the docs files from the
+repository:
+
+#. Run the same steps for running the tests (including installing all
+   requirements, installing SpamPAD, etc.).
+#. Install the documentation libraries from `requirements/docs.txt`
+#. Change directory to `docs`
+#. Run `make html`
+#. The HTML version of the documentation will be generated in the
+   `docs/_build/` directory.
+
+See also the helper script `docs/generate_plugin_doc.py` that generates
+a documentation page for the specified plugin.
 
 License
 =======
