@@ -165,7 +165,7 @@ class BasePlugin(object):
 
         May be overridden.
         """
-        if key in self.options:
+        if self.options and key in self.options:
             set_func = getattr(self, "set_%s_option" % self.options[key][0])
             set_func(key, value)
             self.inhibit_further_callbacks()
