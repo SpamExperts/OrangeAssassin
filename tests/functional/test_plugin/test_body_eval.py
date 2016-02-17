@@ -27,7 +27,6 @@ class TestBodyEval(tests.util.TestBase):
     def tearDown(self):
         tests.util.TestBase.tearDown(self)
 
-    @unittest.SkipTest
     def test_real_msg_with_errors(self):
         """Check real multipart message"""
         cwd = os.path.join(os.getcwd(), "pad", "plugins", "body_eval.py")

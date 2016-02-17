@@ -326,7 +326,8 @@ class Message(pad.context.MessageContext):
                 self.uri_list.update(set(URL_RE.findall(payload)))
                 if part.get_content_subtype() == "html":
                     text = self.normalize_html_part(payload.replace("\n", " "))
-                    body.extend(text)
+                    text = " ".join(text)
+                    body.append(text)
                     raw_body.append(payload)
                 else:
                     text = payload.replace("\n", " ")

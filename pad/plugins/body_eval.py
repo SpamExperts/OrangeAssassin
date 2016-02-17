@@ -116,6 +116,7 @@ class BodyEval(pad.plugins.base.BasePlugin):
 
         Note that this excludes any HTML tags from the count.
 
+        :param msg: the message that's being checked
         :param minr: the inferior value of the threshold
         :param maxr: the superior value of the threshold
         :return: True if the ratio is between the two values
