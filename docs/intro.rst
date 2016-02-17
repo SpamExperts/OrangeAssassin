@@ -108,7 +108,11 @@ repository:
    `docs/_build/` directory.
 
 See also the helper script `docs/generate_plugin_doc.py` that generates
-a documentation page for the specified plugin.
+a documentation page for the specified plugin. After adding a new plugin:
+
+* Use the script to generate a new page for it
+* Add a reference to the list from `docs/plugins.rst`
+* Add autodoc to `docs/pad.plugins.rst`
 
 License
 =======
