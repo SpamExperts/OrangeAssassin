@@ -4,6 +4,7 @@ ReplaceTags
 ***********
 
 This plugin allows rules to contain regular expression tags.
+
 Example usage
 =============
 

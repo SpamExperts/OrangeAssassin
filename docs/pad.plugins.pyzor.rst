@@ -4,6 +4,7 @@ PyzorPlugin
 ***********
 
 Pyzor check plugin.
+
 Example usage
 =============
 

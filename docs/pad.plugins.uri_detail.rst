@@ -4,6 +4,7 @@ URIDetailPlugin
 ***************
 
 URIDetail Plugin.
+
 Example usage
 =============
 

@@ -4,6 +4,7 @@ ImageInfoPlugin
 ***************
 
 Image Info plugin.
+
 Example usage
 =============
 

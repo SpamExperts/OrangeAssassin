@@ -18,6 +18,7 @@ TEMPLATE = """
 {{ "*"* plugin.__name__|length }}
 
 {{ module.__doc__ }}
+
 Example usage
 =============
 

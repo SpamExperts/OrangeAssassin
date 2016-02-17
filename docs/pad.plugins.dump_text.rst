@@ -4,6 +4,7 @@ DumpText
 ********
 
 Similar to the DumpText demo SA plugin.
+
 Example usage
 =============
 
