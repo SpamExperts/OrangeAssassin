@@ -118,7 +118,14 @@ html_theme = 'alabaster'
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
 # documentation.
-#html_theme_options = {}
+html_theme_options = {
+    "travis_button": True,
+    "github_button": True,
+    "github_user": "SpamExperts",
+    "github_repo": "SpamPAD",
+    "github_banner": True,
+    "show_related": True,
+}
 
 # Add any paths that contain custom themes here, relative to this directory.
 #html_theme_path = []
@@ -357,12 +364,3 @@ epub_exclude_files = ['search.html']
 
 # If false, no index is generated.
 #epub_use_index = True
-
-
-def linkcode_resolve(domain, info):
-    if domain != 'py':
-        return None
-    if not info['module']:
-        return None
-    filename = info['module'].replace('.', '/')
-    return "https://github.com/SpamExperts/SpamPAD/blob/master/%s.py" % filename
