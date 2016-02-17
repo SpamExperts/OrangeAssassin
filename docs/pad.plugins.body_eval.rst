@@ -32,11 +32,16 @@ None
 EVAL rules
 ==========
 
-* :meth:`multipart_alternative_difference(min, max) <pad.plugins.body_eval.BodyEval.multipart_alternative_difference>`
-* :meth:`multipart_alternative_difference_count(ratio, minhtml) <pad.plugins.body_eval.BodyEval.multipart_alternative_difference_count>`
-* :meth:`check_blank_line_ratio(min, max, minlines=1) <pad.plugins.body_eval.BodyEval.check_blank_line_ratio>`
-* :meth:`tvd_vertical_words(min, max) <pad.plugins.body_eval.BodyEval.tvd_vertical_words>`
-* :meth:`check_stock_info(minwords) <pad.plugins.body_eval.BodyEval.check_stock_info>`
+.. automethod:: pad.plugins.body_eval.BodyEval.multipart_alternative_difference
+    :noindex:
+.. automethod:: pad.plugins.body_eval.BodyEval.multipart_alternative_difference_count
+    :noindex:
+.. automethod:: pad.plugins.body_eval.BodyEval.check_blank_line_ratio
+    :noindex:
+.. automethod:: pad.plugins.body_eval.BodyEval.tvd_vertical_words
+    :noindex:
+.. automethod:: pad.plugins.body_eval.BodyEval.check_stock_info
+    :noindex:
 
 Tags
 ====

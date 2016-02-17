@@ -24,8 +24,19 @@ Available plugins
 .. toctree::
     :maxdepth: 1
 
+    pad.plugins.awl
     pad.plugins.body_eval
+    pad.plugins.dump_text
+    pad.plugins.image_info
+    pad.plugins.pdf_info
+    pad.plugins.pyzor
+    pad.plugins.relay_country
+    pad.plugins.replace_tags
     pad.plugins.short_circuit
+    pad.plugins.textcat
+    pad.plugins.uri_detail
+    pad.plugins.whitelist_subject
+
 
 Plugin reference
 ================
