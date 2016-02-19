@@ -273,6 +273,27 @@ class TestPDFHash(PDFInfoBase):
         self.plugin.set_local(self.mock_msg, "md5hashes", ["1234567890", ])
         self.assertFalse(self.plugin.pdf_match_md5(self.mock_msg, "123456789"))
 
+    def test_pdf_fuzzy_md5(self):
+        """Test pdf_match_fuzzy_md5 with a match
+        """
+        hashes = set(["1234567890"])
+        self.plugin.set_local(self.mock_msg, "fuzzy_md5_hashes", hashes)
+        self.assertTrue(self.plugin.pdf_match_fuzzy_md5(self.mock_msg, 
+                                                        "1234567890"))
+    def test_pdf_fuzzy_md5_no_match(self):
+        """Test pdf_match_fuzzy_md5 with no match"""
+        self.assertFalse(self.plugin.pdf_match_fuzzy_md5(self.mock_msg, 
+                                                        "1234567890"))
+
+    def test_pdf_update_fuzzy_md5hash(self):
+        """Test setting fuzzy_md5_hashes in the context local values"""
+        hashes = ["1234567890","0987654321","qwertyuiop"]
+        expeted = set()
+        for tmphash in hashes:
+            expeted.add(tmphash)
+            self.plugin._update_fuzzy_md5(self.mock_msg, tmphash)
+        self.assertEqual(self.plugin.get_local(self.mock_msg, "fuzzy_md5_hashes"),
+                         expeted)
     # XXX Still need to get the fuzzy md5 tests
 
 class TestPDFDetails(PDFInfoBase):

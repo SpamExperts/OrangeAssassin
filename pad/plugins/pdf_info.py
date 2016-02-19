@@ -158,9 +158,24 @@ class PDFInfoPlugin(pad.plugins.base.BasePlugin):
         """string: 32-byte md5 hex"""
         return md5hash in self._get_pdf_hashes(msg)
 
-    def pdf_match_fuzzy_md5(self, md5hash):
+    def _update_fuzzy_md5(self, msg, texthash):
+        """Add a md5 hash for text in a PDF"""
+        hashes = self._get_fuzzy_md5(msg)
+        hashes.add(texthash.lower())
+        self.set_local(msg, "fuzzy_md5_hashes", hashes)
+
+    def _get_fuzzy_md5(self, msg):
+        """Return the set with the md5 hashes for fuzzy text"""
+        try:
+            return self.get_local(msg, "fuzzy_md5_hashes")
+        except:
+            return set()
+
+    def pdf_match_fuzzy_md5(self, msg, md5hash):
         """string: 32-byte md5 hex - see ruleset for obtaining the fuzzy md5"""
-        pass
+        hashes = self._get_fuzzy_md5(msg)
+        return md5hash in hashes
+
 
     def _update_details(self, msg, pdfid, detail, value):
         """Update the details for the PDF attachments"""
@@ -247,6 +262,11 @@ class PDFInfoPlugin(pad.plugins.base.BasePlugin):
             self._update_details(msg, pdf_id, "producer", document_info.producer)
             self._update_details(msg, pdf_id, "title", document_info.title)
         for page in pdfobject.pages:
+            #Get the text for the corrent page, get the md5 for fuzzy md5
+            text = page.extractText()
+            if text:
+                fuzzy_md5 = md5(text).hexdigest()
+                self._update_fuzzy_md5(msg, fuzzy_md5)
             try:
                 resources = page["/Resources"]
             except KeyError:
