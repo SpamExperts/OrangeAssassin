@@ -128,6 +128,7 @@ class PDFInfoPlugin(pad.plugins.base.BasePlugin):
     def pdf_named(self, msg, name):
         """string: exact file name match, if you need partial match, see
         pdf_name_regex()
+        Please note that this string match is case sensitive.
         """
         return name in self._get_pdf_names(msg)
 
@@ -172,7 +173,10 @@ class PDFInfoPlugin(pad.plugins.base.BasePlugin):
             return set()
 
     def pdf_match_fuzzy_md5(self, msg, md5hash):
-        """string: 32-byte md5 hex - see ruleset for obtaining the fuzzy md5"""
+        """string: 32-byte md5 hex - Please note that in order to get the 
+        fuzzy md5 hash the plugin extracts the string from each page of the 
+        PDF file then create a hash per page. The match is done to each of this
+        hashes"""
         hashes = self._get_fuzzy_md5(msg)
         return md5hash in hashes
 
@@ -192,7 +196,10 @@ class PDFInfoPlugin(pad.plugins.base.BasePlugin):
 
 
     def pdf_match_details(self, msg, detail, regex):
-        """detail: author, creator, created, modified, producer, title
+        """Match if the detail match with any of the PDF files in the 
+        message. 
+
+        detail: author, creator, created, modified, producer, title
         regex: regular expression, see examples in ruleset
         """
         try:
@@ -219,7 +226,7 @@ class PDFInfoPlugin(pad.plugins.base.BasePlugin):
 
 
     def pdf_is_encrypted(self, msg):
-        """Return if any of the PDF attachments is encrypted
+        """Return True if any of the PDF attachments is encrypted
         """
         try:
             return True in self.get_local(msg, "pdf_encrypted")

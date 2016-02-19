@@ -37,6 +37,8 @@ EVAL rules
     :noindex:
 .. automethod:: pad.plugins.pdf_info.PDFInfoPlugin.pdf_match_md5
     :noindex:
+.. automethod:: pad.plugins.pdf_info.PDFInfoPlugin.pdf_match_fuzzy_md5
+    :noindex:
 .. automethod:: pad.plugins.pdf_info.PDFInfoPlugin.pdf_match_details
     :noindex:
 .. automethod:: pad.plugins.pdf_info.PDFInfoPlugin.pdf_is_encrypted
