@@ -16,20 +16,22 @@ def new_pdf(details, name, width=216, height=280):
     return {"data": pdfio,
             "name": name}
 
+
 def new_email(pdfs):
     msg = MIMEMultipart()
     for pdf in pdfs.values():
         stream = pdf["data"]
         stream.seek(0)
         data = stream.read()
-        pdfp = MIMEApplication(data, "pdf", name = pdf["name"])
+        pdfp = MIMEApplication(data, "pdf", name=pdf["name"])
         pdfp.add_header("Content-Disposition", "attachment",
                         filename=pdf["name"])
         msg.attach(pdfp)
     return msg
 
+
 class PDFWithAttachments():
-    def __init__(self, details, name, width = 216, height = 280):
+    def __init__(self, details, name, width=216, height=280):
         self._images = []
         self.pdfobj = PyPDF2.PdfFileWriter()
         self.pdfobj.addMetadata(details)

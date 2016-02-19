@@ -65,20 +65,21 @@ class TestPDFInfo(PDFInfoBase):
                          "/Created": "2016-02-11", "/Title": "pdftest4"},
              "images": ("image1", (100, 100))},
         )
-        for i, pdfinfo in enumerate(allpdfinfo):
+        for i, pdf_info in enumerate(allpdfinfo):
             name = "%d.pdf" % i
-            if "images" not in pdfinfo:
-                pdfobj = new_pdf(details=pdfinfo["details"], name=name)
+            if "images" not in pdf_info:
+                pdf_object = new_pdf(details=pdf_info["details"], name=name)
             else:
                 pdfc = PDFWithAttachments(
-                    details=pdfinfo["details"], name=name)
-                image = new_image_string(pdfinfo["images"][1])
-                pdfc.addAttachment(pdfinfo["images"][0], image)
-                pdfobj = {"data": pdfc.as_file(), "name": name}
-            pdfs.update({i: pdfobj})
+                    details=pdf_info["details"], name=name)
+                image = new_image_string(pdf_info["images"][1])
+                pdfc.addAttachment(pdf_info["images"][0], image)
+                pdf_object = {"data": pdfc.as_file(), "name": name}
+            pdfs.update({i: pdf_object})
             add_name_calls.append(call(self.mock_msg, name))
             update_counts_calls.append(call(self.mock_msg, incr=1))
-            save_stats_calls.append(call(self.mock_msg, pdfobj["data"].read()))
+            save_stats_calls.append(call(self.mock_msg,
+                                         pdf_object["data"].read()))
 
         self.mock_msg.msg = new_email(pdfs)
 
@@ -97,28 +98,22 @@ class TestPDFInfo(PDFInfoBase):
             "pad.plugins.pdf_info.PDFInfoPlugin._update_image_counts").start()
         patch(
             "pad.plugins.pdf_info.PDFInfoPlugin._update_pixel_coverage").start()
-        update_details_calls = []
-        update_image_count_calls = []
-        update_pixel_coverage_calls = []
-        pdfs = {}
         datastore = BytesIO()
-        with open("tests/data/pdftest.pdf", "rb") as pdffp:
-            datastore.write(pdffp.read())
+        with open("tests/data/pdftest.pdf", "rb") as pdf_file:
+            datastore.write(pdf_file.read())
         if not datastore.getvalue():
             return
         pdf_id = md5(datastore.getvalue()).hexdigest()
-        pdfobj = PyPDF2.PdfFileReader(datastore)
-        info = pdfobj.getDocumentInfo()
-        update_image_count_calls.append(call(self.mock_msg, incr=1))
-        update_pixel_coverage_calls.append(call(self.mock_msg, incr=360800))
-        update_details_calls.append(
-            call(self.mock_msg, pdf_id, "author", info.author))
-        update_details_calls.append(
-            call(self.mock_msg, pdf_id, "creator", info.creator))
-        update_details_calls.append(
-            call(self.mock_msg, pdf_id, "producer", info.producer))
-        update_details_calls.append(
-            call(self.mock_msg, pdf_id, "title", info.title))
+        pdf_object = PyPDF2.PdfFileReader(datastore)
+        info = pdf_object.getDocumentInfo()
+        update_image_count_calls = [call(self.mock_msg, incr=1), ]
+        update_pixel_coverage_calls = [call(self.mock_msg, incr=360800), ]
+        update_details_calls = [
+            call(self.mock_msg, pdf_id, "author", info.author),
+            call(self.mock_msg, pdf_id, "creator", info.creator),
+            call(self.mock_msg, pdf_id, "producer", info.producer),
+            call(self.mock_msg, pdf_id, "title", info.title)
+        ]
         pdfs = {1: {"data": datastore, "name": "pdftest.pdf"}}
         self.mock_msg.msg = new_email(pdfs)
 
@@ -133,6 +128,7 @@ class TestPDFInfo(PDFInfoBase):
             update_image_count_calls)
         self.plugin._update_pixel_coverage.assert_has_calls(
             update_pixel_coverage_calls)
+
 
 class TestPDFCount(PDFInfoBase):
     """Tests for counting the PDF files in the message """
@@ -159,6 +155,7 @@ class TestPDFCount(PDFInfoBase):
         """
         self.plugin.set_local(self.mock_msg, "counts", 3)
         self.assertTrue(self.plugin.pdf_count(self.mock_msg, 3, 5))
+
 
 class TestPDFImageCount(PDFInfoBase):
     """Tests for  image and pixel count"""
@@ -210,6 +207,7 @@ class TestPDFImageCount(PDFInfoBase):
         self.plugin.set_local(self.mock_msg, "pixel_coverage", 3)
         self.assertTrue(self.plugin.pdf_pixel_coverage(self.mock_msg, 3, 5))
 
+
 class TestPDFName(PDFInfoBase):
     """Tests related to the PDF file name"""
     def test_add_name(self):
@@ -244,6 +242,7 @@ class TestPDFName(PDFInfoBase):
         self.plugin.set_local(self.mock_msg, "names", names)
         self.assertTrue(self.plugin.pdf_name_regex(self.mock_msg,
                                                    r"/^\w{1,9}\.\.pdf$/i"))
+
 
 class TestPDFHash(PDFInfoBase):
     """Tests related to the PDF MD5 hash"""
@@ -288,40 +287,44 @@ class TestPDFHash(PDFInfoBase):
     def test_pdf_update_fuzzy_md5hash(self):
         """Test setting fuzzy_md5_hashes in the context local values"""
         hashes = ["1234567890","0987654321","qwertyuiop"]
-        expeted = set()
+        expected = set()
         for tmphash in hashes:
-            expeted.add(tmphash)
+            expected.add(tmphash)
             self.plugin._update_fuzzy_md5(self.mock_msg, tmphash)
-        self.assertEqual(self.plugin.get_local(self.mock_msg, "fuzzy_md5_hashes"),
-                         expeted)
+        self.assertEqual(self.plugin.get_local(self.mock_msg,
+                                               "fuzzy_md5_hashes"), expected)
     # XXX Still need to get the fuzzy md5 tests
 
+
 class TestPDFDetails(PDFInfoBase):
-    """Tests related to the PDF details, like author, creator, modified, title"""
+    """Tests related to the PDF details, like author,
+    creator, modified, title"""
+
     def test_pdf_update_details(self):
         """Test the _update_details method"""
         # Details are stored per pdf file (in practice identified by the md5)
         # then by the detail key (author, creator, created, modified,
         # producer, title)
-        pdfid = "1234567890"
+        pdf_id = "1234567890"
         details = {"author": "testauthor", "creator": "test creator",
                    "created": "1970-01-01 00:00:00", "modified": "None",
                    "producer": "unittest", "title": "Pdf Test"}
         for key in details:
-            self.plugin._update_details(self.mock_msg, pdfid, key,
+            self.plugin._update_details(self.mock_msg, pdf_id, key,
                                         details[key])
 
-        plugin_values = self.plugin.get_local(self.mock_msg, "details")[pdfid]
+        plugin_values = self.plugin.get_local(self.mock_msg, "details")[pdf_id]
         for key in details:
             self.assertEqual(plugin_values[key], details[key])
 
     def test_pdf_match_details(self):
         """Test the match_details method"""
-        pdfid = "1234567890"
-        self.plugin._update_details(self.mock_msg, pdfid, "author",
+        pdf_id = "1234567890"
+        self.plugin._update_details(self.mock_msg, pdf_id, "author",
                                     "TestAuthor")
         self.assertTrue(self.plugin.pdf_match_details(self.mock_msg, "author",
                                                       r"/^tes\w{1,9}$/i"))
+
 
 class TestPDFEncrypted(PDFInfoBase):
     """Tests for encrypted PDFs"""
@@ -347,6 +350,7 @@ class TestPDFEncrypted(PDFInfoBase):
         self.plugin._update_pdf_size(self.mock_msg, 300)
         self.assertEqual(self.plugin.get_local(self.mock_msg, "pdf_bytes"),
                          600)
+
 
 class TestPDFSize(PDFInfoBase):
     """Tests for the PDF file size """
