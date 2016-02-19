@@ -9,6 +9,8 @@ options.
 After all rules are checked a final score is provided for the message and
 according to the `required_score` option the message is marked is spam.
 
+.. _defining-rules:
+
 Defining a rule
 ===============
 
@@ -36,6 +38,7 @@ the following exceptions:
     Rule that are not checked can still be used in combination with other
     rules. See the `meta` rule type for more details.
 
+.. _rule-options:
 
 Rule options
 ============
@@ -54,6 +57,7 @@ somewhere after the initial rule definition.
     Defining the same rule or option twice **will override** the previous
     value.
 
+.. _score-rule-options:
 
 Scoring option
 ==============
@@ -95,6 +99,8 @@ For the advanced scoring the following final score will be used:
 
     This configuration is optional and any rule that doesn't have it will
     get the default score of `1.0`.
+
+.. _describe-rule-options:
 
 Describe option
 ===============

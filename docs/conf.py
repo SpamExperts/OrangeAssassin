@@ -32,7 +32,8 @@ extensions = [
     'sphinx.ext.autodoc',
     'sphinx.ext.todo',
     'sphinx.ext.coverage',
-    'sphinx.ext.viewcode',
+    # 'sphinx.ext.viewcode',
+    # 'sphinx.ext.linkcode',
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -117,7 +118,14 @@ html_theme = 'alabaster'
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
 # documentation.
-#html_theme_options = {}
+html_theme_options = {
+    "travis_button": True,
+    "github_button": True,
+    "github_user": "SpamExperts",
+    "github_repo": "SpamPAD",
+    "github_banner": True,
+    "show_related": True,
+}
 
 # Add any paths that contain custom themes here, relative to this directory.
 #html_theme_path = []

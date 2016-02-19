@@ -58,12 +58,7 @@ class PDFInfoPlugin(pad.plugins.base.BasePlugin):
         maximum: optional, if specified, must not contain more than x pdf mime parts
         """
         count = self._get_count(msg)
-        match = False
-        if count >= minimum:
-            match = True
-            if maximum:
-                match = count <= maximum
-        return match
+        return minimum <= count <= (maximum or float("inf"))
 
     def _get_image_count(self, msg):
         """Get the number of Images in PDF attachments"""
@@ -87,13 +82,8 @@ class PDFInfoPlugin(pad.plugins.base.BasePlugin):
         maximum: optional, if specified, must not contain more than x pdf images
         """
         count = self._get_image_count(msg)
-        match = False
-        if count >= minimum:
-            match = True
-            if maximum:
-                match = count <= maximum
-        return match
-
+        return minimum <= count <= (maximum or float("inf"))
+        
     def _get_pixel_coverage(self, msg):
         """Return the cumulative pixel coverage"""
         try:
@@ -118,12 +108,7 @@ class PDFInfoPlugin(pad.plugins.base.BasePlugin):
         much pixel area
         """
         coverage = self._get_pixel_coverage(msg)
-        match = False
-        if coverage >= minimum:
-            match = True
-            if maximum:
-                match = coverage <= maximum
-        return match
+        return minimum <= coverage <= (maximum or float("inf"))
 
     def _get_pdf_names(self, msg):
         try:
@@ -143,6 +128,7 @@ class PDFInfoPlugin(pad.plugins.base.BasePlugin):
     def pdf_named(self, msg, name):
         """string: exact file name match, if you need partial match, see
         pdf_name_regex()
+        Please note that this string match is case sensitive.
         """
         return name in self._get_pdf_names(msg)
 
@@ -159,7 +145,7 @@ class PDFInfoPlugin(pad.plugins.base.BasePlugin):
         try:
             return self.get_local(msg, "md5hashes")
         except KeyError:
-            return []
+            return set()
 
     def _update_pdf_hashes(self, msg, newhash):
         try:
@@ -173,9 +159,27 @@ class PDFInfoPlugin(pad.plugins.base.BasePlugin):
         """string: 32-byte md5 hex"""
         return md5hash in self._get_pdf_hashes(msg)
 
-    def pdf_match_fuzzy_md5(self, md5hash):
-        """string: 32-byte md5 hex - see ruleset for obtaining the fuzzy md5"""
-        pass
+    def _update_fuzzy_md5(self, msg, texthash):
+        """Add a md5 hash for text in a PDF"""
+        hashes = self._get_fuzzy_md5(msg)
+        hashes.add(texthash.lower())
+        self.set_local(msg, "fuzzy_md5_hashes", hashes)
+
+    def _get_fuzzy_md5(self, msg):
+        """Return the set with the md5 hashes for fuzzy text"""
+        try:
+            return self.get_local(msg, "fuzzy_md5_hashes")
+        except:
+            return set()
+
+    def pdf_match_fuzzy_md5(self, msg, md5hash):
+        """string: 32-byte md5 hex - Please note that in order to get the 
+        fuzzy md5 hash the plugin extracts the string from each page of the 
+        PDF file then create a hash per page. The match is done to each of this
+        hashes"""
+        hashes = self._get_fuzzy_md5(msg)
+        return md5hash in hashes
+
 
     def _update_details(self, msg, pdfid, detail, value):
         """Update the details for the PDF attachments"""
@@ -183,14 +187,19 @@ class PDFInfoPlugin(pad.plugins.base.BasePlugin):
             details = self.get_local(msg, "details")
         except KeyError:
             details = collections.defaultdict()
-        if not details.has_key(pdfid):
+        try:
+            details[pdfid]
+        except KeyError:
             details[pdfid] = collections.defaultdict()
         details[pdfid][detail] = value
         self.set_local(msg, "details", details)
 
 
     def pdf_match_details(self, msg, detail, regex):
-        """detail: author, creator, created, modified, producer, title
+        """Match if the detail match with any of the PDF files in the 
+        message. 
+
+        detail: author, creator, created, modified, producer, title
         regex: regular expression, see examples in ruleset
         """
         try:
@@ -202,7 +211,8 @@ class PDFInfoPlugin(pad.plugins.base.BasePlugin):
         for pdfid in details:
             allpdfs = details[pdfid]
             for pdf in allpdfs:
-                if detail_re.match(pdf.get(detail, "")):
+                value = allpdfs[pdf]
+                if detail_re.match(value):
                     return True
         return False
 
@@ -216,7 +226,7 @@ class PDFInfoPlugin(pad.plugins.base.BasePlugin):
 
 
     def pdf_is_encrypted(self, msg):
-        """Return if any of the PDF attachments is encrypted
+        """Return True if any of the PDF attachments is encrypted
         """
         try:
             return True in self.get_local(msg, "pdf_encrypted")
@@ -246,6 +256,7 @@ class PDFInfoPlugin(pad.plugins.base.BasePlugin):
         pdf_id = md5(payload).hexdigest()
         self._update_pdf_hashes(msg, pdf_id)
         pdffobject = BytesIO(payload)
+        self._update_pdf_size(msg, incr=len(pdffobject.getvalue()))
         pdfobject = PyPDF2.PdfFileReader(pdffobject)
         self._update_is_encrypted(msg, pdfobject.isEncrypted)
         if pdfobject.isEncrypted:
@@ -258,12 +269,19 @@ class PDFInfoPlugin(pad.plugins.base.BasePlugin):
             self._update_details(msg, pdf_id, "producer", document_info.producer)
             self._update_details(msg, pdf_id, "title", document_info.title)
         for page in pdfobject.pages:
+            #Get the text for the corrent page, get the md5 for fuzzy md5
+            text = page.extractText()
+            if text:
+                fuzzy_md5 = md5(text).hexdigest()
+                self._update_fuzzy_md5(msg, fuzzy_md5)
             try:
                 resources = page["/Resources"]
             except KeyError:
                 continue
+            if not "/XObject" in resources:
+                continue
             for key in resources["/XObject"]:
-                obj = resources["/Xobject"][key]
+                obj = resources["/XObject"][key]
                 typ = obj["/Subtype"]
                 if typ != "/Image":
                     continue
@@ -272,10 +290,9 @@ class PDFInfoPlugin(pad.plugins.base.BasePlugin):
                 height = obj["/Height"]
                 self._update_pixel_coverage(msg, incr=width * height)
 
-
-    def extract_metadata(self, msg, payload, part):
+    def extract_metadata(self, msg, payload, text, part):
         """Extend to extract the PDF metadata"""
-        if part.get_content_maintype() == "pdf":
+        if part.get_content_type() == "application/pdf":
             name = part.get_param("name")
             self._add_name(msg, name)
             self._update_counts(msg, incr=1)

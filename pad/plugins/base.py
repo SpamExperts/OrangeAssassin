@@ -165,7 +165,7 @@ class BasePlugin(object):
 
         May be overridden.
         """
-        if key in self.options:
+        if self.options and key in self.options:
             set_func = getattr(self, "set_%s_option" % self.options[key][0])
             set_func(key, value)
             self.inhibit_further_callbacks()
@@ -219,7 +219,7 @@ class BasePlugin(object):
         May be overridden.
         """
 
-    def extract_metadata(self, msg, paylod, part):
+    def extract_metadata(self, msg, payload, text, part):
         """Called while the message metadata is extracted for every message
         part. If the part contains text, corresponding payload is provided,
         else it will be None.

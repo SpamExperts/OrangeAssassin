@@ -188,7 +188,7 @@ class TestImageInfo(tests.util.TestBase):
         """Check message for image name, size and coverage
         and no matches"""
         cwd = os.path.join(os.getcwd(), "pad", "plugins", "image_info.py")
-        self.setup_conf(CONFIG_NAMED + "\n" + CONFIG_SIZED + 
+        self.setup_conf(CONFIG_NAMED + "\n" + CONFIG_SIZED +
                         "\n" + CONFIG_COVERAGE,
                         pre_config="loadplugin ImageInfoPlugin {0}\n"
                         "report _SCORE_".format(cwd))
