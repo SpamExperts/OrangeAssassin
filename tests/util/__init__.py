@@ -56,7 +56,8 @@ class TestBase(unittest.TestCase):
         with open(os.path.join(self.test_conf, "20.cf"), "w") as conf:
             conf.write(config)
 
-    def check_pad(self, message, message_only=False, report_only=True, extra_args=None):
+    def check_pad(self, message, message_only=False, report_only=True,
+                  extra_args=None, debug=False):
         """Run the match script and return the result.
 
         :param message: Pipe this message to the script
@@ -64,8 +65,12 @@ class TestBase(unittest.TestCase):
          report only. Otherwise return the message and report.
         :return: The result of the script.
         """
-        args = [self.match_script, "-D", "-t", "-C", self.test_conf,
-                "--siteconfigpath", self.test_conf]
+        if debug:
+            args = [self.match_script, "-D", "-t", "-C", self.test_conf,
+                    "--siteconfigpath", self.test_conf]
+        else:
+            args = [self.match_script, "-t", "-C", self.test_conf,
+                    "--siteconfigpath", self.test_conf]
         if extra_args is not None:
             args.extend(extra_args)
         proc = subprocess.Popen(args, stdin=subprocess.PIPE,
