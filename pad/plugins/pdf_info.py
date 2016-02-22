@@ -270,7 +270,7 @@ class PDFInfoPlugin(pad.plugins.base.BasePlugin):
             self._update_details(msg, pdf_id, "title", document_info.title)
         for page in pdfobject.pages:
             #Get the text for the corrent page, get the md5 for fuzzy md5
-            text = page.extractText()
+            text = page.extractText().encode("utf8")
             if text:
                 fuzzy_md5 = md5(text).hexdigest()
                 self._update_fuzzy_md5(msg, fuzzy_md5)
