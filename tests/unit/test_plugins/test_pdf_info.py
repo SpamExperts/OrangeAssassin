@@ -129,7 +129,7 @@ class TestPDFInfo(PDFInfoBase):
         self.plugin._update_pixel_coverage.assert_has_calls(
             update_pixel_coverage_calls)
 
-    @unittest.SkipTest
+    #@unittest.SkipTest
     def test_save_stats_text(self):
         """Test the _save_stats method"""
         patch("pad.plugins.pdf_info.PDFInfoPlugin._update_details").start()
@@ -145,8 +145,6 @@ class TestPDFInfo(PDFInfoBase):
         pdf_id = md5(datastore.getvalue()).hexdigest()
         pdf_object = PyPDF2.PdfFileReader(datastore)
         info = pdf_object.getDocumentInfo()
-        update_image_count_calls = [call(self.mock_msg, incr=1), ]
-        update_pixel_coverage_calls = [call(self.mock_msg, incr=360800), ]
         update_details_calls = [
             call(self.mock_msg, pdf_id, "author", info.author),
             call(self.mock_msg, pdf_id, "creator", info.creator),
@@ -163,10 +161,6 @@ class TestPDFInfo(PDFInfoBase):
             self.plugin._save_stats(self.mock_msg, payload)
 
         self.plugin._update_details.assert_has_calls(update_details_calls)
-        self.plugin._update_image_counts.assert_has_calls(
-            update_image_count_calls)
-        self.plugin._update_pixel_coverage.assert_has_calls(
-            update_pixel_coverage_calls)
 
     @unittest.SkipTest
     def test_save_stats_encrypted(self):
@@ -183,6 +177,7 @@ class TestPDFInfo(PDFInfoBase):
             return
         pdf_id = md5(datastore.getvalue()).hexdigest()
         pdf_object = PyPDF2.PdfFileReader(datastore)
+        # Can't get the info of a encrypted file...    
         info = pdf_object.getDocumentInfo()
         update_image_count_calls = [call(self.mock_msg, incr=1), ]
         update_pixel_coverage_calls = [call(self.mock_msg, incr=360800), ]
