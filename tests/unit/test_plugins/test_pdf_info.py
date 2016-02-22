@@ -91,7 +91,7 @@ class TestPDFInfo(PDFInfoBase):
         self.plugin._update_counts.assert_has_calls(update_counts_calls)
         self.plugin._save_stats.assert_has_calls(save_stats_calls)
 
-    def test_update_stats(self):
+    def test_save_stats(self):
         """Test the _save_stats method"""
         patch("pad.plugins.pdf_info.PDFInfoPlugin._update_details").start()
         patch(
@@ -128,6 +128,85 @@ class TestPDFInfo(PDFInfoBase):
             update_image_count_calls)
         self.plugin._update_pixel_coverage.assert_has_calls(
             update_pixel_coverage_calls)
+
+    @unittest.SkipTest
+    def test_save_stats_text(self):
+        """Test the _save_stats method"""
+        patch("pad.plugins.pdf_info.PDFInfoPlugin._update_details").start()
+        patch(
+            "pad.plugins.pdf_info.PDFInfoPlugin._update_image_counts").start()
+        patch(
+            "pad.plugins.pdf_info.PDFInfoPlugin._update_pixel_coverage").start()
+        datastore = BytesIO()
+        with open("tests/data/pdftest_text.pdf", "rb") as pdf_file:
+            datastore.write(pdf_file.read())
+        if not datastore.getvalue():
+            return
+        pdf_id = md5(datastore.getvalue()).hexdigest()
+        pdf_object = PyPDF2.PdfFileReader(datastore)
+        info = pdf_object.getDocumentInfo()
+        update_image_count_calls = [call(self.mock_msg, incr=1), ]
+        update_pixel_coverage_calls = [call(self.mock_msg, incr=360800), ]
+        update_details_calls = [
+            call(self.mock_msg, pdf_id, "author", info.author),
+            call(self.mock_msg, pdf_id, "creator", info.creator),
+            call(self.mock_msg, pdf_id, "producer", info.producer),
+            call(self.mock_msg, pdf_id, "title", info.title)
+        ]
+        pdfs = {1: {"data": datastore, "name": "pdftest.pdf"}}
+        self.mock_msg.msg = new_email(pdfs)
+
+        for part in self.mock_msg.msg.walk():
+            payload = part.get_payload(decode=True)
+            if payload is None:
+                continue
+            self.plugin._save_stats(self.mock_msg, payload)
+
+        self.plugin._update_details.assert_has_calls(update_details_calls)
+        self.plugin._update_image_counts.assert_has_calls(
+            update_image_count_calls)
+        self.plugin._update_pixel_coverage.assert_has_calls(
+            update_pixel_coverage_calls)
+
+    @unittest.SkipTest
+    def test_save_stats_encrypted(self):
+        """Test the _save_stats method"""
+        patch("pad.plugins.pdf_info.PDFInfoPlugin._update_details").start()
+        patch(
+            "pad.plugins.pdf_info.PDFInfoPlugin._update_image_counts").start()
+        patch(
+            "pad.plugins.pdf_info.PDFInfoPlugin._update_pixel_coverage").start()
+        datastore = BytesIO()
+        with open("tests/data/pdftest_encrypted.pdf", "rb") as pdf_file:
+            datastore.write(pdf_file.read())
+        if not datastore.getvalue():
+            return
+        pdf_id = md5(datastore.getvalue()).hexdigest()
+        pdf_object = PyPDF2.PdfFileReader(datastore)
+        info = pdf_object.getDocumentInfo()
+        update_image_count_calls = [call(self.mock_msg, incr=1), ]
+        update_pixel_coverage_calls = [call(self.mock_msg, incr=360800), ]
+        update_details_calls = [
+            call(self.mock_msg, pdf_id, "author", info.author),
+            call(self.mock_msg, pdf_id, "creator", info.creator),
+            call(self.mock_msg, pdf_id, "producer", info.producer),
+            call(self.mock_msg, pdf_id, "title", info.title)
+        ]
+        pdfs = {1: {"data": datastore, "name": "pdftest.pdf"}}
+        self.mock_msg.msg = new_email(pdfs)
+
+        for part in self.mock_msg.msg.walk():
+            payload = part.get_payload(decode=True)
+            if payload is None:
+                continue
+            self.plugin._save_stats(self.mock_msg, payload)
+
+        self.plugin._update_details.assert_has_calls(update_details_calls)
+        self.plugin._update_image_counts.assert_has_calls(
+            update_image_count_calls)
+        self.plugin._update_pixel_coverage.assert_has_calls(
+            update_pixel_coverage_calls)
+
 
 
 class TestPDFCount(PDFInfoBase):
@@ -243,6 +322,14 @@ class TestPDFName(PDFInfoBase):
         self.assertTrue(self.plugin.pdf_name_regex(self.mock_msg,
                                                    r"/^\w{1,9}\.\.pdf$/i"))
 
+    def test_pdf_named_regex_no_match(self):
+        """Test pdf_named_regex with no match
+        """
+        names = ["test.pdf", "test..pdf", "test...pdf"]
+        self.plugin.set_local(self.mock_msg, "names", names)
+        self.assertFalse(self.plugin.pdf_name_regex(self.mock_msg,
+                                                    r"/^\w{1,9}\.\.xxx$/i"))
+
 
 class TestPDFHash(PDFInfoBase):
     """Tests related to the PDF MD5 hash"""
@@ -325,6 +412,19 @@ class TestPDFDetails(PDFInfoBase):
         self.assertTrue(self.plugin.pdf_match_details(self.mock_msg, "author",
                                                       r"/^tes\w{1,9}$/i"))
 
+    def test_pdf_match_details_keyerror(self):
+        """Test the match_details method when KeyError occurs"""
+        self.assertFalse(self.plugin.pdf_match_details(self.mock_msg, "author",
+                                                       r"/^tes\w{1,9}$/i"))
+
+    def test_pdf_match_details_no_match(self):
+        """Test the match_details method when no match"""
+        pdf_id = "1234567890"
+        self.plugin._update_details(self.mock_msg, pdf_id, "author",
+                                    "TestAuthor")
+        self.assertFalse(self.plugin.pdf_match_details(self.mock_msg, "author",
+                                                       r"/^xxx\w{1,9}$/i"))
+
 
 class TestPDFEncrypted(PDFInfoBase):
     """Tests for encrypted PDFs"""
@@ -337,10 +437,14 @@ class TestPDFEncrypted(PDFInfoBase):
         self.assertTrue(self.plugin.pdf_is_encrypted(self.mock_msg))
 
     def test_pdf_is_not_encrypted(self):
-        """Test pdf_is_encrypted"""
+        """Test pdf_is_encrypted false"""
         encrypted = set()
         encrypted.add(False)
         self.plugin.set_local(self.mock_msg, "pdf_encrypted", encrypted)
+        self.assertFalse(self.plugin.pdf_is_encrypted(self.mock_msg))
+
+    def test_pdf_encrypted_keyerror(self):
+        """Test pdf_is_encrypted with KeyError"""
         self.assertFalse(self.plugin.pdf_is_encrypted(self.mock_msg))
 
     def test_update_pdf_size(self):
@@ -364,6 +468,10 @@ class TestPDFSize(PDFInfoBase):
         """Test is_empty_body with 120 bytes, minimum 110, should not be
         considered empty"""
         self.plugin._update_pdf_size(self.mock_msg, 120)
+        self.assertFalse(self.plugin.pdf_is_empty_body(self.mock_msg, 110))
+
+    def test_pdf_is_empty_body_keyerror(self):
+        """Test is_empty_body with KeyError"""
         self.assertFalse(self.plugin.pdf_is_empty_body(self.mock_msg, 110))
 
 
