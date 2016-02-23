@@ -64,8 +64,8 @@ class TestBodyRules(tests.util.TestBase):
         config = ("header __TEST_DKIM_RULE exists:DKIM-Signature \n"
                   "header __TEST_SENDER_RULE From:addr =~ /@example.com/ \n"
                   "uri __TEST_URI_RULE /^https:\/\/example.com$/ \n"
-                  "meta TEST_DKIM_AND_FROM __TEST_DKIM_RULE || !__TEST_SENDER_RULE \n" # One of them should be true
-                  "score TEST_DKIM_AND_FROM 4.0")                                      # For this example the second is
+                  "meta TEST_DKIM_AND_FROM __TEST_DKIM_RULE || !__TEST_SENDER_RULE \n"  # One of them should be true
+                  "score TEST_DKIM_AND_FROM 4.0")                                       # For this example the second is
         self.check_symbols("To: test2 <test@example.com> \n"
                            "From: test <test@example.com>",
                            config=config,
