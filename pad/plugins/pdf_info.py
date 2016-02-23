@@ -84,6 +84,7 @@ class PDFInfoPlugin(pad.plugins.base.BasePlugin):
 
     def pdf_image_count(self, msg, minimum, maximum=None, target=None):
         """Check the number of images in the pdf attachments
+        
         :param minimum: required, message contains at least x images in pdf
         attachments.
         :param maximum: optional, if specified, must not contain more than x pdf
