@@ -59,6 +59,7 @@ class PDFInfoPlugin(pad.plugins.base.BasePlugin):
         :param minimum: required, message contains at least x pdf mime parts
         :param maximum: optional, if specified, must not contain more than x pdf mime
         parts.
+
         :return: True if the number of PDF files are more or equal to 'minimum' and
         less or equal than 'maximum' (if set)
         """
@@ -284,6 +285,7 @@ class PDFInfoPlugin(pad.plugins.base.BasePlugin):
 
         :param byts: maximum byte count to allow and still consider it
         empty
+
         :return: True if the cummulative PDF size is less than byts."""
         try:
             pdfbytes = self.get_local(msg, "pdf_bytes")
