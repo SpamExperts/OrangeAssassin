@@ -76,7 +76,7 @@ class TestBodyRules(tests.util.TestBase):
                            score=1000.0, symbols=["TEST_GTUBE"])
 
     def test_header_rule_utf8(self):
-        subject = "=?utf8?B?" + base64.b64encode("This is a spam message") + "?="
+        subject = "=?utf8?B?" + base64.b64encode(b"This is a spam message").decode('ascii') + "?="
         config = ("header TEST_UTF8_ENCODE Subject:raw =~ /^=\?utf8\?/ \n"
                   "score TEST_UTF8_ENCODE -0.5")
         self.check_symbols("Subject: %s\n\nTest email." % subject,
@@ -84,14 +84,14 @@ class TestBodyRules(tests.util.TestBase):
                            score=-0.5, symbols=["TEST_UTF8_ENCODE"])
 
     def test_header_rule_utf8_match(self):
-        subject = "=?utf8?B?" + base64.b64encode("This is a spam message") + "?="
+        subject = "=?utf8?B?" + base64.b64encode(b"This is a spam message").decode('ascii') + "?="
         config = "header TEST_UTF8_ENCODE Subject =~ /spam/"
         self.check_symbols("Subject: %s\n\nTest email." % subject,
                            config=config,
                            score=1.0, symbols=["TEST_UTF8_ENCODE"])
 
     def test_header_rule_utf8_no_match(self):
-        subject = "=?utf8?B?" + base64.b64encode("This is a clean message") + "?="
+        subject = "=?utf8?B?" + base64.b64encode(b"This is a clean message").decode('ascii') + "?="
         config = "header TEST_UTF8_ENCODE Subject =~ /spam/ \n"
         self.check_symbols("Subject: %s\n\nTest email." % subject,
                            config=config,
