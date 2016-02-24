@@ -29,13 +29,6 @@ UNUSUAL_CHARSETS_FOR_LOCALE = {
     'zh': ('GB1988', 'GB2312', 'GB231219800', 'GB18030', 'GBK', 'BIG5HKSCS',
            'BIG5', 'EUCTW', 'ISO2022CN'),
 
-    # Chinese Traditional charsets only
-    'zh.big5': ('BIG5HKSCS', 'BIG5', 'EUCTW', ),
-
-    # Chinese Simplified charsets only
-    'zh.gb2312': ('GB1988', 'GB2312', 'GB231219800', 'GB18030', 'GBK',
-                  'ISO2022CN',),
-
 }
 
 ALWAYS_OK_CHARSETS_PATTERN = """
