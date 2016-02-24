@@ -24,5 +24,7 @@ REIMPLEMENTED_PLUGINS = {
     "Mail::SpamAssassin::Plugin::Shortcircuit":
         "pad.plugins.short_circuit.ShortCircuit",
     "Mail::SpamAssassin::Plugin::BodyEval":
-        "pad.plugins.body_eval.BodyEval"
+        "pad.plugins.body_eval.BodyEval",
+    "Mail::SpamAssassin::Plugin::DNSEval":
+        "pad.plugins.dns_eval.DNSEval",
 }

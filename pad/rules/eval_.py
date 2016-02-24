@@ -19,12 +19,12 @@ class EvalRule(pad.rules.base.BaseRule):
         super(EvalRule, self).__init__(name, score=score, desc=desc)
         try:
             eval_rule_name, eval_args = _EVAL_RULE_P.match(eval_rule).groups()
-            self._eval_rule = eval_rule_name
+            self.eval_rule_name = eval_rule_name
             if eval_args:
-                self._eval_args = tuple(
+                self.eval_args = tuple(
                         eval(arg) for arg in eval_args.split(","))
             else:
-                self._eval_args = tuple()
+                self.eval_args = tuple()
         except (TypeError, ValueError, AttributeError):
             raise pad.errors.InvalidRule(self.name, "Invalid eval rule: %s" %
                                          eval_rule)
@@ -44,14 +44,14 @@ class EvalRule(pad.rules.base.BaseRule):
         """
         super(EvalRule, self).preprocess(ruleset)
         try:
-            method = ruleset.ctxt.eval_rules[self._eval_rule]
+            method = ruleset.ctxt.eval_rules[self.eval_rule_name]
         except KeyError:
             raise pad.errors.InvalidRule(self.name, "Undefined eval rule "
                                                     "referenced: %s" %
-                                         self._eval_rule)
+                                         self.eval_rule_name)
 
         def new_method(msg):
-            return method(*((msg,) + self._eval_args), target=self.target)
+            return method(*((msg,) + self.eval_args), target=self.target)
 
         self.eval_rule = new_method
 

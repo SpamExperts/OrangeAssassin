@@ -196,6 +196,16 @@ class Message(pad.context.MessageContext):
             values.append(self._decode_header(value))
         return values
 
+    def get_untrusted_ips(self):
+        """Returns the untrusted IPs based on the users trusted
+        network settings.
+
+        :return: A list of `ipaddress.ip_address`.
+        """
+        # XXX This should take into consideration the network
+        # XXX options. #40
+        return self.get_header_ips()
+
     def get_header_ips(self):
         values = list()
         for value in self.get_received_headers("Received"):

@@ -1,1 +1,2 @@
 ipaddress==1.0.16
+dnspython3==1.12.0
