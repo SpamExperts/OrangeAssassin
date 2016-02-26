@@ -27,10 +27,8 @@ class RuleSet(object):
         invalid rule is ignored.
         """
         self.ctxt = ctxt
+        self.conf = ctxt.conf
         self.tags = set()
-        self.report = []
-        self.report_contact = ""
-        self.report_safe = 1
         # Store modification that need to be done to the message in
         # the following format:
         # (True/False, header_name, value)
@@ -47,24 +45,23 @@ class RuleSet(object):
         self.autolearn = False
         self.use_bayes = True
         self.use_network = True
-        self.required_score = 5.0
 
     def _interpolate(self, text, msg):
         if msg.interpolate_data:
             return text % msg.interpolate_data
 
-        spam = msg.score >= self.required_score
+        spam = msg.score >= self.conf["required_score"]
         data = msg.interpolate_data
         # Initialize all tags with a empty value
         for tag in self.tags:
             data[tag] = "@@%s@@" % tag
 
-        data["CONTACTADDRESS"] = self.report_contact
+        data["CONTACTADDRESS"] = self.conf["report_contact"]
         data["HOSTNAME"] = socket.gethostname()
         data["YESNOCAPS"] = "YES" if spam else "NO"
         data["YESNO"] = "Yes" if spam else "No"
         data["SCORE"] = "%0.1f" % msg.score
-        data["REQD"] = "%0.1f" % self.required_score
+        data["REQD"] = "%0.1f" % self.conf["required_score"]
         data["SUBVERSION"] = pad.__release_date__
         data["VERSION"] = pad.__version__
 
@@ -109,12 +106,6 @@ class RuleSet(object):
             self.tags.add(tag[1])
         return _TAG_RE.sub(r"%(\2)s", text)
 
-    def add_report(self, text):
-        """Add some text to the report used when the message
-        is classified as Spam.
-        """
-        self.report.append(self._convert_tags(text))
-
     def get_report(self, msg):
         """Get the Spam report for this message
 
@@ -122,25 +113,11 @@ class RuleSet(object):
           Spam message.
 
         """
-        if not self.report:
+        if not self.conf["report"]:
             return "\n(no report template found)\n"
-        return self._interpolate("\n".join(self.report), msg) + "\n"
+        return self._interpolate(self.conf["report"], msg) + "\n"
 
-    def clear_report_template(self):
-        """Reset the report."""
-        self.ctxt.log.debug("Clearing report template")
-        self.report = []
-
-    def clear_headers(self):
-        """Remove all rules that modify headers to the message."""
-        self.ctxt.log.debug("Clearing headers")
-        self.header_mod = {
-            "spam": [],
-            "ham": [],
-            "all": [],
-        }
-
-    def add_header_rule(self, value, remove=False):
+    def _add_header_rule(self, value, remove=False):
         """Add rule to add a header for the corresponding.
 
         The value must be in the following format:
@@ -168,12 +145,12 @@ class RuleSet(object):
 
     def get_adjusted_message(self, msg, header_only=False):
         """Get message adjusted by the rules."""
-        spam = msg.score >= self.required_score
-        if not spam or header_only or self.report_safe == 0:
+        spam = msg.score >= self.conf["required_score"]
+        if not spam or header_only or self.conf["report_safe"] == 0:
             newmsg = email.message_from_string(msg.raw_msg)
         else:
             newmsg = self._get_bounce_message(msg)
-        if self.report_safe == 0:
+        if self.conf["report_safe"] == 0:
             newmsg.add_header("X-Spam-Report",
                               self.get_matched_report(msg))
         self._adjust_headers(msg, newmsg, self.header_mod["all"])
@@ -222,7 +199,7 @@ class RuleSet(object):
         newmsg.epilogue = ""
 
         attach_type = ("message", "rfc882")
-        if self.report_safe == 2:
+        if self.conf["report_safe"] == 2:
             attach_type = ("text", "plain")
 
         newmsg.attach(email.mime.text.MIMEText(self.get_report(msg)))
@@ -284,6 +261,16 @@ class RuleSet(object):
                     if self.ctxt.paranoid:
                         raise
                     del rule_list[name]
+        self.conf["report"] = "\n".join(
+            self._convert_tags(value)
+            for value in self.conf["report"]
+        )
+        for value in self.conf["add_header"]:
+            self._add_header_rule(value, False)
+        del self.conf["add_header"]
+        for value in self.conf["remove_header"]:
+            self._add_header_rule(value, True)
+        del self.conf["remove_header"]
 
     def match(self, msg):
         """Match the message against all the rules in this ruleset."""

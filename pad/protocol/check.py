@@ -13,12 +13,12 @@ class CheckCommand(pad.protocol.base.BaseProtocol):
 
     def handle(self, msg, options):
         self.ruleset.match(msg)
-        if msg.score >= self.ruleset.required_score:
+        if msg.score >= self.ruleset.conf["required_score"]:
             spam = True
         else:
             spam = False
         yield "Spam: %s ; %s / %s\r\n" % (spam, msg.score,
-                                          self.ruleset.required_score)
+                                          self.ruleset.conf["required_score"])
         result = "".join(self.extra_details(msg, options))
         yield "Content-length: %s\r\n\r\n" % len(result)
         yield result
@@ -67,7 +67,7 @@ class ReportIfSpamCommand(ReportCommand):
         """Return a full report of rules that matched
         the message, if it's Spam.
         """
-        if msg.score < self.ruleset.required_score:
+        if msg.score < self.ruleset.conf["required_score"]:
             return
         result = super(ReportIfSpamCommand, self).extra_details(msg, options)
         for line in result:

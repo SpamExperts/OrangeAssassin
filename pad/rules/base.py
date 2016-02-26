@@ -50,7 +50,7 @@ class BaseRule(object):
         if len(self._scores) != 4:
             # Nothing to do
             return
-        flags = ruleset.use_bayes, ruleset.use_network
+        flags = ruleset.conf["use_bayes"], ruleset.conf["use_network"]
         self.score = _ADVANCED_SCORING[flags](self._scores)
 
     def postprocess(self, ruleset):

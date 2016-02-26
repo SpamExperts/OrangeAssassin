@@ -21,7 +21,10 @@ class TestCheckCommand(unittest.TestCase):
         self.msg = Mock(score=0)
         self.mockr = Mock()
         self.mockw = Mock()
-        self.mockrules = Mock(required_score=5)
+        self.conf = {
+            "required_score": 5
+        }
+        self.mockrules = Mock(conf=self.conf)
 
     def tearDown(self):
         unittest.TestCase.tearDown(self)

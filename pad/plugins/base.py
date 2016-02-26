@@ -108,7 +108,7 @@ class BasePlugin(pad.conf.Conf, object):
                 # The connect string is already in the correct format
                 connect_string = dsn
         if connect_string is not None:
-            self.set_global("engine", create_engine(connect_string))
+            self["engine"] = create_engine(connect_string)
 
     def get_session(self):
         """Open a new SQLAlchemy session."""

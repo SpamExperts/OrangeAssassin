@@ -38,6 +38,15 @@ class Conf(object):
             for key, (dummy, value) in self.options.items():
                 self.set_global(key, value)
 
+    def __setitem__(self, key, value):
+        self.set_global(key, value)
+
+    def __getitem__(self, item):
+        return self.get_global(item)
+
+    def __delitem__(self, key):
+        self.del_global(key)
+
     def set_global(self, key, value):
         """Store data in the global context"""
         self.ctxt.set_plugin_data(self._plugin_name, key, value)
@@ -110,9 +119,10 @@ class Conf(object):
         """Clear the current option's value and replace it
         with the default.
         """
-        default = self.options[key][1]
-        real_key = key.split("_", 1)[1]
-        self.set_global(real_key, default)
+        real_keys = self.options[key][1]
+        for real_key in real_keys:
+            default = self.options[real_key][1]
+            self.set_global(real_key, default)
 
     def inhibit_further_callbacks(self):
         """Tells the plugin handler to inhibit calling into other plugins in
@@ -133,13 +143,23 @@ class Conf(object):
             set_func = getattr(self, "set_%s_option" % self.options[key][0])
             set_func(key, value)
             self.inhibit_further_callbacks()
-#
-#
-# class PADConf(Conf):
-#     """Main configuration of SpamPAD"""
-#
-#     options = {
-#
-#     }
-#
+
+
+class PADConf(Conf):
+    """Main configuration of SpamPAD"""
+
+    options = {
+        "report": ("append", []),
+        "clear_report_template": ("clear", ["report"]),
+        "report_contact": ("str", ""),
+        "report_safe": ("int", 1),
+        "add_header": ("append", []),
+        "remove_header": ("append", []),
+        "clear_headers": ("clear", ["add_header", "remove_header"]),
+        "required_score": ("float", 5.0),
+        "use_bayes": ("bool", True),
+        "use_network": ("bool", True),
+    }
+
+
 

@@ -42,8 +42,8 @@ class RelayCountryPlugin(pad.plugins.base.BasePlugin):
         super(RelayCountryPlugin, self).finish_parsing_end(ruleset)
         reader_ipv4 = self.load_database()
         reader_ipv6 = self.load_database("-ipv6")
-        self.set_global("ipv4", reader_ipv4)
-        self.set_global("ipv6", reader_ipv6)
+        self["ipv4"] = reader_ipv4
+        self["ipv6"] = reader_ipv6
 
     def load_database(self, which=""):
         """Load the csv file and create a list of items where to search the IP.

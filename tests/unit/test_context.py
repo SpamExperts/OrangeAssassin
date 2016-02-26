@@ -270,6 +270,7 @@ class TestGlobalContextUnloadPlugin(unittest.TestCase):
         ctxt.plugin_data["TestPlugin"]["test"] = "value"
 
         ctxt.unload_plugin("TestPlugin")
+        del ctxt.plugin_data["PADConf"]
         self.assertEqual(ctxt.plugin_data, {})
 
 

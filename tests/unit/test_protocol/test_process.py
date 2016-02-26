@@ -16,8 +16,10 @@ class TestProcessCommand(unittest.TestCase):
         unittest.TestCase.setUp(self)
         self.mockr = Mock()
         self.mockw = Mock()
-        self.mockrules = Mock()
-        self.mockrules.required_score = 5
+        self.conf = {
+            "required_score": 5
+        }
+        self.mockrules = Mock(conf=self.conf)
         for klass in ("ProcessCommand", "HeadersCommand"):
             patch("pad.protocol.process.%s.get_and_handle" % klass).start()
         self.msg = Mock(score=0)

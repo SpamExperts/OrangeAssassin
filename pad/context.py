@@ -22,6 +22,7 @@ import dns
 import dns.resolver
 import dns.reversename
 
+import pad.conf
 import pad.errors
 import pad.rules.base
 import pad.plugins.base
@@ -108,6 +109,7 @@ class GlobalContext(_Context):
         self.ignore_unknown = ignore_unknown
         self.eval_rules = dict()
         self.cmds = dict()
+        self.conf = pad.conf.PADConf(self)
 
     def err(self, *args, **kwargs):
         """Log a error according to the paranoid and
@@ -259,6 +261,9 @@ class GlobalContext(_Context):
     @_callback_chain
     def hook_parse_config(self, key, value):
         """Hook for the parsing configuration files."""
+        # First check the SpamPAD default config and
+        # then check all the plugins.
+        self.conf.parse_config(key, value)
         for plugin in self.plugins.values():
             if plugin.parse_config(key, value):
                 break

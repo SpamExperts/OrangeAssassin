@@ -22,9 +22,13 @@ class TestBasePlugin(unittest.TestCase):
                                         create=True).start()
         self.mock_session_maker = patch("pad.plugins.base.sessionmaker",
                                         create=True).start()
+        self.conf = {
+            "use_bayes": True,
+            "use_network": True,
+        }
         self.mock_ctxt = MagicMock()
         self.mock_msg = MagicMock()
-        self.mock_ruleset = MagicMock()
+        self.mock_ruleset = MagicMock(conf=self.conf)
 
     def tearDown(self):
         unittest.TestCase.tearDown(self)
