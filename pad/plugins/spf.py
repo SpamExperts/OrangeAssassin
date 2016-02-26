@@ -4,7 +4,6 @@ from __future__ import absolute_import
 
 import re
 import spf
-import authres
 import pad.plugins.base
 
 RECEIVED_RE = re.compile(r"""
@@ -119,11 +118,12 @@ class SpfPlugin(pad.plugins.base.BasePlugin):
 
     def _check_spf_header(self, msg, newest_header):
         """
-        :return: 'pass', 'permerror', 'fail', 'temperror', 'softfail', 'none', 'neutral'
+        :return: 'pass', 'permerror', 'fail', 'temperror', 'softfail', 'none',
+        'neutral'
         By default the plugin will attempt to use the oldest(bottom most)
         received-spf header
-        If this option is true the plugin will attempt to sue the newest(top most)
-        received-spf header
+        If this option is true the plugin will attempt to sue the
+        newest(top most) received-spf header
         """
         authres_header = msg.msg["authentication-results"]
         if newest_header:
@@ -138,23 +138,29 @@ class SpfPlugin(pad.plugins.base.BasePlugin):
                 received_spf_header = ''
         result = ''
         if received_spf_header:
-            self.ctxt.log.debug("PLUGIN::SPF: %s", "found a Received-SPF header added by an internal host")
+            self.ctxt.log.debug("PLUGIN::SPF: %s",
+                                "found a Received-SPF header "
+                                "added by an internal host")
             match = RECEIVED_RE.match(received_spf_header)
             if match:
                 result = match.group(1)
                 identity = str(match.group(2))
-                if identity == 'mfrom' or identity == 'mailfrom' or identity == 'None':
+                if identity == 'mfrom' or identity == 'mailfrom' \
+                        or identity == 'None':
                     identity = ''
                 elif identity == 'helo':
                     identity = 'helo_'
                 result = identity + result
         elif authres_header:
-            self.ctxt.log.debug("PLUGIN::SPF: %s", "found an Authentication-Results header added by an internal host")
+            self.ctxt.log.debug("PLUGIN::SPF: %s",
+                                "found an Authentication-Results header "
+                                "added by an internal host")
             extract_spf = AUTHRES_SPF.match(authres_header)
             if extract_spf:
                 match = AUTHRES_RE.match(extract_spf.group(1))
             if match:
-                result = 'fail' if match.group(1) == 'hardfail' else match.group(1)
+                result = 'fail' if match.group(1) == 'hardfail' \
+                    else match.group(1)
                 identity = str(match.group(2))
                 if identity == 'mfrom' or identity == 'mailfrom' \
                         or identity == 'None':
@@ -165,7 +171,9 @@ class SpfPlugin(pad.plugins.base.BasePlugin):
         return result
 
     def _query_spf(self, timeout, ip, mx, sender_address):
-        self.ctxt.log.debug("SPF::Plugin %s", "Querying the dns server(%s, %s, %s)..." % (ip, mx, sender_address))
+        self.ctxt.log.debug("SPF::Plugin %s",
+                            "Querying the dns server(%s, %s, %s)..."
+                            % (ip, mx, sender_address))
         result, comment = spf.check2(i=ip, s=sender_address,
                                      h=mx, timeout=timeout)
         return result
