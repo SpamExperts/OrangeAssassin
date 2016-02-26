@@ -21,6 +21,7 @@ class Conf(object):
     * list
     * append
     * append_split
+    * clear
 
     See the corresponding `set_*_option` method for details
     on each of them.
@@ -104,6 +105,14 @@ class Conf(object):
         """
         # WHY?! :/ Who would think this is a good idea?
         self.get_global(key).extend(value.split(separator))
+
+    def set_clear_option(self, key, value):
+        """Clear the current option's value and replace it
+        with the default.
+        """
+        default = self.options[key][1]
+        real_key = key.split("_", 1)[1]
+        self.set_global(real_key, default)
 
     def inhibit_further_callbacks(self):
         """Tells the plugin handler to inhibit calling into other plugins in
