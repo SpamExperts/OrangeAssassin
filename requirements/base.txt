@@ -6,3 +6,4 @@ pygeoip==0.3.2
 langdetect==1.0.5
 sqlalchemy==1.0.12
 PyPDF2==1.25.1
+mysqlclient==1.3.7
