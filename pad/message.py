@@ -119,7 +119,6 @@ class Message(pad.context.MessageContext):
         super(Message, self).__init__(global_context)
         self.raw_msg = self.translate_line_breaks(raw_msg)
         self.msg = email.message_from_string(self.raw_msg)
-
         self.headers = _Headers()
         self.raw_headers = _Headers()
         self.addr_headers = _Headers()
@@ -128,6 +127,8 @@ class Message(pad.context.MessageContext):
         self.received_headers = _Headers()
         self.raw_mime_headers = _Headers()
         self.header_ips = _Headers()
+        self.hostname_with_ip = list()
+        self.sender_address = ""
         self.text = ""
         self.raw_text = ""
         self.uri_list = set()
@@ -336,6 +337,16 @@ class Message(pad.context.MessageContext):
             self._hook_extract_metadata(payload, text, part)
         self.text = " ".join(body)
         self.raw_text = "\n".join(raw_body)
+
+        for value in self.get_received_headers("Received"):
+            if 'from' in value:
+                hostname = value.split(' ')[1]
+                ip = IPFRE.search(value).group()
+                clean_ip = ip.strip("[ ]();\n")
+                try:
+                    self.hostname_with_ip.append((hostname, clean_ip))
+                except ValueError:
+                    continue
 
     @staticmethod
     def _iter_parts(msg):

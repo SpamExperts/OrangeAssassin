@@ -9,6 +9,9 @@ import pad.plugins.base
 
 
 class WhiteListSubjectPlugin(pad.plugins.base.BasePlugin):
+    def __init__(self):
+        pass
+
     eval_rules = (
         "check_subject_in_whitelist",
         "check_subject_in_blacklist"
