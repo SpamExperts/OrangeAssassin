@@ -407,12 +407,11 @@ class TestPDFDetails(PDFInfoBase):
         self.assertFalse(self.plugin.pdf_match_details(self.mock_msg, "author",
                                                        r"/^xxx\w{1,9}$/i"))
 
-    @unittest.SkipTest
     def test_pdf_match_details_none(self):
         """Test the match_details method when value = None"""
         pdf_id = "1234567890"
         self.plugin._update_details(self.mock_msg, pdf_id, "author", None)
-        self.assertTrue(self.plugin.pdf_match_details(self.mock_msg, "author",
+        self.assertFalse(self.plugin.pdf_match_details(self.mock_msg, "author",
                                                       r"/^tes\w{1,9}$/i"))
 
     def test_pdf_match_details_bad_regex(self):

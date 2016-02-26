@@ -228,6 +228,8 @@ class PDFInfoPlugin(pad.plugins.base.BasePlugin):
             details[pdfid]
         except KeyError:
             details[pdfid] = collections.defaultdict()
+        if not value:
+            value = ""
         details[pdfid][detail] = value
         self.set_local(msg, "details", details)
 
