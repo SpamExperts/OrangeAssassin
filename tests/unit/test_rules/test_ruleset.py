@@ -15,7 +15,14 @@ import pad.rules.ruleset
 class TestRuleSet(unittest.TestCase):
     def setUp(self):
         unittest.TestCase.setUp(self)
-        self.mock_ctxt = Mock(plugins={})
+        self.mock_ctxt = Mock(plugins={}, conf={
+            "report": [],
+            "add_header": [],
+            "remove_header": [],
+            "required_score": 5,
+            "report_contact": "",
+            "report_safe": 1
+        })
 
     def tearDown(self):
         unittest.TestCase.tearDown(self)
@@ -187,18 +194,11 @@ class TestRuleSet(unittest.TestCase):
         ruleset._convert_tags(original)
         self.assertIn("YESNO", ruleset.tags)
 
-    def test_add_report(self):
-        mock_conv = patch("pad.rules.ruleset.RuleSet._convert_tags").start()
-        ruleset = pad.rules.ruleset.RuleSet(self.mock_ctxt)
-        ruleset.add_report("Some text")
-
-        self.assertEqual(ruleset.report, [mock_conv("Some text")])
-
     def test_get_report(self):
         mock_int = patch("pad.rules.ruleset.RuleSet._interpolate").start()
         mock_msg = MagicMock()
         ruleset = pad.rules.ruleset.RuleSet(self.mock_ctxt)
-        ruleset.report.append("Some report")
+        ruleset.conf["report"].append("Some report")
 
         result = ruleset.get_report(mock_msg)
         self.assertEqual(result, mock_int("Some report", mock_msg) + "\n")
@@ -210,30 +210,10 @@ class TestRuleSet(unittest.TestCase):
         result = ruleset.get_report(mock_msg)
         self.assertEqual(result, "\n(no report template found)\n")
 
-    def test_clear_report_template(self):
-        ruleset = pad.rules.ruleset.RuleSet(self.mock_ctxt)
-        ruleset.report.append("Some report")
-        ruleset.clear_report_template()
-        self.assertEqual(ruleset.report, [])
-
-    def test_clear_headers(self):
-        expected = {
-            "spam": [],
-            "ham": [],
-            "all": [],
-        }
-        ruleset = pad.rules.ruleset.RuleSet(self.mock_ctxt)
-        ruleset.header_mod["spam"].append("Test")
-        ruleset.header_mod["ham"].append("Test")
-        ruleset.header_mod["all"].append("Test")
-
-        ruleset.clear_headers()
-        self.assertEqual(ruleset.header_mod, expected)
-
     def test_add_header_rule_all(self):
         line = "all Test my value"
         ruleset = pad.rules.ruleset.RuleSet(self.mock_ctxt)
-        ruleset.add_header_rule(line, remove=False)
+        ruleset._add_header_rule(line, remove=False)
 
         result = ruleset.header_mod["all"][0]
         self.assertEqual(result, (False, "X-Spam-Test", "my value"))
@@ -241,7 +221,7 @@ class TestRuleSet(unittest.TestCase):
     def test_add_header_rule_spam(self):
         line = "spam Test my value"
         ruleset = pad.rules.ruleset.RuleSet(self.mock_ctxt)
-        ruleset.add_header_rule(line, remove=False)
+        ruleset._add_header_rule(line, remove=False)
 
         result = ruleset.header_mod["spam"][0]
         self.assertEqual(result, (False, "X-Spam-Test", "my value"))
@@ -249,7 +229,7 @@ class TestRuleSet(unittest.TestCase):
     def test_add_header_rule_ham(self):
         line = "ham Test my value"
         ruleset = pad.rules.ruleset.RuleSet(self.mock_ctxt)
-        ruleset.add_header_rule(line, remove=False)
+        ruleset._add_header_rule(line, remove=False)
 
         result = ruleset.header_mod["ham"][0]
         self.assertEqual(result, (False, "X-Spam-Test", "my value"))
@@ -259,12 +239,12 @@ class TestRuleSet(unittest.TestCase):
         ruleset = pad.rules.ruleset.RuleSet(self.mock_ctxt)
 
         with self.assertRaises(pad.errors.InvalidRule):
-            ruleset.add_header_rule(line, remove=False)
+            ruleset._add_header_rule(line, remove=False)
 
     def test_remove_header_rule_all(self):
         line = "all Test"
         ruleset = pad.rules.ruleset.RuleSet(self.mock_ctxt)
-        ruleset.add_header_rule(line, remove=True)
+        ruleset._add_header_rule(line, remove=True)
 
         result = ruleset.header_mod["all"][0]
         self.assertEqual(result, (True, "X-Spam-Test", None))
@@ -272,7 +252,7 @@ class TestRuleSet(unittest.TestCase):
     def test_remove_header_rule_spam(self):
         line = "spam Test"
         ruleset = pad.rules.ruleset.RuleSet(self.mock_ctxt)
-        ruleset.add_header_rule(line, remove=True)
+        ruleset._add_header_rule(line, remove=True)
 
         result = ruleset.header_mod["spam"][0]
         self.assertEqual(result, (True, "X-Spam-Test", None))
@@ -280,7 +260,7 @@ class TestRuleSet(unittest.TestCase):
     def test_remove_header_rule_ham(self):
         line = "ham Test"
         ruleset = pad.rules.ruleset.RuleSet(self.mock_ctxt)
-        ruleset.add_header_rule(line, remove=True)
+        ruleset._add_header_rule(line, remove=True)
 
         result = ruleset.header_mod["ham"][0]
         self.assertEqual(result, (True, "X-Spam-Test", None))
@@ -290,7 +270,7 @@ class TestRuleSet(unittest.TestCase):
         ruleset = pad.rules.ruleset.RuleSet(self.mock_ctxt)
 
         with self.assertRaises(pad.errors.InvalidRule):
-            ruleset.add_header_rule(line, remove=True)
+            ruleset._add_header_rule(line, remove=True)
 
     def test_adjusted_all_spam(self):
         mock_bounce = patch("pad.rules.ruleset.RuleSet."

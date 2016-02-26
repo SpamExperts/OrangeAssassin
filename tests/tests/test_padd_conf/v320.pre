@@ -1,3 +1,0 @@
-
-# Plugins and settings here
-loadplugin Mail::SpamAssassin::Plugin::Check

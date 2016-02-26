@@ -109,6 +109,11 @@ class _memoize(object):
         return wrapped_func
 
 
+DEFAULT_SENDERH = (
+    "X-Sender", "X-Envelope-From", "Envelope-Sender", "Return-Path", "From"
+)
+
+
 class Message(pad.context.MessageContext):
     """Internal representation of an email message. Used for rule matching."""
 
@@ -127,8 +132,6 @@ class Message(pad.context.MessageContext):
         self.received_headers = _Headers()
         self.raw_mime_headers = _Headers()
         self.header_ips = _Headers()
-        self.hostname_with_ip = list()
-        self.sender_address = ""
         self.text = ""
         self.raw_text = ""
         self.uri_list = set()
@@ -136,6 +139,9 @@ class Message(pad.context.MessageContext):
         self.rules_checked = dict()
         self.interpolate_data = dict()
         self.plugin_tags = dict()
+        # Data
+        self.sender_address = ""
+        self.hostname_with_ip = list()
         self._parse_message()
         self._hook_parsed_metadata()
 
@@ -196,6 +202,16 @@ class Message(pad.context.MessageContext):
         for value in self.get_raw_header(header_name):
             values.append(self._decode_header(value))
         return values
+
+    def get_untrusted_ips(self):
+        """Returns the untrusted IPs based on the users trusted
+        network settings.
+
+        :return: A list of `ipaddress.ip_address`.
+        """
+        # XXX This should take into consideration the network
+        # XXX options. #40
+        return self.get_header_ips()
 
     def get_header_ips(self):
         values = list()
@@ -306,6 +322,21 @@ class Message(pad.context.MessageContext):
             for value in self.get_decoded_mime_header(header_name):
                 yield "%s: %s" % (header_name, value)
 
+    def _parse_sender(self):
+        """Extract the envelope sender from the message."""
+        headers = self.ctxt.conf["envelope_sender_header"] or DEFAULT_SENDERH
+        for sender_header in headers:
+            try:
+                sender = self.get_addr_header(sender_header)[0]
+            except IndexError:
+                continue
+            if sender:
+                self.sender_address = sender.strip()
+                self.ctxt.log.debug("Using %s as sender: %s", sender_header,
+                                    sender)
+                return
+        # XXX This requires an advanced Received parsers #48
+
     def _parse_message(self):
         """Parse the message."""
         self._hook_check_start()
@@ -337,6 +368,7 @@ class Message(pad.context.MessageContext):
             self._hook_extract_metadata(payload, text, part)
         self.text = " ".join(body)
         self.raw_text = "\n".join(raw_body)
+        self._parse_sender()
 
         for value in self.get_received_headers("Received"):
             if 'from' in value:

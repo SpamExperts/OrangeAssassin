@@ -20,6 +20,7 @@ import pad.plugins.base
 
 
 class PDFInfoPlugin(pad.plugins.base.BasePlugin):
+
     """PDFInfoPlugin
     """
     eval_rules = (
@@ -52,10 +53,15 @@ class PDFInfoPlugin(pad.plugins.base.BasePlugin):
         counts += incr
         self.set_local(msg, "counts", counts)
 
-    def pdf_count(self, msg, minimum, maximum=None):
-        """Match the number of pdf files in the message
-        minimum: required, message contains at least x pdf mime parts
-        maximum: optional, if specified, must not contain more than x pdf mime parts
+    def pdf_count(self, msg, minimum, maximum=None, target=None):
+        """Check the number of pdf files in the message
+
+        :param minimum: required, message contains at least x pdf mime parts
+        :param maximum: optional, if specified, must not contain more than x pdf mime
+        parts.
+
+        :return: True if the number of PDF files are more or equal to 'minimum' and
+        less or equal than 'maximum' (if set)
         """
         count = self._get_count(msg)
         return minimum <= count <= (maximum or float("inf"))
@@ -76,14 +82,20 @@ class PDFInfoPlugin(pad.plugins.base.BasePlugin):
         counts += incr
         self.set_local(msg, "image_counts", counts)
 
-    def pdf_image_count(self, msg, minimum, maximum=None):
-        """Match the number of images in the pdf attachments
-        minimum: required, message contains at least x images in pdf attachments.
-        maximum: optional, if specified, must not contain more than x pdf images
+    def pdf_image_count(self, msg, minimum, maximum=None, target=None):
+        """Check the number of images in the pdf attachments
+        
+        :param minimum: required, message contains at least x images in pdf
+        attachments.
+        :param maximum: optional, if specified, must not contain more than x pdf
+        images
+
+        :return: True if the number of images is more or equal to 'minimum' and
+        less or equal than 'maximum'.
         """
         count = self._get_image_count(msg)
         return minimum <= count <= (maximum or float("inf"))
-        
+
     def _get_pixel_coverage(self, msg):
         """Return the cumulative pixel coverage"""
         try:
@@ -102,10 +114,15 @@ class PDFInfoPlugin(pad.plugins.base.BasePlugin):
         pixels += incr
         self.set_local(msg, "pixel_coverage", pixels)
 
-    def pdf_pixel_coverage(self, msg, minimum, maximum=None):
-        """minimum: required, message contains at least this much pixel area
-        maximum: optional, if specified, message must not contain more than this
-        much pixel area
+    def pdf_pixel_coverage(self, msg, minimum, maximum=None, target=None):
+        """Check the pixel coverage in the PDF files.
+
+        :param minimum: required, message contains at least this much pixel area
+        :param maximum: optional, if specified, message must not contain more
+        than this much pixel area
+
+        :return: True if the pixel cummulative coverage is more or equal to
+        'minimum' and less or equal to 'maximum'.
         """
         coverage = self._get_pixel_coverage(msg)
         return minimum <= coverage <= (maximum or float("inf"))
@@ -125,15 +142,26 @@ class PDFInfoPlugin(pad.plugins.base.BasePlugin):
         names.add(name)
         self.set_local(msg, "names", names)
 
-    def pdf_named(self, msg, name):
-        """string: exact file name match, if you need partial match, see
-        pdf_name_regex()
-        Please note that this string match is case sensitive.
+    def pdf_named(self, msg, name, target=None):
+        """Check if a PDF file in the message have the exact name.
+
+        :param name: exact file name match, if you need partial match, see
+        pdf_name_regex(). Please note that this string match is case
+        sensitive.
+
+        :return: True if there is a PDF file with that name.
         """
         return name in self._get_pdf_names(msg)
 
-    def pdf_name_regex(self, msg, regex):
-        """regex: regular expression, see examples in ruleset"""
+    def pdf_name_regex(self, msg, regex, target=None):
+        """The same than pdf_named but you can use regular expressions to
+        do partial matches.
+
+        :param regex: regular expression, see examples in ruleset.
+
+        :return: True if there is a PDF file name that matches that regular
+        expression.
+        """
         name_re = pad.regex.perl2re(regex)
         names = self._get_pdf_names(msg)
         for name in names:
@@ -155,8 +183,13 @@ class PDFInfoPlugin(pad.plugins.base.BasePlugin):
         hashes.add(newhash)
         self.set_local(msg, "md5hashes", hashes)
 
-    def pdf_match_md5(self, msg, md5hash):
-        """string: 32-byte md5 hex"""
+    def pdf_match_md5(self, msg, md5hash, target=None):
+        """Check the PDF md5 hash.
+
+        :param md5hash: 32-byte md5 hex.
+
+        :return: True if the md5hash is in the PDF hashes
+        """
         return md5hash in self._get_pdf_hashes(msg)
 
     def _update_fuzzy_md5(self, msg, texthash):
@@ -169,17 +202,21 @@ class PDFInfoPlugin(pad.plugins.base.BasePlugin):
         """Return the set with the md5 hashes for fuzzy text"""
         try:
             return self.get_local(msg, "fuzzy_md5_hashes")
-        except:
+        except KeyError:
             return set()
 
-    def pdf_match_fuzzy_md5(self, msg, md5hash):
-        """string: 32-byte md5 hex - Please note that in order to get the 
-        fuzzy md5 hash the plugin extracts the string from each page of the 
-        PDF file then create a hash per page. The match is done to each of this
-        hashes"""
+    def pdf_match_fuzzy_md5(self, msg, md5hash, target=None):
+        """Check if the md5hash is in the fuzzy md5 list.
+        Please note that in order to get the fuzzy md5 hash the plugin
+        extracts the string from each page of the PDF file then create a
+        hash per page. The match is done to each of this hashes
+
+        :param mdm5hash: 32-byte md5 hex
+
+        :return: True if the md5hash is in the list of fuzzy md5 hashes
+        """
         hashes = self._get_fuzzy_md5(msg)
         return md5hash in hashes
-
 
     def _update_details(self, msg, pdfid, detail, value):
         """Update the details for the PDF attachments"""
@@ -194,13 +231,14 @@ class PDFInfoPlugin(pad.plugins.base.BasePlugin):
         details[pdfid][detail] = value
         self.set_local(msg, "details", details)
 
+    def pdf_match_details(self, msg, detail, regex, target=None):
+        """Match if the detail match with any of the PDF files in the
+        message.
 
-    def pdf_match_details(self, msg, detail, regex):
-        """Match if the detail match with any of the PDF files in the 
-        message. 
+        :param detail: author, creator, created, modified, producer, title
+        :param regex: regular expression, see examples in ruleset
 
-        detail: author, creator, created, modified, producer, title
-        regex: regular expression, see examples in ruleset
+        :return: True if the detail matches in at least one PDF file.
         """
         try:
             details = self.get_local(msg, "details")
@@ -224,9 +262,10 @@ class PDFInfoPlugin(pad.plugins.base.BasePlugin):
         encrypted.add(enc)
         self.set_local(msg, "pdf_encrypted", encrypted)
 
+    def pdf_is_encrypted(self, msg, target=None):
+        """Check if any of the PDF attachments is encrypted
 
-    def pdf_is_encrypted(self, msg):
-        """Return True if any of the PDF attachments is encrypted
+        :return: True if at least one PDF file is encrypted
         """
         try:
             return True in self.get_local(msg, "pdf_encrypted")
@@ -242,8 +281,13 @@ class PDFInfoPlugin(pad.plugins.base.BasePlugin):
         pdfbytes += incr
         self.set_local(msg, "pdf_bytes", pdfbytes)
 
-    def pdf_is_empty_body(self, msg, byts):
-        """bytes: maximum byte count to allow and still consider it empty"""
+    def pdf_is_empty_body(self, msg, byts, target=None):
+        """Check if the PDF files are empty (cummulative size).
+
+        :param byts: maximum byte count to allow and still consider it
+        empty
+
+        :return: True if the cummulative PDF size is less than byts."""
         try:
             pdfbytes = self.get_local(msg, "pdf_bytes")
         except KeyError:
@@ -252,7 +296,7 @@ class PDFInfoPlugin(pad.plugins.base.BasePlugin):
 
     def _save_stats(self, msg, payload):
         """Extracts and saves the PDF stats once per unique file"""
-        #Use the md5 as ID to avoid duplicated PDFs
+        # Use the md5 as ID to avoid duplicated PDFs
         pdf_id = md5(payload).hexdigest()
         self._update_pdf_hashes(msg, pdf_id)
         pdffobject = BytesIO(payload)
@@ -266,11 +310,12 @@ class PDFInfoPlugin(pad.plugins.base.BasePlugin):
         if document_info is not None:
             self._update_details(msg, pdf_id, "author", document_info.author)
             self._update_details(msg, pdf_id, "creator", document_info.creator)
-            self._update_details(msg, pdf_id, "producer", document_info.producer)
+            self._update_details(
+                msg, pdf_id, "producer", document_info.producer)
             self._update_details(msg, pdf_id, "title", document_info.title)
         for page in pdfobject.pages:
-            #Get the text for the corrent page, get the md5 for fuzzy md5
-            text = page.extractText()
+            # Get the text for the corrent page, get the md5 for fuzzy md5
+            text = page.extractText().encode("utf8")
             if text:
                 fuzzy_md5 = md5(text).hexdigest()
                 self._update_fuzzy_md5(msg, fuzzy_md5)
@@ -278,7 +323,7 @@ class PDFInfoPlugin(pad.plugins.base.BasePlugin):
                 resources = page["/Resources"]
             except KeyError:
                 continue
-            if not "/XObject" in resources:
+            if "/XObject" not in resources:
                 continue
             for key in resources["/XObject"]:
                 obj = resources["/XObject"][key]

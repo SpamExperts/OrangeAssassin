@@ -247,53 +247,6 @@ class TestParsePADLine(unittest.TestCase):
         self.mock_ctxt.return_value.load_plugin.assert_called_with(
             "pad.plugins.dump_text.DumpText", None)
 
-    def test_parse_line_report(self):
-        self.check_parse([b"report test report template"],
-                         {})
-        ruleset = self.mock_ruleset.return_value
-        ruleset.add_report.assert_called_with("test report template")
-
-    def test_parse_line_clear_report(self):
-        self.check_parse([b"clear_report_template"],
-                         {})
-        ruleset = self.mock_ruleset.return_value
-        ruleset.clear_report_template.assert_called_with()
-
-    def test_parse_line_add_header(self):
-        self.check_parse([b"add_header Some-Header value"], {})
-        ruleset = self.mock_ruleset.return_value
-        ruleset.add_header_rule.assert_called_with(u"Some-Header value", False)
-
-    def test_parse_line_remove_header(self):
-        self.check_parse([b"remove_header Some-Header value"], {})
-        ruleset = self.mock_ruleset.return_value
-        ruleset.add_header_rule.assert_called_with(u"Some-Header value", True)
-
-    def test_parse_line_clear_headers(self):
-        self.check_parse([b"clear_headers"],
-                         {})
-        ruleset = self.mock_ruleset.return_value
-        ruleset.clear_headers.assert_called_with()
-
-    def test_parse_line_report_contact(self):
-        self.check_parse([b"report_contact alex@example.com"], {})
-        ruleset = self.mock_ruleset.return_value
-        self.assertEqual(ruleset.report_contact, "alex@example.com")
-
-    def test_parse_line_required_score(self):
-        self.check_parse([b"required_score 5.6"], {})
-        ruleset = self.mock_ruleset.return_value
-        self.assertEqual(ruleset.required_score, 5.6)
-
-    def test_parse_line_report_safe(self):
-        self.check_parse([b"report_safe 2"], {})
-        ruleset = self.mock_ruleset.return_value
-        self.assertEqual(ruleset.report_safe, 2)
-
-    def test_parse_line_report_safe_invalid(self):
-        with self.assertRaises(pad.errors.InvalidRule):
-            self.check_parse([b"report_safe 3"], {})
-
     def test_parse_line_load_plugin_no_path(self):
         self.check_parse([b"loadplugin pad.plugins.dump_text.DumpText"], {})
         self.mock_ctxt.return_value.load_plugin.assert_called_with(

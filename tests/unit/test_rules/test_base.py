@@ -65,7 +65,7 @@ class TestBaseRule(unittest.TestCase):
         self.assertEqual(rule.score, 1.0)
 
     def test_preprocess_advanced(self):
-        mock_ruleset = Mock(use_bayes=True, use_network=False)
+        mock_ruleset = Mock(conf={"use_bayes":True, "use_network":False})
         rule = pad.rules.base.BaseRule("TEST", [1.0, 2.0, 3.0, 4.0])
         rule.preprocess(mock_ruleset)
         self.assertEqual(rule.score, 3.0)

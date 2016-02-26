@@ -130,12 +130,6 @@ class PADParser(object):
         except UnicodeDecodeError as e:
             raise pad.errors.InvalidSyntax(filename, line_no, line,
                                            "Decoding Error: %s" % e)
-        if line.startswith("clear_report_template"):
-            self.ruleset.clear_report_template()
-            return
-        if line.startswith("clear_headers"):
-            self.ruleset.clear_headers()
-            return
         if line.startswith("if can"):
             # XXX We don't support for this check, simply
             # XXX skip everything for now.
@@ -176,22 +170,6 @@ class PADParser(object):
             self._handle_ifplugin(value)
         elif rtype == "loadplugin":
             self._handle_loadplugin(value)
-        elif rtype == "report":
-            self.ruleset.add_report(value)
-        elif rtype == "report_contact":
-            self.ruleset.report_contact = value.strip()
-        elif rtype == "add_header":
-            self.ruleset.add_header_rule(value, False)
-        elif rtype == "remove_header":
-            self.ruleset.add_header_rule(value, True)
-        elif rtype == "required_score":
-            self.ruleset.required_score = float(value.strip())
-        elif rtype == "report_safe":
-            value = int(value.strip())
-            if value not in (0, 1, 2):
-                raise pad.errors.InvalidRule("report_safe",
-                                             "Invalid value: %s" % value)
-            self.ruleset.report_safe = value
         elif rtype in KNOWN_2_RTYPE or rtype in self.ctxt.cmds:
             try:
                 rtype, name, value = line.split(None, 2)

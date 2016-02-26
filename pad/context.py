@@ -12,13 +12,17 @@ except ImportError:
 
 import os
 import imp
+import struct
 import logging
 import functools
 import importlib
 import collections
 
-import future.utils
+import dns
+import dns.resolver
+import dns.reversename
 
+import pad.conf
 import pad.errors
 import pad.rules.base
 import pad.plugins.base
@@ -105,6 +109,7 @@ class GlobalContext(_Context):
         self.ignore_unknown = ignore_unknown
         self.eval_rules = dict()
         self.cmds = dict()
+        self.conf = pad.conf.PADConf(self)
 
     def err(self, *args, **kwargs):
         """Log a error according to the paranoid and
@@ -120,6 +125,33 @@ class GlobalContext(_Context):
             self.log.warn(*args, **kwargs)
         else:
             self.log.debug(*args, **kwargs)
+
+    def query_dns(self, qname, qtype="A"):
+        """This method should be used for any DNS queries.
+
+        :param qname: The DNS question.
+        :param qtype: The DNS query type.
+        :return: The result of the DNS query.
+        """
+        # XXX This needs to take into account various the
+        # XXX network options. #40.
+        # XXX We should likely cache responses here as
+        # XXX well.
+        if qtype == "PTR":
+            qname = dns.reversename.from_address(qname)
+        try:
+            return dns.resolver.query(qname, qtype)
+        except (dns.resolver.NoAnswer, dns.resolver.NoNameservers,
+                dns.resolver.NXDOMAIN, dns.exception.Timeout) as e:
+            self.log.warn("Failed to resolved %s (%s): %s", qname, qtype, e)
+            return []
+        except (ValueError, IndexError, struct.error) as e:
+            self.log.info("Invalid DNS entry %s (%s): %s", qname, qtype, e)
+            return []
+
+    def reverse_ip(self, ip):
+        reversed = dns.reversename.from_address(ip.exploded)
+        return reversed.rstrip(".").rsplit(".", 2)[0]
 
     def load_plugin(self, name, path=None):
         """Load the specified plugin from the given path."""
@@ -229,6 +261,9 @@ class GlobalContext(_Context):
     @_callback_chain
     def hook_parse_config(self, key, value):
         """Hook for the parsing configuration files."""
+        # First check the SpamPAD default config and
+        # then check all the plugins.
+        self.conf.parse_config(key, value)
         for plugin in self.plugins.values():
             if plugin.parse_config(key, value):
                 break
@@ -273,22 +308,22 @@ class MessageContext(_Context):
 
     def __init__(self, _global_context):
         super(MessageContext, self).__init__()
-        self._global_ctxt = _global_context
+        self.ctxt = _global_context
 
     @_callback_chain
     def _hook_check_start(self):
         """Hook before the message is checked."""
-        for plugin in self._global_ctxt.plugins.values():
+        for plugin in self.ctxt.plugins.values():
             plugin.check_start(self)
 
     @_callback_chain
     def _hook_extract_metadata(self, payload, text, part):
         """Hook before the message is checked."""
-        for plugin in self._global_ctxt.plugins.values():
+        for plugin in self.ctxt.plugins.values():
             plugin.extract_metadata(self, payload, text, part)
 
     @_callback_chain
     def _hook_parsed_metadata(self):
         """Hook before the message is checked."""
-        for plugin in self._global_ctxt.plugins.values():
+        for plugin in self.ctxt.plugins.values():
             plugin.parsed_metadata(self)

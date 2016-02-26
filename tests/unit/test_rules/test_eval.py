@@ -43,8 +43,8 @@ class TestEvalRule(unittest.TestCase):
     def test_extract_args(self):
         rule = pad.rules.eval_.EvalRule("TEST", "test_rule(1, '2')")
 
-        self.assertEqual(rule._eval_args, (1, '2'))
-        self.assertEqual(rule._eval_rule, "test_rule")
+        self.assertEqual(rule.eval_args, (1, '2'))
+        self.assertEqual(rule.eval_rule_name, "test_rule")
 
     def test_extract_args_invalid_rule_name(self):
         self.assertRaises(pad.errors.InvalidRule, pad.rules.eval_.EvalRule,

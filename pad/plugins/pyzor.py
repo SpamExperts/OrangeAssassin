@@ -20,8 +20,7 @@ class PyzorPlugin(pad.plugins.base.BasePlugin):
         super(PyzorPlugin, self).finish_parsing_end(ruleset)
         # Store a single Pyzor client in the global context at plugin
         # initialization, rather than creating a new one for every message
-        self.set_global("client", pyzor.client.BatchClient(
-                timeout=self.get_global("pyzor_timeout")))
+        self["client"] = pyzor.client.BatchClient(self["pyzor_timeout"])
 
     def check_pyzor(self, msg, target=None):
         """Check the message with the defined pyzor servers. Stores the

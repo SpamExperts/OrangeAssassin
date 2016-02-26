@@ -59,7 +59,7 @@ class ReplaceTags(pad.plugins.base.BasePlugin):
             result[template % tag_name] = value
         # Replace the list with a dictionary in the global
         # context.
-        self.set_global("replace_%s" % which, result)
+        self["replace_%s" % which] = result
 
     def get_metatags(self, rule_value, which):
         """Check the rule value for meta tags and return
