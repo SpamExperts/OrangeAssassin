@@ -159,6 +159,7 @@ class PADConf(Conf):
         "required_score": ("float", 5.0),
         "use_bayes": ("bool", True),
         "use_network": ("bool", True),
+        "envelope_sender_header": ("append", []),
     }
 
 

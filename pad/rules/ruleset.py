@@ -261,6 +261,7 @@ class RuleSet(object):
                     if self.ctxt.paranoid:
                         raise
                     del rule_list[name]
+        # Convert some of the parsed information
         self.conf["report"] = "\n".join(
             self._convert_tags(value)
             for value in self.conf["report"]

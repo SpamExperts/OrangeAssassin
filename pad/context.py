@@ -308,22 +308,22 @@ class MessageContext(_Context):
 
     def __init__(self, _global_context):
         super(MessageContext, self).__init__()
-        self._global_ctxt = _global_context
+        self.ctxt = _global_context
 
     @_callback_chain
     def _hook_check_start(self):
         """Hook before the message is checked."""
-        for plugin in self._global_ctxt.plugins.values():
+        for plugin in self.ctxt.plugins.values():
             plugin.check_start(self)
 
     @_callback_chain
     def _hook_extract_metadata(self, payload, text, part):
         """Hook before the message is checked."""
-        for plugin in self._global_ctxt.plugins.values():
+        for plugin in self.ctxt.plugins.values():
             plugin.extract_metadata(self, payload, text, part)
 
     @_callback_chain
     def _hook_parsed_metadata(self):
         """Hook before the message is checked."""
-        for plugin in self._global_ctxt.plugins.values():
+        for plugin in self.ctxt.plugins.values():
             plugin.parsed_metadata(self)

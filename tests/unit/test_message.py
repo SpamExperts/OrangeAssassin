@@ -84,7 +84,10 @@ class TestParseMessage(unittest.TestCase):
         self.html_part = Mock(**{"get_content_subtype.return_value": "html",
                                  "_headers": self.mime_headers
                                  })
-        self.mock_ctxt = Mock(plugins={})
+        self.conf = {
+            "envelope_sender_header": []
+        }
+        self.mock_ctxt = Mock(plugins={}, conf=self.conf)
 
     def tearDown(self):
         unittest.TestCase.tearDown(self)
@@ -231,7 +234,10 @@ class TestIterPartsMessage(unittest.TestCase):
 class TestMessageVarious(unittest.TestCase):
     def setUp(self):
         unittest.TestCase.setUp(self)
-        self.mock_ctxt = Mock(plugins={})
+        self.conf = {
+            "envelope_sender_header": []
+        }
+        self.mock_ctxt = Mock(plugins={}, conf=self.conf)
 
     def tearDown(self):
         unittest.TestCase.tearDown(self)
@@ -278,7 +284,10 @@ class TestMessageVarious(unittest.TestCase):
 class TestGetHeaders(unittest.TestCase):
     def setUp(self):
         unittest.TestCase.setUp(self)
-        self.mock_ctxt = Mock(plugins={})
+        self.conf = {
+            "envelope_sender_header": []
+        }
+        self.mock_ctxt = Mock(plugins={}, conf=self.conf)
         self.msg = pad.message.Message(self.mock_ctxt, "Subject: test\n\n")
 
     def tearDown(self):

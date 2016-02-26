@@ -109,6 +109,11 @@ class _memoize(object):
         return wrapped_func
 
 
+DEFAULT_SENDERH = (
+    "X-Sender", "X-Envelope-From", "Envelope-Sender", "Return-Path", "From"
+)
+
+
 class Message(pad.context.MessageContext):
     """Internal representation of an email message. Used for rule matching."""
 
@@ -135,6 +140,9 @@ class Message(pad.context.MessageContext):
         self.rules_checked = dict()
         self.interpolate_data = dict()
         self.plugin_tags = dict()
+        # Data
+        self.sender_address = ""
+
         self._parse_message()
         self._hook_parsed_metadata()
 
@@ -315,6 +323,21 @@ class Message(pad.context.MessageContext):
             for value in self.get_decoded_mime_header(header_name):
                 yield "%s: %s" % (header_name, value)
 
+    def _parse_sender(self):
+        """Extract the envelope sender from the message."""
+        headers = self.ctxt.conf["envelope_sender_header"] or DEFAULT_SENDERH
+        for sender_header in headers:
+            try:
+                sender = self.get_addr_header(sender_header)[0]
+            except IndexError:
+                continue
+            if sender:
+                self.sender_address = sender.strip()
+                self.ctxt.log.debug("Using %s as sender: %s", sender_header,
+                                    sender)
+                return
+        # XXX This requires an advanced Received parsers #48
+
     def _parse_message(self):
         """Parse the message."""
         self._hook_check_start()
@@ -346,6 +369,7 @@ class Message(pad.context.MessageContext):
             self._hook_extract_metadata(payload, text, part)
         self.text = " ".join(body)
         self.raw_text = "\n".join(raw_body)
+        self._parse_sender()
 
     @staticmethod
     def _iter_parts(msg):
