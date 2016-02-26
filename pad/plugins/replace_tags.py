@@ -42,12 +42,12 @@ class ReplaceTags(pad.plugins.base.BasePlugin):
         if which == "tag":
             extra = ""
         template = "%s%s%%s%s" % (
-            self.get_global("replace_start"),
+            self["replace_start"],
             extra,
-            self.get_global("replace_end")
+            self["replace_end"]
         )
         result = {}
-        for config in self.get_global("replace_%s" % which):
+        for config in self["replace_%s" % which]:
             try:
                 tag_name, value = config.split(None, 1)
             except ValueError:
@@ -69,7 +69,7 @@ class ReplaceTags(pad.plugins.base.BasePlugin):
         >>> ('{3}', '/(?!tion)/')
         """
         result = []
-        for tag, tag_value in self.get_global("replace_%s" % which).items():
+        for tag, tag_value in self["replace_%s" % which].items():
             if tag in rule_value:
                 result.append(tag_value)
                 rule_value = rule_value.replace(tag, "")
@@ -82,7 +82,7 @@ class ReplaceTags(pad.plugins.base.BasePlugin):
         post_replace, rule_value = self.get_metatags(rule_value, "post")
 
         results = []
-        replace_tags = self.get_global("replace_tag")
+        replace_tags = self["replace_tag"]
         splits = SPLIT_TAGS.split(rule_value)
         for i, value in enumerate(splits):
             try:
@@ -115,7 +115,7 @@ class ReplaceTags(pad.plugins.base.BasePlugin):
         for which in ("pre", "inter", "post", "tag"):
             self.prepare_tags(which)
 
-        for rule_name in self.get_global("replace_rules"):
+        for rule_name in self["replace_rules"]:
             try:
                 rule_results = results[rule_name]
             except KeyError:

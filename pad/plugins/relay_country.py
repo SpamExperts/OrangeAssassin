@@ -49,7 +49,7 @@ class RelayCountryPlugin(pad.plugins.base.BasePlugin):
         """Load the csv file and create a list of items where to search the IP.
         """
         try:
-            return pygeoip.GeoIP(self.get_global("geodb" + which))
+            return pygeoip.GeoIP(self["geodb" + which])
         except IOError as exc:
             self.ctxt.log.warning("Unable to open geo database file: %r", exc)
         return None
@@ -61,9 +61,9 @@ class RelayCountryPlugin(pad.plugins.base.BasePlugin):
         if ipaddr.is_private:
             return "**"
         if ipaddr.version == 4:
-            reader = self.get_global("ipv4")
+            reader = self["ipv4"]
         else:
-            reader = self.get_global("ipv6")
+            reader = self["ipv6"]
         if not reader:
             self.ctxt.log.warning("Database not loaded.")
             return "XX"

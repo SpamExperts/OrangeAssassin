@@ -241,7 +241,7 @@ class DNSEval(pad.plugins.base.BasePlugin):
           passes and False otherwise.
         """
         try:
-            rbl_server = self.get_global("zones")[zone_set]
+            rbl_server = self["zones"][zone_set]
         except KeyError as e:
             self.ctxt.err("Invalid zone %s: %s", zone_set, e)
             return False
