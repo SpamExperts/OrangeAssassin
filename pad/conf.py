@@ -4,9 +4,27 @@ import pad.errors
 
 
 class Conf(object):
-    # Dictionary that matches options to tuples like (type, default_value)
-    # Supported types are "int", "float", "bool", "str", "list", "append",
-    # "append_split".
+    """Parses and stores values for options in the global
+    context. The options must be defined in the `options`
+    class attribute in the following format::
+
+        {
+            "my_option": ("str", "default value"),
+        }
+
+    Support types are:
+
+    * int
+    * float
+    * bool
+    * str
+    * list
+    * append
+    * append_split
+
+    See the corresponding `set_*_option` method for details
+    on each of them.
+    """
     options = None
 
     def __init__(self, context):
