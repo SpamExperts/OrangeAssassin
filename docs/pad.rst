@@ -7,6 +7,15 @@ pad Package
     pad.protocol
     pad.rules
 
+:mod:`conf` Module
+--------------------
+
+.. automodule:: pad.config
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+
 :mod:`config` Module
 --------------------
 
