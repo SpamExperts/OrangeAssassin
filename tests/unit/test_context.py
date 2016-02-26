@@ -82,7 +82,6 @@ class TestGlobalContextLoadPlugin(unittest.TestCase):
                                  "unload_plugin").start()
         self.mock_issubclass = patch("pad.context.issubclass",
                                      create=True).start()
-        self.mock_py3 = patch("pad.context.future.utils", MagicMock()).start()
 
     def tearDown(self):
         unittest.TestCase.tearDown(self)
