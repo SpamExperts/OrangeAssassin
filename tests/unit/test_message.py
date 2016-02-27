@@ -280,6 +280,15 @@ class TestMessageVarious(unittest.TestCase):
         result = pad.message.Message._decode_header(enc_header)
         self.assertEqual(result, header)
 
+    @unittest.SkipTest
+    def test_decode_header_no_encoding(self):
+        header = "<alexey@spamexperts.com>"
+        enc_header = email.header.make_header([(header, "utf-8"), ])
+        patch("email.header.decode_header",
+              return_value=[(b'<alexey@spamexperts.com>', None), ]).start()
+        result = pad.message.Message._decode_header(enc_header)
+        self.assertEqual(result, header)
+
 
 class TestGetHeaders(unittest.TestCase):
     def setUp(self):
