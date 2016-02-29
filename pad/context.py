@@ -290,12 +290,12 @@ class GlobalContext(_Context):
         for plugin in self.plugins.values():
             plugin.finish_parsing_start(results)
 
-    @_callback_chain
-    def hook_parsing_end(self, ruleset):
-        """Hook after the parsing has finished but and the
-        ruleset is initialized.
+    def _configure_dns(self):
+        """Configure the DNS resolver based on the user
+        settings.
         """
         cport = None
+        nameservers = []
         for dns_server in self.conf["dns_server"]:
             try:
                 addr, port = DSN_SERVER_RE.match(dns_server).groups()
@@ -307,8 +307,19 @@ class GlobalContext(_Context):
                 continue
             if port:
                 cport = port
-            self._resolver.nameservers.append(addr)
-        self._resolver.port = cport or 53
+            nameservers.append(addr)
+        if not nameservers:
+            self.log.info("Using default nameservers")
+        else:
+            self._resolver.nameservers = nameservers
+            self._resolver.port = cport or 53
+        del self.conf["dns_server"]
+
+    @_callback_chain
+    def hook_parsing_end(self, ruleset):
+        """Hook after the parsing has finished but and the
+        ruleset is initialized.
+        """
         for plugin in self.plugins.values():
             plugin.finish_parsing_end(ruleset)
 
