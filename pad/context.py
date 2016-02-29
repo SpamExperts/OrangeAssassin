@@ -164,7 +164,7 @@ class GlobalContext(_Context):
             return []
 
     def reverse_ip(self, ip):
-        reversed = dns.reversename.from_address(ip.exploded)
+        reversed = str(dns.reversename.from_address(ip.exploded))
         return reversed.rstrip(".").rsplit(".", 2)[0]
 
     def load_plugin(self, name, path=None):
