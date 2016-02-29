@@ -272,6 +272,20 @@ class DNSEval(pad.plugins.base.BasePlugin):
 
     def check_rbl_envfrom(self, msg, zone_set, rbl_server, subtest=None,
                           target=None):
+        """Check the envelope sender domain for matches on this
+        list.
+
+        Note the envelope sender is determined according to the
+        envelope_sender_header option.
+
+        :param zone_set: Define zone ID for this lookup.
+        :param rbl_server: The RBL server to check.
+        :param subtest: If specified then an additional check
+          is done on the result of the DNS lookup by matching
+          this regular expression against the result.
+        :return: True if there is a match and the subtest
+          passes and False otherwise.
+        """
         if not msg.sender_address:
             self.ctxt.log.debug("Message has no envelope sender")
             return False
@@ -279,6 +293,17 @@ class DNSEval(pad.plugins.base.BasePlugin):
 
     def check_rbl_from_domain(self, msg, zone_set, rbl_server, subtest=None,
                               target=None):
+        """Check the From header domain for matches on this
+        list.
+
+        :param zone_set: Define zone ID for this lookup.
+        :param rbl_server: The RBL server to check.
+        :param subtest: If specified then an additional check
+          is done on the result of the DNS lookup by matching
+          this regular expression against the result.
+        :return: True if there is a match and the subtest
+          passes and False otherwise.
+        """
         from_addrs = msg.get_addr_header("From")
         if not from_addrs:
             self.ctxt.log.debug("Message has no From header")
