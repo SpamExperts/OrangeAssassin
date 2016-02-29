@@ -160,6 +160,8 @@ class PADConf(Conf):
         "use_bayes": ("bool", True),
         "use_network": ("bool", True),
         "envelope_sender_header": ("append", []),
+        "dns_server": ("append", [])
+
     }
 
 
