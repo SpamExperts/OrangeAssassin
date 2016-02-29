@@ -10,9 +10,7 @@ RECEIVED_RE = re.compile(r"""
     ^(pass|neutral|(?:soft)?fail|none|
     permerror|temperror)
     \b(?:.*\bidentity=(\S+?);?\b)?""", re.I | re.S | re.X | re.M)
-
 AUTHRES_SPF = re.compile(r'.*;\s*spf\s*=\s*([^;]*)', re.I | re.S | re.X | re.M)
-
 AUTHRES_RE = re.compile(r"""
     ^(pass|neutral|(?:hard|soft)?fail|none|
     permerror|temperror)(?:[^;]*?
@@ -106,7 +104,7 @@ class SpfPlugin(pad.plugins.base.BasePlugin):
         return self.get_local(msg, "spf_result") == "helo_permerror"
 
     def check_for_spf_helo_temperror(self, msg, target=None):
-        return self.get_local(msg, "spf_result") == "helo_permerror"
+        return self.get_local(msg, "spf_result") == "helo_temperror"
 
     def check_for_spf_whitelist_from(self, msg, target=None):
         if msg.sender_address in self.get_global("whitelist_from_spf"):
@@ -138,15 +136,15 @@ class SpfPlugin(pad.plugins.base.BasePlugin):
                 received_spf_header = ''
         result = ''
         if received_spf_header:
-            self.ctxt.log.debug("PLUGIN::SPF: %s",
-                                "found a Received-SPF header "
-                                "added by an internal host")
+            self.ctxt.log.debug(
+                "PLUGIN::SPF: found a Received-SPF header added by an internal "
+                "host"
+            )
             match = RECEIVED_RE.match(received_spf_header)
             if match:
                 result = match.group(1)
                 identity = str(match.group(2))
-                if identity == 'mfrom' or identity == 'mailfrom' \
-                        or identity == 'None':
+                if identity in ('mfrom', 'mailfrom', 'None'):
                     identity = ''
                 elif identity == 'helo':
                     identity = 'helo_'
@@ -156,14 +154,14 @@ class SpfPlugin(pad.plugins.base.BasePlugin):
                                 "found an Authentication-Results header "
                                 "added by an internal host")
             extract_spf = AUTHRES_SPF.match(authres_header)
+            match = None
             if extract_spf:
                 match = AUTHRES_RE.match(extract_spf.group(1))
             if match:
-                result = 'fail' if match.group(1) == 'hardfail' \
-                    else match.group(1)
+                result = 'fail' if match.group(
+                    1) == 'hardfail' else match.group(1)
                 identity = str(match.group(2))
-                if identity == 'mfrom' or identity == 'mailfrom' \
-                        or identity == 'None':
+                if identity in ('mfrom', 'mailfrom', 'None'):
                     identity = ''
                 elif identity == 'helo':
                     identity = 'helo_'
