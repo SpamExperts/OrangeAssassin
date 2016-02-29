@@ -32,6 +32,7 @@ class TestDNSEval(unittest.TestCase):
     def test_finish_parsing_end(self):
         pass
 
+    @unittest.skip("Not ready.")
     def test_check_rbl(self):
         self.plugin._check_rbl(self.mock_msg, "example.com")
         self.mock_ctxt.query_dns.assert_called_with(

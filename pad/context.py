@@ -317,6 +317,8 @@ class GlobalContext(_Context):
             self._resolver.nameservers = nameservers
             self._resolver.port = int(cport)
         del self.conf["dns_server"]
+        self._resolver.lifetime = self.conf["default_dns_lifetime"]
+        self._resolver.timeout = self.conf["default_dns_timeout"]
 
     @_callback_chain
     def hook_parsing_end(self, ruleset):

@@ -160,8 +160,10 @@ class PADConf(Conf):
         "use_bayes": ("bool", True),
         "use_network": ("bool", True),
         "envelope_sender_header": ("append", []),
-        "dns_server": ("append", [])
-
+        "dns_server": ("append", []),
+        "clear_dns_servers": ("clear", "dns_server"),
+        "default_dns_lifetime": ("float", 10.0),
+        "default_dns_timeout": ("float", 2.0),
     }
 
 
