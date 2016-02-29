@@ -149,7 +149,7 @@ class DNSEval(pad.plugins.base.BasePlugin):
                 domain = addr.rsplit("@", 1)[1].strip()
             else:
                 domain = addr.strip()
-            results = self.ctxt.query_dns("%s.%s" % (addr, rbl_server), "A")
+            results = self.ctxt.query_dns("%s.%s" % (domain, rbl_server), "A")
 
             if results and not subtest:
                 return True
