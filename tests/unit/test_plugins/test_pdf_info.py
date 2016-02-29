@@ -129,7 +129,6 @@ class TestPDFInfo(PDFInfoBase):
         self.plugin._update_pixel_coverage.assert_has_calls(
             update_pixel_coverage_calls)
 
-    #@unittest.SkipTest
     def test_save_stats_text(self):
         """Test the _save_stats method"""
         patch("pad.plugins.pdf_info.PDFInfoPlugin._update_details").start()
@@ -162,7 +161,6 @@ class TestPDFInfo(PDFInfoBase):
 
         self.plugin._update_details.assert_has_calls(update_details_calls)
 
-    @unittest.SkipTest
     def test_save_stats_encrypted(self):
         """Test the _save_stats method"""
         patch("pad.plugins.pdf_info.PDFInfoPlugin._update_details").start()
@@ -175,32 +173,21 @@ class TestPDFInfo(PDFInfoBase):
             datastore.write(pdf_file.read())
         if not datastore.getvalue():
             return
-        pdf_id = md5(datastore.getvalue()).hexdigest()
-        pdf_object = PyPDF2.PdfFileReader(datastore)
-        # Can't get the info of a encrypted file...    
-        info = pdf_object.getDocumentInfo()
-        update_image_count_calls = [call(self.mock_msg, incr=1), ]
-        update_pixel_coverage_calls = [call(self.mock_msg, incr=360800), ]
-        update_details_calls = [
-            call(self.mock_msg, pdf_id, "author", info.author),
-            call(self.mock_msg, pdf_id, "creator", info.creator),
-            call(self.mock_msg, pdf_id, "producer", info.producer),
-            call(self.mock_msg, pdf_id, "title", info.title)
-        ]
+
         pdfs = {1: {"data": datastore, "name": "pdftest.pdf"}}
         self.mock_msg.msg = new_email(pdfs)
 
+        results = []
         for part in self.mock_msg.msg.walk():
             payload = part.get_payload(decode=True)
             if payload is None:
                 continue
-            self.plugin._save_stats(self.mock_msg, payload)
+            results.append(self.plugin._save_stats(self.mock_msg, payload))
 
-        self.plugin._update_details.assert_has_calls(update_details_calls)
-        self.plugin._update_image_counts.assert_has_calls(
-            update_image_count_calls)
-        self.plugin._update_pixel_coverage.assert_has_calls(
-            update_pixel_coverage_calls)
+        self.plugin._update_details.assert_not_called()
+        self.plugin._update_image_counts.assert_not_called()
+        self.plugin._update_pixel_coverage.assert_not_called()
+        self.assertEqual(results, [None])
 
 
 
@@ -419,6 +406,20 @@ class TestPDFDetails(PDFInfoBase):
                                     "TestAuthor")
         self.assertFalse(self.plugin.pdf_match_details(self.mock_msg, "author",
                                                        r"/^xxx\w{1,9}$/i"))
+
+    def test_pdf_match_details_none(self):
+        """Test the match_details method when value = None"""
+        pdf_id = "1234567890"
+        self.plugin._update_details(self.mock_msg, pdf_id, "author", None)
+        self.assertFalse(self.plugin.pdf_match_details(self.mock_msg, "author",
+                                                      r"/^tes\w{1,9}$/i"))
+
+    def test_pdf_match_details_bad_regex(self):
+        """Test the match_details method when regex is wrong"""
+        pdf_id = "1234567890"
+        self.plugin._update_details(self.mock_msg, pdf_id, "author", "test")
+        with self.assertRaises(pad.errors.InvalidRegex):
+            self.plugin.pdf_match_details(self.mock_msg, "author", r".*")
 
 
 class TestPDFEncrypted(PDFInfoBase):

@@ -10,6 +10,7 @@ try:
 except ImportError:
     pass
 
+import re
 import os
 import imp
 import struct
@@ -26,6 +27,18 @@ import pad.conf
 import pad.errors
 import pad.rules.base
 import pad.plugins.base
+
+
+DSN_SERVER_RE = re.compile(r"""
+^\[?
+    ([0-9.]+|           # IPv4
+     [0-9a-f:]+)        # IPv6
+\]?
+(?:
+    :                   # A port is following the address
+    ([0-9]+)            # The port
+)?$
+""", re.I | re.S | re.M | re.X)
 
 
 class _Context(object):
@@ -110,6 +123,7 @@ class GlobalContext(_Context):
         self.eval_rules = dict()
         self.cmds = dict()
         self.conf = pad.conf.PADConf(self)
+        self._resolver = dns.resolver.Resolver()
 
     def err(self, *args, **kwargs):
         """Log a error according to the paranoid and
@@ -140,7 +154,7 @@ class GlobalContext(_Context):
         if qtype == "PTR":
             qname = dns.reversename.from_address(qname)
         try:
-            return dns.resolver.query(qname, qtype)
+            return self._resolver.query(qname, qtype)
         except (dns.resolver.NoAnswer, dns.resolver.NoNameservers,
                 dns.resolver.NXDOMAIN, dns.exception.Timeout) as e:
             self.log.warn("Failed to resolved %s (%s): %s", qname, qtype, e)
@@ -150,7 +164,7 @@ class GlobalContext(_Context):
             return []
 
     def reverse_ip(self, ip):
-        reversed = dns.reversename.from_address(ip.exploded)
+        reversed = str(dns.reversename.from_address(ip.exploded))
         return reversed.rstrip(".").rsplit(".", 2)[0]
 
     def load_plugin(self, name, path=None):
@@ -276,11 +290,42 @@ class GlobalContext(_Context):
         for plugin in self.plugins.values():
             plugin.finish_parsing_start(results)
 
+    def _configure_dns(self):
+        """Configure the DNS resolver based on the user
+        settings.
+        """
+        cport = None
+        nameservers = []
+        for dns_server in self.conf["dns_server"]:
+            try:
+                addr, port = DSN_SERVER_RE.match(dns_server).groups()
+            except AttributeError:
+                self.err("Invalid dns_server: %s", dns_server)
+                continue
+            if cport is not None and port is not None and cport != port:
+                self.err("Cannot use multiple ports %s, %s", cport, port)
+                continue
+            if port:
+                cport = port
+            nameservers.append(addr)
+        cport = cport or 53
+        if not nameservers:
+            self.log.info("Using default nameservers")
+        else:
+            self.log.info("Using nameservers: %s (port %s)", nameservers,
+                          cport)
+            self._resolver.nameservers = nameservers
+            self._resolver.port = int(cport)
+        del self.conf["dns_server"]
+        self._resolver.lifetime = self.conf["default_dns_lifetime"]
+        self._resolver.timeout = self.conf["default_dns_timeout"]
+
     @_callback_chain
     def hook_parsing_end(self, ruleset):
         """Hook after the parsing has finished but and the
-        rulest is initialized.
+        ruleset is initialized.
         """
+        self._configure_dns()
         for plugin in self.plugins.values():
             plugin.finish_parsing_end(ruleset)
 

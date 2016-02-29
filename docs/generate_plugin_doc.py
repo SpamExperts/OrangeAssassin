@@ -2,7 +2,7 @@
 
 Example usage:
 
-python doc/generate_plugin_doc.py pad.plugins.body_eval BodyEval
+python docs/generate_plugin_doc.py pad.plugins.body_eval BodyEval
 """
 
 from __future__ import absolute_import

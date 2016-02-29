@@ -57,15 +57,15 @@ class TextCatPlugin(pad.plugins.base.BasePlugin):
         :return True if the message language is unwanted and False
         otherwise
         """
-        prob = self.get_global("textcat_acceptable_prob")
+        prob = self["textcat_acceptable_prob"]
         results = langdetect.detect_langs(msg.text)
         self.ctxt.log.debug("TextCat results: %s", results)
         langs = [lang.lang for lang in results if lang.prob > prob]
-        if len(langs) > self.get_global("textcat_max_languages"):
+        if len(langs) > self["textcat_max_languages"]:
             self.ctxt.log.debug("Too many languages.")
             return False
         msg.plugin_tags["LANGUAGES"] = " ".join(langs)
-        ok_languages = self.get_global("ok_languages")
+        ok_languages = self["ok_languages"]
         if "all" in ok_languages:
             # All good.
             return False

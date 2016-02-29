@@ -33,6 +33,14 @@ Plugin :mod:`dump_text`
     :undoc-members:
     :show-inheritance:
 
+Plugin :mod:`dns_eval`
+----------------------
+
+.. automodule:: pad.plugins.dns_eval
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 Plugin :mod:`image_info`
 ------------------------
 

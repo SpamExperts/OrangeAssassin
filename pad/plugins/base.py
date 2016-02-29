@@ -98,11 +98,11 @@ class BasePlugin(pad.conf.Conf, object):
         """
         connect_string = None
         if self.dsn_name:
-            dsn = self.get_global(self.dsn_name + "_dsn")
+            dsn = self[self.dsn_name + "_dsn"]
             if dsn.upper().startswith("DBI"):
                 # Convert from SA format.
-                user = self.get_global(self.dsn_name + "_sql_username")
-                password = self.get_global(self.dsn_name + "_sql_password")
+                user = self[self.dsn_name + "_sql_username"]
+                password = self[self.dsn_name + "_sql_password"]
                 connect_string = dbi_to_alchemy(dsn, user, password)
             elif dsn:
                 # The connect string is already in the correct format
@@ -112,7 +112,7 @@ class BasePlugin(pad.conf.Conf, object):
 
     def get_session(self):
         """Open a new SQLAlchemy session."""
-        engine = self.get_global("engine")
+        engine = self["engine"]
         return sessionmaker(bind=engine)()
 
     def check_start(self, msg):

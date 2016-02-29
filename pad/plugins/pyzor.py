@@ -26,22 +26,22 @@ class PyzorPlugin(pad.plugins.base.BasePlugin):
         """Check the message with the defined pyzor servers. Stores the
         digest so it can be used
         """
-        if not self.get_global("use_pyzor"):
+        if not self["use_pyzor"]:
             return False
         digest = pyzor.digest.DataDigester(msg.msg).value
         # Store the digest data in the local message context, so it can be
         # used for reporting later.
         self.set_local(msg, "digest", digest)
 
-        client = self.get_global("client")
+        client = self["client"]
         self.ctxt.log.debug("Checking digest %s with Pyzor", digest)
-        for server in self.get_global("pyzor_servers"):
+        for server in self["pyzor_servers"]:
             response = client.check(digest, server.rsplit(":", 1))
             r_count = int(response["Count"])
             wl_count = int(response["WL-Count"])
             self.ctxt.log.debug("Response from %s: (%s, %s)", server, r_count,
                                 wl_count)
-            if r_count >= self.get_global("pyzor_max") and not wl_count:
+            if r_count >= self["pyzor_max"] and not wl_count:
                 return True
         return False
 
@@ -57,17 +57,17 @@ class PyzorPlugin(pad.plugins.base.BasePlugin):
 
     def _pyzor_report(self, msg, spam=True):
         """Does the actual work for reporting digests to pyzor."""
-        if not self.get_global("use_pyzor"):
+        if not self["use_pyzor"]:
             return
         try:
             digest = self.get_local(msg, "digest")
         except KeyError:
             digest = pyzor.digest.DataDigester(msg.msg).value
             self.set_local(msg, "digest", digest)
-        client = self.get_global("client")
+        client = self["client"]
         self.ctxt.log.debug("Reporting digest %s with Pyzor (%s)", digest,
                             spam)
-        for server in self.get_global("pyzor_servers"):
+        for server in self["pyzor_servers"]:
             if spam:
                 client.report(digest, server.rsplit(":", 1))
             else:

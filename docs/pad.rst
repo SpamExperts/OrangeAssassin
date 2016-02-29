@@ -10,7 +10,7 @@ pad Package
 :mod:`conf` Module
 --------------------
 
-.. automodule:: pad.config
+.. automodule:: pad.conf
     :members:
     :undoc-members:
     :show-inheritance:

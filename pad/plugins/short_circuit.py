@@ -59,9 +59,9 @@ class ShortCircuit(pad.plugins.base.BasePlugin):
             msg.score += rule.score
 
             if stype == "spam":
-                msg.score += self.get_global("shortcircuit_spam_score")
+                msg.score += self["shortcircuit_spam_score"]
             elif stype == "ham":
-                msg.score += self.get_global("shortcircuit_ham_score")
+                msg.score += self["shortcircuit_ham_score"]
 
             raise pad.errors.StopProcessing("ShortCircuit: %s", rule.name)
 
@@ -72,7 +72,7 @@ class ShortCircuit(pad.plugins.base.BasePlugin):
         configuration and shortcircuit them.
         """
         super(ShortCircuit, self).finish_parsing_end(ruleset)
-        for config in self.get_global("shortcircuit"):
+        for config in self["shortcircuit"]:
             try:
                 rule_name, stype = config.split(None, 1)
             except ValueError:

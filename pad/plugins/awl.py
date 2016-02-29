@@ -96,9 +96,9 @@ class AutoWhiteListPlugin(pad.plugins.base.BasePlugin):
 
     def ip_to_awl_key(self, ip):
         if ip.version == 4:
-            mask = self.get_global("auto_whitelist_ipv4_mask_len")
+            mask = self["auto_whitelist_ipv4_mask_len"]
         else:
-            mask = self.get_global("auto_whitelist_ipv6_mask_len")
+            mask = self["auto_whitelist_ipv6_mask_len"]
 
         interface = ipaddress.ip_interface("%s/%s" % (ip, mask))
         network = interface.network.network_address
@@ -135,7 +135,7 @@ class AutoWhiteListPlugin(pad.plugins.base.BasePlugin):
 
     def check_from_in_auto_whitelist(self, msg, target=None):
         score = msg.score
-        factor = self.get_global("auto_whitelist_factor")
+        factor = self["auto_whitelist_factor"]
         origin_ip = self.get_local(msg, "originip")
         if origin_ip:
             awl_key_ip = self.ip_to_awl_key(origin_ip)

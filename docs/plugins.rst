@@ -27,6 +27,7 @@ Available plugins
     pad.plugins.awl
     pad.plugins.body_eval
     pad.plugins.dump_text
+    pad.plugins.dns_eval
     pad.plugins.image_info
     pad.plugins.pdf_info
     pad.plugins.pyzor
