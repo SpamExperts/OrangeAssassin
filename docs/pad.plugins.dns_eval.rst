@@ -12,15 +12,14 @@ Example usage
 
     loadplugin      pad.plugins.dns_eval.DNSEval
 
+    header IP_IN_LIST        eval:check_rbl('example', 'example.com.', '127.0.0.10')
+    describe IP_IN_LIST      IP in example.com list with response 10
+
 Usage
 =====
 
-.. code-block:: none
-
-    loadplugin      pad.plugins.dns_eval.DNSEval
-
-    header IP_IN_LIST        eval:check_rbl('example', 'example.com.', '127.0.0.10')
-    describe IP_IN_LIST      IP in example.com list with response 10
+This plugin only has EVAL methods. See :ref:`eval-rule` for general
+details on how to use such methods.
 
 Options
 =======
