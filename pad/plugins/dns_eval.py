@@ -60,6 +60,38 @@ class DNSEval(pad.plugins.base.BasePlugin):
                 zones[zone_id] = rbl_server
         self["zones"] = zones
 
+    def _check_rbl(self, msg, rbl_server, qtype="A", subtest=None):
+        """Checks all the IPs of this message on the specified
+        list.
+
+        :param msg: The message that we perform the check on.
+        :param rbl_server: The RBL list to check
+        :param qtype: The DNS record type to check
+        :param subtest: If specified then an additional check
+          is done on the result of the DNS lookup by matching
+          this regular expression against the result.
+        :return: True if there is a match and the subtest
+          passes and False otherwise.
+        """
+        if subtest is not None:
+            try:
+                subtest = re.compile(subtest)
+            except re.error as e:
+                self.ctxt.err("Invalid regex %s: %s", subtest, e)
+                return False
+
+        for ip in msg.get_untrusted_ips():
+            rev = self.ctxt.reverse_ip(ip)
+            results = self.ctxt.query_dns("%s.%s" % (rev, rbl_server), qtype)
+
+            if results and not subtest:
+                return True
+
+            for result in results:
+                if subtest.match(str(result)):
+                    return True
+        return False
+
     def _check_multi_rbl(self, msg, rbl_server, mask=None):
         """Checks all the IPs of this message on the specified
         list.
@@ -91,38 +123,6 @@ class DNSEval(pad.plugins.base.BasePlugin):
             for result in results:
                 result = ipaddress.ip_address(str(result))
                 if int(result) & mask:
-                    return True
-        return False
-
-    def _check_rbl(self, msg, rbl_server, qtype="A", subtest=None):
-        """Checks all the IPs of this message on the specified
-        list.
-
-        :param msg: The message that we perform the check on.
-        :param rbl_server: The RBL list to check
-        :param qtype: The DNS record type to check
-        :param subtest: If specified then an additional check
-          is done on the result of the DNS lookup by matching
-          this regular expression against the result.
-        :return: True if there is a match and the subtest
-          passes and False otherwise.
-        """
-        if subtest is not None:
-            try:
-                subtest = re.compile(subtest)
-            except re.error as e:
-                self.ctxt.err("Invalid regex %s: %s", subtest, e)
-                return False
-
-        for ip in msg.get_untrusted_ips():
-            rev = self.ctxt.reverse_ip(ip)
-            results = self.ctxt.query_dns("%s.%s" % (rev, rbl_server), qtype)
-
-            if results and not subtest:
-                return True
-
-            for result in results:
-                if subtest.match(str(result)):
                     return True
         return False
 
