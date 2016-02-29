@@ -106,7 +106,7 @@ def main():
                 print(ruleset.get_report(msg))
             else:
                 ruleset.match(msg)
-                # print(ruleset.get_adjusted_message(msg))
+                print(ruleset.get_adjusted_message(msg))
                 if options.test_mode:
                     print(ruleset.get_report(msg))
         count += 1
