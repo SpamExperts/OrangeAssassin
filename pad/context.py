@@ -308,11 +308,14 @@ class GlobalContext(_Context):
             if port:
                 cport = port
             nameservers.append(addr)
+        cport = cport or 53
         if not nameservers:
             self.log.info("Using default nameservers")
         else:
+            self.log.info("Using nameservers: %s (port %s)", nameservers,
+                          cport)
             self._resolver.nameservers = nameservers
-            self._resolver.port = cport or 53
+            self._resolver.port = int(cport)
         del self.conf["dns_server"]
 
     @_callback_chain
@@ -320,6 +323,7 @@ class GlobalContext(_Context):
         """Hook after the parsing has finished but and the
         ruleset is initialized.
         """
+        self._configure_dns()
         for plugin in self.plugins.values():
             plugin.finish_parsing_end(ruleset)
 
