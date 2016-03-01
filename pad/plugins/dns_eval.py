@@ -6,6 +6,8 @@ from __future__ import absolute_import
 import re
 import ipaddress
 
+from builtins import str
+
 import pad.rules.eval_
 import pad.plugins.base
 
@@ -108,7 +110,7 @@ class DNSEval(pad.plugins.base.BasePlugin):
                 mask = int(mask)
             except (ValueError, TypeError):
                 try:
-                    mask = int(ipaddress.ip_address(mask))
+                    mask = int(ipaddress.ip_address(str(mask)))
                 except ValueError as e:
                     self.ctxt.err("Invalid mask %s: %s", mask, e)
                     return False

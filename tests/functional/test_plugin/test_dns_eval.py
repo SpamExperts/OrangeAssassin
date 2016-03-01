@@ -163,7 +163,7 @@ class TestDNSEval(tests.util.TestBase):
             "example.com.", "127.0.2.16"
         )
         self.setup_conf(CONFIG, PRE_CONFIG)
-        result = self.check_pad(MSG, debug=True)
+        result = self.check_pad(MSG)
         self.check_report(result, 1.0, ["IP_IN_LIST"])
 
     @unittest.skip("check_rbl_txt - is not working")
