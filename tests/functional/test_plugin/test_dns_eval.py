@@ -28,7 +28,7 @@ describe    IP_IN_LIST      IP in example.com list
 
 CONFIG_TXT = r"""
 header      IP_IN_TXT_LIST      eval:check_rbl_txt('example', 'example.com')
-header      IP_IN_TXT_LIST      eval:check_rbl_txt('example', '127.0.0.3')
+header      IP_IN_TXT_LIST_SUB      eval:check_rbl_txt('example', 'example.com, '127.0.0.3')
 """
 
 CONFIG_SUB = r"""
@@ -166,12 +166,12 @@ class TestDNSEval(tests.util.TestBase):
         result = self.check_pad(MSG)
         self.check_report(result, 1.0, ["IP_IN_LIST"])
 
-    @unittest.skip("check_rbl_txt - is not working")
+    @unittest.skip("The mindns server that we are using doesn't work with TXT")
     def test_check_rbl_txt(self):
         """Check real multipart message on a TXT list"""
         self.add("34.216.184.93.example.com.", "127.0.0.1", rtype='TXT')
         self.setup_conf(CONFIG_TXT, PRE_CONFIG)
-        result = self.check_pad(MSG)
+        result = self.check_pad(MSG, debug=True)
         self.check_report(result, 1.0, ["IP_IN_TXT_LIST"])
 
     def test_check_rbl_sub(self):

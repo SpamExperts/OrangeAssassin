@@ -151,6 +151,7 @@ class GlobalContext(_Context):
         # XXX network options. #40.
         # XXX We should likely cache responses here as
         # XXX well.
+        self.log.debug("Querying %s for %s record", qname, qtype)
         if qtype == "PTR":
             qname = dns.reversename.from_address(qname)
         try:
