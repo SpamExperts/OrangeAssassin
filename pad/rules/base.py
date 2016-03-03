@@ -110,5 +110,5 @@ class BaseRule(object):
         return cls(name, **cls.get_rule_kwargs(data))
 
     def __str__(self):
-        return "%s* %s %s %s%s" % (self.priority, self.score, self.name, self._rule_type,
+        return "* %s %s %s%s" % (self.score, self.name, self._rule_type,
                                  self.description)
