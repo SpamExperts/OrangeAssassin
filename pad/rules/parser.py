@@ -37,6 +37,7 @@ MAX_RECURSION = 10
 KNOWN_2_RTYPE = frozenset(
         (
             "score",  # Specifies the score adjustment if the rule matches
+            "priority",  # Specifies the priority of the rule
             "describe",  # Specifies a comment describing the rule
             "full",  # Specifies a FullRule
             "body",  # Specifies a BodyRule
@@ -122,6 +123,9 @@ class PADParser(object):
                 except pad.errors.PluginLoadError as e:
                     warnings.warn(e.message)
                     self.ctxt.log.warn(e.message)
+        self.results = collections.OrderedDict(
+            sorted(self.results.items(),
+                   key=lambda x:-int(x[1].get('priority', 0)), reverse=False))
 
     def _handle_line(self, filename, line, line_no, _depth=0):
         """Handles a single line."""
@@ -249,7 +253,6 @@ class PADParser(object):
                     self.ctxt.log.debug("Adding rule %s with: %s", name, data)
                     rule = rule_class.get_rule(name, data)
                     self.ruleset.add_rule(rule)
-
         self.ctxt.hook_parsing_end(self.ruleset)
         self.ctxt.log.info("%s rules loaded", len(self.ruleset.checked))
         self.ruleset.post_parsing()

@@ -23,7 +23,7 @@ class BaseRule(object):
     """Abstract class for rules."""
     _rule_type = ""
 
-    def __init__(self, name, score=None, desc=None):
+    def __init__(self, name, score=None, desc=None, priority=None):
         self.name = name
         if name.startswith("__"):
             score = [0.0]
@@ -39,6 +39,11 @@ class BaseRule(object):
         if desc is None:
             desc = "No description available."
         self.description = desc
+
+        if priority is None:
+            priority = 0
+        self.priority = int(priority)
+
         # Public score, the value is change accordingly when the
         # rule is added to a ruleset.
         self.score = self._scores[0]
@@ -91,6 +96,10 @@ class BaseRule(object):
             kwargs["desc"] = data["describe"].strip()
         except KeyError:
             pass
+        try:
+            kwargs["priority"] = data["priority"].strip()
+        except KeyError:
+            pass
         return kwargs
 
     @classmethod
@@ -101,5 +110,5 @@ class BaseRule(object):
         return cls(name, **cls.get_rule_kwargs(data))
 
     def __str__(self):
-        return "* %s %s %s%s" % (self.score, self.name, self._rule_type,
+        return "%s* %s %s %s%s" % (self.priority, self.score, self.name, self._rule_type,
                                  self.description)
