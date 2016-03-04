@@ -147,6 +147,17 @@ class TestDNSEval(unittest.TestCase):
         self.mock_ctxt.query_dns.assert_called_with(
             "example.org.example.com", 'A')
 
+    def test_check_rbl_from_domain_addr(self):
+        """Test the check_rbl_from_domain eval rule"""
+        from_headers = ["test@example.org", "teo@example.test",
+                        "from@example.net", "domain.example.com"]
+        self.mock_msg.get_addr_header.return_value = from_headers
+        self.plugin.check_rbl_from_domain(
+            self.mock_msg, "example_set", "example.com", "127.0.0.1"
+        )
+        self.mock_ctxt.query_dns.assert_called_with(
+            "domain.example.com.example.com", 'A')
+
     def test_check_rbl_accreditor(self):
         """Test the check_rbl_from_domain eval rule"""
         self.mock_msg.sender_address = "sender@a--accreditor.mail.example.com"
