@@ -144,7 +144,7 @@ This option can be used to prioritize rules to be evaluated before others. By de
 the rules are checked in the order they are defined in the config file and their
 priority value is 0. A negative priority will leave the evaluation at the end.
 
-Example configuration:
+Example configuration::
 
     body    TEST_RULE1  /test/
     body    TEST_RULE2  /test/
@@ -152,7 +152,7 @@ Example configuration:
     priority TEST_RULE2 5
     priority TEST_RULE1 -1
 
-They will be evaluated in the next order:
+They will be evaluated in the next order::
 
     TEST_RULE2
     TEST_RULE3
