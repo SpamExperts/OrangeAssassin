@@ -80,6 +80,23 @@ class TestDNSEval(unittest.TestCase):
         self.mock_ctxt.query_dns.assert_called_with(
             "1.0.0.127.example.com", 'A')
 
+    def test_check_rbl_sub_multi(self):
+        """Test the _check_multi_rbl method."""
+        eval_rule = MagicMock()
+        eval_rule.eval_rule_name = "check_rbl"
+        eval_rule.eval_args = ("example_ser", "rbl.example.com.")
+        self.mock_ruleset.checked["MY_RULE"] = eval_rule
+        patch("pad.plugins.dns_eval.isinstance", return_value=True,
+              create=True).start()
+
+        self.plugin.finish_parsing_end(self.mock_ruleset)
+
+        self.plugin.check_rbl_sub(
+            self.mock_msg, "example_ser", "127.0.0.1",
+        )
+        self.mock_ctxt.query_dns.assert_called_with(
+            "1.0.0.127.rbl.example.com.", 'A')
+
     def test_check_dns_sender_with_a_records(self):
         """Test the check_dns_sender rule"""
 
@@ -87,8 +104,8 @@ class TestDNSEval(unittest.TestCase):
             return ["127.0.0.1"]
 
         self.mock_ctxt.query_dns.side_effect = mock_query
-        restult = self.plugin.check_dns_sender(self.mock_msg)
-        self.assertFalse(restult)
+        result = self.plugin.check_dns_sender(self.mock_msg)
+        self.assertFalse(result)
 
     def test_check_dns_sender_no_mx(self):
         """Test the check_dns_sender rule"""
@@ -120,7 +137,7 @@ class TestDNSEval(unittest.TestCase):
         self.assertTrue(result)
 
     def test_check_rbl_envfrom(self):
-        """Test the check_rbl_from_envfrom eval rule"""
+        """Test the check_rbl_envfrom eval rule"""
         self.plugin.check_rbl_envfrom(
             self.mock_msg, "example_set", "example.org"
         )
@@ -128,7 +145,7 @@ class TestDNSEval(unittest.TestCase):
             "example.com.example.org", 'A')
 
     def test_check_rbl_from_host(self):
-        """Test the check_rbl_from_domain eval rule"""
+        """Test the check_rbl_from_host eval rule"""
         from_host = ["test@example.net"]
         self.mock_msg.get_addr_header.return_value = from_host
         self.plugin.check_rbl_from_host(
@@ -159,10 +176,35 @@ class TestDNSEval(unittest.TestCase):
             "domain.example.com.example.com", 'A')
 
     def test_check_rbl_accreditor(self):
-        """Test the check_rbl_from_domain eval rule"""
+        """Test the check_rbl_accreditor eval rule"""
         self.mock_msg.sender_address = "sender@a--accreditor.mail.example.com"
         self.plugin.check_rbl_accreditor(
             self.mock_msg, "accredit", "example.com", "127.0.0.1", "accreditor"
         )
+        self.mock_ctxt.query_dns.assert_called_with(
+            "1.0.0.127.example.com", 'A')
+
+    def test_check_rbl_accreditor_from_header_no_match(self):
+        """Test the check_rbl_accreditor eval rule when accreditor doen't
+        match"""
+        accreditor_header = ["accreditor2, parm=value;"]
+        self.mock_msg.get_decoded_header.return_value = accreditor_header
+
+        result = self.plugin.check_rbl_accreditor(
+            self.mock_msg, "accreditor1", "example.com.", "127.0.0.1",
+            "accreditor"
+        )
+        self.assertFalse(result)
+
+    def test_check_rbl_accreditor_from_header(self):
+        """Test the check_rbl_accreditor eval rule when accreditor match"""
+        accreditor_header = ["accreditor, parm=value;"]
+        self.mock_msg.get_decoded_header.return_value = accreditor_header
+
+        self.plugin.check_rbl_accreditor(
+            self.mock_msg, "accreditor", "example.com", "127.0.0.1",
+            "accreditor"
+        )
+        # accredit', 'example.net', '127.0.1.2','accreditor1'
         self.mock_ctxt.query_dns.assert_called_with(
             "1.0.0.127.example.com", 'A')
