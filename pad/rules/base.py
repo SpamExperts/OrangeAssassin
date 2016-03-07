@@ -23,7 +23,7 @@ class BaseRule(object):
     """Abstract class for rules."""
     _rule_type = ""
 
-    def __init__(self, name, score=None, desc=None, priority=None):
+    def __init__(self, name, score=None, desc=None, priority=0):
         self.name = name
         if name.startswith("__"):
             score = [0.0]
@@ -40,8 +40,6 @@ class BaseRule(object):
             desc = "No description available."
         self.description = desc
 
-        if priority is None:
-            priority = 0
         self.priority = int(priority)
 
         # Public score, the value is change accordingly when the
