@@ -15,8 +15,10 @@ _EVAL_RULE_P = re.compile(r"""
 class EvalRule(pad.rules.base.BaseRule):
     """Evaluates a registered eval function."""
 
-    def __init__(self, name, eval_rule, score=None, desc=None, target=None, priority=0):
-        super(EvalRule, self).__init__(name, score=score, desc=desc, priority=priority)
+    def __init__(self, name, eval_rule, score=None, desc=None, target=None,
+                 priority=0):
+        super(EvalRule, self).__init__(name, score=score, desc=desc,
+                                       priority=priority)
         try:
             eval_rule_name, eval_args = _EVAL_RULE_P.match(eval_rule).groups()
             self.eval_rule_name = eval_rule_name

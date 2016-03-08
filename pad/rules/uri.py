@@ -12,8 +12,9 @@ class URIRule(pad.rules.base.BaseRule):
     """
     _rule_type = "URI: "
 
-    def __init__(self, name, pattern, score=None, desc=None):
-        super(URIRule, self).__init__(name, score=score, desc=desc)
+    def __init__(self, name, pattern, score=None, desc=None, priority=0):
+        super(URIRule, self).__init__(name, score=score, desc=desc,
+                                      priority=priority)
         self._pattern = pattern
 
     def match(self, msg):

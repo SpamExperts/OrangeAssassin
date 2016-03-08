@@ -7,8 +7,8 @@ import pad.rules.base
 class FullRule(pad.rules.base.BaseRule):
     """Match a regular expression against the full raw message."""
 
-    def __init__(self, name, pattern, score=None, desc=None):
-        super(FullRule, self).__init__(name, score=score, desc=desc)
+    def __init__(self, name, pattern, score=None, desc=None, priority=0):
+        super(FullRule, self).__init__(name, score=score, desc=desc, priority=priority)
         self._pattern = pattern
 
     def match(self, msg):

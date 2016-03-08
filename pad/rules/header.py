@@ -44,9 +44,9 @@ class _PatternMimeHeaderRule(MimeHeaderRule):
     """
 
     def __init__(self, name, pattern=None, header_name=None, score=None,
-                 desc=None):
+                 desc=None, priority=0):
         super(_PatternMimeHeaderRule, self).__init__(name, score=score,
-                                                     desc=desc)
+                                                     desc=desc, priority=priority)
         self._header_name = header_name
         self._pattern = pattern
 
