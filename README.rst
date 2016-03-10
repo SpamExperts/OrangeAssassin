@@ -9,6 +9,11 @@ Python Antispam Daemon
   :target: https://coveralls.io/github/SpamExperts/SpamPAD?branch=master
 
 
+.. image:: https://codeclimate.com/github/SpamExperts/SpamPAD/badges/gpa.svg
+   :target: https://codeclimate.com/github/SpamExperts/SpamPAD
+   :alt: Code Climate
+
+
 .. image:: https://requires.io/github/SpamExperts/SpamPAD/requirements.svg?branch=master
      :target: https://requires.io/github/SpamExperts/SpamPAD/requirements/?branch=master
      :alt: Requirements Status
