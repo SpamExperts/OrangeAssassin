@@ -121,8 +121,8 @@ class PADParser(object):
                     with self._paranoid(pad.errors.InvalidSyntax):
                         self._handle_line(filename, line, line_no + 1, _depth)
                 except pad.errors.PluginLoadError as e:
-                    warnings.warn(e.message)
-                    self.ctxt.log.warn(e.message)
+                    warnings.warn(str(e))
+                    self.ctxt.log.warn("%s", e)
         self.results = collections.OrderedDict(
             sorted(self.results.items(),
                    key=lambda x:-int(x[1].get('priority', 0)), reverse=False))
