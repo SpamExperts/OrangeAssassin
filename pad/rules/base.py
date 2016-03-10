@@ -39,8 +39,10 @@ class BaseRule(object):
         if desc is None:
             desc = "No description available."
         self.description = desc
-
-        self.priority = int(priority)
+        try:
+            self.priority = int(priority)
+        except ValueError:
+            self.priority = 0
 
         # Public score, the value is change accordingly when the
         # rule is added to a ruleset.
