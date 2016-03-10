@@ -142,7 +142,8 @@ Priority option
 
 This option can be used to prioritize rules to be evaluated before others. By default
 the rules are checked in the order they are defined in the config file and their
-priority value is 0. A negative priority will leave the evaluation at the end.
+priority value is 0. A negative priority will leave the evaluation at the end. Also
+note that the value of the priority must be integer.
 
 Example configuration::
 
