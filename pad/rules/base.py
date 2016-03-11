@@ -112,3 +112,18 @@ class BaseRule(object):
     def __str__(self):
         return "* %s %s %s%s" % (self.score, self.name, self._rule_type,
                                  self.description)
+
+    def __gt__(self, other):
+        return other.priority > self.priority
+
+    def __lt__(self, other):
+        return other.priority < self.priority
+
+    def __ge__(self, other):
+        return other.priority >= self.priority
+
+    def __le__(self, other):
+        return other.priority <= self.priority
+
+    def __eq__(self, other):
+        return self.priority == other.priority

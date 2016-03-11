@@ -109,13 +109,6 @@ class PADParser(object):
             if self.ctxt.paranoid:
                 raise
 
-    def clean_priority(self, priority, filename):
-        try:
-            return -int(priority.get('priority', 0))
-        except ValueError:
-            self.ctxt.err("Ignoring invalid priority value in config file: %s", filename)
-            return 0
-
     def parse_file(self, filename, _depth=0):
         """Parses a single PAD ruleset file."""
         if _depth > MAX_RECURSION:
@@ -130,9 +123,6 @@ class PADParser(object):
                 except pad.errors.PluginLoadError as e:
                     warnings.warn(str(e))
                     self.ctxt.log.warn("%s", e)
-        self.results = collections.OrderedDict(
-            sorted(self.results.items(),
-                   key=lambda x:self.clean_priority(x[1], filename), reverse=False))
 
     def _handle_line(self, filename, line, line_no, _depth=0):
         """Handles a single line."""
