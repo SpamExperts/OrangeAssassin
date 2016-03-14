@@ -52,7 +52,7 @@ def parse_arguments(args):
     parser.add_argument("-C", "--configpath", action="store",
                         help="Path to standard configuration directory",
                         **pad.config.get_default_configs(site=False))
-    parser.add_argument("--sitepath", "--siteconfigpath", action="store",
+    parser.add_argument("-S", "--sitepath", "--siteconfigpath", action="store",
                         help="Path to standard configuration directory",
                         **pad.config.get_default_configs(site=True))
     parser.add_argument("-p", "--prefspath", "--prefs-file",

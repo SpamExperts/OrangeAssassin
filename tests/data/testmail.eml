@@ -1,0 +1,130 @@
+Delivered-To: support@example.com
+Received: by 10.216.244.5 with SMTP id l5csp117570wer;
+        Tue, 18 Dec 2012 04:42:14 -0800 (PST)
+X-Received: by 10.14.218.69 with SMTP id j45mr5251670eep.35.1355834534076;
+        Tue, 18 Dec 2012 04:42:14 -0800 (PST)
+Return-Path: <testone@example.com>
+Received: from delivery.example.com (delivery.example.com. [31.25.103.16])
+        by mx.google.com with ESMTPS id g47si4104168eep.63.2012.12.18.04.42.13
+        (version=TLSv1/SSLv3 cipher=OTHER);
+        Tue, 18 Dec 2012 04:42:14 -0800 (PST)
+Received-SPF: neutral (google.com: 31.25.103.16 is neither permitted nor denied by domain of testone@example.com) client-ip=31.25.103.16;
+Authentication-Results: mx.google.com; spf=neutral (google.com: 31.25.103.16 is neither permitted nor denied by domain of testone@example.com) smtp.mail=testone@example.com; dkim=pass header.i=@example.com
+Received: from mail-ob0-f178.google.com ([209.85.214.178])
+	by mx11.example.com with esmtps (TLSv1:RC4-SHA:128)
+	(Exim 4.80.1)
+	(envelope-from <testone@example.com>)
+	id 1TkwUu-0004St-4t
+	for support@example.com; Tue, 18 Dec 2012 13:42:13 +0100
+Received: by mail-ob0-f178.google.com with SMTP id eh20so536115obb.37
+        for <support@example.com>; Tue, 18 Dec 2012 04:42:10 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=example.com; s=20120113;
+        h=mime-version:date:message-id:subject:from:to:content-type;
+        bh=NvCE6QH4wkBg/+35aFeT8UO9NqRvdcxyrKRNCOsxWgc=;
+        b=QzQ+bxfIKBpeTcK/mR95PeI6X3JUefpwwaK1yPeQN+QvD0ny4nCcKs2Kb4kLueIibx
+         Q48laxUP2zXYPXGG50QEq7zLVcedAmCFsWN9lY8BPF9QbzZxJAnBIlykrI36Bkgg2BDJ
+         EJGjE6y1Pu8kg7a8a5zCxGXUzmOquqK7HoR0+O7mYd4UhX/cntVGZnKT9gmUZynQk42h
+         COgAIeCWlzGtdxpFycnkelcvSRrwikjw7MWU9f4LCjmAnQw36E3kdTC4gYXmrDcEK4S9
+         qGyXA286Dq1LKUWXoKPllrmkW5nDJqPnmXZULphaFJfkHOXQEKK9ELJY10x2x7pcjR6K
+         c6vg==
+MIME-Version: 1.0
+Received: by 10.60.21.131 with SMTP id v3mr1427586oee.32.1355834530650; Tue,
+ 18 Dec 2012 04:42:10 -0800 (PST)
+Received: by 10.76.162.68 with HTTP; Tue, 18 Dec 2012 04:42:10 -0800 (PST)
+Date: Tue, 18 Dec 2012 13:42:10 +0100
+Message-ID: <CAEf13+m7tFSGF8a-g3+=7Fpkx=9nKA7HOP5CZ4yqK7k+2UJgiA@mail.example.com>
+Subject: Test ticket 1
+From: example Playstation <testone@example.com>
+To: support@example.com
+Content-Type: multipart/alternative; boundary=e89a8fb1ef4492dad404d11fd3bc
+Received-SPF: pass (mx11.example.com: domain of example.com designates 209.85.214.178 as permitted sender) client-ip=209.85.214.178; envelope-from=testone@example.com; helo=mail-ob0-f178.google.com;
+X-SPF-Result: mx11.example.com: domain of example.com designates 209.85.214.178 as permitted sender
+X-Filter-ID: XtLePq6GTMn8G68F0EmQvUKW+Mvk3FqBhsNYA10N+Mo30TOeNnpMT5uM0AU/mBfVMLsUEmqK4hN1
+ 6H9C8BO1LDzcpbhDULLs2Csc47fri2x2CjmHmyNpq+Xk8APPqXJfLiPw8YgtO4k2C8LN+YA0IkkP
+ 2lriwUyOscvwBUPrCc3pTuwQh68OC42Yst2oGCqwi/1NUMQf/0myq8aEHxGSRz+uIRtdejHvG7Dd
+ t62myXJqTJ4u9EM+CmApZB3j/toN5YE5enyccp7RH4WQio3uGTK4l0l2G0NASm9Qm5Y9fDeRVYKU
+ 9W9tbmVXJBqdHHDmBhZwvK1mepKPsbfpwBU8gQdbrfJfTTvdu54UU/Jl7KXFIK2mTYv45hcBLgdt
+ L2k4i+jJGjKfMJkKJ80uEplT3qBacVJJzJNUmhIIdyGd7OfJaaL/jTaUKvJuUlYD3/korSOIPpeq
+ wlm2NDGXIJ2x7J9+clq8d+DCHBQbpbc2dOG+fkqWCACns6xmns733t24iqLW1AZPOXUTegi8FwDv
+ OJwUQPiGdhgFDWRCp0Hx+Cr2OKHH5lr9xXvSM4nM3avg
+Authentication-Results: example.com;
+ spf=pass smtp.mailfrom=testone@example.com
+Authentication-Results: example.com; dkim=pass () header.i=example.com
+X-example-Class: ham
+X-example-Evidence: SB/example_com (0.00325574630959)
+X-Recommended-Action: accept
+
+--e89a8fb1ef4492dad404d11fd3bc
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: quoted-printable
+
+SPD-Kanzlerkandidat Peer Steinbr=FCck will auch im Unternehmerlager Stimmen
+sammeln, doch die Wirtschaft geht auf Distanz. F=FChrende Manager greifen d=
+en
+Sozialdemokraten an, Umfragen zufolge setzen die Firmenchefs klar auf
+Angela Merkel.
+
+Berlin - Bei den eigenen Leuten ist Peer Steinbr=FCck neuerdings gut
+gelitten. Seine Vorschl=E4ge zur Bankenregulierung, zu h=F6heren Steuers=E4=
+tzen
+f=FCr Spitzenverdiener sowie sein Bekenntnis zur Frauenquote haben viele in
+der SPD mit ihrem Kanzlerkandidaten vers=F6hnt. Allerdings gibt es pl=F6tzl=
+ich
+ein anderes Problem: Die Wirtschaft geht zum einst als Pragmatiker gelobten
+Steinbr=FCck mehr und mehr auf Distanz.
+
+Von dessen Comeback als Sozialdemokrat ist unter Managern offenbar kaum
+einer begeistert. "Steinbr=FCck bedient Neidreflexe, indem er die Besteueru=
+ng
+von Verm=F6gen und Personenunternehmen ganz oben auf die Agenda setzt", sag=
+t
+Lencke Wischhusen, neue Chefin des Verbandes der Jungen Unternehmer.
+Wischhusens Vorwurf an Steinbr=FCck: "Dabei vergisst er, dass diese
+wachstumsfeindliche Politik den Unternehmen die M=F6glichkeit nimmt zu
+reinvestieren, Eigenkapital aufzubauen und so langfristig Arbeitspl=E4tze z=
+u
+schaffen und auch in der n=E4chsten Krise f=FCr Stabilit=E4t zu sorgen."
+
+Auch der Pr=E4sident des Deutschen Industrie- und Handelskammertages (DIHK)=
+,
+Hans Heinrich Driftmann, kritisiert Steinbr=FCck. "In Zeiten von
+Steuereinnahmen auf Rekordniveau halte ich es f=FCr v=F6llig falsch, =FCber
+Steuererh=F6hungen nachzudenken." Driftmann warnt: "Das kostet Wachstum und
+Arbeitspl=E4tze." Und Arbeitgeberchef Dieter Hundt nennt die von Steinbr=FC=
+ck
+mitgetragenen rot-gr=FCnen Pl=E4ne "hochgradig sch=E4dlich" f=FCr die Wirts=
+chaft.
+
+--e89a8fb1ef4492dad404d11fd3bc
+Content-Type: text/html; charset=ISO-8859-1
+Content-Transfer-Encoding: quoted-printable
+
+SPD-Kanzlerkandidat Peer Steinbr=FCck will auch im Unternehmerlager Stimmen=
+ sammeln, doch die Wirtschaft geht auf Distanz. F=FChrende Manager greifen =
+den Sozialdemokraten an, Umfragen zufolge setzen die Firmenchefs klar auf A=
+ngela Merkel.<br>
+<br>Berlin - Bei den eigenen Leuten ist Peer Steinbr=FCck neuerdings gut ge=
+litten. Seine Vorschl=E4ge zur Bankenregulierung, zu h=F6heren Steuers=E4tz=
+en f=FCr Spitzenverdiener sowie sein Bekenntnis zur Frauenquote haben viele=
+ in der SPD mit ihrem Kanzlerkandidaten vers=F6hnt. Allerdings gibt es pl=
+=F6tzlich ein anderes Problem: Die Wirtschaft geht zum einst als Pragmatike=
+r gelobten Steinbr=FCck mehr und mehr auf Distanz.<br>
+<br>Von dessen Comeback als Sozialdemokrat ist unter Managern offenbar kaum=
+ einer begeistert. &quot;Steinbr=FCck bedient Neidreflexe, indem er die Bes=
+teuerung von Verm=F6gen und Personenunternehmen ganz oben auf die Agenda se=
+tzt&quot;, sagt Lencke Wischhusen, neue Chefin des Verbandes der Jungen Unt=
+ernehmer. Wischhusens Vorwurf an Steinbr=FCck: &quot;Dabei vergisst er, das=
+s diese wachstumsfeindliche Politik den Unternehmen die M=F6glichkeit nimmt=
+ zu reinvestieren, Eigenkapital aufzubauen und so langfristig Arbeitspl=E4t=
+ze zu schaffen und auch in der n=E4chsten Krise f=FCr Stabilit=E4t zu sorge=
+n.&quot;<br>
+<br>Auch der Pr=E4sident des Deutschen Industrie- und Handelskammertages (D=
+IHK), Hans Heinrich Driftmann, kritisiert Steinbr=FCck. &quot;In Zeiten von=
+ Steuereinnahmen auf Rekordniveau halte ich es f=FCr v=F6llig falsch, =FCbe=
+r Steuererh=F6hungen nachzudenken.&quot; Driftmann warnt: &quot;Das kostet =
+Wachstum und Arbeitspl=E4tze.&quot; Und Arbeitgeberchef Dieter Hundt nennt =
+die von Steinbr=FCck mitgetragenen rot-gr=FCnen Pl=E4ne &quot;hochgradig sc=
+h=E4dlich&quot; f=FCr die Wirtschaft.<br>
+
+--e89a8fb1ef4492dad404d11fd3bc--
