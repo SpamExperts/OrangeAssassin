@@ -14,6 +14,7 @@ import re
 import os
 import imp
 import struct
+import getpass
 import logging
 import functools
 import importlib
@@ -124,6 +125,7 @@ class GlobalContext(_Context):
         self.cmds = dict()
         self.conf = pad.conf.PADConf(self)
         self._resolver = dns.resolver.Resolver()
+        self.username = getpass.getuser()
 
     def err(self, *args, **kwargs):
         """Log a error according to the paranoid and

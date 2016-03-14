@@ -138,6 +138,7 @@ class Server(socketserver.TCPServer):
             parser.results = copy.deepcopy(self._parser_results)
             parser.parse_file(path)
             ruleset = parser.get_ruleset()
+            ruleset.ctxt.username = user
             # Cache the result
             self._user_rulesets[user] = ruleset
             return ruleset
