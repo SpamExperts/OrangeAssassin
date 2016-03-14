@@ -27,10 +27,26 @@ class TestServer(unittest.TestCase):
         self.mock_signal = patch("pad.server.signal.signal",
                                  create=True).start()
         self.mock_thread = patch("pad.server.threading.Thread").start()
+        self.mock_parser = patch("pad.server."
+                                 "pad.rules.parser.PADParser").start()
+        self.mock_rules = patch("pad.server."
+                                "pad.rules.parser.parse_pad_rules").start()
+        self.mainset = self.mock_rules.return_value.get_ruleset.return_value
+        self.conf = {
+            "allow_user_rules": False
+        }
+        self.mainset.conf = self.conf
 
     def tearDown(self):
         unittest.TestCase.tearDown(self)
         patch.stopall()
+
+    def test_init_ruleset(self):
+        server = pad.server.Server(("0.0.0.0", 783), "/dev/null",
+                                   "/etc/spamassassin/")
+        self.assertEqual(server._parser_results,
+                         self.mock_rules.return_value.results)
+        self.assertEqual(server._ruleset, self.mainset)
 
     def test_handler(self):
         mock_check = MagicMock()
@@ -73,6 +89,55 @@ class TestServer(unittest.TestCase):
         server.reload_handler()
         self.mock_thread.assert_called_with(target=server.load_config)
 
+    def test_user_ruleset_none(self):
+        server = pad.server.Server(("0.0.0.0", 783), "/dev/null",
+                                   "/etc/spamassassin/")
+        result = server.get_user_ruleset(user=None)
+        self.assertEqual(result, self.mainset)
+
+    def test_user_ruleset_user_not_allowed(self):
+        server = pad.server.Server(("0.0.0.0", 783), "/dev/null",
+                                   "/etc/spamassassin/")
+        result = server.get_user_ruleset(user="alex")
+        self.assertEqual(result, self.mainset)
+
+    def test_user_ruleset_user_no_pref(self):
+        self.conf["allow_user_rules"] = True
+        server = pad.server.Server(("0.0.0.0", 783), "/dev/null",
+                                   "/etc/spamassassin/")
+        with patch("pad.server.os.path.exists", return_value=False):
+            result = server.get_user_ruleset(user="alex")
+        self.assertEqual(result, self.mainset)
+
+    def test_user_ruleset_user(self):
+        self.conf["allow_user_rules"] = True
+        server = pad.server.Server(("0.0.0.0", 783), "/dev/null",
+                                   "/etc/spamassassin/")
+        with patch("pad.server.os.path.exists", return_value=True):
+            result = server.get_user_ruleset(user="alex")
+        parser = self.mock_parser.return_value
+        self.assertEqual(result, parser.get_ruleset.return_value)
+
+    def test_user_ruleset_user_file_parsed(self):
+        self.conf["allow_user_rules"] = True
+        server = pad.server.Server(("0.0.0.0", 783), "/dev/null",
+                                   "/etc/spamassassin/")
+        with patch("pad.server.os.path.exists", return_value=True):
+            result = server.get_user_ruleset(user="alex")
+        parser = self.mock_parser.return_value
+        parser.parse_file.assert_called_with(
+            "/home/alex/.spamassassin/user_prefs"
+        )
+
+    def test_user_ruleset_user_cached(self):
+        self.conf["allow_user_rules"] = True
+        server = pad.server.Server(("0.0.0.0", 783), "/dev/null",
+                                   "/etc/spamassassin/")
+        cached_result = Mock()
+        server._user_rulesets["alex"] = cached_result
+
+        result = server.get_user_ruleset(user="alex")
+        self.assertEqual(result, cached_result)
 
 class TestPreForkServer(unittest.TestCase):
     def setUp(self):
