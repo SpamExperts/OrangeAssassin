@@ -21,7 +21,10 @@ class BaseProtocol(object):
         self.rfile = rfile
         self.wfile = wfile
         self.server = server
-        self.ruleset = None
+        # This is initialized with the default ruleset and it
+        # will get changed later if a user is specified and
+        # that option is allowed.
+        self.ruleset = server.get_user_ruleset(user=None)
         # For brevity
         self.log = server.log
         self.get_and_handle()
