@@ -16,7 +16,9 @@ class TestTellCommand(unittest.TestCase):
         unittest.TestCase.setUp(self)
         self.mockr = Mock()
         self.mockw = Mock()
+        self.mockserver = Mock()
         self.mockrules = Mock()
+        self.mockserver.get_user_ruleset.return_value = self.mockrules
         for klass in ("TellCommand",):
             patch("pad.protocol.tell.%s.get_and_handle" % klass).start()
         self.msg = Mock(score=0)
@@ -34,7 +36,7 @@ class TestTellCommand(unittest.TestCase):
             "DidSet: local\r\n"
         ]
         cmd = pad.protocol.tell.TellCommand(self.mockr, self.mockw,
-                                            self.mockrules)
+                                            self.mockserver)
         result = list(cmd.handle(self.msg, options))
         self.mockrules.ctxt.hook_report.assert_called_with(
             self.msg, True, True, False
@@ -50,7 +52,7 @@ class TestTellCommand(unittest.TestCase):
             "DidSet: remote\r\n"
         ]
         cmd = pad.protocol.tell.TellCommand(self.mockr, self.mockw,
-                                            self.mockrules)
+                                            self.mockserver)
         result = list(cmd.handle(self.msg, options))
         self.mockrules.ctxt.hook_report.assert_called_with(
             self.msg, True, False, True
@@ -66,7 +68,7 @@ class TestTellCommand(unittest.TestCase):
             "DidSet: local,remote\r\n"
         ]
         cmd = pad.protocol.tell.TellCommand(self.mockr, self.mockw,
-                                            self.mockrules)
+                                            self.mockserver)
         result = list(cmd.handle(self.msg, options))
         self.mockrules.ctxt.hook_report.assert_called_with(
             self.msg, True, True, True
@@ -82,7 +84,7 @@ class TestTellCommand(unittest.TestCase):
             "DidRemove: local\r\n"
         ]
         cmd = pad.protocol.tell.TellCommand(self.mockr, self.mockw,
-                                            self.mockrules)
+                                            self.mockserver)
         result = list(cmd.handle(self.msg, options))
         self.mockrules.ctxt.hook_revoke.assert_called_with(
             self.msg, False, True, False
@@ -98,7 +100,7 @@ class TestTellCommand(unittest.TestCase):
             "DidRemove: remote\r\n"
         ]
         cmd = pad.protocol.tell.TellCommand(self.mockr, self.mockw,
-                                            self.mockrules)
+                                            self.mockserver)
         result = list(cmd.handle(self.msg, options))
         self.mockrules.ctxt.hook_revoke.assert_called_with(
             self.msg, False, False, True
@@ -114,7 +116,7 @@ class TestTellCommand(unittest.TestCase):
             "DidRemove: local,remote\r\n"
         ]
         cmd = pad.protocol.tell.TellCommand(self.mockr, self.mockw,
-                                            self.mockrules)
+                                            self.mockserver)
         result = list(cmd.handle(self.msg, options))
         self.mockrules.ctxt.hook_revoke.assert_called_with(
             self.msg, False, True, True
@@ -132,7 +134,7 @@ class TestTellCommand(unittest.TestCase):
             "DidRemove: local\r\n"
         ]
         cmd = pad.protocol.tell.TellCommand(self.mockr, self.mockw,
-                                            self.mockrules)
+                                            self.mockserver)
         result = list(cmd.handle(self.msg, options))
         self.mockrules.ctxt.hook_report.assert_called_with(
             self.msg, True, False, True
