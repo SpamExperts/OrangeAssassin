@@ -273,4 +273,4 @@ def parse_pad_rules(files, paranoid=False, ignore_unknown=True):
     for filename in files:
         parser.parse_file(filename)
 
-    return parser.get_ruleset()
+    return parser
