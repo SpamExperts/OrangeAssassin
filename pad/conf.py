@@ -164,6 +164,7 @@ class PADConf(Conf):
         "clear_dns_servers": ("clear", "dns_server"),
         "default_dns_lifetime": ("float", 10.0),
         "default_dns_timeout": ("float", 2.0),
+        "allow_user_rules": ("bool", False),
     }
 
 
