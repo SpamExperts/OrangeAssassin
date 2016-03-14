@@ -17,12 +17,13 @@ class BaseProtocol(object):
     chunk_size = 8192
     ok_code = "EX_OK"
 
-    def __init__(self, rfile, wfile, ruleset):
+    def __init__(self, rfile, wfile, server):
         self.rfile = rfile
         self.wfile = wfile
-        self.ruleset = ruleset
+        self.server = server
+        self.ruleset = None
         # For brevity
-        self.log = ruleset.ctxt.log
+        self.log = server.log
         self.get_and_handle()
 
     def get_options(self):
@@ -77,6 +78,8 @@ class BaseProtocol(object):
         try:
             if self.has_options:
                 options = self.get_options()
+            user = options.get("user")
+            self.ruleset = self.server.get_user_ruleset(user)
             if self.has_message:
                 message = self.get_message(options)
                 message = pad.message.Message(self.ruleset.ctxt, message)
