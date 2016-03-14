@@ -22,6 +22,7 @@ import email.mime.multipart
 
 import pad
 import pad.context
+from pad.received_parser import ReceivedParser
 
 URL_RE = re.compile(r"""
 (
@@ -129,7 +130,7 @@ class Message(pad.context.MessageContext):
         self.addr_headers = _Headers()
         self.name_headers = _Headers()
         self.mime_headers = _Headers()
-        self.received_headers = _Headers()
+        self.received_headers = list()
         self.raw_mime_headers = _Headers()
         self.header_ips = _Headers()
         self.text = ""
@@ -322,6 +323,10 @@ class Message(pad.context.MessageContext):
             for value in self.get_decoded_mime_header(header_name):
                 yield "%s: %s" % (header_name, value)
 
+    def _create_plugin_tags(self, header):
+        for key, value in header:
+            self.plugin_tags[key] = value
+
     def _parse_sender(self):
         """Extract the envelope sender from the message."""
         headers = self.ctxt.conf["envelope_sender_header"] or DEFAULT_SENDERH
@@ -369,16 +374,14 @@ class Message(pad.context.MessageContext):
         self.text = " ".join(body)
         self.raw_text = "\n".join(raw_body)
         self._parse_sender()
+        self.received_headers = ReceivedParser(self.get_decoded_header("Received")).received
+        try:
+            self._create_plugin_tags(self.received_headers[0])
+        except IndexError:
+            pass
 
-        for value in self.get_received_headers("Received"):
-            if 'from' in value:
-                hostname = value.split(' ')[1]
-                ip = IPFRE.search(value).group()
-                clean_ip = ip.strip("[ ]();\n")
-                try:
-                    self.hostname_with_ip.append((hostname, clean_ip))
-                except ValueError:
-                    continue
+        for header in self.received_headers:
+            self.hostname_with_ip.append((header["rdns"], header["ip"]))
 
     @staticmethod
     def _iter_parts(msg):
