@@ -103,7 +103,7 @@ Message modifications
     Adds one header to the message. The value for this option must be in the
     following format::
 
-         `[all|spam|ham] [header_name] [header_value]`
+        add_header [all|spam|ham] [header_name] [header_value]
 
     If the first argument is `all` then the header is added to ALL
     messages. Otherwise the header is added only to messages that were
@@ -111,7 +111,7 @@ Message modifications
     `X-Spam-` and the header string ill have any TAGS replaced with their
     values. For example::
 
-        all PAD-Report Checked with SpamPAD _SCORE_
+        add_header all PAD-Report Checked with SpamPAD _SCORE_
 
     Will add a new header to every message like::
 
@@ -120,7 +120,8 @@ Message modifications
     Removes all header from message with the specified name. The value for this
     option must be in the following format::
 
-         `[all|spam|ham] [header_name]`
+         remove_header [all|spam|ham] [header_name]
+
 **clear_headers** N/A (type `clear`)
     Clear all previously set options that add or remove headers (i.e. any
     from `add_header` or `remove_header`).
