@@ -107,14 +107,14 @@ class AutoWhiteListPlugin(pad.plugins.base.BasePlugin):
     def get_entry(self, address, ip, signed_by):
         session = self.get_session()
         result = session.query(AWL).filter(
-                AWL.username == getpass.getuser(),
+                AWL.username == self.ctxt.username,
                 AWL.email == address,
                 AWL.signedby == signed_by,
                 AWL.ip == ip).first()
 
         if not result:
             result = session.query(AWL).filter(
-                    AWL.username == getpass.getuser(),
+                    AWL.username == self.ctxt.username,
                     AWL.email == address,
                     AWL.signedby == signed_by,
                     AWL.ip == "none").first()
@@ -127,7 +127,7 @@ class AutoWhiteListPlugin(pad.plugins.base.BasePlugin):
             result = AWL()
             result.count = 0
             result.totscore = 0
-            result.username = getpass.getuser()
+            result.username = self.ctxt.username
             result.email = address
             result.signedby = signed_by
             result.ip = ip

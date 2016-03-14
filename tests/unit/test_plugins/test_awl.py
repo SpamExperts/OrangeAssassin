@@ -21,12 +21,12 @@ class TestAWLBase(unittest.TestCase):
         self.options = {}
         self.global_data = {}
         self.msg_data = {}
-        patch("pad.plugins.awl.getpass.getuser", return_value="test").start()
 
         self.mock_ctxt = MagicMock(**{
             "get_plugin_data.side_effect": lambda p, k: self.global_data[k],
-            "set_plugin_data.side_effect": lambda p, k, v: self.global_data.setdefault(k, v)}
-        )
+            "set_plugin_data.side_effect": lambda p, k, v: self.global_data.setdefault(k, v),
+            "username": "test",
+        })
         self.mock_msg = MagicMock(**{
             "get_plugin_data.side_effect": lambda p, k: self.msg_data[k],
             "set_plugin_data."
