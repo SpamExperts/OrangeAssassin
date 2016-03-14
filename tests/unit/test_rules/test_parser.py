@@ -282,6 +282,107 @@ class TestParsePADLine(unittest.TestCase):
             self.assertRaises(pad.errors.MaxRecursionDepthExceeded,
                               self.check_parse, rules, expected)
 
+    def test_parse_line_priority_order(self):
+        rules = [b"body TEST_RULE1 /test/",
+                 b"body TEST_RULE2 /test/",
+                 b"body TEST_RULE3 /test/",
+                 b"priority TEST_RULE3 1"]
+        expected = {"TEST_RULE3": {"type": "body", "value": "/test/",
+                                   "priority": "1"},
+                    "TEST_RULE1": {"type": "body", "value": "/test/"},
+                    "TEST_RULE2": {"type": "body", "value": "/test/"}
+                    }
+        self.check_parse(rules, expected)
+
+    def test_parse_line_priority(self):
+        rules = [b"body TEST_RULE /test/",
+                 b"priority TEST_RULE 10"]
+        expected = {"TEST_RULE": {"type": "body", "value": "/test/",
+                                  "priority": "10"}}
+        self.check_parse(rules, expected)
+
+    def test_parse_line_multiple_priority_order(self):
+        rules = [b"body TEST_RULE1 /test/",
+                 b"body TEST_RULE2 /test/",
+                 b"body TEST_RULE3 /test/",
+                 b"body TEST_RULE4 /test/",
+                 b"priority TEST_RULE3 1",
+                 b"priority TEST_RULE2 4"]
+        expected = {"TEST_RULE2": {"type": "body", "value": "/test/",
+                                   "priority": "4"},
+                    "TEST_RULE3": {"type": "body", "value": "/test/",
+                                   "priority": "1"},
+                    "TEST_RULE1": {"type": "body", "value": "/test/"},
+                    "TEST_RULE4": {"type": "body", "value": "/test/"}
+                    }
+        self.check_parse(rules, expected)
+
+    def test_parse_line_negative_priority_order(self):
+        rules = [b"body TEST_RULE1 /test/",
+                 b"body TEST_RULE2 /test/",
+                 b"body TEST_RULE3 /test/",
+                 b"body TEST_RULE4 /test/",
+                 b"priority TEST_RULE1 -2"]
+        expected = {"TEST_RULE2": {"type": "body", "value": "/test/"},
+                    "TEST_RULE3": {"type": "body", "value": "/test/"},
+                    "TEST_RULE4": {"type": "body", "value": "/test/"},
+                    "TEST_RULE1": {"type": "body", "value": "/test/",
+                                   "priority": "-2"}
+                    }
+        self.check_parse(rules, expected)
+
+    def test_parse_line_negative_and_positive_priority_order(self):
+        rules = [b"body TEST_RULE1 /test/",
+                 b"body TEST_RULE2 /test/",
+                 b"body TEST_RULE3 /test/",
+                 b"body TEST_RULE4 /test/",
+                 b"priority TEST_RULE2 -1",
+                 b"priority TEST_RULE3 -4",
+                 b"priority TEST_RULE4 1"]
+        expected = {"TEST_RULE4": {"type": "body", "value": "/test/",
+                                   "priority": "1"},
+                    "TEST_RULE1": {"type": "body", "value": "/test/"},
+                    "TEST_RULE2": {"type": "body", "value": "/test/",
+                                   "priority": "-1"},
+                    "TEST_RULE3": {"type": "body", "value": "/test/",
+                                   "priority": "-4"}
+                    }
+        self.check_parse(rules, expected)
+
+    def test_parse_line_same_priority(self):
+        rules = [b"body TEST_RULE1 /test/",
+                 b"body TEST_RULE2 /test/",
+                 b"body TEST_RULE3 /test/",
+                 b"body TEST_RULE4 /test/",
+                 b"priority TEST_RULE2 1",
+                 b"priority TEST_RULE3 1"]
+        expected = {"TEST_RULE2": {"type": "body", "value": "/test/",
+                                   "priority": "1"},
+                    "TEST_RULE3": {"type": "body", "value": "/test/",
+                                   "priority": "1"},
+                    "TEST_RULE1": {"type": "body", "value": "/test/"},
+                    "TEST_RULE4": {"type": "body", "value": "/test/"}
+                    }
+        self.check_parse(rules, expected)
+
+    def test_parse_line_same_with_multiple_priority(self):
+        rules = [b"body TEST_RULE1 /test/",
+                 b"body TEST_RULE2 /test/",
+                 b"body TEST_RULE3 /test/",
+                 b"body TEST_RULE4 /test/",
+                 b"priority TEST_RULE2 1",
+                 b"priority TEST_RULE3 1",
+                 b"priority TEST_RULE4 2"]
+        expected = {"TEST_RULE4": {"type": "body", "value": "/test/",
+                                   "priority": "2"},
+                    "TEST_RULE2": {"type": "body", "value": "/test/",
+                                   "priority": "1"},
+                    "TEST_RULE3": {"type": "body", "value": "/test/",
+                                   "priority": "1"},
+                    "TEST_RULE1": {"type": "body", "value": "/test/"}
+                    }
+        self.check_parse(rules, expected)
+
 
 class TestParsePADRules(unittest.TestCase):
     def setUp(self):

@@ -55,6 +55,9 @@ def parse_arguments(args):
     parser.add_argument("--sitepath", "--siteconfigpath", action="store",
                         help="Path to standard configuration directory",
                         **pad.config.get_default_configs(site=True))
+    parser.add_argument("-p", "--prefspath", "--prefs-file",
+                        default="~/.spamassassin/user_prefs",
+                        help="Path to user preferences.")
     parser.add_argument("-t", "--test-mode", action="store_true", default=False,
                         help="Pipe message through and add extra report to the "
                              "bottom")
@@ -73,7 +76,8 @@ def main():
     options = parse_arguments(sys.argv[1:])
     logger = pad.config.setup_logging("pad-logger", debug=options.debug)
     config_files = pad.config.get_config_files(options.configpath,
-                                               options.sitepath)
+                                               options.sitepath,
+                                               options.prefspath)
 
     if not config_files:
         print("Config: no rules were found!", file=sys.stderr)
@@ -82,7 +86,7 @@ def main():
     try:
         ruleset = pad.rules.parser.parse_pad_rules(
             config_files, options.paranoid, not options.show_unknown
-        )
+        ).get_ruleset()
     except pad.errors.MaxRecursionDepthExceeded as e:
         print(e.recursion_list, file=sys.stderr)
         sys.exit(1)

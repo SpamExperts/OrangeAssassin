@@ -94,12 +94,13 @@ def get_default_configs(site=False):
 
 
 def get_files_with_extension(path, extension):
+    path = os.path.expanduser(path)
     for p in os.listdir(path):
         if p.endswith(extension):
             yield os.path.join(path, p)
 
 
-def get_config_files(config_path, siteconfig_path):
+def get_config_files(config_path, siteconfig_path, userpref_path=None):
     """Return the .pre and .cf files in the correct order."""
     config_files = []
     config_files.extend(
@@ -111,5 +112,11 @@ def get_config_files(config_path, siteconfig_path):
                 sorted(get_files_with_extension(config_path, ".cf")))
     config_files.extend(
             sorted(get_files_with_extension(siteconfig_path, ".cf")))
-
+    if userpref_path is not None and os.path.exists(userpref_path):
+        config_files.append(os.path.expanduser(userpref_path))
     return config_files
+
+
+def get_userprefs_path(user):
+    """Get the path to the user preference location."""
+    return os.path.join("/home", user, ".spamassassin", "user_prefs")

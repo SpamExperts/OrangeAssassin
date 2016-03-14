@@ -4,6 +4,7 @@ returns the result.
 from __future__ import absolute_import
 
 import os
+import copy
 import errno
 import socket
 import signal
@@ -55,8 +56,7 @@ class RequestHandler(socketserver.StreamRequestHandler):
         command, proto_version = line.split()
         try:
             # Run the command handler
-            COMMANDS[command.upper()](self.rfile, self.wfile,
-                                      self.server.ruleset)
+            COMMANDS[command.upper()](self.rfile, self.wfile, self.server)
         except KeyError:
             error_line = ("SPAMD/%s 76 Bad header line: %s\r\n" %
                           (pad.__version__, line))
@@ -73,7 +73,9 @@ class Server(socketserver.TCPServer):
         self.log = logging.getLogger("pad-logger")
         self.paranoid = paranoid
         self.ignore_unknown = ignore_unknown
-        self.ruleset = None
+        self._ruleset = None
+        self._user_rulesets = {}
+        self._parser_results = None
         self.sitepath = sitepath
         self.configpath = configpath
 
@@ -100,10 +102,46 @@ class Server(socketserver.TCPServer):
 
     def load_config(self):
         """Reads the configuration files and reloads the ruleset."""
-        self.ruleset = pad.rules.parser.parse_pad_rules(
-                pad.config.get_config_files(self.configpath, self.sitepath),
-                paranoid=self.paranoid, ignore_unknown=self.ignore_unknown
+        self._user_rulesets.clear()
+        parser = pad.rules.parser.parse_pad_rules(
+            pad.config.get_config_files(self.configpath, self.sitepath),
+            paranoid=self.paranoid, ignore_unknown=self.ignore_unknown
         )
+        self._ruleset = parser.get_ruleset()
+        # Store a copy of the parser results to generate user
+        # settings later
+        self._parser_results = parser.results
+
+    def get_user_ruleset(self, user=None):
+        """Get the corresponding ruleset for this user. If the
+        `allow_user_rules` is not set to True then it will get
+        the main ruleset loaded from the site files/
+
+        :param user: The username for which the config should
+          be returned.
+        :return: a `pad.rules.ruleset.RuleSet` object
+        """
+        if user is not None and self._ruleset.conf["allow_user_rules"]:
+            if user in self._user_rulesets:
+                return self._user_rulesets[user]
+
+            path = pad.config.get_userprefs_path(user)
+            if not os.path.exists(path):
+                self.log.warn("No user preference file: %s", path)
+                return self._ruleset
+            parser = pad.rules.parser.PADParser(
+                self._ruleset.ctxt.paranoid,
+                self._ruleset.ctxt.ignore_unknown
+            )
+            # Use the already parsed results and pass the user
+            # ones.
+            parser.results = copy.deepcopy(self._parser_results)
+            parser.parse_file(path)
+            ruleset = parser.get_ruleset()
+            # Cache the result
+            self._user_rulesets[user] = ruleset
+            return ruleset
+        return self._ruleset
 
     def shutdown_handler(self, *args, **kwargs):
         """Handler for the SIGTERM signal. This should be used to kill the

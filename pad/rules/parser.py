@@ -37,6 +37,7 @@ MAX_RECURSION = 10
 KNOWN_2_RTYPE = frozenset(
         (
             "score",  # Specifies the score adjustment if the rule matches
+            "priority",  # Specifies the priority of the rule
             "describe",  # Specifies a comment describing the rule
             "full",  # Specifies a FullRule
             "body",  # Specifies a BodyRule
@@ -120,8 +121,8 @@ class PADParser(object):
                     with self._paranoid(pad.errors.InvalidSyntax):
                         self._handle_line(filename, line, line_no + 1, _depth)
                 except pad.errors.PluginLoadError as e:
-                    warnings.warn(e.message)
-                    self.ctxt.log.warn(e.message)
+                    warnings.warn(str(e))
+                    self.ctxt.log.warn("%s", e)
 
     def _handle_line(self, filename, line, line_no, _depth=0):
         """Handles a single line."""
@@ -249,7 +250,6 @@ class PADParser(object):
                     self.ctxt.log.debug("Adding rule %s with: %s", name, data)
                     rule = rule_class.get_rule(name, data)
                     self.ruleset.add_rule(rule)
-
         self.ctxt.hook_parsing_end(self.ruleset)
         self.ctxt.log.info("%s rules loaded", len(self.ruleset.checked))
         self.ruleset.post_parsing()
@@ -273,4 +273,4 @@ def parse_pad_rules(files, paranoid=False, ignore_unknown=True):
     for filename in files:
         parser.parse_file(filename)
 
-    return parser.get_ruleset()
+    return parser

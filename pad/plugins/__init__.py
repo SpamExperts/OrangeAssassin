@@ -27,4 +27,6 @@ REIMPLEMENTED_PLUGINS = {
         "pad.plugins.body_eval.BodyEval",
     "Mail::SpamAssassin::Plugin::DNSEval":
         "pad.plugins.dns_eval.DNSEval",
+    "Mail::SpamAssassin::Plugin::SPF":
+        "pad.plugins.spf.SpfPlugin"
 }

@@ -11,6 +11,7 @@ import email.message
 import email.mime.text
 import email.mime.base
 import email.mime.multipart
+from operator import itemgetter
 
 import pad
 import pad.errors
@@ -252,6 +253,8 @@ class RuleSet(object):
 
     def post_parsing(self):
         """Run all post processing hooks."""
+        self.checked = collections.OrderedDict(
+            sorted(self.checked.items(), key=itemgetter(1), reverse=False))
         for rule_list in (self.checked, self.not_checked):
             for name, rule in list(rule_list.items()):
                 try:

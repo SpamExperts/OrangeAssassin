@@ -15,8 +15,9 @@ class BodyRule(pad.rules.base.BaseRule):
     """
     _rule_type = "BODY: "
 
-    def __init__(self, name, pattern, score=None, desc=None):
-        super(BodyRule, self).__init__(name, score=score, desc=desc)
+    def __init__(self, name, pattern, score=None, desc=None, priority=0):
+        super(BodyRule, self).__init__(name, score=score, desc=desc,
+                                       priority=priority)
         self._pattern = pattern
 
     def match(self, msg):

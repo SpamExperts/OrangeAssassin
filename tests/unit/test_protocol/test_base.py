@@ -18,7 +18,9 @@ class TestBaseCommand(unittest.TestCase):
         self.mock_m = patch("pad.protocol.base.pad.message.Message").start()
         self.mockr = Mock()
         self.mockw = Mock()
+        self.mockserver = Mock()
         self.mockrules = Mock()
+        self.mockserver.get_user_ruleset.return_value = self.mockrules
 
     def tearDown(self):
         unittest.TestCase.tearDown(self)
@@ -28,7 +30,7 @@ class TestBaseCommand(unittest.TestCase):
 
     def get_base(self):
         return pad.protocol.base.BaseProtocol(self.mockr, self.mockw,
-                                              self.mockrules)
+                                              self.mockserver)
 
     def test_init(self):
         """Test creating a new base protocol command."""

@@ -44,7 +44,7 @@ class TestServer(unittest.TestCase):
         pad.server.RequestHandler(mock_request, ("127.0.0.1", 47563),
                                   mock_server)
         mock_check.assert_called_with(mock_rfile, mock_rfile,
-                                      mock_server.ruleset)
+                                      mock_server)
 
     def test_server(self):
         server = pad.server.Server(("0.0.0.0", 783), "/dev/null",
