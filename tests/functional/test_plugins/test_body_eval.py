@@ -4,8 +4,7 @@ import os
 import unittest
 import tests.util
 
-TESTDATA_DIR = os.path.join(os.getcwd(), "tests", "functional",
-                            "test_plugins", "test_data")
+TESTDATA_DIR = os.path.join(os.getcwd(), "tests", "data")
 
 CONFIG = r"""
 body        MPART_ALT_DIFF      eval:multipart_alternative_difference('99', '100')
