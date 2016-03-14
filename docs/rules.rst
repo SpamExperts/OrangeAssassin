@@ -137,6 +137,8 @@ For more details on the report see the report section of the documentation.
     This configuration is optional and any rule that doesn't have it will
     get "No description available".
 
+.. _priority-rule-options:
+
 Priority option
 ===============
 

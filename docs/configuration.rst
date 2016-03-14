@@ -1,0 +1,178 @@
+*************
+Configuration
+*************
+
+This page describes how to configure SpamPAD.
+
+.. _configuration-files:
+
+Configuration files
+===================
+
+The SpamPAD configuration can be separated into multiple files. These are read
+from the `configpath` and `sitepath` directories. You can change these
+locations using the `-C` or `-S` options of the daemon and CLI script.
+
+More files can be included from other location by using the include option::
+
+    # This include a different file
+    include /etc/spampad/custom_prefs.cf
+
+Users can also configure custom preferences in their home directory when
+running the CLI script. This location is also customizable with the `-P`
+option. Note that daemon does NOT accept user preferences by default and you
+will have to enable it with `allow_user_rules`.
+
+.. note::
+
+    The order the files IS important as it determines the order of the rules
+    loading and executing. To change the order in which the rules are checked
+    see the :ref:`priority rule option <priority-rule-options>`.
+
+.. _configuration-types:
+
+Configuration types
+===================
+
+SpamPAD accepts various types of configuration options. The current types are:
+
+**int**
+    Integer number.
+**float**
+    Floating point number.
+**bool**
+    Boolean value, can be one of: 1, 0, True, False.
+**str**
+    A simple string value.
+**list**
+    A comma separated list of strings. For example defining this::
+
+        pyzor_servers public.pyzor.org,my.pyzor.example.com
+
+    Will be evaluated as::
+
+        ["public.pyzor.org", "my.pyzor.example.com"]
+
+    Defining the same option multiple time WILL override the previous
+    setting.
+**append**
+    This option can be specified multiple times without overriding previous
+    settings. Every time the option is specified the values are appended to
+    to a list. For example for the report option::
+
+        report This message is was marked as spam on _HOSTNAME_.
+        report The message score was _SCORE_.
+        report Contact me at _CONTACTADDRESS_.
+
+    Will result in the final option being evaluated as::
+
+        ["This message is was marked as spam on _HOSTNAME_.",
+         "The message score was _SCORE_.",
+         "Contact me at _CONTACTADDRESS_."]
+**clear**
+    Clears one or more of the append type option.
+
+.. _configuration-options:
+
+Options
+=======
+
+.. _filtering-options:
+
+Filtering options
+-----------------
+
+**required_score** 5.0 (type `float`)
+    Set minimum required score for a message to get for it to be treated as
+    spam.
+**use_bayes**: True (type `bool`)
+    Controls whether or not the bayesian filter should be checked.
+**use_network**: True (type `bool`)
+    Controls whether or not network checks should be perfomed on the message.
+**envelope_sender_header**: ["X-Sender", "X-Envelope-From", "Envelope-Sender", "Return-Path", "From"] (type `append`)
+    Specifies which header should be used when determining the envelope sender
+    of the message.
+**allow_user_rules**: False (type `bool`)
+    If set to True the daemon will also load user preferences. Note that this
+    can be a possible security risk, which is why it's disabled by default.
+
+Message modifications
+---------------------
+
+**add_header** [] (type `append`)
+    Adds one header to the message. The value for this option must be in the
+    following format::
+
+         `[all|spam|ham] [header_name] [header_value]`
+
+    If the first argument is `all` then the header is added to ALL
+    messages. Otherwise the header is added only to messages that were
+    classified as spam or ham. Note that the header name will be append with
+    `X-Spam-` and the header string ill have any TAGS replaced with their
+    values. For example::
+
+        all PAD-Report Checked with SpamPAD _SCORE_
+
+    Will add a new header to every message like::
+
+        X-Spam-PAD-Report: Checked with SpamPAD <score>
+**remove_header** [] (type `append`)
+    Removes all header from message with the specified name. The value for this
+    option must be in the following format::
+
+         `[all|spam|ham] [header_name]`
+**clear_headers** N/A (type `clear`)
+    Clear all previously set options that add or remove headers (i.e. any
+    from `add_header` or `remove_header`).
+
+.. _reporting-options:
+
+Reporting
+---------
+
+**report** [] (type `append`)
+    A list of strings that form the report. The report can be returned when
+    the CLI script is called with `-t` and is also included by default in
+    messages that have been marked as spam. Note that this string will have
+    any TAGS replaced with their values.
+**clear_report_template** N/A (type `clear`)
+    Clear the report list.
+**report_safe** 1 (type `int`)
+    When this option is set to 0 only header modification are made to the
+    messages. In addition an X-Spam-Report will be added to the messages that
+    contains the `report` for this message. Note this only applies to
+    messages classified as spam.
+
+    When this option is set to 1 and the messages is marked as spam, SpamPAD
+    will generate a multipart/mixed messages. The new message will have
+    `text/plain` part with the SpamPAD report and `message/rfc882` part with
+    the original message.
+
+    When the option is set to 2 instead of using a `messages/rfc882` content
+    type, a text/plain one will be used instead.
+**report_contact** None (type `str`)
+    Set the contact address that is exposed in the `_CONTACTADDRESS_` tag.
+
+.. _dns-options:
+
+DNS
+---
+
+**dns_server** [] (type `append`)
+    Specify a list of nameservers to query when doing DNS lookups. These can
+    specified as IPv4 or IPv6 address with an optional port followed. Example::
+
+        dns_server 127.0.0.1
+        dns_server 127.0.0.1:53
+        dns_server [::1]:53
+
+    If no such nameserver is specified, the default ones from `/etc/resolv.conf`
+    will be used.
+**clear_dns_servers** N/A (type `clear`)
+    Clear any custom nameserver set by `dns_server`.
+**default_dns_lifetime** 10.0 (type `float`)
+    Sets the timeout for a full DNS lookup. I.e. any DNS lookup will have at
+    most 10 seconds to get a valid response from one of the DNS server.
+**default_dns_timeout** 2.0 (type `float`)
+    Set the timeout for a DNS lookup from a single nameserver.
+
