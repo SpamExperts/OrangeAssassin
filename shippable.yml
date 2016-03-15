@@ -1,5 +1,5 @@
 language: python
-build_image: drydock/u14pytall
+build_image: drydock/u14pytall:tip
 python:
   - 2.7
 
