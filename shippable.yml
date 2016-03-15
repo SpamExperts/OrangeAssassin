@@ -6,7 +6,6 @@ python:
 install:
   - sudo apt-get update
   - sudo apt-get install python-dev libjpeg-dev build-essential zlib1g-dev
-  - pip install nose coverage
   - pip install -r requirements/base.txt
   - pip install -r requirements/python2.txt
   - pip install -r requirements/tests.txt
@@ -22,8 +21,8 @@ before_script:
   - mkdir -p shippable/codecoverage
 
 script:
-  - which python
-  - coverage run --source=pad,scripts `which nosetests` tests --with-xunit --xunit-file=shippable/testresults/nosetests.xml
+  - py.test tests/unit/ --cov pad --cov scripts --cov-report term-missing --junit-xml=shippable/testresults/py.tests.xml
+  - py.test tests/functional/
 after_script:
   - coverage xml -o shippable/codecoverage/coverage.xml
 
