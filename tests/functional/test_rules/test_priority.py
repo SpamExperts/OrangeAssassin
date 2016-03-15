@@ -93,7 +93,7 @@ whitelist_from_spf test@example.com
 header SPF_PASS     eval:check_for_spf_pass()
 
 header SPF_WHITELIST    eval:check_for_spf_whitelist_from()
-priority SPF_WHITELIST 0.2
+priority SPF_WHITELIST 2
 """
 
 CONFIG_EVAL_INVALID = r"""
@@ -248,4 +248,4 @@ class TestPriorityRules(tests.util.TestBase):
         self.setup_conf(config=CONFIG_EVAL_INVALID, pre_config=PRE_CONFIG)
         result = self.check_pad(MSG, debug=True)
         print(result)
-        self.check_report(result, 3.0, ["SPF_PASS", "SPF_WHITELIST"])
+        self.check_report(result, 2.0, ["SPF_PASS", "SPF_WHITELIST"])
