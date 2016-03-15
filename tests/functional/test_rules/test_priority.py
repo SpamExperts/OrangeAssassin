@@ -93,7 +93,17 @@ whitelist_from_spf test@example.com
 header SPF_PASS     eval:check_for_spf_pass()
 
 header SPF_WHITELIST    eval:check_for_spf_whitelist_from()
-priority SPF_WHITELIST 2
+priority SPF_WHITELIST 0.2
+"""
+
+CONFIG_EVAL_INVALID = r"""
+loadplugin     Mail::SpamAssassin::Plugin::SPF
+whitelist_from_spf test@example.com
+
+header SPF_PASS     eval:check_for_spf_pass()
+
+header SPF_WHITELIST    eval:check_for_spf_whitelist_from()
+priority SPF_WHITELIST 0.2
 """
 
 MSG = """Received: from 127.0.0.1  (EHLO m1.util24.eu) [213.133.99.176]
@@ -229,5 +239,13 @@ class TestPriorityRules(tests.util.TestBase):
     def test_priority_rule_for_eval_rules(self):
         """Test priority for eval rules"""
         self.setup_conf(config=CONFIG_EVAL, pre_config=PRE_CONFIG)
-        result = self.check_pad(MSG)
+        result = self.check_pad(MSG, debug=True)
+        print(result)
         self.check_report(result, 2.0, ["SPF_WHITELIST", "SPF_PASS"])
+
+    def test_priority_rule_for_eval_rules_invalid(self):
+        """Test priority for eval rules"""
+        self.setup_conf(config=CONFIG_EVAL_INVALID, pre_config=PRE_CONFIG)
+        result = self.check_pad(MSG, debug=True)
+        print(result)
+        self.check_report(result, 3.0, ["SPF_PASS", "SPF_WHITELIST"])
