@@ -442,7 +442,6 @@ class TestReceivedParser(unittest.TestCase):
         result = pad.received_parser.ReceivedParser.get_auth(header)
         self.assertEqual(result, expected)
 
-
     def test_check_parser(self):
         header = ["""from server1.example.com ([216.219.119.8]
                  helo=relay.example.com)

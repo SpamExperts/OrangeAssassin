@@ -319,7 +319,6 @@ class ReceivedParser(object):
                 header = re.sub('\s+', ' ', header)     # removing '\n\t' chars
                 header = header.replace('from ', '', 1)
                 header = header.split(';')[0]
-                print(header)
                 self.received_headers.append(header)
         self._parse_message()
 
