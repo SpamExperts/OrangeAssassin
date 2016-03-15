@@ -24,5 +24,6 @@ before_script:
 script:
   - which python
   - coverage run --source=pad,scripts `which nosetests` tests --with-xunit --xunit-file=shippable/testresults/nosetests.xml
+after_script:
   - coverage xml -o shippable/codecoverage/coverage.xml
 
