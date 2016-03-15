@@ -324,7 +324,7 @@ class Message(pad.context.MessageContext):
                 yield "%s: %s" % (header_name, value)
 
     def _create_plugin_tags(self, header):
-        for key, value in header:
+        for key, value in header.items():
             self.plugin_tags[key] = value
 
     def _parse_sender(self):
@@ -374,7 +374,8 @@ class Message(pad.context.MessageContext):
         self.text = " ".join(body)
         self.raw_text = "\n".join(raw_body)
         self._parse_sender()
-        self.received_headers = ReceivedParser(self.get_decoded_header("Received")).received
+        received_obj = ReceivedParser(self.get_decoded_header("Received"))
+        self.received_headers = received_obj.received
         try:
             self._create_plugin_tags(self.received_headers[0])
         except IndexError:
