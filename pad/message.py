@@ -216,21 +216,8 @@ class Message(pad.context.MessageContext):
 
     def get_header_ips(self):
         values = list()
-        for value in self.get_received_headers("Received"):
-            ips = IPFRE.findall(value)
-            for ip in ips:
-                clean_ip = ip.strip("[ ]();\n")
-                try:
-                    values.append(ipaddress.ip_address(clean_ip))
-                except ValueError:
-                    continue
-        return values
-
-    @_memoize("received_headers")
-    def get_received_headers(self, header_name="Received"):
-        values = list()
-        for value in self.get_decoded_header(header_name):
-            values.append(value)
+        for header in self.received_headers:
+            values.append(ipaddress.ip_address(header["ip"]))
         return values
 
     @_memoize("addr_headers")

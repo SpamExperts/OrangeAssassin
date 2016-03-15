@@ -74,7 +74,7 @@ Content-Type: multipart/mixed;
 """
 
 MSG_UNKNOWN="""Delivered-To: user@example.com
-Received: by [189.23.4.1] with SMTP id e82csp671450iod;
+Received: from [189.23.4.1] with SMTP id e82csp671450iod;
  Fri, 8 Jan 2016 10:27:27 -0800 (PST)
 From: "=?utf-8?B?UENIIE1heW9yZW8=?=" <ventas@pch-mayoreo.com.mx>
 To: user@example.com
@@ -124,7 +124,7 @@ class TestRelayCountry(unittest.TestCase):
         """Test getting all the countries"""
         message = pad.message.Message(self.mock_ctxt, MSGTEST)
         self.plugin.parsed_metadata(message)
-        expected_result = ['** GB']
+        expected_result = ['GB']
         self.assertEqual(message.headers["X-Relay-Countries"], expected_result)
 
     def test_no_received_headers(self):
