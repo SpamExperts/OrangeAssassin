@@ -1,0 +1,7 @@
+
+loadplugin     Mail::SpamAssassin::Plugin::TextCat
+ok_languages   en, fr
+textcat_acceptable_prob 0.70
+
+report _SCORE_
+report _TESTS_

@@ -259,7 +259,7 @@ by\s(\S+)\swith\s\S+\s\(fetchmail""".format(IP_ADDRESS=IP_ADDRESS.pattern), re.X
 
 LOCALHOST_RE = re.compile(r"""
 ^\S+\s\([^\s\@]+\@{LOCALHOST}\)\sby\s\S+\s\(
-""".format(LOCALHOST=LOCALHOST.pattern))
+""".format(LOCALHOST=LOCALHOST.pattern), re.X|re.I)
 
 UNKNOWN_RE_RDNS = re.compile("""
 ^(\S+)\s\((unknown)\s\[({IP_ADDRESS})\]\)\s\(
@@ -300,7 +300,7 @@ HELO_RE4 = re.compile(r"""
 HELO_RE5 = re.compile(r"""
     ^(\S+)\s\({IP_ADDRESS}\)
 """.format(IP_ADDRESS=IP_ADDRESS.pattern), re.X)
-IDENT_RE = re.compile(r'.*? ident=(\S+)\) .*')
+IDENT_RE = re.compile(r'.*ident=(\S+)\)')
 ID_RE = re.compile(r'.*id (\S+)')
 AUTH_RE = re.compile(r'.*? with ((?:ES|L|UTF8S|UTF8L)MTPS?A|ASMTP|HTTPU?)(?: |;|$)', re.IGNORECASE)
 AUTH_VC_RE = re.compile(r'.*? \(version=([^ ]+) cipher=([^\)]+)\)')
@@ -319,6 +319,7 @@ class ReceivedParser(object):
                 header = re.sub('\s+', ' ', header)     # removing '\n\t' chars
                 header = header.replace('from ', '', 1)
                 header = header.split(';')[0]
+                print(header)
                 self.received_headers.append(header)
         self._parse_message()
 
@@ -339,10 +340,18 @@ class ReceivedParser(object):
         # spam@spamexperts.wiredtree.com
         if WITH_LOCAL_RE.search(header):
             return True
+        # Received: from cabbage.jmason.org [127.0.0.1]
+        # by localhost with IMAP (fetchmail-5.9.0)
+        # for jm@localhost (single-drop); Thu, 13 Mar 2003 20:39:56 -0800 (PST)
         if 'fetchmail' in header and FETCHMAIL.search(header):
             return True
-        if ' with bsmtp' in header and BSMTP_RE.search(header):
+        # Received: from faerber.muc.de by slarti.muc.de with BSMTP (rsmtp-qm-ot 0.4)
+        # for asrg@ietf.org; 7 Mar 2003 21:10:38 -0000
+        if ' with BSMTP' in header and BSMTP_RE.search(header):
             return True
+        # Received: from scv3.apple.com (scv3.apple.com) by mailgate2.apple.com
+        # (Content Technologies SMTPRS 4.2.1) with ESMTP id <T61095998e1118164e
+        # 13f8@mailgate2.apple.com>; Mon, 17 Mar 2003 17:04:54 -0800
         if CONTENT_TECH_RE.search(header):
             return True
         # Received: from raptor.research.att.com (bala@localhost) by
@@ -460,7 +469,7 @@ class ReceivedParser(object):
             if not IP_PRIVATE.search(clean_ip):
                 ip = clean_ip
                 break
-        if count == no_ips:
+        if no_ips != 0 and count == no_ips:
             ip = private_ips[0]
         return ip
 
@@ -542,11 +551,6 @@ class ReceivedParser(object):
         auth = ""
         if AUTH_RE3.search(header):
             auth = 'Postfix'
-        elif ' by ' in header and AUTH_RE.match(header):
-            try:
-                auth = AUTH_RE.match(header).groups()[0]
-            except IndexError:
-                pass
         elif ' by mx.google.com ' in header:
             try:
                 version, cipher = AUTH_VC_RE.match(header).groups()
@@ -556,6 +560,11 @@ class ReceivedParser(object):
                 pass
         elif 'SquirrelMail authenticated ' in header:
             auth = "SquirrelMail"
+        elif ' by ' in header and AUTH_RE.match(header):
+            try:
+                auth = AUTH_RE.match(header).groups()[0]
+            except IndexError:
+                pass
         elif 'authenticated' in header and AUTH_RE2.search(header):
             auth = "CriticalPath"
         elif 'authenticated' in header:

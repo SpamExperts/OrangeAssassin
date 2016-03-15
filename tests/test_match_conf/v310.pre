@@ -1,0 +1,2 @@
+loadplugin Mail::SpamAssassin::Plugin::Check
+report ---=PAD report start=---
