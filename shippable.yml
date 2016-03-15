@@ -1,5 +1,5 @@
 language: python
-build_image: shippableimages/ubuntu1204_python
+build_image: dry-dock/u14all
 python:
   - 2.7
 
@@ -8,6 +8,11 @@ install:
   - pip install -r requirements/base.txt
   - pip install -r requirements/python2.txt
   - pip install -r requirements/tests.txt
+  - python setup.py install
+  - wget http://geolite.maxmind.com/download/geoip/database/GeoLiteCountry/GeoIP.dat.gz
+  - gunzip GeoIP.dat.gz
+  - wget http://geolite.maxmind.com/download/geoip/database/GeoIPv6.dat.gz
+  - gunzip GeoIPv6.dat.gz
 
 # Make folders for the reports
 before_script:
