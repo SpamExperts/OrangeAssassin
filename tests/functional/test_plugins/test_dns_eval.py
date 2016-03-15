@@ -74,7 +74,7 @@ MSG = r"""Received: from mail-wm0-f50.google.com ([93.184.216.34])
  (envelope-from <sender@example.com>)
  id 1aaNAy-0006fq-LZ
  for chirila@example.com; Mon, 29 Feb 2016 13:43:53 +0100
- Received: from host.example.com (example.org. [2604:9a00:2100:a00d:7::1])
+Received: from host.example.com (example.org. [2604:9a00:2100:a00d:7::1])
         by me.example.org with ESMTPS id qg1si11179246igb.97.2016.02.29.04.27
         for <teo@example.com>
         Mon, 29 Feb 2016 04:27:52 -0800 (PST)
@@ -163,7 +163,7 @@ class TestDNSEval(tests.util.TestBase):
             "example.com.", "127.0.2.16"
         )
         self.setup_conf(CONFIG, PRE_CONFIG)
-        result = self.check_pad(MSG)
+        result = self.check_pad(MSG, debug=True)
         self.check_report(result, 1.0, ["IP_IN_LIST"])
 
     @unittest.skip("The mindns server that we are using doesn't work with TXT")

@@ -332,7 +332,6 @@ class ReceivedParser(object):
         # BSMTP != a TCP/IP handover, ignore it
         # Content Technology
 
-        :param header:
         :return: True or False
         """
         # Received: from root by server6.seinternal.com with
@@ -404,6 +403,12 @@ class ReceivedParser(object):
 
     @staticmethod
     def get_envfrom(header):
+        """
+        Parsing envelope-from or envelope-sender from Received header
+
+        :param header:
+        :return: envfrom if is found if not it returns an empty string
+        """
         envfrom = ""
         try:
             envfrom = ENVFROM_RE.match(header).groups()[0]
@@ -416,6 +421,11 @@ class ReceivedParser(object):
 
     @staticmethod
     def get_rdns(header):
+        """
+        Parsing rdns from Received header
+        :param header:
+        :return: rdns if is found if not it returns an empty string
+        """
         rdns = ""
         try:
             rdns = RDNS_RE.match(header).groups()[0]
@@ -432,6 +442,11 @@ class ReceivedParser(object):
 
     @staticmethod
     def get_ip(header):
+        """
+        Parsing the relay ip address from Received header
+        :param header:
+        :return: ip address if is found if not it returns an empty string
+        """
         ip = ""
         ips = IP_ADDRESS.findall(header)
         no_ips = len(ips)
@@ -451,6 +466,11 @@ class ReceivedParser(object):
 
     @staticmethod
     def get_by(header):
+        """
+        Parsing the relay server from Received header
+        :param header:
+        :return: by if is found if not it returns an empty string
+        """
         by = ""
         try:
             by = BY_RE.match(header).groups()[0]
@@ -460,6 +480,11 @@ class ReceivedParser(object):
 
     @staticmethod
     def get_helo(header):
+        """
+        Parsing the helo server from Received header
+        :param header:
+        :return: helo if is found if not it returns an empty string
+        """
         helo = ""
         try:
             if HELO_RE2.match(header):
@@ -481,6 +506,11 @@ class ReceivedParser(object):
 
     @staticmethod
     def get_ident(header):
+        """
+        Parsing the ident from Received header
+        :param header:
+        :return: ident if is found if not it returns an empty string
+        """
         ident = ""
         try:
             ident = IDENT_RE.match(header).groups()[0]
@@ -490,6 +520,11 @@ class ReceivedParser(object):
 
     @staticmethod
     def get_id(header):
+        """
+        Parsing the id of the relay from Received header
+        :param header:
+        :return: id if is found if not it returns an empty string
+        """
         id = ""
         try:
             id = ID_RE.match(header).groups()[0]
@@ -499,6 +534,11 @@ class ReceivedParser(object):
 
     @staticmethod
     def get_auth(header):
+        """
+        Parsing the authentication from Received header
+        :param header:
+        :return: auth if is found if not it returns an empty string
+        """
         auth = ""
         if AUTH_RE3.search(header):
             auth = 'Postfix'
