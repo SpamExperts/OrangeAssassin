@@ -188,6 +188,13 @@ class PADParser(object):
                 self.results[name]["type"] = rtype
                 self.results[name]["value"] = value
             else:
+                if rtype == 'priority':
+                    try:
+                        int(value)
+                    except ValueError:
+                        self.ctxt.err("%s:%s Invalid type for priority value "
+                                      "in configuration line: %s, setting it by"
+                                      " default to 0", filename, line_no, line)
                 self.results[name][rtype] = value
         else:
             if not self.ctxt.hook_parse_config(rtype, value):
