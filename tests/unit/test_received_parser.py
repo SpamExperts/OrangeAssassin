@@ -401,7 +401,7 @@ class TestReceivedParser(unittest.TestCase):
 
     def test_get_auth_squirrelmail(self):
         header = (
-            "from 165.228.131.11 (proxying for 139.130.20.189) (SquirrelMail "
+            "165.228.131.11 (proxying for 139.130.20.189) (SquirrelMail "
             "authenticated user jmmail) by jmason.org with HTTP")
         expected = "SquirrelMail"
         result = pad.received_parser.ReceivedParser.get_auth(header)
@@ -409,7 +409,7 @@ class TestReceivedParser(unittest.TestCase):
 
     def test_get_auth_squirrelmail(self):
         header = (
-            "from [41.71.176.172] (41.71.176.172) by smtp.example.org "
+            "[41.71.176.172] (41.71.176.172) by smtp.example.org "
             "(8.7.004.06) (authenticated as user@example.com) "
             "id 55F054B600FC5AB5; Wed, 14 Oct 2015 22:36:42 +0800")
         expected = "CriticalPath"
@@ -418,7 +418,7 @@ class TestReceivedParser(unittest.TestCase):
 
     def test_get_auth_criticalpath(self):
         header = (
-            "from 165.228.131.11 (proxying for 139.130.20.189) (SquirrelMail "
+            "165.228.131.11 (proxying for 139.130.20.189) (SquirrelMail "
             "authenticated user jmmail) by example.org with HTTP")
         expected = "SquirrelMail"
         result = pad.received_parser.ReceivedParser.get_auth(header)
@@ -426,7 +426,7 @@ class TestReceivedParser(unittest.TestCase):
 
     def test_get_auth_sendmail(self):
         header = (
-            "from server1.example.com (host.example.com "
+            "server1.example.com (host.example.com "
             "[64.91.78.197]) (authenticated bits=0) by fierwall.example.org "
             "(8.14.4/8.14.4) with ESMTP id tBCFWrhS080562")
         expected = "Sendmail"
@@ -435,7 +435,7 @@ class TestReceivedParser(unittest.TestCase):
 
     def test_get_auth_no_auth(self):
         header = (
-            "from [107.172.93.124] (ident=mail) by server.example.org with local "
+            "[107.172.93.124] (ident=mail) by server.example.org with local "
             "(envelope-from <example@test.org>) id 1a7QMI-0004Ag-Ky "
             "for asellitto@a3mediallc.com")
         expected = ""

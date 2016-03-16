@@ -255,7 +255,8 @@ IPFRE = re.compile(r"[\[ \(]{1}[a-fA-F\d\.\:]{7,}?[\] \n;\)]{1}")
 
 FETCHMAIL = re.compile(r"""
 .*?\s(\S+)\s(?:\[({IP_ADDRESS})\]\s)?
-by\s(\S+)\swith\s\S+\s\(fetchmail""".format(IP_ADDRESS=IP_ADDRESS.pattern), re.X)
+by\s(\S+)\swith
+\s\S+\s\(fetchmail""".format(IP_ADDRESS=IP_ADDRESS.pattern), re.X)
 
 LOCALHOST_RE = re.compile(r"""
 ^\S+\s\([^\s\@]+\@{LOCALHOST}\)\sby\s\S+\s\(
@@ -268,22 +269,28 @@ UNKNOWN_RE_RDNS = re.compile("""
 # ================ check_for_skip regex ==================
 WITH_LOCAL_RE = re.compile(r'\bwith local(?:-\S+)? ', re.I)
 BSMTP_RE = re.compile(r'^\S+ by \S+ with BSMTP', re.I)
-CONTENT_TECH_RE = re.compile(r'^\S+ \(\S+\) by \S+ \(Content Technologies ', re.I)
+CONTENT_TECH_RE = re.compile(r"""
+^\S+\s\(\S+\)\sby\s\S+\s\(Content\sTechnologies\s""", re.X|re.I)
 AVG_SMTP_RE = re.compile(r'^127\.0\.0\.1 \(AVG SMTP \S+ \[\S+\]\)')
 QMAIL_RE = re.compile(r'^\S+\@\S+ by \S+ by uid \S+ ')
 FROM_RE = re.compile(r'^\S+\@\S+ by \S+ ')
 UNKNOWN_RE = re.compile(r'^Unknown\/Local \(')
 AUTH_SKIP_RE = re.compile(r'^\(AUTH: \S+\) by \S+ with ')
-LOCAL_SKIP_RE = re.compile(r'^localhost \(localhost \[\[UNIX: localhost\]\]\) by ')
-AMAZON_RE = re.compile(r'^\S+\.amazon\.com by \S+\.amazon\.com with ESMTP \(peer crosscheck: ')
+LOCAL_SKIP_RE = re.compile(r"""
+^localhost\s\(localhost\s\[\[UNIX:\slocalhost\]\]\)\sby\s""", re.X)
+AMAZON_RE = re.compile(r"""
+^\S+\.amazon\.com\sby
+\s\S+\.amazon\.com\swith\sESMTP\s\(peer\scrosscheck:\s""", re.X)
 NOVELL_RE = re.compile(r'^[^\.]+ by \S+ with Novell_GroupWise')
 NO_NAME_RE = re.compile(r'^no\.name\.available by \S+ via smtpd \(for ')
-SMTPSVC_RE = re.compile(r'^mail pickup service by (\S+) with Microsoft SMTPSVC$')
+SMTPSVC_RE = re.compile(r"""
+^mail\spickup\sservice\sby\s(\S+)\swith\sMicrosoft\sSMTPSVC$""", re.X)
 
 # ========================================================
 
 # ================ function regex ====================
-ENVFROM_RE = re.compile(r'.*?(?:return-path:? |envelope-(?:sender|from)[ =])(\S+)\b')
+ENVFROM_RE = re.compile(r"""
+.*?(?:return-path:?\s|envelope-(?:sender|from)[\s=])(\S+)\b""", re.X)
 RDNS_RE = re.compile(r'^(\S+) ')
 RDNS_IP_RE = re.compile(r"""
     ^\[({IP_ADDRESS})\]
@@ -302,10 +309,12 @@ HELO_RE5 = re.compile(r"""
 """.format(IP_ADDRESS=IP_ADDRESS.pattern), re.X)
 IDENT_RE = re.compile(r'.*ident=(\S+)\)')
 ID_RE = re.compile(r'.*id (\S+)')
-AUTH_RE = re.compile(r'.*? with ((?:ES|L|UTF8S|UTF8L)MTPS?A|ASMTP|HTTPU?)(?: |;|$)', re.IGNORECASE)
+AUTH_RE = re.compile(r"""
+.*?\swith\s((?:ES|L|UTF8S|UTF8L)MTPS?A|ASMTP|HTTPU?)(?:\s|;|$)""", re.X|re.I)
 AUTH_VC_RE = re.compile(r'.*? \(version=([^ ]+) cipher=([^\)]+)\)')
 AUTH_RE2 = re.compile(r'.*? \(authenticated as (\S+)\)')
-AUTH_RE3 = re.compile(r'\) \(Authenticated sender: \S+\) by \S+ \(Postfix\) with ')
+AUTH_RE3 = re.compile(r"""
+\)\s\(Authenticated\ssender:\s\S+\)\sby\s\S+\s\(Postfix\)\swith\s""", re.X)
 
 # ========================================================
 
@@ -324,10 +333,9 @@ class ReceivedParser(object):
 
     @staticmethod
     def check_for_skip(header):
-        """
-        STUFF TO IGNORE
-        Received headers which doesn't start with 'from'
+        """STUFF TO IGNORE
 
+        # Received headers which doesn't start with 'from'
         # Skip fetchmail handovers
         # BSMTP != a TCP/IP handover, ignore it
         # Content Technology
@@ -344,7 +352,7 @@ class ReceivedParser(object):
         # for jm@localhost (single-drop); Thu, 13 Mar 2003 20:39:56 -0800 (PST)
         if 'fetchmail' in header and FETCHMAIL.search(header):
             return True
-        # Received: from faerber.muc.de by slarti.muc.de with BSMTP (rsmtp-qm-ot 0.4)
+        # Received: from faerber.muc.de by slarti.muc.de with BSMTP (rsmtp-qm)
         # for asrg@ietf.org; 7 Mar 2003 21:10:38 -0000
         if ' with BSMTP' in header and BSMTP_RE.search(header):
             return True
@@ -411,10 +419,9 @@ class ReceivedParser(object):
 
     @staticmethod
     def get_envfrom(header):
-        """
-        Parsing envelope-from or envelope-sender from Received header
+        """Parsing envelope-from or envelope-sender from Received header
 
-        :param header:
+        :param header: The received header without the 'from ' at the begin
         :return: envfrom if is found if not it returns an empty string
         """
         envfrom = ""
@@ -429,9 +436,9 @@ class ReceivedParser(object):
 
     @staticmethod
     def get_rdns(header):
-        """
-        Parsing rdns from Received header
-        :param header:
+        """Parsing rdns from Received header
+
+        :param header: The received header without the 'from ' at the begin
         :return: rdns if is found if not it returns an empty string
         """
         rdns = ""
@@ -450,9 +457,9 @@ class ReceivedParser(object):
 
     @staticmethod
     def get_ip(header):
-        """
-        Parsing the relay ip address from Received header
-        :param header:
+        """Parsing the relay ip address from Received header
+
+        :param header: The received header without the 'from ' at the begin
         :return: ip address if is found if not it returns an empty string
         """
         ip = ""
@@ -474,9 +481,9 @@ class ReceivedParser(object):
 
     @staticmethod
     def get_by(header):
-        """
-        Parsing the relay server from Received header
-        :param header:
+        """Parsing the relay server from Received header
+
+        :param header: The received header without the 'from ' at the begin
         :return: by if is found if not it returns an empty string
         """
         by = ""
@@ -488,9 +495,9 @@ class ReceivedParser(object):
 
     @staticmethod
     def get_helo(header):
-        """
-        Parsing the helo server from Received header
-        :param header:
+        """Parsing the helo server from Received header
+
+        :param header: The received header without the 'from ' at the begin
         :return: helo if is found if not it returns an empty string
         """
         helo = ""
@@ -514,9 +521,9 @@ class ReceivedParser(object):
 
     @staticmethod
     def get_ident(header):
-        """
-        Parsing the ident from Received header
-        :param header:
+        """Parsing the ident from Received header
+
+        :param header: The received header without the 'from ' at the begin
         :return: ident if is found if not it returns an empty string
         """
         ident = ""
@@ -528,9 +535,9 @@ class ReceivedParser(object):
 
     @staticmethod
     def get_id(header):
-        """
-        Parsing the id of the relay from Received header
-        :param header:
+        """Parsing the id of the relay from Received header
+
+        :param header: The received header without the 'from ' at the begin
         :return: id if is found if not it returns an empty string
         """
         id = ""
@@ -542,9 +549,9 @@ class ReceivedParser(object):
 
     @staticmethod
     def get_auth(header):
-        """
-        Parsing the authentication from Received header
-        :param header:
+        """Parsing the authentication from Received header
+
+        :param header: The received header without the 'from ' at the begin
         :return: auth if is found if not it returns an empty string
         """
         auth = ""
