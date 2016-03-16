@@ -11,12 +11,10 @@ from builtins import str
 import pad.rules.eval_
 import pad.plugins.base
 
-
 ACCREDITOR_RE = re.compile(r"[@.]a--([a-z0-9]{3,})\.", re.I)
 
 
 class DNSEval(pad.plugins.base.BasePlugin):
-
     eval_rules = (
         "check_rbl",
         "check_rbl_txt",
@@ -27,7 +25,7 @@ class DNSEval(pad.plugins.base.BasePlugin):
         "check_rbl_from_domain",
         "check_rbl_accreditor",
         # Deprecated in SA
-        #"check_rbl_results_for",
+        # "check_rbl_results_for",
     )
 
     def finish_parsing_end(self, ruleset):
@@ -247,7 +245,7 @@ class DNSEval(pad.plugins.base.BasePlugin):
         except KeyError as e:
             self.ctxt.err("Invalid zone %s: %s", zone_set, e)
             return False
-        return self._check_multi_rbl(msg,rbl_server, subtest)
+        return self._check_multi_rbl(msg, rbl_server, subtest)
 
     def check_dns_sender(self, msg, target=None):
         """Check if the sender domain has MX or A records.
@@ -314,4 +312,3 @@ class DNSEval(pad.plugins.base.BasePlugin):
 
     # This two do the same thing
     check_rbl_from_host = check_rbl_from_domain
-
