@@ -17,7 +17,6 @@ class MimeHeaderRule(pad.rules.base.BaseRule):
         kwargs = cls.get_rule_kwargs(data)
         value = data["value"].strip()
 
-        match_op = None
         if "=~" in value:
             match_op = "=~"
         elif "!~" in value:
