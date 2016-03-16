@@ -256,15 +256,6 @@ class Message(pad.context.MessageContext):
             values.append(self._decode_header(value))
         return values
 
-    def iter_raw_headers(self):
-        """Iterate through all the raw headers.
-
-        Yields strings like "<header_name>: <header_value>"
-        """
-        for header_name, values in self.raw_headers.items():
-            for value in values:
-                yield "%s: %s" % (header_name, value)
-
     def iter_decoded_headers(self):
         """Iterate through all the decoded headers.
 
@@ -272,42 +263,6 @@ class Message(pad.context.MessageContext):
         """
         for header_name in self.raw_headers:
             for value in self.get_decoded_header(header_name):
-                yield "%s: %s" % (header_name, value)
-
-    def iter_addr_headers(self):
-        """Iterate through all the addr decoded headers.
-
-        Yields strings like "<header_name>: <addr>"
-        """
-        for header_name in self.raw_headers:
-            for value in self.get_addr_header(header_name):
-                yield "%s: %s" % (header_name, value)
-
-    def iter_name_headers(self):
-        """Iterate through all the name decoded headers.
-
-        Yields strings like "<header_name>: <name>"
-        """
-        for header_name in self.raw_headers:
-            for value in self.get_name_header(header_name):
-                yield "%s: %s" % (header_name, value)
-
-    def iter_raw_mime_headers(self):
-        """Iterate through all the raw mime headers.
-
-        Yields strings like "<header_name>: <header_value>"
-        """
-        for header_name, values in self.raw_mime_headers.items():
-            for value in values:
-                yield "%s: %s" % (header_name, value)
-
-    def iter_mime_headers(self):
-        """Iterate through all the mime decoded headers.
-
-        Yields strings like "<header_name>: <header_value>"
-        """
-        for header_name in self.raw_mime_headers:
-            for value in self.get_decoded_mime_header(header_name):
                 yield "%s: %s" % (header_name, value)
 
     def _create_plugin_tags(self, header):

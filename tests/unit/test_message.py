@@ -370,18 +370,6 @@ class TestGetHeaders(unittest.TestCase):
         self.msg.mime_headers = {name: expected}
         self.assertEqual(self.msg.get_decoded_mime_header(name), expected)
 
-    def test_iter_raw_headers(self):
-        headers = collections.OrderedDict()
-        headers["test1"] = ["1value1", "1value2"]
-        headers["test2"] = ["2value1", "2value2"]
-        headers["test3"] = ["3value1", "3value2"]
-        expected = ['test1: 1value1', 'test1: 1value2',
-                    'test2: 2value1', 'test2: 2value2',
-                    'test3: 3value1', 'test3: 3value2', ]
-        self.msg.raw_headers = headers
-        results = list(self.msg.iter_raw_headers())
-        self.assertEqual(results, expected)
-
     def test_iter_decoded_headers(self):
         headers = collections.OrderedDict()
         headers["test1"] = ["1value1", "1value2"]
@@ -393,55 +381,6 @@ class TestGetHeaders(unittest.TestCase):
         self.msg.raw_headers = headers
         results = list(self.msg.iter_decoded_headers())
         self.assertEqual(results, expected)
-
-    def test_iter_addr_headers(self):
-        headers = collections.OrderedDict()
-        headers["test1"] = ["1value1", "1value2"]
-        headers["test2"] = ["2value1", "2value2"]
-        headers["test3"] = ["3value1", "3value2"]
-        expected = ['test1: 1value1', 'test1: 1value2',
-                    'test2: 2value1', 'test2: 2value2',
-                    'test3: 3value1', 'test3: 3value2', ]
-        self.msg.raw_headers = headers
-        results = list(self.msg.iter_addr_headers())
-        self.assertEqual(results, expected)
-
-    def test_iter_name_headers(self):
-        headers = collections.OrderedDict()
-        headers["test1"] = ["1value1 <>", "1value2 <>"]
-        headers["test2"] = ["2value1 <>", "2value2 <>"]
-        headers["test3"] = ["3value1 <>", "3value2 <>"]
-        expected = ['test1: 1value1', 'test1: 1value2',
-                    'test2: 2value1', 'test2: 2value2',
-                    'test3: 3value1', 'test3: 3value2', ]
-        self.msg.raw_headers = headers
-        results = list(self.msg.iter_name_headers())
-        self.assertEqual(results, expected)
-
-    def test_iter_raw_mime_headers(self):
-        headers = collections.OrderedDict()
-        headers["test1"] = ["1value1", "1value2"]
-        headers["test2"] = ["2value1", "2value2"]
-        headers["test3"] = ["3value1", "3value2"]
-        expected = ['test1: 1value1', 'test1: 1value2',
-                    'test2: 2value1', 'test2: 2value2',
-                    'test3: 3value1', 'test3: 3value2', ]
-        self.msg.raw_mime_headers = headers
-        results = list(self.msg.iter_raw_mime_headers())
-        self.assertEqual(results, expected)
-
-    def test_iter_decoded_mime_headers(self):
-        headers = collections.OrderedDict()
-        headers["test1"] = ["1value1", "1value2"]
-        headers["test2"] = ["2value1", "2value2"]
-        headers["test3"] = ["3value1", "3value2"]
-        expected = ['test1: 1value1', 'test1: 1value2',
-                    'test2: 2value1', 'test2: 2value2',
-                    'test3: 3value1', 'test3: 3value2', ]
-        self.msg.raw_mime_headers = headers
-        results = list(self.msg.iter_mime_headers())
-        self.assertEqual(results, expected)
-
 
 
 def suite():
