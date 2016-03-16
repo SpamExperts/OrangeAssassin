@@ -118,7 +118,8 @@ class _ExistsHeaderRule(HeaderRule):
     """Simple check if header exists."""
 
     def __init__(self, name, header_name, score=None, desc=None, priority=0):
-        HeaderRule.__init__(self, name, score=score, desc=desc, priority=priority)
+        super(_ExistsHeaderRule, self).__init__(name, score=score, desc=desc,
+                                                priority=priority)
         self._header_name = header_name
 
     def match(self, msg):
@@ -185,7 +186,9 @@ class _MultiplePatternHeaderRule(HeaderRule):
     _headers = None
 
     def __init__(self, name, pattern, score=None, desc=None, priority=0):
-        HeaderRule.__init__(self, name, score=score, desc=desc, priority=priority)
+        super(_MultiplePatternHeaderRule, self).__init__(
+            name, score=score, desc=desc, priority=priority
+        )
         self._pattern = pattern
 
     def match(self, msg):
@@ -216,7 +219,8 @@ class _AllHeaderRule(HeaderRule):
     """
 
     def __init__(self, name, pattern, score=None, desc=None, priority=0):
-        HeaderRule.__init__(self, name, score=score, desc=desc, priority=priority)
+        super(_AllHeaderRule, self).__init__(name, score=score, desc=desc,
+                                             priority=priority)
         self._pattern = pattern
 
     def match(self, msg):
