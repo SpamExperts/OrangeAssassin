@@ -1,4 +1,3 @@
-
 """ PDFInfo Plugin. """
 
 from __future__ import absolute_import
@@ -8,6 +7,7 @@ from io import BytesIO
 from hashlib import md5
 
 import pad.errors
+
 try:
     import PyPDF2
 except ImportError:
@@ -20,9 +20,8 @@ import pad.plugins.base
 
 
 class PDFInfoPlugin(pad.plugins.base.BasePlugin):
+    """PDFInfoPlugin"""
 
-    """PDFInfoPlugin
-    """
     eval_rules = (
         "pdf_count",
         "pdf_image_count",
@@ -37,8 +36,7 @@ class PDFInfoPlugin(pad.plugins.base.BasePlugin):
     options = {}
 
     def _get_count(self, msg):
-        """Get the number of PDF files in the message
-        """
+        """Get the number of PDF files in the message"""
         try:
             return self.get_local(msg, "counts")
         except KeyError:
@@ -57,11 +55,11 @@ class PDFInfoPlugin(pad.plugins.base.BasePlugin):
         """Check the number of pdf files in the message
 
         :param minimum: required, message contains at least x pdf mime parts
-        :param maximum: optional, if specified, must not contain more than x pdf mime
-        parts.
+        :param maximum: optional, if specified, must not contain more than x
+          pdf mime parts.
 
-        :return: True if the number of PDF files are more or equal to 'minimum' and
-        less or equal than 'maximum' (if set)
+        :return: True if the number of PDF files are more or equal to
+          'minimum' and less or equal than 'maximum' (if set)
         """
         count = self._get_count(msg)
         return minimum <= count <= (maximum or float("inf"))
