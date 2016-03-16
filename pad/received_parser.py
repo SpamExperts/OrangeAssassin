@@ -166,7 +166,7 @@ IP_PRIVATE = re.compile(r"""
     (?![a-f0-9:])
   )
 )
-""", re.X|re.I)
+""", re.X | re.I)
 
 IP_ADDRESS = re.compile(r"""
             (?:
@@ -260,7 +260,7 @@ by\s(\S+)\swith
 
 LOCALHOST_RE = re.compile(r"""
 ^\S+\s\([^\s\@]+\@{LOCALHOST}\)\sby\s\S+\s\(
-""".format(LOCALHOST=LOCALHOST.pattern), re.X|re.I)
+""".format(LOCALHOST=LOCALHOST.pattern), re.X | re.I)
 
 UNKNOWN_RE_RDNS = re.compile("""
 ^(\S+)\s\((unknown)\s\[({IP_ADDRESS})\]\)\s\(
@@ -270,7 +270,7 @@ UNKNOWN_RE_RDNS = re.compile("""
 WITH_LOCAL_RE = re.compile(r'\bwith local(?:-\S+)? ', re.I)
 BSMTP_RE = re.compile(r'^\S+ by \S+ with BSMTP', re.I)
 CONTENT_TECH_RE = re.compile(r"""
-^\S+\s\(\S+\)\sby\s\S+\s\(Content\sTechnologies\s""", re.X|re.I)
+^\S+\s\(\S+\)\sby\s\S+\s\(Content\sTechnologies\s""", re.X | re.I)
 AVG_SMTP_RE = re.compile(r'^127\.0\.0\.1 \(AVG SMTP \S+ \[\S+\]\)')
 QMAIL_RE = re.compile(r'^\S+\@\S+ by \S+ by uid \S+ ')
 FROM_RE = re.compile(r'^\S+\@\S+ by \S+ ')
@@ -310,7 +310,7 @@ HELO_RE5 = re.compile(r"""
 IDENT_RE = re.compile(r'.*ident=(\S+)\)')
 ID_RE = re.compile(r'.*id (\S+)')
 AUTH_RE = re.compile(r"""
-.*?\swith\s((?:ES|L|UTF8S|UTF8L)MTPS?A|ASMTP|HTTPU?)(?:\s|;|$)""", re.X|re.I)
+.*?\swith\s((?:ES|L|UTF8S|UTF8L)MTPS?A|ASMTP|HTTPU?)(?:\s|;|$)""", re.X | re.I)
 AUTH_VC_RE = re.compile(r'.*? \(version=([^ ]+) cipher=([^\)]+)\)')
 AUTH_RE2 = re.compile(r'.*? \(authenticated as (\S+)\)')
 AUTH_RE3 = re.compile(r"""
@@ -591,5 +591,5 @@ class ReceivedParser(object):
             auth = self.get_auth(header)
             self.received.append({
                 "rdns": rdns, "ip": ip, "by": by,
-                "helo": helo,"ident": ident, "id": id, "envfrom": envfrom,
+                "helo": helo, "ident": ident, "id": id, "envfrom": envfrom,
                 "auth": auth})
