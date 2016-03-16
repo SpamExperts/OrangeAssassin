@@ -9,12 +9,14 @@ import pad.plugins.base
 RECEIVED_RE = re.compile(r"""
     ^(pass|neutral|(?:soft)?fail|none|
     permerror|temperror)
-    \b(?:.*\bidentity=(\S+?);?\b)?""", re.I | re.S | re.X | re.M)
+    \b(?:.*\bidentity=(\S+?);?\b)?
+""", re.I | re.S | re.X | re.M)
 AUTHRES_SPF = re.compile(r'.*;\s*spf\s*=\s*([^;]*)', re.I | re.S | re.X | re.M)
 AUTHRES_RE = re.compile(r"""
     ^(pass|neutral|(?:hard|soft)?fail|none|
     permerror|temperror)(?:[^;]*?
-    \bsmtp\.(\S+)\s*=[^;]+)?""", re.I | re.S | re.X | re.M)
+    \bsmtp\.(\S+)\s*=[^;]+)?
+""", re.I | re.S | re.X | re.M)
 
 
 class SpfPlugin(pad.plugins.base.BasePlugin):
