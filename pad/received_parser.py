@@ -82,7 +82,7 @@ LOCALHOST = re.compile(r"""
               )
               (?![a-f0-9:])
             )
-""", re.I|re.X)
+""", re.I | re.X)
 
 IP_PRIVATE = re.compile(r"""
 ^(?:
@@ -316,6 +316,7 @@ AUTH_RE2 = re.compile(r'.*? \(authenticated as (\S+)\)')
 AUTH_RE3 = re.compile(r"""
 \)\s\(Authenticated\ssender:\s\S+\)\sby\s\S+\s\(Postfix\)\swith\s""", re.X)
 
+
 # ========================================================
 
 
@@ -325,7 +326,7 @@ class ReceivedParser(object):
         self.received = list()
         for header in received_headers:
             if header.startswith('from'):
-                header = re.sub('\s+', ' ', header)     # removing '\n\t' chars
+                header = re.sub('\s+', ' ', header)  # removing '\n\t' chars
                 header = header.replace('from ', '', 1)
                 header = header.split(';')[0]
                 self.received_headers.append(header)
