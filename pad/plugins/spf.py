@@ -48,7 +48,6 @@ class SpfPlugin(pad.plugins.base.BasePlugin):
 
     def parsed_metadata(self, msg):
         if self.get_global("ignore_received_spf_header"):
-            # If this option is true:
             # The plugin will ignore the spf headers and will perform
             # SPF check by itself by querying the dns
             timeout = self.get_global('spf_timeout')
@@ -56,7 +55,6 @@ class SpfPlugin(pad.plugins.base.BasePlugin):
             spf_result = self._query_spf(timeout, ip, mx, msg.sender_address)
             self.set_local(msg, 'spf_result', spf_result)
         else:
-            # If this option is false:
             # The plugin will try to use the SPF results found in any
             # Received-SPF headers it finds in the message that could only
             # have been added by an internal relay
@@ -115,30 +113,27 @@ class SpfPlugin(pad.plugins.base.BasePlugin):
         pass
 
     def _check_spf_header(self, msg, newest_header):
-        """
-        :return: 'pass', 'permerror', 'fail', 'temperror', 'softfail', 'none',
-        'neutral'
-        By default the plugin will attempt to use the oldest(bottom most)
+        """By default the plugin will attempt to use the oldest(bottom most)
         received-spf header
+
         If this option is true the plugin will attempt to sue the
         newest(top most) received-spf header
+
+        :return: 'pass', 'permerror', 'fail', 'temperror', 'softfail', 'none',
+          'neutral'
         """
         authres_header = msg.msg["authentication-results"]
-        if newest_header:
-            try:
-                received_spf_header = msg.get_decoded_header("received-spf")[0]
-            except IndexError:
-                received_spf_header = ''
-        else:
-            try:
-                received_spf_header = msg.get_decoded_header("received-spf")[-1]
-            except IndexError:
-                received_spf_header = ''
+        index = 0 if newest_header else -1
+        try:
+            received_spf_header = msg.get_decoded_header("received-spf")[index]
+        except IndexError:
+            received_spf_header = ''
+
         result = ''
         if received_spf_header:
             self.ctxt.log.debug(
-                "PLUGIN::SPF: found a Received-SPF header added by an internal "
-                "host"
+                "PLUGIN::SPF: found a Received-SPF header added by an internal"
+                " host"
             )
             match = RECEIVED_RE.match(received_spf_header)
             if match:
