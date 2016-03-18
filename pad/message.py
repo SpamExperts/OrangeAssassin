@@ -267,7 +267,7 @@ class Message(pad.context.MessageContext):
 
     def _create_plugin_tags(self, header):
         for key, value in header.items():
-            self.plugin_tags[key] = value
+            self.plugin_tags[key.upper()] = value
 
     def _parse_sender(self):
         """Extract the envelope sender from the message."""
