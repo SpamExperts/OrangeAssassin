@@ -81,8 +81,8 @@ class DNSEval(pad.plugins.base.BasePlugin):
                 return False
 
         for ip in msg.get_untrusted_ips():
-            rev = self.ctxt.reverse_ip(ip)
-            results = self.ctxt.query_dns("%s.%s" % (rev, rbl_server), qtype)
+            rev = self.ctxt.dns.reverse_ip(ip)
+            results = self.ctxt.dns.query("%s.%s" % (rev, rbl_server), qtype)
 
             if results and not subtest:
                 return True
@@ -114,8 +114,8 @@ class DNSEval(pad.plugins.base.BasePlugin):
                     return False
 
         for ip in msg.get_untrusted_ips():
-            rev = self.ctxt.reverse_ip(ip)
-            results = self.ctxt.query_dns("%s.%s" % (rev, rbl_server), "A")
+            rev = self.ctxt.dns.reverse_ip(ip)
+            results = self.ctxt.dns.query("%s.%s" % (rev, rbl_server), "A")
 
             if results and not mask:
                 return True
@@ -149,7 +149,7 @@ class DNSEval(pad.plugins.base.BasePlugin):
                 domain = addr.rsplit("@", 1)[1].strip()
             else:
                 domain = addr.strip()
-            results = self.ctxt.query_dns("%s.%s" % (domain, rbl_server), "A")
+            results = self.ctxt.dns.query("%s.%s" % (domain, rbl_server), "A")
 
             if results and not subtest:
                 return True
@@ -262,9 +262,9 @@ class DNSEval(pad.plugins.base.BasePlugin):
         else:
             domain = msg.sender_address
 
-        if self.ctxt.query_dns(domain, "A"):
+        if self.ctxt.dns.query(domain, "A"):
             return False
-        if self.ctxt.query_dns(domain, "MX"):
+        if self.ctxt.dns.query(domain, "MX"):
             return False
         self.ctxt.log.debug("Sending domain %s has no MX or A records",
                             domain)

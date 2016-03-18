@@ -13,21 +13,18 @@ except ImportError:
 import re
 import os
 import imp
-import struct
 import getpass
 import logging
 import functools
 import importlib
 import collections
 
-import dns
-import dns.resolver
-import dns.reversename
 
 import pad.conf
 import pad.errors
 import pad.rules.base
 import pad.plugins.base
+import pad.dns_interface
 
 
 DSN_SERVER_RE = re.compile(r"""
@@ -123,8 +120,8 @@ class GlobalContext(_Context):
         self.ignore_unknown = ignore_unknown
         self.eval_rules = dict()
         self.cmds = dict()
+        self.dns = None
         self.conf = pad.conf.PADConf(self)
-        self._resolver = dns.resolver.Resolver()
         self.username = getpass.getuser()
 
     def err(self, *args, **kwargs):
@@ -141,34 +138,6 @@ class GlobalContext(_Context):
             self.log.warn(*args, **kwargs)
         else:
             self.log.debug(*args, **kwargs)
-
-    def query_dns(self, qname, qtype="A"):
-        """This method should be used for any DNS queries.
-
-        :param qname: The DNS question.
-        :param qtype: The DNS query type.
-        :return: The result of the DNS query.
-        """
-        # XXX This needs to take into account various the
-        # XXX network options. #40.
-        # XXX We should likely cache responses here as
-        # XXX well.
-        self.log.debug("Querying %s for %s record", qname, qtype)
-        if qtype == "PTR":
-            qname = dns.reversename.from_address(qname)
-        try:
-            return self._resolver.query(qname, qtype)
-        except (dns.resolver.NoAnswer, dns.resolver.NoNameservers,
-                dns.resolver.NXDOMAIN, dns.exception.Timeout) as e:
-            self.log.warn("Failed to resolved %s (%s): %s", qname, qtype, e)
-            return []
-        except (ValueError, IndexError, struct.error) as e:
-            self.log.info("Invalid DNS entry %s (%s): %s", qname, qtype, e)
-            return []
-
-    def reverse_ip(self, ip):
-        reversed = str(dns.reversename.from_address(ip.exploded))
-        return reversed.rstrip(".").rsplit(".", 2)[0]
 
     def load_plugin(self, name, path=None):
         """Load the specified plugin from the given path."""
@@ -297,6 +266,10 @@ class GlobalContext(_Context):
         """Configure the DNS resolver based on the user
         settings.
         """
+
+        self.dns = pad.dns_interface.DNSInterface()
+        self.dns.lifetime = self.conf["default_dns_lifetime"]
+        self.dns.timeout = self.conf["default_dns_timeout"]
         cport = None
         nameservers = []
         for dns_server in self.conf["dns_server"]:
@@ -317,11 +290,12 @@ class GlobalContext(_Context):
         else:
             self.log.info("Using nameservers: %s (port %s)", nameservers,
                           cport)
-            self._resolver.nameservers = nameservers
-            self._resolver.port = int(cport)
+            #   self._resolver.nameservers = nameservers
+            #   self._resolver.port = int(cport)
+
+            self.dns.namerservers = nameservers
+            self.dns.port = int(cport)
         del self.conf["dns_server"]
-        self._resolver.lifetime = self.conf["default_dns_lifetime"]
-        self._resolver.timeout = self.conf["default_dns_timeout"]
 
     @_callback_chain
     def hook_parsing_end(self, ruleset):
