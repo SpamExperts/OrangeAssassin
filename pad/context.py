@@ -290,8 +290,6 @@ class GlobalContext(_Context):
         else:
             self.log.info("Using nameservers: %s (port %s)", nameservers,
                           cport)
-            #   self._resolver.nameservers = nameservers
-            #   self._resolver.port = int(cport)
 
             self.dns.namerservers = nameservers
             self.dns.port = int(cport)
