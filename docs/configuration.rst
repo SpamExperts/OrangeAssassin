@@ -96,6 +96,33 @@ Filtering options
     If set to True the daemon will also load user preferences. Note that this
     can be a possible security risk, which is why it's disabled by default.
 
+Tags
+====
+
+.. _received-headers-tags:
+
+Received Headers tags
+---------------------
+These are metadata parsed from the last received header ( top most ) and exposed
+in tags which can be accessed with the next keywords:
+
+**_RDNS_**
+    Reverse DNS made automatically by MTA
+**_HELO_**
+    Helo identification
+**_IP_**
+    Relay IP address
+**_ENVFROM_**
+    For routing the received e-mail to the intended recipient(s)
+**_BY_**
+    Mail server name and system: domain of the server receiving the e-mail
+**_IDENT_**
+    Ident lookup
+**_ID_**
+    Message identification number given by the machine who received the message
+**_AUTH_**
+    Authentication
+
 Message modifications
 ---------------------
 
