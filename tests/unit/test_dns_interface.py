@@ -9,6 +9,8 @@ try:
 except ImportError:
     from mock import patch
 
+from builtins import str
+
 from pad.dns_interface import DNSInterface
 
 
@@ -82,5 +84,5 @@ class TestDNSInterface(unittest.TestCase):
         pass
 
     def test_reverse_ip(self):
-        result = self.dns.reverse_ip(ipaddress.ip_address("127.0.0.1"))
+        result = self.dns.reverse_ip(ipaddress.ip_address(str("127.0.0.1")))
         self.assertEqual("1.0.0.127", result)
