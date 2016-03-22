@@ -26,49 +26,49 @@ class TestDNSInterface(unittest.TestCase):
         patch.stopall()
         super(TestDNSInterface, self).tearDown()
 
-    def test_qname_is_restricted_empty(self):
+    def testis_query_restricted_empty(self):
         """Test a domain that when no restrictions apply"""
         self.assertFalse(
-            self.dns._qname_is_restricted("1.2.3.4.5.example.com"))
+            self.dns.is_query_restricted("1.2.3.4.5.example.com"))
 
-    def test_qname_is_restricted_true(self):
+    def testis_query_restricted_true(self):
         """Test an allowed domain."""
         self.dns.restrictions = {"1.2.3.4.5.example.com": True}
 
         self.assertTrue(
-            self.dns._qname_is_restricted("1.2.3.4.5.example.com"))
+            self.dns.is_query_restricted("1.2.3.4.5.example.com"))
 
-    def test_qname_is_restricted_false(self):
+    def testis_query_restricted_false(self):
         """Test a restricted domain"""
         self.dns.restrictions = {"1.2.3.4.5.example.com": False}
         self.assertFalse(
-            self.dns._qname_is_restricted("1.2.3.4.5.example.com"))
+            self.dns.is_query_restricted("1.2.3.4.5.example.com"))
 
     def test_qname_parent_is_restricted_true(self):
         """Test a domain with an allowed parent"""
         self.dns.restrictions = {"4.5.example.com": True}
         self.assertTrue(
-            self.dns._qname_is_restricted("1.2.3.4.5.example.com"))
+            self.dns.is_query_restricted("1.2.3.4.5.example.com"))
 
     def test_qname_parent_is_restricted_false(self):
         """Test a domain with a restricted parent"""
         self.dns.restrictions = {"4.5.example.com": False}
         self.assertFalse(
-            self.dns._qname_is_restricted("1.2.3.4.5.example.com"))
+            self.dns.is_query_restricted("1.2.3.4.5.example.com"))
 
-    def test_qname_is_restricted_false_with_parent_true(self):
+    def testis_query_restricted_false_with_parent_true(self):
         """Test an allowed domain with a restricted parent."""
         self.dns.restrictions = {"2.3.4.5.example.com": True,
                                  "4.5.example.com": False}
         self.assertTrue(
-            self.dns._qname_is_restricted("1.2.3.4.5.example.com"))
+            self.dns.is_query_restricted("1.2.3.4.5.example.com"))
 
-    def test_qname_is_restricted_true_with_parent_false(self):
+    def testis_query_restricted_true_with_parent_false(self):
         """Test a restricted domain with an allowed parent."""
         self.dns.restrictions = {"2.3.4.5.example.com": False,
                                  "4.5.example.com": True}
         self.assertFalse(
-            self.dns._qname_is_restricted("1.2.3.4.5.example.com"))
+            self.dns.is_query_restricted("1.2.3.4.5.example.com"))
 
     def test_query(self):
         self.dns.query("example.com", "A")

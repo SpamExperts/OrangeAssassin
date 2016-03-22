@@ -165,7 +165,21 @@ class PADConf(Conf):
         "default_dns_lifetime": ("float", 10.0),
         "default_dns_timeout": ("float", 2.0),
         "allow_user_rules": ("bool", False),
+        "skip_rbl_checks": ("int", 0),
+        "trusted_networks": ("append_split", []),
+        "clear_trusted_networks": ("clear", ["trusted_networks"]),
+        "internal_networks": ("append_split", []),
+        "clear_internal_networks": ("clear", ["internal_networks"]),
+        "msa_networks": ("append_split", []),
+        "clear_msa_networks": ("clear", ["msa_networks"]),
+        "originating_ip_headers": ("append_split", []),
+        "clear_originating_ip_headers": ("clear", ["originating_ip_headers"]),
+        "clear_dns_query_restriction": ("clear", ["dns_query_restriction"]),
+        "always_trust_envelope_sender": ("int", 0),
+        "dns_available": ("string", "yes"),
+        "dns_local_ports_permit": ("append_split", []),
+        "dns_local_ports_avoid": ("append_split", []),
+        "dns_test_interval": ("str", "600"),
+        "dns_options": ("str", "norotate, nodns0x20, edns=4096"),
+        "dns_query_restriction": ("append", []),
     }
-
-
-

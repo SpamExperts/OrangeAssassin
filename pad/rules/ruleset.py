@@ -284,7 +284,7 @@ class RuleSet(object):
             self._add_header_rule(value, True)
         del self.conf["remove_header"]
 
-        for value in self.conf['dns_query_restrictions']:
+        for value in self.conf['dns_query_restriction']:
             try:
                 option, qname = value.split(" ", 1)
             except ValueError:
