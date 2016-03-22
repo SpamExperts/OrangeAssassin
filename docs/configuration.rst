@@ -209,7 +209,7 @@ They will be replaced by the corresponding value when they are used.
     summary of tests hit for standard report (for body reports)
 **_CONTACTADDRESS_**
     Contents of the 'report_contact' setting
-**__**
+
 Received Headers tags
 ---------------------
 These are metadata parsed from the last received header ( top most ) and exposed
