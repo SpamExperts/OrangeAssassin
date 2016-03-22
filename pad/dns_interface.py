@@ -40,13 +40,13 @@ class DNSInterface(object):
 
     @rotate_nameservers.setter
     def rotate_nameservers(self, rotate):
-        self._resolver.rotate = rotate == "rotate":
+        self._resolver.rotate = rotate == "rotate"
 
     @property
     def edns(self):
         return bool(self._resolver.payload)
 
-    @use_edns.setter
+    @edns.setter
     def edns(self, value):
         if value.startswith("no"):
             self._resolver.payload = 512
@@ -103,7 +103,7 @@ class DNSInterface(object):
             if qname in self.query_restrictions:
                 return self.query_restrictions[qname]
             try:
-                qname = qname.split(".",1)[1]
+                qname = qname.split(".", 1)[1]
             except KeyError:
                 return False
 
