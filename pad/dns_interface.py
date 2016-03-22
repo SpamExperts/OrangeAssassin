@@ -4,7 +4,6 @@ when performing queries"""
 import struct
 import logging
 import datetime
-from dateutil import relativedelta
 
 import dns
 import dns.resolver
@@ -61,15 +60,15 @@ class DNSInterface(object):
     def test_interval(self, value):
         "Set the test_interval as relative delta object"
         if value.endswith("s"):
-            self._test_interval = relativedelta(seconds=int(value[:-1]))
+            self._test_interval = datetime.timedelta(seconds=int(value[:-1]))
         elif value.endswith("m"):
-            self._test_interval = relativedelta(minutes=int(value[:-1]))
+            self._test_interval = datetime.timedelta(minutes=int(value[:-1]))
         elif value.endswith("h"):
-            self._test_interval = relativedelta(hours=int(value[:-1]))
+            self._test_interval = datetime.timedelta(hours=int(value[:-1]))
         elif value.endswith("d"):
-            self._test_interval = relativedelta(days=int(value[:-1]))
+            self._test_interval = datetime.timedelta(days=int(value[:-1]))
         elif value.endswith("w"):
-            self._test_interval = relativedelta(weeks=int(value[:-1]))
+            self._test_interval = datetime.timedelta(weeks=int(value[:-1]))
         else:
             self._test_interval = relativedelta(seconds=int(value))
 
