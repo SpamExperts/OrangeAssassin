@@ -20,7 +20,7 @@ class DNSInterface(object):
         self.test_qnames = []
         self.retest = datetime.datetime.now()
         self._test_interval = None
-        self.dns_available = True
+        self.available = True
         self.test = False
         self._resolver.edns = 0
         self._resolver.rotate = False
@@ -122,7 +122,7 @@ class DNSInterface(object):
             self.log.debug("Querying %s is restricted", qname)
             return []
 
-        if not self.available():
+        if not self._is_available():
             return []
 
         self.log.debug("Querying %s for %s record", qname, qtype)

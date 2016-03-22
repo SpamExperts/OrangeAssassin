@@ -299,8 +299,9 @@ class RuleSet(object):
         dns_options = {"edns": "edns=4096",
                        "rotate": "norotate",
                        "dns0x20": "nodns0x20"}
-        dns_options.update(
-            _DNS_OPTIONS_RE.match(self.conf['dns_options']).groupdict())
+        dns_options_match = _DNS_OPTIONS_RE.match(self.conf['dns_options'])
+        if dns_options_match:
+            dns_options.update(dns_options_match.groupdict())
         self.ctxt.dns.rotate = dns_options['rotate']
         self.ctxt.dns.edns = dns_options['edns']
 
