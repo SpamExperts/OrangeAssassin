@@ -120,7 +120,7 @@ class GlobalContext(_Context):
         self.ignore_unknown = ignore_unknown
         self.eval_rules = dict()
         self.cmds = dict()
-        self.dns = None
+        self.dns = pad.dns_interface.DNSInterface()
         self.conf = pad.conf.PADConf(self)
         self.username = getpass.getuser()
 
@@ -267,7 +267,6 @@ class GlobalContext(_Context):
         settings.
         """
 
-        self.dns = pad.dns_interface.DNSInterface()
         self.dns.lifetime = self.conf["default_dns_lifetime"]
         self.dns.timeout = self.conf["default_dns_timeout"]
         cport = None
@@ -290,6 +289,8 @@ class GlobalContext(_Context):
         else:
             self.log.info("Using nameservers: %s (port %s)", nameservers,
                           cport)
+            #   self._resolver.nameservers = nameservers
+            #   self._resolver.port = int(cport)
 
             self.dns.namerservers = nameservers
             self.dns.port = int(cport)
