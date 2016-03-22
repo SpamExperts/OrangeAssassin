@@ -16,7 +16,7 @@ class DNSInterface(object):
     def __init__(self):
         self.log = logging.getLogger("pad-logger")
         self._resolver = dns.resolver.Resolver()
-        self.restrictions = {}
+        self.query_restrictions = {}
         self.test_qnames = []
         self.retest = datetime.datetime.now()
         self._test_interval = None
