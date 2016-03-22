@@ -96,32 +96,6 @@ Filtering options
     If set to True the daemon will also load user preferences. Note that this
     can be a possible security risk, which is why it's disabled by default.
 
-Tags
-====
-
-.. _received-headers-tags:
-
-Received Headers tags
----------------------
-These are metadata parsed from the last received header ( top most ) and exposed
-in tags which can be accessed with the next keywords:
-
-**_RDNS_**
-    Reverse DNS made automatically by MTA
-**_HELO_**
-    Helo identification
-**_IP_**
-    Relay IP address
-**_ENVFROM_**
-    For routing the received e-mail to the intended recipient(s)
-**_BY_**
-    Mail server name and system: domain of the server receiving the e-mail
-**_IDENT_**
-    Ident lookup
-**_ID_**
-    Message identification number given by the machine who received the message
-**_AUTH_**
-    Authentication
 
 Message modifications
 ---------------------
@@ -203,4 +177,58 @@ DNS
     most 10 seconds to get a valid response from one of the DNS server.
 **default_dns_timeout** 2.0 (type `float`)
     Set the timeout for a DNS lookup from a single nameserver.
+
+Tags
+====
+
+.. _received-headers-tags:
+Template tags
+-------------
+The following tags can be used as placeholders in certain options.
+They will be replaced by the corresponding value when they are used.
+
+**_YESNOCAPS_**
+    "YES"/"NO" for is/isn't spam
+**_YESNO_**
+    "Yes"/"No" for is/isn't spam
+**_REQD_**
+    Message threshold
+**_VERSION_**
+    version (eg. 1.0a)
+**_SUBVERSION_**
+    sub-version/code revision date (eg. 2016-01-15)
+**_HOSTNAME_**
+    Hostname of the machine the mail was processed on
+**_TESTS(,)_**
+    tests hit separated by "," (or other separator)
+**_PREVIEW_**
+    content preview
+**_REPORT_**
+    terse report of tests hit (for header reports)
+**_SUMMARY_**
+    summary of tests hit for standard report (for body reports)
+**_CONTACTADDRESS_**
+    Contents of the 'report_contact' setting
+**__**
+Received Headers tags
+---------------------
+These are metadata parsed from the last received header ( top most ) and exposed
+in tags which can be accessed with the next keywords:
+
+**_RDNS_**
+    Reverse DNS made automatically by MTA
+**_HELO_**
+    Helo identification
+**_IP_**
+    Relay IP address
+**_ENVFROM_**
+    For routing the received e-mail to the intended recipient(s)
+**_BY_**
+    Mail server name and system: domain of the server receiving the e-mail
+**_IDENT_**
+    Ident lookup
+**_ID_**
+    Message identification number given by the machine who received the message
+**_AUTH_**
+    Authentication
 
