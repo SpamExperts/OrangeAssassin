@@ -33,40 +33,40 @@ class TestDNSInterface(unittest.TestCase):
 
     def testis_query_restricted_true(self):
         """Test an allowed domain."""
-        self.dns.restrictions = {"1.2.3.4.5.example.com": True}
+        self.dns.query_restrictions = {"1.2.3.4.5.example.com": True}
 
         self.assertTrue(
             self.dns.is_query_restricted("1.2.3.4.5.example.com"))
 
     def testis_query_restricted_false(self):
         """Test a restricted domain"""
-        self.dns.restrictions = {"1.2.3.4.5.example.com": False}
+        self.dns.query_restrictions = {"1.2.3.4.5.example.com": False}
         self.assertFalse(
             self.dns.is_query_restricted("1.2.3.4.5.example.com"))
 
     def test_qname_parent_is_restricted_true(self):
         """Test a domain with an allowed parent"""
-        self.dns.restrictions = {"4.5.example.com": True}
+        self.dns.query_restrictions = {"4.5.example.com": True}
         self.assertTrue(
             self.dns.is_query_restricted("1.2.3.4.5.example.com"))
 
     def test_qname_parent_is_restricted_false(self):
         """Test a domain with a restricted parent"""
-        self.dns.restrictions = {"4.5.example.com": False}
+        self.dns.query_restrictions = {"4.5.example.com": False}
         self.assertFalse(
             self.dns.is_query_restricted("1.2.3.4.5.example.com"))
 
     def testis_query_restricted_false_with_parent_true(self):
         """Test an allowed domain with a restricted parent."""
-        self.dns.restrictions = {"2.3.4.5.example.com": True,
-                                 "4.5.example.com": False}
+        self.dns.query_restrictions = {"2.3.4.5.example.com": True,
+                                       "4.5.example.com": False}
         self.assertTrue(
             self.dns.is_query_restricted("1.2.3.4.5.example.com"))
 
     def testis_query_restricted_true_with_parent_false(self):
         """Test a restricted domain with an allowed parent."""
-        self.dns.restrictions = {"2.3.4.5.example.com": False,
-                                 "4.5.example.com": True}
+        self.dns.query_restrictions = {"2.3.4.5.example.com": False,
+                                       "4.5.example.com": True}
         self.assertFalse(
             self.dns.is_query_restricted("1.2.3.4.5.example.com"))
 
@@ -74,7 +74,7 @@ class TestDNSInterface(unittest.TestCase):
         self.dns.query("example.com", "A")
 
     def test_query_restricted(self):
-        self.dns.restrictions = {"example.com": True}
+        self.dns.query_restrictions = {"example.com": True}
         result = self.dns.query("example.com", "A")
         self.assertEqual(result, [])
 
@@ -83,4 +83,4 @@ class TestDNSInterface(unittest.TestCase):
 
     def test_reverse_ip(self):
         result = self.dns.reverse_ip(ipaddress.ip_address("127.0.0.1"))
-        self.assertEqual("1.0.0.127.in-addr", result)
+        self.assertEqual("1.0.0.127", result)
