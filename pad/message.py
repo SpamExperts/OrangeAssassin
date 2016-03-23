@@ -188,7 +188,7 @@ class Message(pad.context.MessageContext):
                     continue
             else:
                 parts.append(value)
-        return "".join(parts)
+        return "".join(map(str,parts))
 
     def get_raw_header(self, header_name):
         """Get a list of raw headers with this name."""
