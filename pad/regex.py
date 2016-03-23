@@ -85,7 +85,6 @@ def perl2re(pattern, match_op="=~"):
     """Convert a Perl type regex to a Python one."""
     # We don't need to consider the pre-flags
     pattern = pattern.strip().lstrip("mgs")
-    print("---->", pattern)
     delim = pattern[0]
     try:
         rev_delim = DELIMS[delim]
