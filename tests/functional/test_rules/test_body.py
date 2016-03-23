@@ -36,7 +36,6 @@ class TestBodyRules(tests.util.TestBase):
                            config=config,
                            score=4.2, symbols=["TEST_RULE"])
 
-    @unittest.skip('Temporary skipped until the issue it checks is fixed.')
     def test_invalid_body_rule_score_match(self):
         config = ("body TEST_RULE /#$%#$/ \n"
                   "score TEST_RULE 4.2")

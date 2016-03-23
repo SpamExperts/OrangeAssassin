@@ -85,13 +85,20 @@ def perl2re(pattern, match_op="=~"):
     """Convert a Perl type regex to a Python one."""
     # We don't need to consider the pre-flags
     pattern = pattern.strip().lstrip("mgs")
+    print("---->", pattern)
     delim = pattern[0]
     try:
         rev_delim = DELIMS[delim]
     except KeyError:
         raise pad.errors.InvalidRegex("Invalid regex delimiter %r in %r" %
                                       (delim, pattern))
-    pattern, flags_str = pattern.lstrip(delim).rsplit(rev_delim, 1)
+    try:
+        pattern, flags_str = pattern.lstrip(delim).rsplit(rev_delim, 1)
+    except ValueError:
+        raise pad.errors.InvalidRegex("Invalid regex %r. Please make sure you "
+                                      "have escaped all the special characters "
+                                      "when you defined the regex in "
+                                      "configuration file" % pattern)
     for conv_p, repl in _CONVERTS:
         pattern = conv_p.sub(repl, pattern)
 
