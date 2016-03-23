@@ -262,7 +262,7 @@ LOCALHOST_RE = re.compile(r"""
 ^\S+\s\([^\s\@]+\@{LOCALHOST}\)\sby\s\S+\s\(
 """.format(LOCALHOST=LOCALHOST.pattern), re.X | re.I)
 
-UNKNOWN_RE_RDNS = re.compile("""
+UNKNOWN_RE_RDNS = re.compile(r"""
 ^(\S+)\s\((unknown)\s\[({IP_ADDRESS})\]\)\s\(
 """.format(IP_ADDRESS=IP_ADDRESS.pattern), re.X)
 
@@ -326,7 +326,7 @@ class ReceivedParser(object):
         self.received = list()
         for header in received_headers:
             if header.startswith('from'):
-                header = re.sub('\s+', ' ', header)  # removing '\n\t' chars
+                header = re.sub(r'\s+', ' ', header)  # removing '\n\t' chars
                 header = header.replace('from ', '', 1)
                 header = header.split(';')[0]
                 self.received_headers.append(header)
