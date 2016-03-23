@@ -6,6 +6,7 @@ import re
 import unittest
 import collections
 import email.header
+from builtins import str
 
 try:
     from unittest.mock import patch, Mock, call
@@ -256,8 +257,8 @@ class TestMessageVarious(unittest.TestCase):
         self.assertEqual(result, expected)
 
     def test_translate_line_breaks_nonascii(self):
-        text = "X-Envelope-Sender: 'ant㮩o.parreira'@credimedia.pt"
-        expected = "X-Envelope-Sender: 'ant㮩o.parreira'@credimedia.pt"
+        text = u"X-Envelope-Sender: 'ant㮩o.parreira'@credimedia.pt"
+        expected = u"X-Envelope-Sender: 'ant㮩o.parreira'@credimedia.pt"
         result = pad.message.Message.translate_line_breaks(text)
         self.assertEqual(result, expected)
 

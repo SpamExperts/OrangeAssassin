@@ -6,6 +6,7 @@ from builtins import set
 from builtins import list
 from builtins import dict
 from builtins import object
+from builtins import str
 
 import re
 import email
@@ -188,7 +189,7 @@ class Message(pad.context.MessageContext):
                     continue
             else:
                 parts.append(value)
-        return "".join(map(str,parts))
+        return "".join(map(str, parts))
 
     def get_raw_header(self, header_name):
         """Get a list of raw headers with this name."""
