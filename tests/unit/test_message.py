@@ -255,7 +255,6 @@ class TestMessageVarious(unittest.TestCase):
         result = pad.message.Message.translate_line_breaks(text)
         self.assertEqual(result, expected)
 
-    @unittest.SkipTest
     def test_translate_line_breaks_nonascii(self):
         text = "X-Envelope-Sender: 'ant㮩o.parreira'@credimedia.pt"
         expected = "X-Envelope-Sender: 'ant㮩o.parreira'@credimedia.pt"
@@ -280,12 +279,11 @@ class TestMessageVarious(unittest.TestCase):
         result = pad.message.Message._decode_header(enc_header)
         self.assertEqual(result, header)
 
-    @unittest.SkipTest
     def test_decode_header_no_encoding(self):
         header = "<alexey@spamexperts.com>"
         enc_header = email.header.make_header([(header, "utf-8"), ])
         patch("email.header.decode_header",
-              return_value=[(b'<alexey@spamexperts.com>', None), ]).start()
+              return_value=[('<alexey@spamexperts.com>', None), ]).start()
         result = pad.message.Message._decode_header(enc_header)
         self.assertEqual(result, header)
 
