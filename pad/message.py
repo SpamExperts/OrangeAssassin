@@ -215,7 +215,7 @@ class Message(pad.context.MessageContext):
         :return: A list of `ipaddress.ip_address`.
         """
         ips = [ip for ip in self.get_header_ips()
-               if ip in self.networks.trusted_networks]
+               if ip not in self.ctxt.networks.trusted]
         return ips
 
     def get_header_ips(self):
@@ -296,9 +296,10 @@ class Message(pad.context.MessageContext):
         found_msa = False
 
         for position, relay in enumerate(relays):
-            in_internal = relay['ip'] in self.ctxt.networks.internal
-            in_trusted = relay['ip'] in self.ctxt.trusted
-            in_msa = relay['ip'] in self.ctxt.networks.msa
+            ip = ipaddress.ip_address(relay['ip'])
+            in_internal = ip in self.ctxt.networks.internal
+            in_trusted = ip in self.ctxt.networks.trusted
+            in_msa = ip in self.ctxt.networks.msa
             has_auth = relay.get("auth", None)
             if is_trusted and not found_msa:
                 if self.ctxt.networks.configured:
@@ -312,7 +313,7 @@ class Message(pad.context.MessageContext):
                     if has_auth and (is_internal or is_trusted) and in_msa:
                         found_msa = True
 
-                elif not relay.get("ip").is_private() and not has_auth:
+                elif not ip.is_private and not has_auth:
                         is_trusted = False
                         is_internal = False
 
