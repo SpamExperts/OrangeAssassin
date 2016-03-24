@@ -85,7 +85,8 @@ class TestParseMessage(unittest.TestCase):
                                  })
         self.conf = {
             "originating_ip_headers": [],
-            "envelope_sender_header": []
+            "envelope_sender_header": [],
+            "always_trust_envelope_sender": "0"
         }
         self.mock_ctxt = Mock(plugins={}, conf=self.conf)
 
@@ -237,6 +238,7 @@ class TestMessageVarious(unittest.TestCase):
         self.conf = {
             "envelope_sender_header": [],
             "originating_ip_headers": [],
+            "always_trust_envelope_sender": "0"
         }
         self.mock_ctxt = Mock(plugins={}, conf=self.conf)
 
@@ -294,6 +296,7 @@ class TestGetHeaders(unittest.TestCase):
         unittest.TestCase.setUp(self)
         self.conf = {
             "originating_ip_headers": [],
+            "always_trust_envelope_sender": "0",
             "envelope_sender_header": []
         }
         self.mock_ctxt = Mock(plugins={}, conf=self.conf)
