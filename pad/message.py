@@ -1,7 +1,5 @@
 """Internal representation of email messages."""
 
-from __future__ import unicode_literals
-
 from builtins import set
 from builtins import list
 from builtins import dict
