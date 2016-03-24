@@ -302,7 +302,7 @@ class GlobalContext(_Context):
             self.networks.add_internal(network)
         for network in self.conf['msa_networks']:
             self.networks.add_msa(network)
-        
+
     @_callback_chain
     def hook_parsing_end(self, ruleset):
         """Hook after the parsing has finished but and the
@@ -310,6 +310,7 @@ class GlobalContext(_Context):
         """
         self._configure_dns()
         self._add_networks()
+        self.skip_rbl_checks = bool(self.conf['skip_rbl_checks'])
         for plugin in self.plugins.values():
             plugin.finish_parsing_end(ruleset)
 
