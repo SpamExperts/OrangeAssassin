@@ -296,9 +296,9 @@ class Message(pad.context.MessageContext):
         found_msa = False
 
         for position, relay in enumerate(relays):
-            in_internal = relay['ip'] in self.ctxt.networks.internal_networks
-            in_trusted = relay['ip'] in self.ctxt.trusted_networks
-            in_msa = relay['ip'] in self.ctxt.networks.msa_networks
+            in_internal = relay['ip'] in self.ctxt.networks.internal
+            in_trusted = relay['ip'] in self.ctxt.trusted
+            in_msa = relay['ip'] in self.ctxt.networks.msa
             has_auth = relay.get("auth", None)
             if is_trusted and not found_msa:
                 if self.ctxt.networks.configured:

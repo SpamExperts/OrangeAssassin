@@ -88,15 +88,15 @@ class NetworkList(object):
         self.configured = True
         exclude, network = self.extract_network(network_str)
         self.trusted.configured = True
-        self.trusted_networks.add(network, exclude)
+        self.trusted.add(network, exclude)
 
     def add_internal_network(self, network_str):
         exclude, network = self.extract_network(network_str)
         self.internal.configured = True
-        self.trusted_networks.add(network, exclude)
-        self.internal_networks.add(network, exclude)
+        self.trusted.add(network, exclude)
+        self.internal.add(network, exclude)
 
     def add_msa_network(self, network_str):
         exclude, network = self.extract_network(network_str)
         self.internal.configured = True
-        self.msa_networks.add(network, exclude)
+        self.msa.add(network, exclude)
