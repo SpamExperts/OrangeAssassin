@@ -2,11 +2,9 @@
 
 """Tests for pad.message"""
 
-import re
 import unittest
 import collections
 import email.header
-from builtins import str
 
 try:
     from unittest.mock import patch, Mock, call
@@ -86,6 +84,7 @@ class TestParseMessage(unittest.TestCase):
                                  "_headers": self.mime_headers
                                  })
         self.conf = {
+            "originating_ip_headers": [],
             "envelope_sender_header": []
         }
         self.mock_ctxt = Mock(plugins={}, conf=self.conf)
@@ -236,7 +235,8 @@ class TestMessageVarious(unittest.TestCase):
     def setUp(self):
         unittest.TestCase.setUp(self)
         self.conf = {
-            "envelope_sender_header": []
+            "envelope_sender_header": [],
+            "originating_ip_headers": [],
         }
         self.mock_ctxt = Mock(plugins={}, conf=self.conf)
 
@@ -293,6 +293,7 @@ class TestGetHeaders(unittest.TestCase):
     def setUp(self):
         unittest.TestCase.setUp(self)
         self.conf = {
+            "originating_ip_headers": [],
             "envelope_sender_header": []
         }
         self.mock_ctxt = Mock(plugins={}, conf=self.conf)

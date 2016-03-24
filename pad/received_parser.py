@@ -316,16 +316,23 @@ AUTH_RE2 = re.compile(r'.*? \(authenticated as (\S+)\)')
 AUTH_RE3 = re.compile(r"""
 \)\s\(Authenticated\ssender:\s\S+\)\sby\s\S+\s\(Postfix\)\swith\s""", re.X)
 
+ORIGINATING_IP_HEADER_RE = r"^({}).*"
 
 # ========================================================
 
 
 class ReceivedParser(object):
-    def __init__(self, received_headers):
+    def __init__(self, received_headers, originating_header_names=None):
+        self.originating_header_names = tuple()
+        if originating_header_names:
+            self.originating_header_names = tuple(originating_header_names)
         self.received_headers = list()
         self.received = list()
         for header in received_headers:
-            if header.startswith('from'):
+            if (self.originating_header_names and
+                    header.startswith(self.originating_header_names)):
+                self.received_headers.append(header)
+            elif header.startswith('from'):
                 header = re.sub(r'\s+', ' ', header)  # removing '\n\t' chars
                 header = header.replace('from ', '', 1)
                 header = header.split(';')[0]
@@ -580,17 +587,23 @@ class ReceivedParser(object):
 
     def _parse_message(self):
         for header in self.received_headers:
-            if self.check_for_skip(header):
-                continue
-            rdns = self.get_rdns(header)
-            ip = self.get_ip(header)
-            by = self.get_by(header)
-            helo = self.get_helo(header)
-            ident = self.get_ident(header)
-            id = self.get_id(header)
-            envfrom = self.get_envfrom(header)
-            auth = self.get_auth(header)
-            self.received.append({
-                "rdns": rdns, "ip": ip, "by": by,
-                "helo": helo, "ident": ident, "id": id, "envfrom": envfrom,
-                "auth": auth})
+            if not self.check_for_skip(header):
+                rdns = self.get_rdns(header)
+                ip = self.get_ip(header)
+                by = self.get_by(header)
+                helo = self.get_helo(header)
+                ident = self.get_ident(header)
+                id = self.get_id(header)
+                envfrom = self.get_envfrom(header)
+                auth = self.get_auth(header)
+                if (self.originating_header_names and
+                        header.startswith(self.originating_header_names)):
+                    self.received.append({
+                        "rdns": "", "ip": ip, "by": "",
+                        "helo": "", "ident": "", "id": "", "envfrom": "",
+                        "auth": ""})
+                else:
+                    self.received.append({
+                        "rdns": rdns, "ip": ip, "by": by, "helo": helo,
+                        "ident": ident, "id": id, "envfrom": envfrom, "auth":
+                        auth})

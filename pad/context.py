@@ -22,6 +22,7 @@ import collections
 
 import pad.conf
 import pad.errors
+import pad.networks
 import pad.rules.base
 import pad.plugins.base
 import pad.dns_interface
@@ -121,6 +122,7 @@ class GlobalContext(_Context):
         self.eval_rules = dict()
         self.cmds = dict()
         self.dns = pad.dns_interface.DNSInterface()
+        self.networks = pad.networks.NetworkList()
         self.conf = pad.conf.PADConf(self)
         self.username = getpass.getuser()
 
@@ -289,19 +291,25 @@ class GlobalContext(_Context):
         else:
             self.log.info("Using nameservers: %s (port %s)", nameservers,
                           cport)
-            #   self._resolver.nameservers = nameservers
-            #   self._resolver.port = int(cport)
-
             self.dns.namerservers = nameservers
             self.dns.port = int(cport)
         del self.conf["dns_server"]
 
+    def _add_networks(self):
+        for network in self.conf['trusted_networks']:
+            self.networks.add_trusted(network)
+        for network in self.conf['internal_networks']:
+            self.networks.add_internal(network)
+        for network in self.conf['msa_networks']:
+            self.networks.add_msa(network)
+        
     @_callback_chain
     def hook_parsing_end(self, ruleset):
         """Hook after the parsing has finished but and the
         ruleset is initialized.
         """
         self._configure_dns()
+        self._add_networks()
         for plugin in self.plugins.values():
             plugin.finish_parsing_end(ruleset)
 
