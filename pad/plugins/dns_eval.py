@@ -103,6 +103,8 @@ class DNSEval(pad.plugins.base.BasePlugin):
         :return: True if there is a match and the mask
           passes and False otherwise.
         """
+        if self.ctxt.skip_rbl_checks:
+            return False
         if mask is not None:
             try:
                 mask = int(mask)
@@ -137,6 +139,10 @@ class DNSEval(pad.plugins.base.BasePlugin):
         :return: True if there is a match and the subtest
           passes and False otherwise.
         """
+
+        if self.ctxt.skip_rbl_checks:
+            return False
+
         if subtest is not None:
             try:
                 subtest = re.compile(subtest)

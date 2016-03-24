@@ -8,7 +8,6 @@ from builtins import object
 
 import re
 import email
-import socket
 import functools
 import ipaddress
 import email.utils
@@ -144,6 +143,12 @@ class Message(pad.context.MessageContext):
         # Data
         self.sender_address = ""
         self.hostname_with_ip = list()
+        self.internal_relays = []
+        self.external_relays = []
+        self.last_internal_relay_index = 0
+        self.last_trusted_relay_index = 0
+        self.trusted_relays = []
+        self.untrusted_relays = []
         self._parse_message()
         self._hook_parsed_metadata()
 
@@ -215,9 +220,9 @@ class Message(pad.context.MessageContext):
 
         :return: A list of `ipaddress.ip_address`.
         """
-        # XXX This should take into consideration the network
-        # XXX options. #40
-        return self.get_header_ips()
+        ips = [ip for ip in self.get_header_ips()
+               if ip not in self.ctxt.networks.trusted]
+        return ips
 
     def get_header_ips(self):
         values = list()
@@ -276,18 +281,72 @@ class Message(pad.context.MessageContext):
 
     def _parse_sender(self):
         """Extract the envelope sender from the message."""
+
+        always_trust_envelope_from = self.ctxt.conf[
+            'always_trust_envelope_sender']
         headers = self.ctxt.conf["envelope_sender_header"] or DEFAULT_SENDERH
-        for sender_header in headers:
-            try:
-                sender = self.get_addr_header(sender_header)[0]
-            except IndexError:
-                continue
+
+        if self.external_relays:
+            sender = self.external_relays[0].get("envfrom").strip()
             if sender:
-                self.sender_address = sender.strip()
-                self.ctxt.log.debug("Using %s as sender: %s", sender_header,
-                                    sender)
+                self.sender_address = sender
                 return
-        # XXX This requires an advanced Received parsers #48
+        else:
+            if self.trusted_relays and not always_trust_envelope_from:
+                return
+
+            for sender_header in headers:
+                try:
+                    sender = self.get_addr_header(sender_header)[0]
+                except IndexError:
+                    continue
+                if sender:
+                    self.sender_address = sender.strip()
+                    self.ctxt.log.debug("Using %s as sender: %s",
+                                        sender_header, sender)
+                    return
+        return
+
+    def _parse_relays(self, relays):
+        """Walks though a relays list to extract
+        [un]trusted/internal/external relays"""
+        is_trusted = True
+        is_internal = True
+        found_msa = False
+
+        for position, relay in enumerate(relays):
+            ip = ipaddress.ip_address(relay['ip'])
+            in_internal = ip in self.ctxt.networks.internal
+            in_trusted = ip in self.ctxt.networks.trusted
+            in_msa = ip in self.ctxt.networks.msa
+            has_auth = relay.get("auth", None)
+            if is_trusted and not found_msa:
+                if self.ctxt.networks.configured:
+                    if not in_trusted:
+                        is_trusted = False
+                        is_internal = False
+
+                    if not in_internal:
+                        is_internal = False
+
+                    if has_auth and (is_internal or is_trusted) and in_msa:
+                        found_msa = True
+
+                elif not ip.is_private and not has_auth:
+                        is_trusted = False
+                        is_internal = False
+
+            if is_internal:
+                self.internal_relays.append(relay)
+                self.last_internal_relay_index = position
+            else:
+                self.external_relays.append(relay)
+
+            if is_trusted:
+                self.trusted_relays.append(relay)
+                self.last_trusted_relay_index = position
+            else:
+                self.untrusted_relays.append(relay)
 
     def _parse_message(self):
         """Parse the message."""
@@ -321,8 +380,14 @@ class Message(pad.context.MessageContext):
         self.text = " ".join(body)
         self.raw_text = "\n".join(raw_body)
         self._parse_sender()
-        received_obj = ReceivedParser(self.get_decoded_header("Received"))
+        received_headers = self.get_decoded_header("Received")
+        for header in self.ctxt.conf["originating_ip_headers"]:
+            received_headers.extend(self.get_decoded_header(header))
+        received_obj = ReceivedParser(received_headers,
+                                      self.ctxt.conf["originating_ip_headers"])
         self.received_headers = received_obj.received
+        self._parse_relays(self.received_headers)
+
         try:
             self._create_plugin_tags(self.received_headers[0])
         except IndexError:

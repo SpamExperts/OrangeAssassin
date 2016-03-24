@@ -458,6 +458,18 @@ class TestReceivedParser(unittest.TestCase):
         parsed_data = pad.received_parser.ReceivedParser(header).received
         self.assertEqual(parsed_data, expected)
 
+    def test_for_originating_ip_header(self):
+        header = ["X-Yahoo-Post-IP: 1.2.3.4"]
+        expected = [{
+            "rdns": "", "ip": "1.2.3.4",
+            "by": "", "helo": "",
+            "ident": "", "id": "", "envfrom": "",
+            "auth": ""}]
+
+        parsed_data = pad.received_parser.ReceivedParser(
+            header, ["X-Yahoo-Post-IP", ]).received
+        self.assertEqual(parsed_data, expected)
+
 
 def suite():
     """Gather all the tests from this package in a test suite."""
