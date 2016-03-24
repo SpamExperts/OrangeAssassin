@@ -3,7 +3,6 @@
 """Test the match script."""
 
 from __future__ import absolute_import, print_function
-
 import os
 import unittest
 
@@ -154,7 +153,6 @@ class TestMatchScript(tests.util.TestBase):
         result = self.check_pad(MULTIPART_MSG)
         self.assertEqual(result, "0.0")
 
-    @unittest.SkipTest
     def test_no_match_bad_encoding(self):
         """Rule shouldn't be matched but score reported.
         No errors should occur."""
