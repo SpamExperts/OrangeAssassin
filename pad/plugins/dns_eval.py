@@ -73,6 +73,8 @@ class DNSEval(pad.plugins.base.BasePlugin):
         :return: True if there is a match and the subtest
           passes and False otherwise.
         """
+        if self.ctxt.skip_rbl_checks:
+            return False
         if subtest is not None:
             try:
                 subtest = re.compile(subtest)

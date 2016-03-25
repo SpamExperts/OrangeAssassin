@@ -23,6 +23,7 @@ class TestDNSEval(unittest.TestCase):
         self.global_data = {}
         self.mock_ctxt = MagicMock()
         self.mock_ctxt.dns.reverse_ip = pad.dns_interface.DNSInterface().reverse_ip
+        self.mock_ctxt.skip_rbl_checks = False
         self.mock_msg = MagicMock()
         self.mock_msg.sender_address = "sender@example.com"
         self.mock_msg.get_untrusted_ips.return_value = self.ips
