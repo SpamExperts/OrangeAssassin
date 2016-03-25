@@ -1,6 +1,7 @@
 """ DNS wrapper that takes the user options into consideration
 when performing queries"""
 
+import random
 import struct
 import logging
 import datetime
@@ -13,17 +14,39 @@ import dns.reversename
 class DNSInterface(object):
     """Interface for various dns related actions"""
 
+    test_qnames = [
+        "adelphia.net",
+        "akamai.com",
+        "apache.org",
+        "cingular.com",
+        "colorado.edu",
+        "comcast.net",
+        "doubleclick.com",
+        "ebay.com",
+        "gmx.net",
+        "google.com",
+        "intel.com",
+        "kernel.org",
+        "linux.org",
+        "mit.edu",
+        "motorola.com",
+        "msn.com",
+        "sourceforge.net",
+        "sun.com",
+        "w3.org",
+        "yahoo.com",
+    ]
+
     def __init__(self):
         self.log = logging.getLogger("pad-logger")
         self._resolver = dns.resolver.Resolver()
         self.query_restrictions = {}
-        self.test_qnames = []
-        self.retest = datetime.datetime.now()
+        self.next_test = datetime.datetime.now()
         self._test_interval = None
-        self.available = True
         self.test = False
         self._resolver.edns = 0
         self._resolver.rotate = False
+        self._available = True
 
     @property
     def port(self):
@@ -70,7 +93,7 @@ class DNSInterface(object):
         elif value.endswith("w"):
             self._test_interval = datetime.timedelta(weeks=int(value[:-1]))
         else:
-            self._test_interval = relativedelta(seconds=int(value))
+            self._test_interval = datetime.timedelta(seconds=int(value))
 
     @property
     def nameservers(self):
@@ -82,17 +105,27 @@ class DNSInterface(object):
         "set the nameservers for the resolver"
         self._resolver.nameservers = nameservers
 
-    def _is_available(self):
+    @property
+    def available(self):
         if self.test and self.next_test <= datetime.datetime.now():
-            for qname in self.test_qnames:
+            for qname in random.sample(set(self.test_qnames), 3):
                 if self._query(qname, "A"):
-                    self.available = True
+                    self._available = True
                     break
             else:
                 self.available = False
             self.next_test = datetime.datetime.now() + self.test_interval
 
-        return self.available
+        return self._available
+
+    @available.setter
+    def available(self, value):
+        self._available = value == "yes"
+        if value.startswith("test"):
+            self.test = True
+            if ":" in value:
+                test_servers = value.split(":")[1].split()
+                self.test_qnames = test_servers
 
     def is_query_restricted(self, qname):
         if not self.query_restrictions:
@@ -113,16 +146,13 @@ class DNSInterface(object):
         :param qtype: The DNS query type.
         :return: The result of the DNS query.
         """
-        # XXX This needs to take into account various the
-        # XXX network options. #40.
-        # XXX We should likely cache responses here as
-        # XXX well.
 
         if self.is_query_restricted(qname):
             self.log.debug("Querying %s is restricted", qname)
             return []
 
-        if not self._is_available():
+        if not self.available:
+            self.log.debug("DNS querying is not available")
             return []
 
         self.log.debug("Querying %s for %s record", qname, qtype)

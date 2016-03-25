@@ -293,7 +293,7 @@ class GlobalContext(_Context):
                           cport)
             self.dns.namerservers = nameservers
             self.dns.port = int(cport)
-        del self.conf["dns_server"]
+        self.dns.available = self.conf['dns_available']
 
     def _add_networks(self):
         for network in self.conf['trusted_networks']:
