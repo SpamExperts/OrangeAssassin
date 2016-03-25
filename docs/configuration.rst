@@ -177,7 +177,7 @@ DNS
     most 10 seconds to get a valid response from one of the DNS server.
 **default_dns_timeout** 2.0 (type `float`)
     Set the timeout for a DNS lookup from a single nameserver.
-**dns_available** yes|no|test[:domain1 domain domain] ( type `str` )
+**dns_available** yes ( type `str` )
     Configure whether DNS resolving is available or not. If you specify it as
     yes or no then no tests will be performed. Example::
         
@@ -191,8 +191,51 @@ DNS
     The test will be performed again according to the 
     :ref: `dns_test_interval option <dns_test_interval>` Example::
 
-        dns_available test
         dns_available test:domain1 domain2 domain3 domain4
+
+    If no domains are specified with the test option then a default list will
+    be used Example::
+        
+        dns_available test
+
+**dns_test_interval** 600s ( type `str` )
+    If you set the :ref:`dns_available option <dns_available>` to `test` then
+    by setting, the actual test will be performed no sooner that the interval
+    you set here. You can set just a number or a number with a suffix to
+    determine the the time unit (s, m, h, d, w) Example::
+    
+        dns_test_interval 600
+        dns_test_interval 600s
+        dns_test_interval 10m 
+
+**dns_query_restriction** "" ( type `string` )
+    Configure restrictions for querying the dns. Almost all dns queries are
+    subject to the dns_query_restriction. Before performing a query the domain
+    is tested against these restrictions and when a match occurs the the query
+    is performed according to the allow/deny setting for that match. If no
+    match is found then the query is allowed by default.
+    
+    when testing a domain it's labels are stripped succesively to check if a
+    parent matches. 
+        
+    All of the following would be denied example.com, 1.example.com
+    1.2.example.com ::
+
+        dns_query_restriction deny example.com
+
+    This way 1.example.com 2.1.example.com would be denied
+    but example.com would be allowed ::
+
+        dns_query_restriction deny 1.example.com
+
+    You can deny a wider group of domains and only allow one subgroup like this::
+
+        dns_query_restriction deny example.com
+        dns_query_restriction allow 1.example.com
+
+    In this case example.com and all of it's subdomsins would be denied except
+    1.example.com and all of it's subdomains which would be allowed
+
 
 Tags
 ====
