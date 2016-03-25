@@ -17,6 +17,7 @@ import pad.errors
 import pad.message
 import pad.rules.parser
 
+from future.utils import PY3
 
 class MessageList(argparse.FileType):
     def __call__(self, string):
@@ -27,6 +28,26 @@ class MessageList(argparse.FileType):
                 yield msgf
         else:
             yield super(MessageList, self).__call__(string)
+
+
+def _is_binary_reader(stream, default=False):
+    try:
+        return isinstance(stream.read(0), bytes)
+    except Exception:
+        return default
+
+
+def get_binary_stdin():
+    # sys.stdin might or might not be binary in some extra cases.  By
+    # default it's obviously non binary which is the core of the
+    # problem but the docs recommend changing it to binary for such
+    # cases so we need to deal with it.
+    is_binary = _is_binary_reader(sys.stdin, False)
+    if is_binary:
+        return sys.stdin
+    buf = getattr(sys.stdin, 'buffer', None)
+    if buf is not None and _is_binary_reader(buf, True):
+        return buf
 
 
 def parse_arguments(args):
@@ -67,7 +88,7 @@ def parse_arguments(args):
     parser.add_argument("messages", type=MessageList(), nargs="*",
                         metavar="path", help="Paths to messages or "
                                              "directories containing messages",
-                        default=[[sys.stdin]])
+                        default=[[get_binary_stdin()]])
 
     return parser.parse_args(args)
 
@@ -98,6 +119,8 @@ def main():
     for message_list in options.messages:
         for msgf in message_list:
             raw_msg = msgf.read()
+            if type(raw_msg) is bytes and PY3:
+                raw_msg = raw_msg.decode("utf-8", "ignore")
             msgf.close()
             msg = pad.message.Message(ruleset.ctxt, raw_msg)
 
