@@ -1,10 +1,10 @@
 """Internal representation of email messages."""
 
 from builtins import set
+from builtins import str
 from builtins import list
 from builtins import dict
 from builtins import object
-from builtins import str
 
 import re
 import email
@@ -17,6 +17,8 @@ import email.header
 import email.mime.base
 import email.mime.text
 import email.mime.multipart
+
+from future.utils import PY3
 
 import pad
 import pad.context
@@ -184,6 +186,7 @@ class Message(pad.context.MessageContext):
             decoded_header = email.header.decode_header(header)
         except (ValueError, email.header.HeaderParseError):
             return
+
         for value, encoding in decoded_header:
             if encoding:
                 try:
@@ -191,8 +194,11 @@ class Message(pad.context.MessageContext):
                 except (LookupError, UnicodeError, AssertionError):
                     continue
             else:
-                parts.append(value)
-        return "".join(map(str, parts))
+                if PY3:
+                    parts.append(value)
+                else:
+                    parts.append(value.decode("utf-8", "ignore"))
+        return "".join(parts)
 
     def get_raw_header(self, header_name):
         """Get a list of raw headers with this name."""
