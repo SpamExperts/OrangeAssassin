@@ -177,11 +177,28 @@ DNS
     most 10 seconds to get a valid response from one of the DNS server.
 **default_dns_timeout** 2.0 (type `float`)
     Set the timeout for a DNS lookup from a single nameserver.
+**dns_available** yes|no|test[:domain1 domain domain] ( type `str` )
+    Configure whether DNS resolving is available or not. If you specify it as
+    yes or no then no tests will be performed. Example::
+        
+        dns_available yes
+        dns_available no
+    
+    If you want to determine the availability dynamically you can use the value
+    `test` or `test: domain1 domain2 ... domainN`. In that case a query will be
+    performed for three of the domain names given chosen at random. If any of
+    them gives a response then dns will be considered available.
+    The test will be performed again according to the 
+    :ref: `dns_test_interval option <dns_test_interval>` Example::
+
+        dns_available test
+        dns_available test:domain1 domain2 domain3 domain4
 
 Tags
 ====
 
 .. _received-headers-tags:
+
 Template tags
 -------------
 The following tags can be used as placeholders in certain options.
