@@ -165,7 +165,7 @@ class PADConf(Conf):
         "default_dns_lifetime": ("float", 10.0),
         "default_dns_timeout": ("float", 2.0),
         "allow_user_rules": ("bool", False),
-        "skip_rbl_checks": ("int", 0),
+        "skip_rbl_checks": ("bool", 0),
         "trusted_networks": ("append_split", []),
         "clear_trusted_networks": ("clear", ["trusted_networks"]),
         "internal_networks": ("append_split", []),
