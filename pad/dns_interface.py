@@ -107,8 +107,11 @@ class DNSInterface(object):
 
     @property
     def available(self):
+        """Checks whether the dns is available. Depending on how it is
+        configured a test may be performed to determine the result"""
         if self.test and self.next_test <= datetime.datetime.now():
-            for qname in random.sample(set(self.test_qnames), 3):
+            for qname in random.sample(
+                    set(self.test_qnames), min(3, len(self.test_qnames))):
                 if self._query(qname, "A"):
                     self._available = True
                     break
@@ -128,6 +131,15 @@ class DNSInterface(object):
                 self.test_qnames = test_servers
 
     def is_query_restricted(self, qname):
+        """Checks whether the qname is restricted by the dns_query_restriction
+        option if the qname or one of it's parent domains matches an entry in
+        the restriction that is returned, by default qnames are not
+        restricted
+
+        :param qname: The domain.
+        :return: True if it's restricted, False if it's allowed or not found.
+        """
+
         if not self.query_restrictions:
             return False
 
