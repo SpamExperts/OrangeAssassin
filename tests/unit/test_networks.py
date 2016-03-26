@@ -29,12 +29,12 @@ class TrustedNetworkTest(unittest.TestCase):
         self.assertTrue(ip in self.network)
 
     def test_new_excluded(self):
-        self.network.add(ipaddress.ip_network("192.168.0.0/24"), False)
+        self.network.add(ipaddress.ip_network(str("192.168.0.0/24")), False)
         ip = ipaddress.ip_address(str("192.168.0.1"))
         self.assertFalse(ip in self.network)
 
     def test_new_missing(self):
-        self.network.add(ipaddress.ip_network("192.168.0.0/24"), False)
+        self.network.add(ipaddress.ip_network(str("192.168.0.0/24")), False)
         ip = ipaddress.ip_address(str("192.168.1.1"))
         self.assertFalse(ip in self.network)
 
@@ -60,12 +60,12 @@ class InternalNetworkTest(unittest.TestCase):
         self.assertTrue(ip in self.network)
 
     def test_new_excluded(self):
-        self.network.add(ipaddress.ip_network("192.168.0.0/24"), False)
+        self.network.add(ipaddress.ip_network(str("192.168.0.0/24")), False)
         ip = ipaddress.ip_address(str("192.168.0.1"))
         self.assertFalse(ip in self.network)
 
     def test_new_missing(self):
-        self.network.add(ipaddress.ip_network("192.168.0.0/24"), False)
+        self.network.add(ipaddress.ip_network(str("192.168.0.0/24")), False)
         ip = ipaddress.ip_address(str("192.168.1.1"))
         self.assertFalse(ip in self.network)
 
@@ -88,12 +88,12 @@ class MSANetworkTest(unittest.TestCase):
         self.assertTrue(ip in self.network)
 
     def test_new_excluded(self):
-        self.network.add(ipaddress.ip_network("192.168.0.0/24"), False)
+        self.network.add(ipaddress.ip_network(str("192.168.0.0/24")), False)
         ip = ipaddress.ip_address(str("192.168.0.1"))
         self.assertFalse(ip in self.network)
 
     def test_new_missing(self):
-        self.network.add(ipaddress.ip_network("192.168.0.0/24"), False)
+        self.network.add(ipaddress.ip_network(str("192.168.0.0/24")), False)
         ip = ipaddress.ip_address(str("192.168.1.1"))
         self.assertFalse(ip in self.network)
 
