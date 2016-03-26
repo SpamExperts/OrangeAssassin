@@ -19,35 +19,34 @@ _NETWORK_RE = re.compile(r"""
 
 
 class NetworkListBase(object):
-    always_accepted = ()
+    _always_accepted = ()
     configured = False
-    _networks = []
 
     def __init__(self):
-        self._networks.extend(self.always_accepted)
+        self._networks = []
+        self._networks.extend(self._always_accepted)
 
-    def add(self, network, excluded):
-        self._networks.append((network, excluded))
+    def add(self, network, accepted):
+        self._networks.append((network, accepted))
 
     def __contains__(self, query):
-        for network, excluded in self._networks:
+        for network, accepted in self._networks:
             if query in network:
-                return excluded
-        else:
-            return False
+                return accepted
+        return False
 
 
 class TrustedNetworks(NetworkListBase):
     _always_accepted = (
-        ipaddress.ip_network(str("127.0.0.0/8")),
-        ipaddress.ip_network(str("::1")),
+        (ipaddress.ip_network(str("127.0.0.0/8")), True),
+        (ipaddress.ip_network(str("::1")), True),
     )
 
 
 class InternalNetworks(NetworkListBase):
     _always_accepted = (
-        ipaddress.ip_network(str("127.0.0.0/8")),
-        ipaddress.ip_network(str("::1")),
+        (ipaddress.ip_network(str("127.0.0.0/8")), True),
+        (ipaddress.ip_network(str("::1")), True),
     )
 
 
@@ -70,33 +69,32 @@ class NetworkList(object):
     def _format_network_str(self, network, mask):
         padding = ""
         if network.endswith("."):
-            padding = ".".join(["0"] * network.count("."))
+            padding = ".".join(["0"] * (4 - network.count(".")))
         if not mask:
             mask = network.count(".") * 8
         return str("%s%s/%s" % (network, padding, mask))
 
-    def extract_network(self, network_str):
-        exclude, network, mask = _NETWORK_RE.match(network_str).groups()
+    def _extract_network(self, network_str):
+        excluded, network, mask = _NETWORK_RE.match(network_str).groups()
         clean_value = self._format_network_str(network, mask)
         try:
             network = ipaddress.ip_network(clean_value)
         except ValueError:
-            return exclude, None
-        return exclude, network
+            return excluded, None
+        return excluded, network
 
     def add_trusted_network(self, network_str):
-        self.configured = True
-        exclude, network = self.extract_network(network_str)
+        excluded, network = self._extract_network(network_str)
         self.trusted.configured = True
-        self.trusted.add(network, exclude)
+        self.trusted.add(network, not excluded)
 
     def add_internal_network(self, network_str):
-        exclude, network = self.extract_network(network_str)
+        excluded, network = self._extract_network(network_str)
         self.internal.configured = True
-        self.trusted.add(network, exclude)
-        self.internal.add(network, exclude)
+        self.trusted.add(network, not excluded)
+        self.internal.add(network, not excluded)
 
     def add_msa_network(self, network_str):
-        exclude, network = self.extract_network(network_str)
+        excluded, network = self._extract_network(network_str)
         self.internal.configured = True
-        self.msa.add(network, exclude)
+        self.msa.add(network, not excluded)
