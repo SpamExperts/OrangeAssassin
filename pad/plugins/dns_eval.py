@@ -75,6 +75,7 @@ class DNSEval(pad.plugins.base.BasePlugin):
         """
         if self.ctxt.skip_rbl_checks:
             return False
+
         if subtest is not None:
             try:
                 subtest = re.compile(subtest)
@@ -107,6 +108,7 @@ class DNSEval(pad.plugins.base.BasePlugin):
         """
         if self.ctxt.skip_rbl_checks:
             return False
+
         if mask is not None:
             try:
                 mask = int(mask)

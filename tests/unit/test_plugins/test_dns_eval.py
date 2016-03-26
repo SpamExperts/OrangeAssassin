@@ -210,3 +210,34 @@ class TestDNSEval(unittest.TestCase):
         # accredit', 'example.net', '127.0.1.2','accreditor1'
         self.mock_ctxt.dns.query.assert_called_with(
             "1.0.0.127.example.com", 'A')
+
+
+    def test_check_rbl_skip_rbl_check(self):
+        """Test the check_rbl method with skip_rbl_checks True."""
+        self.mock_ctxt.skip_rbl_checks = True
+
+        self.plugin._check_rbl(
+            self.mock_msg, "example_ser" 
+        )
+
+        self.mock_ctxt.dns.query.assert_not_called()
+
+    def test_check_rbl_addr_skip_rbl_check(self):
+        """Test the check_rbl method with skip_rbl_checks True."""
+        self.mock_ctxt.skip_rbl_checks = True
+
+        self.plugin._check_rbl_addr(
+            ['test@example.com'], "example_ser" 
+        )
+
+        self.mock_ctxt.dns.query.assert_not_called()
+
+    def test_check_multi_rbl_skip_rbl_check(self):
+        """Test the check_rbl method with skip_rbl_checks True."""
+        self.mock_ctxt.skip_rbl_checks = True
+
+        self.plugin._check_multi_rbl(
+            self.mock_msg, "example_ser" 
+        )
+
+        self.mock_ctxt.dns.query.assert_not_called()
