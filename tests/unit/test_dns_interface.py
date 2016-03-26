@@ -31,33 +31,56 @@ class TestDNSInterface(unittest.TestCase):
 
     def test_test_interval_seconds(self):
         self.dns.test_interval="60s"
-        self.assertEqual(self.dns._test_interval,
+        self.assertEqual(self.dns.test_interval,
                          datetime.timedelta(seconds=60))
 
     def test_test_interval_seconds_implicit(self):
         self.dns.test_interval="60"
-        self.assertEqual(self.dns._test_interval,
+        self.assertEqual(self.dns.test_interval,
                          datetime.timedelta(seconds=60))
 
     def test_test_interval_minutes(self):
         self.dns.test_interval="60m"
-        self.assertEqual(self.dns._test_interval,
+        self.assertEqual(self.dns.test_interval,
                          datetime.timedelta(minutes=60))
 
     def test_test_interval_hours(self):
         self.dns.test_interval="60h"
-        self.assertEqual(self.dns._test_interval,
+        self.assertEqual(self.dns.test_interval,
                          datetime.timedelta(hours=60))
 
     def test_test_interval_days(self):
         self.dns.test_interval="60d"
-        self.assertEqual(self.dns._test_interval,
+        self.assertEqual(self.dns.test_interval,
                          datetime.timedelta(days=60))
 
     def test_test_interval_weeks(self):
         self.dns.test_interval="60w"
-        self.assertEqual(self.dns._test_interval,
+        self.assertEqual(self.dns.test_interval,
                          datetime.timedelta(weeks=60))
+
+    def test_dns_available_yes(self):
+        self.dns.available = "yes"
+        self.assertTrue(self.dns.available)
+
+    def test_dns_available_no(self):
+        self.dns.available = "no"
+        self.assertFalse(self.dns.available)
+
+    def test_dns_available_test(self):
+        patch("pad.dns_interface.DNSInterface._query").start()
+        self.dns.available = "test"
+        self.assertTrue(self.dns.available)
+
+    def test_dns_available_test_fail(self):
+        patch("pad.dns_interface.DNSInterface._query", return_value=[]).start()
+        self.dns.available = "test"
+        self.assertFalse(self.dns.available)
+
+    def test_dns_available_test_custom_dns(self):
+        patch("pad.dns_interface.DNSInterface._query", return_value=[]).start()
+        self.dns.available = "test: example.com 1.example.com 2.example.com"
+        self.assertFalse(self.dns.available)
 
     def test_is_query_restricted_empty(self):
         """Test a domain that when no restrictions apply"""

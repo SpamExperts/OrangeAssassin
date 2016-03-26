@@ -42,7 +42,7 @@ class DNSInterface(object):
         self._resolver = dns.resolver.Resolver()
         self.query_restrictions = {}
         self.next_test = datetime.datetime.now()
-        self._test_interval = None
+        self._test_interval = datetime.timedelta(seconds=600)
         self.test = False
         self._resolver.edns = 0
         self._resolver.rotate = False
@@ -116,7 +116,7 @@ class DNSInterface(object):
                     self._available = True
                     break
             else:
-                self.available = False
+                self._available = False
             self.next_test = datetime.datetime.now() + self.test_interval
 
         return self._available
@@ -124,6 +124,7 @@ class DNSInterface(object):
     @available.setter
     def available(self, value):
         self._available = value == "yes"
+        print("VALUE: ", value)
         if value.startswith("test"):
             self.test = True
             if ":" in value:
