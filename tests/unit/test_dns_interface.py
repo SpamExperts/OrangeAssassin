@@ -1,6 +1,7 @@
 """Tests for pad.dns_interface """
 
 import logging
+import datetime
 import unittest
 import ipaddress
 
@@ -28,19 +29,49 @@ class TestDNSInterface(unittest.TestCase):
         patch.stopall()
         super(TestDNSInterface, self).tearDown()
 
-    def testis_query_restricted_empty(self):
+    def test_test_interval_seconds(self):
+        self.dns.test_interval="60s"
+        self.assertEqual(self.dns._test_interval,
+                         datetime.timedelta(seconds=60))
+
+    def test_test_interval_seconds_implicit(self):
+        self.dns.test_interval="60"
+        self.assertEqual(self.dns._test_interval,
+                         datetime.timedelta(seconds=60))
+
+    def test_test_interval_minutes(self):
+        self.dns.test_interval="60m"
+        self.assertEqual(self.dns._test_interval,
+                         datetime.timedelta(minutes=60))
+
+    def test_test_interval_hours(self):
+        self.dns.test_interval="60h"
+        self.assertEqual(self.dns._test_interval,
+                         datetime.timedelta(hours=60))
+
+    def test_test_interval_days(self):
+        self.dns.test_interval="60d"
+        self.assertEqual(self.dns._test_interval,
+                         datetime.timedelta(days=60))
+
+    def test_test_interval_weeks(self):
+        self.dns.test_interval="60w"
+        self.assertEqual(self.dns._test_interval,
+                         datetime.timedelta(weeks=60))
+
+    def test_is_query_restricted_empty(self):
         """Test a domain that when no restrictions apply"""
         self.assertFalse(
             self.dns.is_query_restricted("1.2.3.4.5.example.com"))
 
-    def testis_query_restricted_true(self):
+    def test_is_query_restricted_true(self):
         """Test an allowed domain."""
         self.dns.query_restrictions = {"1.2.3.4.5.example.com": True}
 
         self.assertTrue(
             self.dns.is_query_restricted("1.2.3.4.5.example.com"))
 
-    def testis_query_restricted_false(self):
+    def test_is_query_restricted_false(self):
         """Test a restricted domain"""
         self.dns.query_restrictions = {"1.2.3.4.5.example.com": False}
         self.assertFalse(
@@ -58,14 +89,14 @@ class TestDNSInterface(unittest.TestCase):
         self.assertFalse(
             self.dns.is_query_restricted("1.2.3.4.5.example.com"))
 
-    def testis_query_restricted_false_with_parent_true(self):
+    def test_is_query_restricted_false_with_parent_true(self):
         """Test an allowed domain with a restricted parent."""
         self.dns.query_restrictions = {"2.3.4.5.example.com": True,
                                        "4.5.example.com": False}
         self.assertTrue(
             self.dns.is_query_restricted("1.2.3.4.5.example.com"))
 
-    def testis_query_restricted_true_with_parent_false(self):
+    def test_is_query_restricted_true_with_parent_false(self):
         """Test a restricted domain with an allowed parent."""
         self.dns.query_restrictions = {"2.3.4.5.example.com": False,
                                        "4.5.example.com": True}
