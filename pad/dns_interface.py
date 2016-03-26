@@ -124,7 +124,6 @@ class DNSInterface(object):
     @available.setter
     def available(self, value):
         self._available = value == "yes"
-        print("VALUE: ", value)
         if value.startswith("test"):
             self.test = True
             if ":" in value:
