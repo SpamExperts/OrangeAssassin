@@ -43,11 +43,8 @@ class TrustedNetworks(NetworkListBase):
     )
 
 
-class InternalNetworks(NetworkListBase):
-    _always_accepted = (
-        (ipaddress.ip_network(str("127.0.0.0/8")), True),
-        (ipaddress.ip_network(str("::1")), True),
-    )
+class InternalNetworks(TrustedNetworks):
+    pass
 
 
 class MSANetworks(NetworkListBase):
