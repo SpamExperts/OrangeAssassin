@@ -66,9 +66,15 @@ class AutoWhiteListPlugin(pad.plugins.base.BasePlugin):
     }
 
     def _get_origin_ip(self, msg):
-        for ip in msg.get_header_ips():
-            if not ip.is_private:
-                return ip
+        relays = []
+        relays.extend(msg.trusted_relays)
+        relays.extend(msg.untrusted_relays)
+        relays.reverse()
+        for relay in relays:
+            if "ip" in relay:
+                ip = ipaddress.ip_address(str(relay['ip'])) 
+                if not ip.is_private:
+                    return ip
         return None
 
     def _get_signed_by(self, msg):
