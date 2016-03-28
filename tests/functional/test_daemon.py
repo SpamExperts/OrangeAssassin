@@ -462,7 +462,7 @@ class TestUserConfigDaemon(TestDaemon):
     specific to the User Preferences.
     """
 
-    username = "test_user"
+    username = getpass.getuser()
     user_pref = USER_CONFIG
     user_dir = os.path.join("/home", username, ".spamassassin")
     user_msg_len = len(USER_TEST_MSG) + 2
