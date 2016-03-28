@@ -1,4 +1,6 @@
 """Test the daemon protocol."""
+from __future__ import print_function
+
 import os
 import sys
 import time
@@ -470,8 +472,8 @@ class TestUserConfigDaemon(TestDaemon):
         super(TestUserConfigDaemon, cls).setUpClass()
         try:
             os.makedirs(cls.user_dir)
-        except OSError:
-            pass
+        except OSError as e:
+            print(e, file=sys.stderr)
         with open(os.path.join(cls.user_dir, "user_prefs"), "w") as userf:
             userf.write(cls.user_pref)
 
