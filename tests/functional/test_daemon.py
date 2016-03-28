@@ -514,6 +514,7 @@ def suite():
     """Gather all the tests from this package in a test suite."""
     test_suite = unittest.TestSuite()
     test_suite.addTest(unittest.makeSuite(TestDaemon, "test"))
+    test_suite.addTest(unittest.makeSuite(TestUserConfigDaemon, "test"))
     return test_suite
 
 
