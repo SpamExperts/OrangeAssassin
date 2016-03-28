@@ -511,6 +511,55 @@ class TestUserConfigDaemon(TestDaemon):
                     u'', u'CUSTOM_RULE']
         self.assertEqual(result, expected)
 
+    def test_user_msg_check_no_match(self):
+        """Check if message is spam or not, and return score"""
+        process_row = "CHECK"
+        content_row = "Content-length: %s\r\n" % self.user_msg_len
+        command = ("%s SPAMC/1.2\r\n%s\r\n%s\r\n" %
+                   (process_row, content_row,
+                    USER_TEST_MSG.replace("abcdef123456", "abcdef555555")))
+        result = self.send_to_proc(command).split("\r\n")
+        expected = [u'0 EX_OK', u'Spam: False ; 0 / 5.0',
+                    u'Content-length: 0', u'', u'']
+        self.assertEqual(result, expected)
+
+    def test_user_msg_report_spam(self):
+        """Check if message is spam or not, and return score plus report"""
+        process_row = "REPORT"
+        content_row = "Content-length: %s\r\n" % self.user_msg_len
+        command = ("%s SPAMC/1.2\r\n%s\r\n%s\r\n" %
+                   (process_row, content_row, USER_TEST_MSG))
+        result = self.send_to_proc(command).split("\r\n")
+        expected = [u'0 EX_OK',
+                    u'Spam: True ; 5.0 / 5.0',
+                    u'Content-length: 28',
+                    u'',
+                    u'\n(no report template found)\n']
+        self.assertEqual(result, expected)
+
+    def test_user_msg_reportifspam_spam(self):
+        """Check if message is spam or not, and return score plus report"""
+        process_row = "REPORT_IFSPAM"
+        content_row = "Content-length: %s\r\n" % self.user_msg_len
+        command = ("%s SPAMC/1.2\r\n%s\r\n%s\r\n" %
+                   (process_row, content_row, USER_TEST_MSG))
+        result = self.send_to_proc(command).split("\r\n")
+        expected = [u'0 EX_OK',
+                    u'Spam: True ; 5.0 / 5.0',
+                    u'Content-length: 28',
+                    u'',
+                    u'\n(no report template found)\n']
+        self.assertEqual(result, expected)
+
+    def test_user_msg_skip(self):
+        """Check if message is spam or not, and skip it"""
+        process_row = "SKIP"
+        content_row = "Content-length: %s\r\n" % self.user_msg_len
+        command = ("%s SPAMC/1.2\r\n%s\r\n%s\r\n" %
+                   (process_row, content_row, USER_TEST_MSG))
+        with self.assertRaises(AssertionError):
+            self.send_to_proc(command).split("\r\n")
+
 
 def suite():
     """Gather all the tests from this package in a test suite."""
