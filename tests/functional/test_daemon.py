@@ -5,6 +5,7 @@ import time
 import email
 import socket
 import shutil
+import getpass
 import unittest
 import platform
 import subprocess
@@ -12,6 +13,7 @@ import subprocess
 PRE_CONFIG = r"""
 # Plugins and settings here
 loadplugin Mail::SpamAssassin::Plugin::Check
+allow_user_rules True
 """
 
 CONFIG = r"""
@@ -68,6 +70,19 @@ src="cid:40808429-84C6-4DB6-982E-451F05730FE0@ubuntu"><br><br>
 Testing rule one-two-three
 <br></body></html>
 --Apple-Mail=_9311E301-2E56-423D-B730-30A522F3844C--
+"""
+
+USER_CONFIG = r"""
+body CUSTOM_RULE /abcdef123456/
+score CUSTOM_RULE 5
+"""
+
+USER_TEST_MSG = """Subject: Email Flow Test
+From: Geo <test@example.com>
+To: jimi@example.com
+
+This is a abcdef123456 test message.
+
 """
 
 
@@ -435,6 +450,64 @@ class TestDaemon(unittest.TestCase):
         result = self.send_to_proc(command)
         expected = u'0 EX_OK\r\nDidSet: local\r\nDidRemove: remote\r\n'
         self.assertEqual(expected, result)
+
+
+class TestUserConfigDaemon(TestDaemon):
+    """This runs the ALL the tests from TestDaemon but
+    appends always send the User: with each request.
+
+    Apart from the tests from TestDaemon this also has some tests
+    specific to the User Preferences.
+    """
+
+    username = "test_user"
+    user_pref = USER_CONFIG
+    user_dir = os.path.join("/home", username, ".spamassassin")
+    user_msg_len = len(USER_TEST_MSG) + 2
+
+    @classmethod
+    def setUpClass(cls):
+        super(TestUserConfigDaemon, cls).setUpClass()
+        try:
+            os.makedirs(cls.user_dir)
+        except OSError:
+            pass
+        with open(os.path.join(cls.user_dir, "user_prefs"), "w") as userf:
+            userf.write(cls.user_pref)
+
+    @classmethod
+    def tearDownClass(cls):
+        super(TestUserConfigDaemon, cls).tearDownClass()
+        try:
+            shutil.rmtree(cls.user_dir)
+        except OSError:
+            pass
+
+    def send_to_proc(self, text):
+        """Like the super method but also add the username to
+        the request.
+        """
+        try:
+            command, body = text.split("\r\n\r\n", 1)
+            text = "%s\r\nUser: %s\r\n\r\n%s" % (command, self.username, body)
+        except ValueError:
+            text = "%s\r\nUser: %s\r\n" % (text.strip(), self.username)
+
+        return super(TestUserConfigDaemon, self).send_to_proc(text)
+
+    def test_user_msg_symbols_spam(self):
+        """Check if message is spam or not, and return score plus list of
+        symbols hit"""
+        process_row = "SYMBOLS"
+        content_row = "Content-length: %s\r\n" % self.user_msg_len
+        command = ("%s SPAMC/1.2\r\n%s\r\n%s\r\n" %
+                   (process_row, content_row, USER_TEST_MSG))
+        result = self.send_to_proc(command).split("\r\n")
+        expected = [u'0 EX_OK',
+                    u'Spam: True ; 5.0 / 5.0',
+                    u'Content-length: 11',
+                    u'', u'CUSTOM_RULE']
+        self.assertEqual(result, expected)
 
 
 def suite():
