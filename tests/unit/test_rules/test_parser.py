@@ -253,6 +253,7 @@ class TestParsePADLine(unittest.TestCase):
             "pad.plugins.dump_text.DumpText", None)
 
     def test_parse_line_include(self):
+        patch("pad.rules.parser.os.path.isfile", return_value=True).start()
         rules = [b"body TEST_RULE /test/",
                  b"include testf_2", ]
         expected = {"TEST_RULE": {"type": "body",
@@ -268,6 +269,7 @@ class TestParsePADLine(unittest.TestCase):
             self.check_parse(rules, expected)
 
     def test_parse_line_include_max_recursion(self):
+        patch("pad.rules.parser.os.path.isfile", return_value=True).start()
         rules = Mock(**{"__iter__": Mock(return_value=iter([b"include testf_1"])),
                         "name": "testf_1"})
         expected = {}
