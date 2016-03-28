@@ -155,6 +155,109 @@ Reporting
 **report_contact** None (type `str`)
     Set the contact address that is exposed in the `_CONTACTADDRESS_` tag.
 
+
+.. _network-options:
+
+Network Options
+---------------
+
+    Syntax::
+        trusted_networks [!]IP_ADDRESS[/MASKLEN] [...]
+        internal_networks [!]IP_ADDRESS[/MASKLEN] [...]
+        msa_networks [!]IP_ADDRESS[/MASKLEN] [...]
+
+    `!`
+        excludes the network from the list
+    `MASKLEN`
+        the CIDR-style netmask length specified in bits. If it's not specified
+        it will be deduced from the IP_ADDRESS
+    `IP_ADDRESS`
+        an IPv4 or IPv6 address optionally enclosed in square brackets. If no
+        masklen is specified then one will be deduced from the ip like this: If
+        the ip has less than 4 octets and ends with a trailing dot then the
+        masklen is `num_octets * 8` if there is no trailing dot then the mask
+        will be `32` for IPv4 addresses and `128` for IPv6 addresses
+
+**trusted_networks** [] (type `append split`)
+
+    The option can be specified multiple times, each one adding to the list of
+    of networks to be searched.
+
+    The networks are searched sequentially with the first match stopping the
+    search, so you should write more specific subnets first.
+
+        Note::
+        127.0.0.0/8 and ::1 are always included in trusted_networks and cannot
+        be overriden
+
+    Trusted networks in our case means that a relay host from one of these
+    networks is considered out of the control of spammers, open relays, or open
+    proxies. A trusted network could relay spam but spam will not originate
+    from it and it will not forge header data. So we will not do dns blacklist
+    checks for any host in these networks
+    
+    This setting should define the networks that you trust but are not internal
+    relays or MXes for your domains
+
+    Examples::
+        # Trust all in 192.168.*.*
+        trusted_networks 192.168.
+        # or
+        trusted_networks 192.168.0.0/16
+
+        # Trust all in 192.168.*.* except those in 192.168.1.*
+        trusted_networks !192.168.1. 192.168. 
+        # or
+        trusted_networks !192.168.1.0/24 192.168.0.0/16
+        # or
+        trusted_networks !192.168.1.0/24
+        trusted_networks !192.168.0.0/16
+
+**internal_networks** [] (type `append split`)
+    When you define an internal network then all hosts in the network are
+    considered to be MXes for your domains or internal relays.
+
+    Internal networks are a subset of trusted networks so they will be added as
+    a trusted network too 
+
+    If trusted networks is set and internal_networks is not then trusted
+    networks will also be considered internal networks. 
+
+        Note::
+        127.0.0.0/8 and ::1 are always included in trusted_networks and cannot
+        be overriden
+
+**internal_networks** [] (type `append split`)
+    MSA hosts, also known as MX relays are hosts that accept mail from your own
+    users and authenticate them properly.
+
+    These relays will never accept mail from hosts taht aren't authenticated in
+    some way. If an MSA relays is found then all relays after it will get the
+    same internal/trusted classification as that one
+
+    When using msa_networks to identify an MSA host it is recommended to treat
+    it as both trusted and internal. When an MSA is also acting as an MX or an
+    intermediate relay you must always treat it as both trusted and internal
+    and make sure that the MSA includes visible auth tokens in it's Received
+    header 
+
+        Warning::
+        You shouldn't include an msa that is also an MX or an intermediate
+        relay for an MX in this setting because it will result in uknown
+        external relays being trusted
+
+**clear_trusted_networks** N/A (type `clear`)
+    Empties the list of trusted networks. 127.0.0.0/8 and ::1 will still exist
+    and they cannot be removed
+
+**clear_internal_networks** N/A (type `clear`)
+    Empties the list of internal networks. 127.0.0.0/8 and ::1 will still exist
+    and they cannot be removed
+
+**clear_msa_networks** N/A (type `clear`)
+    Empties the list of msa networks
+
+
 .. _dns-options:
 
 DNS

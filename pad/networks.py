@@ -29,6 +29,10 @@ class NetworkListBase(object):
     def add(self, network, accepted):
         self._networks.append((network, accepted))
 
+    def clear(self):
+        self._networks = []
+        self._networks.extend(self._always_accepted)
+
     def __contains__(self, query):
         for network, accepted in self._networks:
             if query in network:
@@ -84,9 +88,13 @@ class NetworkList(object):
         excluded, network = self._extract_network(network_str)
         self.trusted.configured = True
         self.trusted.add(network, not excluded)
+        if not self.internal.configured:
+            self.internal.add(network, not excluded)
 
     def add_internal_network(self, network_str):
         excluded, network = self._extract_network(network_str)
+        if not self.internal.configured and self.internal:
+            self.internal.clear()
         self.internal.configured = True
         self.trusted.add(network, not excluded)
         self.internal.add(network, not excluded)

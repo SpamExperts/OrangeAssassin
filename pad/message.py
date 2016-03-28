@@ -315,6 +315,7 @@ class Message(pad.context.MessageContext):
         found_msa = False
 
         for position, relay in enumerate(relays):
+            relay['msa'] = 0
             ip = ipaddress.ip_address(relay['ip'])
             in_internal = ip in self.ctxt.networks.internal
             in_trusted = ip in self.ctxt.networks.trusted
@@ -330,12 +331,14 @@ class Message(pad.context.MessageContext):
                         is_internal = False
 
                     if has_auth and (is_internal or is_trusted) and in_msa:
+                        relay['msa'] = 1
                         found_msa = True
 
                 elif not ip.is_private and not has_auth:
                         is_trusted = False
                         is_internal = False
 
+            relay['intl'] = 1 if is_internal else 0
             if is_internal:
                 self.internal_relays.append(relay)
                 self.last_internal_relay_index = position
