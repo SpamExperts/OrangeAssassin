@@ -649,6 +649,7 @@ class TestDaemonReload(TestDaemonBase):
             userf.write(USER_CONFIG_GTUBE)
         for padd_proc in self.padd_procs:
             padd_proc.send_signal(signal.SIGUSR1)
+        time.sleep(1)
 
         # Check the daemon again, the score should change.
         process_row = "CHECK"
