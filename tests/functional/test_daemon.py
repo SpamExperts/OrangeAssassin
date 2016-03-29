@@ -79,6 +79,10 @@ body CUSTOM_RULE /abcdef123456/
 score CUSTOM_RULE 5
 """
 
+USER_CONFIG_GTUBE = r"""
+score GTUBE     7
+"""
+
 USER_TEST_MSG = """Subject: Email Flow Test
 From: Geo <test@example.com>
 To: jimi@example.com
@@ -559,6 +563,21 @@ class TestUserConfigDaemon(TestDaemon):
                    (process_row, content_row, USER_TEST_MSG))
         with self.assertRaises(AssertionError):
             self.send_to_proc(command).split("\r\n")
+
+    @unittest.SkipTest
+    def test_user_msg_spam_override(self):
+        """Just check if the passed message is spam and verify that
+        score from user preferences overrides the one from config"""
+        with open(os.path.join(self.user_dir, "user_prefs"), "a") as userf:
+            userf.write(USER_CONFIG_GTUBE)
+        process_row = "CHECK"
+        content_row = "Content-length: %s\r\n" % self.content_len
+        command = ("%s SPAMC/1.2\r\n%s\r\n%s\r\n" %
+                   (process_row, content_row, GTUBE_MSG))
+        result = self.send_to_proc(command).split("\r\n")
+        expected = [u'0 EX_OK', u'Spam: True ; 7.0 / 5.0',
+                    u'Content-length: 0', u'', u'']
+        self.assertEqual(result, expected)
 
 
 def suite():
