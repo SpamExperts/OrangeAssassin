@@ -1,5 +1,4 @@
 # -*- coding: UTF-8 -*-
-
 """Test received header parser"""
 
 from __future__ import absolute_import, print_function
@@ -80,9 +79,27 @@ MSG6 = """Received: from mx6-05.smtp.antispamcloud.com
  ld8si17897891wjc.77.2016.03.07.00.56.45 for <backendteam@gapps.spamexperts.com>
  (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128)"""
 
+TEST_IDENT = """Received: from [2a01:4f8:161:124b::3026] (ident=mail)
+        by parser.example.com with esmtpa (Exim 4.85)
+        (envelope-from <sender@parser.example.com>)
+        id 1akrrE-2016TL-NN
+        for teo@gapps.spamexperts.com; Tue, 29 Mar 2016 14:30:49 +0300"""
+
+TEST_IP4_MAPPED = """Received: from relay.example.com ([IPv6:::ffff:217.70.183.195])
+ by mfilter.example.net (mfilter.example.net [::ffff:10.0.15.180])
+ (amavisd-new, port 10024)
+ with ESMTP id hWQzvlEtNu8a for <teo@example.com>;
+ Mon, 29 Mar 2016 17:33:40 +0100 (CET)"""
+
+TEST_IDNA = """Received: from %s
+ (%s [236.44.62.230])
+ (authenticated bits=0)
+ by %s (8.12.10/8.12.9) with ESMTP id
+ o6PCS1im002238
+ for <user@example.com>; Mon, 01 Feb 2016 03:45:37 -0600 (EST)"""
 
 class TestReceivedParser(tests.util.TestBase):
-
+    """Test the parser for received headers"""
     def setUp(self):
         tests.util.TestBase.setUp(self)
 
@@ -119,53 +136,43 @@ class TestReceivedParser(tests.util.TestBase):
         self._check_parser(msg, expected)
 
     def test_header_msg_ignore_by(self):
-        """Ignore headers which starts with 'by'
-        """
+        """Ignore headers which starts with 'by'"""
         self._check_for_skip(MSG_IGNORE)
 
     def test_header_msg_ignore_with_local(self):
-        """Ignore headers received 'with local'
-        """
+        """Ignore headers received 'with local'"""
         self._check_for_skip(MSG_IGNORE2)
 
     def test_header_msg_ignore_with_local2(self):
-        """Ignore headers received 'with local'
-        """
+        """Ignore headers received 'with local'"""
         self._check_for_skip(MSG_IGNORE3)
 
     def test_header_msg_ignore_fetchmail(self):
-        """Ignore headers with fetchmail
-        """
+        """Ignore headers with fetchmail"""
         self._check_for_skip(MSG_IGNORE4)
 
     def test_header_msg_ignore_bsmtp(self):
-        """Ignore headers with BSMTP
-        """
+        """Ignore headers with BSMTP"""
         self._check_for_skip(MSG_IGNORE5)
 
     def test_header_msg_ignore_content_tech(self):
-        """Ignore headers with content technology
-        """
+        """Ignore headers with content technology"""
         self._check_for_skip(MSG_IGNORE6)
 
     def test_header_msg_ignore_localhost(self):
-        """Ignore headers from example@localhost
-        """
+        """Ignore headers from example@localhost"""
         self._check_for_skip(MSG_IGNORE7)
 
     def test_header_msg_ignore_AVG(self):
-        """Ignore headers with AVG SMTP
-        """
+        """Ignore headers with AVG SMTP"""
         self._check_for_skip(MSG_IGNORE8)
 
     def test_header_msg_ignore_qmail(self):
-        """Ignore headers qmail
-        """
+        """Ignore headers qmail"""
         self._check_for_skip(MSG_IGNORE9)
 
     def test_header_msg_ignore_aol(self):
-        """Ignore headers qmail
-        """
+        """Ignore headers qmail"""
         self._check_for_skip(MSG_IGNORE10)
 
     def test_header_MSG1(self):
@@ -173,14 +180,11 @@ class TestReceivedParser(tests.util.TestBase):
         ip = "217.70.183.195"
         by = "by.example.org"
         helo = "rdns.example.com"
-        ident = ""
         id = "1aVFVG-0000me-LC"
         envfrom = "envfrom@example.com"
         auth = ""
-        expected = {
-                "rdns": rdns, "ip": ip, "by": by,
-                "helo": helo, "ident": ident, "id": id, "envfrom": envfrom,
-                "auth": auth}
+        expected = {"rdns": rdns, "ip": ip, "by": by, "helo": helo,
+                    "ident": "", "id": id, "envfrom": envfrom, "auth": auth}
         self._check_parser(MSG1, expected)
 
     def test_header_MSG2(self):
@@ -188,29 +192,19 @@ class TestReceivedParser(tests.util.TestBase):
         ip = "127.0.0.1"
         by = "by.example.org"
         helo = "localhost"
-        ident = ""
         id = "48963245BF8"
-        envfrom = ""
-        auth = ""
-        expected = {
-                "rdns": rdns, "ip": ip, "by": by,
-                "helo": helo, "ident": ident, "id": id, "envfrom": envfrom,
-                "auth": auth}
+        expected = {"rdns": rdns, "ip": ip, "by": by, "helo": helo,
+                    "ident": "", "id": id, "envfrom": "", "auth": ""}
         self._check_parser(MSG2, expected)
 
     def test_header_MSG3(self):
-        rdns = ""
         ip = "88.247.157.17"
         by = "by.example.org"
         helo = "helo.example.com"
-        ident = ""
         id = "1aaNYs-0002bJ-A9"
         envfrom = "envfrom@example.com"
-        auth = ""
-        expected = {
-                "rdns": rdns, "ip": ip, "by": by,
-                "helo": helo, "ident": ident, "id": id, "envfrom": envfrom,
-                "auth": auth}
+        expected = {"rdns": "", "ip": ip, "by": by, "helo": helo, "ident": "",
+                    "id": id, "envfrom": envfrom, "auth": ""}
         self._check_parser(MSG3, expected)
 
     def test_header_MSG4(self):
@@ -218,14 +212,9 @@ class TestReceivedParser(tests.util.TestBase):
         ip = "172.17.210.11"
         by = "by.example.org"
         helo = "rdns.example.com"
-        ident = ""
         id = "15.0.1104.5"
-        envfrom = ""
-        auth = ""
-        expected = {
-                "rdns": rdns, "ip": ip, "by": by,
-                "helo": helo, "ident": ident, "id": id, "envfrom": envfrom,
-                "auth": auth}
+        expected = {"rdns": rdns, "ip": ip, "by": by, "helo": helo,
+                    "ident": "", "id": id, "envfrom": "", "auth": ""}
         self._check_parser(MSG4, expected)
 
     def test_header_MSG5(self):
@@ -233,14 +222,10 @@ class TestReceivedParser(tests.util.TestBase):
         ip = "236.44.62.230"
         by = "by.example.org"
         helo = "helo.example.com"
-        ident = ""
         id = "o6PCS1im002238"
-        envfrom = ""
         auth = "Sendmail"
-        expected = {
-                "rdns": rdns, "ip": ip, "by": by,
-                "helo": helo, "ident": ident, "id": id, "envfrom": envfrom,
-                "auth": auth}
+        expected = {"rdns": rdns, "ip": ip, "by": by, "helo": helo,
+                    "ident": "", "id": id, "envfrom": "", "auth": auth}
         self._check_parser(MSG5, expected)
 
     def test_header_MSG6(self):
@@ -248,13 +233,45 @@ class TestReceivedParser(tests.util.TestBase):
         ip = "95.211.2.196"
         by = "mx.google.com"
         helo = "mx6-05.smtp.antispamcloud.com."
-        ident = ""
         id = "ld8si17897891wjc.77.2016.03.07.00.56.45"
-        envfrom = ""
-        auth = "GMail - transport=TLS1_2 " \
-               "cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128"
-        expected = {
-                "rdns": rdns, "ip": ip, "by": by,
-                "helo": helo, "ident": ident, "id": id, "envfrom": envfrom,
-                "auth": auth}
+        auth = ("GMail - transport=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 "
+                "bits=128/128")
+        expected = {"rdns": rdns, "ip": ip, "by": by, "helo": helo,
+                    "ident": "", "id": id, "envfrom": "", "auth": auth}
         self._check_parser(MSG6, expected)
+
+    def test_header_ident(self):
+        """Test parsing ident from Received header"""
+        ip = "2a01:4f8:161:124b::3026"
+        by = "parser.example.com"
+        ident = "mail"
+        id = "1akrrE-2016TL-NN"
+        envfrom = "sender@parser.example.com"
+        auth = "esmtpa"
+        expected = {"rdns": '', "ip": ip, "by": by, "helo": '', "ident": ident,
+                    "id": id, "envfrom": envfrom, "auth": auth}
+        self._check_parser(TEST_IDENT, expected)
+
+    @unittest.skip("Refs. #48 - This case must be fixed. Currently test fail.")
+    def test_header_ip4_mapped(self):
+        """Test parsing IPs from Received header with IPv4 mapped"""
+        rdns = "relay.example.com"
+        ip = "217.70.183.195"
+        by = "mfilter.example.net"
+        helo = "relay.example.com"
+        id = "hWQzvlEtNu8a"
+        expected = {"rdns": rdns, "ip": ip, "by": by, "helo": helo,
+                    "ident": "", "id": id, "envfrom": "", "auth": ""}
+        self._check_parser(TEST_IP4_MAPPED, expected)
+
+    def test_header_idna_domain(self):
+        """Test parsing Received header with non-ASCII domains"""
+        domain = ("xn--0cacdeehfljkltmnp5mraqt3eyba51bgd4bx7apd12f."
+                  "xn--ss-5ia4bbgfkgw3owcu1b6a1j2dvgqe9vjb2b.example.com")
+        ip = "236.44.62.230"
+        id = "o6PCS1im002238"
+        auth = "Sendmail"
+        msg = TEST_IDNA % (domain, domain, domain)
+        expected = {"rdns": domain, "ip": ip, "by": domain, "helo": domain,
+                    "ident": "", "id": id, "envfrom": "", "auth": auth}
+        self._check_parser(msg, expected)

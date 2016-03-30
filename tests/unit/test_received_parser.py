@@ -342,7 +342,6 @@ class TestReceivedParser(unittest.TestCase):
             "from [107.172.93.124] (ident=mail) by mail.example.org with local "
             "(envelope-from <username@example.net>) id 1a7QMI-0004Ag-Ky "
             "for john@example.com")
-        print(header)
         expected = "mail"
         result = pad.received_parser.ReceivedParser.get_ident(header)
         self.assertEqual(result, expected)
