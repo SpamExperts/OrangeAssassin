@@ -1,7 +1,6 @@
 """Internal representation of email messages."""
 
 from builtins import set
-from builtins import str
 from builtins import list
 from builtins import dict
 from builtins import object
