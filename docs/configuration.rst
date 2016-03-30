@@ -85,14 +85,14 @@ Filtering options
 **required_score** 5.0 (type `float`)
     Set minimum required score for a message to get for it to be treated as
     spam.
-**use_bayes**: True (type `bool`)
+**use_bayes** True (type `bool`)
     Controls whether or not the bayesian filter should be checked.
-**use_network**: True (type `bool`)
+**use_network** True (type `bool`)
     Controls whether or not network checks should be perfomed on the message.
-**envelope_sender_header**: ["X-Sender", "X-Envelope-From", "Envelope-Sender", "Return-Path", "From"] (type `append`)
+**envelope_sender_header** ["X-Sender", "X-Envelope-From", "Envelope-Sender", "Return-Path", "From"] (type `append`)
     Specifies which header should be used when determining the envelope sender
     of the message.
-**allow_user_rules**: False (type `bool`)
+**allow_user_rules** False (type `bool`)
     If set to True the daemon will also load user preferences. Note that this
     can be a possible security risk, which is why it's disabled by default.
 
