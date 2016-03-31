@@ -71,9 +71,10 @@ class NetworkList(object):
         padding = ""
         if network.endswith("."):
             padding = ".".join(["0"] * (4 - network.count(".")))
-        if not mask:
             mask = network.count(".") * 8
-        return str("%s%s/%s" % (network, padding, mask))
+        if mask:
+            return str("%s%s/%s" % (network, padding, mask))
+        return str("%s%s" % (network, padding))
 
     def _extract_network(self, network_str):
         excluded, network, mask = _NETWORK_RE.match(network_str).groups()

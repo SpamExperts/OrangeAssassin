@@ -297,11 +297,11 @@ class GlobalContext(_Context):
 
     def _add_networks(self):
         for network in self.conf['trusted_networks']:
-            self.networks.add_trusted(network)
+            self.networks.add_trusted_network(network)
         for network in self.conf['internal_networks']:
-            self.networks.add_internal(network)
+            self.networks.add_internal_network(network)
         for network in self.conf['msa_networks']:
-            self.networks.add_msa(network)
+            self.networks.add_msa_network(network)
 
     @_callback_chain
     def hook_parsing_end(self, ruleset):
