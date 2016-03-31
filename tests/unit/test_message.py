@@ -400,7 +400,7 @@ class TestParseRelays(unittest.TestCase):
     def tearDown(self):
         unittest.TestCase.tearDown(self)
 
-    @unittest.SkipTest
+    # @unittest.SkipTest
     def test_parse_relays_blank_ip(self):
         """parse_relays when 'ip' equals ''"""
         relays = [{'ident': '', 'envfrom': '', 'id': u'md50000059687.msg',

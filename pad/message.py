@@ -1,5 +1,6 @@
 """Internal representation of email messages."""
 
+from builtins import str
 from builtins import set
 from builtins import list
 from builtins import dict
@@ -315,40 +316,41 @@ class Message(pad.context.MessageContext):
 
         for position, relay in enumerate(relays):
             relay['msa'] = 0
-            ip = ipaddress.ip_address(relay['ip'])
-            in_internal = ip in self.ctxt.networks.internal
-            in_trusted = ip in self.ctxt.networks.trusted
-            in_msa = ip in self.ctxt.networks.msa
-            has_auth = relay.get("auth", None)
-            if is_trusted and not found_msa:
-                if self.ctxt.networks.configured:
-                    if not in_trusted:
-                        is_trusted = False
-                        is_internal = False
+            if relay['ip']:
+                ip = ipaddress.ip_address(str(relay['ip']))
+                in_internal = ip in self.ctxt.networks.internal
+                in_trusted = ip in self.ctxt.networks.trusted
+                in_msa = ip in self.ctxt.networks.msa
+                has_auth = relay.get("auth", None)
+                if is_trusted and not found_msa:
+                    if self.ctxt.networks.configured:
+                        if not in_trusted:
+                            is_trusted = False
+                            is_internal = False
 
-                    if not in_internal:
-                        is_internal = False
+                        if not in_internal:
+                            is_internal = False
 
-                    if has_auth and (is_internal or is_trusted) and in_msa:
-                        relay['msa'] = 1
-                        found_msa = True
+                        if has_auth and (is_internal or is_trusted) and in_msa:
+                            relay['msa'] = 1
+                            found_msa = True
 
-                elif not ip.is_private and not has_auth:
-                        is_trusted = False
-                        is_internal = False
+                    elif not ip.is_private and not has_auth:
+                            is_trusted = False
+                            is_internal = False
 
-            relay['intl'] = 1 if is_internal else 0
-            if is_internal:
-                self.internal_relays.append(relay)
-                self.last_internal_relay_index = position
-            else:
-                self.external_relays.append(relay)
+                relay['intl'] = 1 if is_internal else 0
+                if is_internal:
+                    self.internal_relays.append(relay)
+                    self.last_internal_relay_index = position
+                else:
+                    self.external_relays.append(relay)
 
-            if is_trusted:
-                self.trusted_relays.append(relay)
-                self.last_trusted_relay_index = position
-            else:
-                self.untrusted_relays.append(relay)
+                if is_trusted:
+                    self.trusted_relays.append(relay)
+                    self.last_trusted_relay_index = position
+                else:
+                    self.untrusted_relays.append(relay)
 
     def _parse_message(self):
         """Parse the message."""

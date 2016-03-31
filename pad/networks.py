@@ -71,7 +71,8 @@ class NetworkList(object):
         padding = ""
         if network.endswith("."):
             padding = ".".join(["0"] * (4 - network.count(".")))
-            mask = network.count(".") * 8
+            if not mask:
+                mask = network.count(".") * 8
         if mask:
             return str("%s%s/%s" % (network, padding, mask))
         return str("%s%s" % (network, padding))
