@@ -98,6 +98,25 @@ TEST_IDNA = """Received: from %s
  o6PCS1im002238
  for <user@example.com>; Mon, 01 Feb 2016 03:45:37 -0600 (EST)"""
 
+
+MSGTRUSTEDRELAYS = """Received: from mx6-05.smtp.antispamcloud.com
+ (mx6-05.smtp.antispamcloud.com. [95.211.2.196]) by mx.google.com with ESMTPSA id
+ ld8si17897891wjc.77.2016.03.07.00.56.45 for <backendteam@gapps.spamexperts.com>
+ (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128)
+
+Received: from mx6-05.smtp.antispamcloud.com
+ (mx6-05.smtp.antispamcloud.com. [95.211.3.196]) by mx.google.com with ESMTPSA id
+ ld8si17897891wjc.77.2016.03.07.00.56.45 for <backendteam@gapps.spamexperts.com>
+ (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128)
+
+Received: from mx6-05.smtp.antispamcloud.com
+ (mx6-05.smtp.antispamcloud.com. [95.211.4.196]) by mx.google.com with ESMTPSA id
+ ld8si17897891wjc.77.2016.03.07.00.56.45 for <backendteam@gapps.spamexperts.com>
+ (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128)
+ 
+ """
+
+
 class TestReceivedParser(tests.util.TestBase):
     """Test the parser for received headers"""
     def setUp(self):
@@ -274,3 +293,23 @@ class TestReceivedParser(tests.util.TestBase):
         expected = {"rdns": domain, "ip": ip, "by": domain, "helo": domain,
                     "ident": "", "id": id, "envfrom": "", "auth": auth}
         self._check_parser(msg, expected)
+
+
+class TestTrustPath(tests.util.TestBase):
+
+    def setUp(self):
+        tests.util.TestBase.setUp(self)
+
+    def tearDown(self):
+        tests.util.TestBase.tearDown(self)
+
+    def test_relays_trusted(self):
+        self.setup_conf(pre_config="report _RELAYSTRUSTED_")
+        expected = ("[ ip=95.211.2.196 rdns=mx6-05.smtp.antispamcloud.com "
+                    "helo=mx6-05.smtp.antispamcloud.com. "
+                    "by=mx.google.com ident= intl=1 id=ld8si17897891wjc.77."
+                    "2016.03.07.00.56.45 auth=GMail - transport=TLS1_2 "
+                    "cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128 msa=0 ]")
+        result = self.check_pad(MSGTRUSTEDRELAYS)
+        self.assertEqual(result, expected)
+
