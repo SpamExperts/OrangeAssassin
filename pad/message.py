@@ -360,14 +360,17 @@ class Message(pad.context.MessageContext):
                                        for x in self.trusted_relays]),
             "RELAYSUNTRUSTED": " ".join([tag_template.format(**x)
                                          for x in self.untrusted_relays]),
-            "relaysinternal": " ".join([tag_template.format(**x)
+            "RELAYSINTERNAL": " ".join([tag_template.format(**x)
                                         for x in self.internal_relays]),
-            "relaysexternal": " ".join([tag_template.format(**x)
+            "RELAYSEXTERNAL": " ".join([tag_template.format(**x)
                                         for x in self.external_relays]),
-            # "lastexternalip": self.external_relays[-1]['ip'],
-            # "lastexternalrdns": self.external_relays[-1]['rdns'],
-            # "lastexternalhelo": self.external_relays[-1]['helo']
         }
+        if self.external_relays:
+            relays_tags.update({
+                "LASTEXTERNALIP": self.external_relays[-1]['ip'],
+                "LASTEXTERNALRDNS": self.external_relays[-1]['rdns'],
+                "LASTEXTERNALHELO": self.external_relays[-1]['helo']
+            })
 
         self._create_plugin_tags(relays_tags)
 
