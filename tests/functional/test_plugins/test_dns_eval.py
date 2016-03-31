@@ -8,6 +8,7 @@ import subprocess
 
 import sqlite3
 import tests.util
+import pad.dns_interface
 
 PRE_CONFIG = r"""
 report _SCORE_
@@ -66,6 +67,36 @@ header      RBL_ACCREDITOR      eval:check_rbl_accreditor('accredit', 'example.n
 describe    RBL_ACCREDITOR      Checks all the IPs of this message on the
                                 specified list, but only if the sender has the
                                 specified accreditor tag.
+"""
+
+CONFIG_DNS_AVAILABLE = r"""
+dns_available yes
+header      IP_IN_LIST      eval:check_rbl('example', 'example.com')
+describe    IP_IN_LIST      IP in example.com list
+"""
+
+CONFIG_DNS_NOT_AVAILABLE = r"""
+dns_available no
+header      IP_IN_LIST      eval:check_rbl('example', 'example.com')
+describe    IP_IN_LIST      IP in example.com list
+"""
+
+CONFIG_DNS_TEST_AVAILABLE = r"""
+dns_available test: 34.216.184.93.example.com.
+header      IP_IN_LIST      eval:check_rbl('example', 'example.com')
+describe    IP_IN_LIST      IP in example.com list
+"""
+
+CONFIG_DNS_RESTRICTED_ALLOW = r"""
+dns_query_restriction allow example.com
+header      IP_IN_LIST      eval:check_rbl('example', 'example.com')
+describe    IP_IN_LIST      IP in example.com list
+"""
+
+CONFIG_DNS_RESTRICTED_DENY = r"""
+dns_query_restriction deny 1.example.com
+header      IP_IN_LIST      eval:check_rbl('example', 'example.com')
+describe    IP_IN_LIST      IP in example.com list
 """
 
 MSG = r"""Received: from mail-wm0-f50.google.com ([93.184.216.34])
@@ -153,8 +184,46 @@ class TestDNSEval(tests.util.TestBase):
         """Check real multipart message"""
         self.add("34.216.184.93.example.com.", "127.0.0.1")
         self.setup_conf(CONFIG, PRE_CONFIG)
-        result = self.check_pad(MSG)
+        result = self.check_pad(MSG, debug=True)
         self.check_report(result, 1.0, ["IP_IN_LIST"])
+    @unittest.skip
+    def test_check_rbl_with_dns(self):
+        """Check rbl without dns"""
+        self.add("34.216.184.93.example.com.", "127.0.0.1")
+        self.setup_conf(CONFIG_DNS_AVAILABLE, PRE_CONFIG)
+        result = self.check_pad(MSG, debug=True)
+        self.check_report(result, 1.0, ["IP_IN_LIST"])
+    @unittest.skip
+    def test_check_rbl_without_dns(self):
+        """Check rbl without dns"""
+        self.add("34.216.184.93.example.com.", "127.0.0.1")
+        self.setup_conf(CONFIG_DNS_NOT_AVAILABLE, PRE_CONFIG)
+        result = self.check_pad(MSG, debug=True)
+        self.check_report(result, 0.0, [])
+
+    @unittest.skip
+    def test_check_rbl_with_test_dns(self):
+        """Check rbl with test dns"""
+        self.add("1.examp le.com", "127.0.0.1")
+        self.setup_conf(CONFIG_DNS_TEST_AVAILABLE, PRE_CONFIG)
+        result = self.check_pad(MSG, debug=True)
+        self.check_report(result, 1.0, ["IP_IN_LIST"])
+
+    @unittest.skip
+    def test_check_dns_restricted_allow(self):
+        """Check dns_restrictions for allow option"""
+        self.add("1.2.example.com", "127.0.0.1")
+        self.setup_conf(CONFIG_DNS_RESTRICTED_ALLOW, PRE_CONFIG)
+        result = self.check_pad(MSG, debug=True)
+        self.check_report(result, 1.0, ["IP_IN_LIST"])
+
+    @unittest.skip
+    def test_check_dns_restricted_deny(self):
+        """Check dns_restrictions for allow option"""
+        self.add("example.com", "127.0.0.1")
+        self.setup_conf(CONFIG_DNS_RESTRICTED_DENY, PRE_CONFIG)
+        result = self.check_pad(MSG, debug=True)
+        self.check_report(result, 0.0, [])
 
     def test_check_rbl_ipv6(self):
         """Check real multipart message"""
