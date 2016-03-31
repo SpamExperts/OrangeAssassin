@@ -351,6 +351,25 @@ class Message(pad.context.MessageContext):
                     self.last_trusted_relay_index = position
                 else:
                     self.untrusted_relays.append(relay)
+        tag_template = ("[ ip={ip} rdns={rdns} helo={helo} by={by} "
+                        "ident={ident} intl={intl} id={id} auth={auth} "
+                        "msa={msa} ]")
+
+        relays_tags = {
+            "RELAYSTRUSTED": " ".join([tag_template.format(**x)
+                                       for x in self.trusted_relays]),
+            "RELAYSUNTRUSTED": " ".join([tag_template.format(**x)
+                                         for x in self.untrusted_relays]),
+            "relaysinternal": " ".join([tag_template.format(**x)
+                                        for x in self.internal_relays]),
+            "relaysexternal": " ".join([tag_template.format(**x)
+                                        for x in self.external_relays]),
+            # "lastexternalip": self.external_relays[-1]['ip'],
+            # "lastexternalrdns": self.external_relays[-1]['rdns'],
+            # "lastexternalhelo": self.external_relays[-1]['helo']
+        }
+
+        self._create_plugin_tags(relays_tags)
 
     def _parse_message(self):
         """Parse the message."""
