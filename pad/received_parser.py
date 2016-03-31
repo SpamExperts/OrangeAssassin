@@ -477,6 +477,8 @@ class ReceivedParser(object):
         private_ips = list()
         for item in ips:
             clean_ip = item.strip("[ ]();\n")
+            clean_ip = clean_ip.lower().replace('ipv6:','')
+            clean_ip = clean_ip.lower().replace('::ffff:','')
             if IP_PRIVATE.search(clean_ip):
                 count += 1
                 private_ips.append(clean_ip)
