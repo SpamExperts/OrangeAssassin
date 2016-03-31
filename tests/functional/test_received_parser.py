@@ -252,7 +252,6 @@ class TestReceivedParser(tests.util.TestBase):
                     "id": id, "envfrom": envfrom, "auth": auth}
         self._check_parser(TEST_IDENT, expected)
 
-    @unittest.skip("Refs. #48 - This case must be fixed. Currently test fail.")
     def test_header_ip4_mapped(self):
         """Test parsing IPs from Received header with IPv4 mapped"""
         rdns = "relay.example.com"
