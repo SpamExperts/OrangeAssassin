@@ -419,17 +419,16 @@ class TestTrustPath(tests.util.TestBase):
         result = self.check_pad(MSGRELAYS)
         self.assertEqual(str(expected), str(result))
 
-    @unittest.skip
     def test_relays_originating_ip(self):
         config = ("clear_trusted_networks",
                   "clear_internal_networks",
                   "clear_msa_networks",
                   "clear_originating_ip_headers",
-                  "trusted_networks 9.9.9.9",
                   "originating_ip_headers X-ORIGINATING-IP",
+                  "trusted_networks 10.10.10.10",
                   "internal_networks 10.10.10.10\n")
         self.setup_conf(pre_config="report _LASTEXTERNALIP_",
                         config="\n".join(config))
-        expected = ("7.8.9.0")
-        result = self.check_pad(IPHEADER)
+        expected = "7.8.9.0"
+        result = self.check_pad(IPHEADER, debug=True)
         self.assertEqual(str(expected), str(result))

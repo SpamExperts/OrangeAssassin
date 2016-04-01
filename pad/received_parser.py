@@ -316,27 +316,24 @@ AUTH_RE2 = re.compile(r'.*? \(authenticated as (\S+)\)')
 AUTH_RE3 = re.compile(r"""
 \)\s\(Authenticated\ssender:\s\S+\)\sby\s\S+\s\(Postfix\)\swith\s""", re.X)
 
-ORIGINATING_IP_HEADER_RE = r"^({}).*"
+ORIGINATING_IP_HEADER_RE = r"^X-ORIGINATING-IP: ({}).*"
 
 # ========================================================
 
 
 class ReceivedParser(object):
-    def __init__(self, received_headers, originating_header_names=None):
-        self.originating_header_names = tuple()
-        if originating_header_names:
-            self.originating_header_names = tuple(originating_header_names)
+    def __init__(self, received_headers):
         self.received_headers = list()
         self.received = list()
         for header in received_headers:
-            if (self.originating_header_names and
-                    header.startswith(self.originating_header_names)):
-                self.received_headers.append(header)
-            elif header.startswith('from'):
+            if header.startswith('from'):
                 header = re.sub(r'\s+', ' ', header)  # removing '\n\t' chars
                 header = header.replace('from ', '', 1)
                 header = header.split(';')[0]
                 self.received_headers.append(header)
+            elif header.startswith("X-ORIGINATING-IP"):
+                self.received_headers.append(header)
+
         self._parse_message()
 
     @staticmethod
@@ -598,8 +595,7 @@ class ReceivedParser(object):
                 id = self.get_id(header)
                 envfrom = self.get_envfrom(header)
                 auth = self.get_auth(header)
-                if (self.originating_header_names and
-                        header.startswith(self.originating_header_names)):
+                if header.startswith("X-ORIGINATING-IP"):
                     self.received.append({
                         "rdns": "", "ip": ip, "by": "",
                         "helo": "", "ident": "", "id": "", "envfrom": "",

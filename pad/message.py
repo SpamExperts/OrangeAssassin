@@ -408,9 +408,10 @@ class Message(pad.context.MessageContext):
         self._parse_sender()
         received_headers = self.get_decoded_header("Received")
         for header in self.ctxt.conf["originating_ip_headers"]:
-            received_headers.extend(self.get_decoded_header(header))
-        received_obj = ReceivedParser(received_headers,
-                                      self.ctxt.conf["originating_ip_headers"])
+            headers = ["X-ORIGINATING-IP: %s" % x
+                       for x in self.get_decoded_header(header)]
+            received_headers.extend(headers)
+        received_obj = ReceivedParser(received_headers)
         self.received_headers = received_obj.received
         self._parse_relays(self.received_headers)
 
