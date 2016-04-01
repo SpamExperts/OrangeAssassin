@@ -324,22 +324,22 @@ class Message(pad.context.MessageContext):
                 has_auth = relay.get("auth", None)
                 if is_trusted and not found_msa:
                     if self.ctxt.networks.configured:
-                        if not in_trusted:
+                        if not in_trusted and not has_auth:
                             is_trusted = False
                             is_internal = False
 
-                        if not in_internal:
-                            is_internal = False
+                        else:
+                            if is_internal and not has_auth and not in_internal:
+                                is_internal = False
 
-                        if has_auth and (is_internal or is_trusted) and in_msa:
-                            relay['msa'] = 1
-                            found_msa = True
+                            if in_msa:
+                                relay['msa'] = 1
+                                found_msa = True
 
                     elif not ip.is_private and not has_auth:
-                            is_trusted = False
-                            is_internal = False
+                        pass
 
-                relay['intl'] = 1 if is_internal else 0
+                relay['intl'] = int(is_internal)
                 if is_internal:
                     self.internal_relays.append(relay)
                     self.last_internal_relay_index = position
@@ -352,7 +352,7 @@ class Message(pad.context.MessageContext):
                 else:
                     self.untrusted_relays.append(relay)
         tag_template = ("[ ip={ip} rdns={rdns} helo={helo} by={by} "
-                        "ident={ident} intl={intl} id={id} auth={auth} "
+                        "ident={ident} envfrom={envfrom} intl={intl} id={id} auth={auth} "
                         "msa={msa} ]")
 
         relays_tags = {

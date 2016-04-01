@@ -565,9 +565,14 @@ class ReceivedParser(object):
         :return: auth if is found if not it returns an empty string
         """
         auth = ""
-        if AUTH_RE3.search(header):
+        if ' by ' in header and AUTH_RE.match(header):
+            try:
+                auth = AUTH_RE.match(header).groups()[0]
+            except IndexError:
+                pass
+        elif AUTH_RE3.search(header):
             auth = 'Postfix'
-        elif ' by mx.google.com ' in header:
+        elif ' by mx.google.com with ESMTPS id ' in header:
             try:
                 version, cipher = AUTH_VC_RE.match(header).groups()
                 auth = "GMail - transport={version} " \
@@ -576,11 +581,6 @@ class ReceivedParser(object):
                 pass
         elif 'SquirrelMail authenticated ' in header:
             auth = "SquirrelMail"
-        elif ' by ' in header and AUTH_RE.match(header):
-            try:
-                auth = AUTH_RE.match(header).groups()[0]
-            except IndexError:
-                pass
         elif 'authenticated' in header and AUTH_RE2.search(header):
             auth = "CriticalPath"
         elif 'authenticated' in header:
