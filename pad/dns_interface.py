@@ -145,10 +145,11 @@ class DNSInterface(object):
 
         while True:
             if qname in self.query_restrictions:
+                self.log.debug(self.query_restrictions)
                 return self.query_restrictions[qname]
             try:
                 qname = qname.split(".", 1)[1]
-            except KeyError:
+            except IndexError:
                 return False
 
     def query(self, qname, qtype="A"):
@@ -171,10 +172,13 @@ class DNSInterface(object):
         return self._query(qname, qtype)
 
     def _query(self, qname, qtype):
+        self.log.debug("Querying %s %s", qname, qtype)
         if qtype == "PTR":
             qname = dns.reversename.from_address(qname)
         try:
-            return self._resolver.query(qname, qtype)
+            result = self._resolver.query(qname, qtype)
+            self.log.debug("Got %s for %s %s", result, qname, qtype)
+            return result
         except (dns.resolver.NoAnswer, dns.resolver.NoNameservers,
                 dns.resolver.NXDOMAIN, dns.exception.Timeout) as e:
             self.log.warn("Failed to resolve %s (%s): %s", qname, qtype, e)
