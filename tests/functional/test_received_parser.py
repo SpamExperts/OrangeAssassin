@@ -115,6 +115,14 @@ Received: from mx6-06.smtp.antispamcloud.com
  
  """
 
+IPHEADER = """Received: from mx6-05.smtp.antispamcloud.com
+ (mx6-05.smtp.antispamcloud.com [9.9.9.9]) by mx.google.com with ESMTPSA id
+ ld8si17897891wjc.77.2016.03.07.00.56.45 for <backendteam@gapps.spamexperts.com>
+ (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128)
+X-ORIGINATING-IP: 7.8.9.0
+
+"""
+
 
 class TestReceivedParser(tests.util.TestBase):
     """Test the parser for received headers"""
@@ -409,4 +417,19 @@ class TestTrustPath(tests.util.TestBase):
                         config="\n".join(config))
         expected = ("mx6-06.smtp.antispamcloud.com")
         result = self.check_pad(MSGRELAYS)
+        self.assertEqual(str(expected), str(result))
+
+    @unittest.skip
+    def test_relays_originating_ip(self):
+        config = ("clear_trusted_networks",
+                  "clear_internal_networks",
+                  "clear_msa_networks",
+                  "clear_originating_ip_headers",
+                  "trusted_networks 9.9.9.9",
+                  "originating_ip_headers X-ORIGINATING-IP",
+                  "internal_networks 10.10.10.10\n")
+        self.setup_conf(pre_config="report _LASTEXTERNALIP_",
+                        config="\n".join(config))
+        expected = ("7.8.9.0")
+        result = self.check_pad(IPHEADER)
         self.assertEqual(str(expected), str(result))
