@@ -60,13 +60,13 @@ SpamPAD accepts various types of configuration options. The current types are:
     settings. Every time the option is specified the values are appended to
     to a list. For example for the report option::
 
-        report This message it was marked as spam on _HOSTNAME_.
+        report This message was marked as spam on _HOSTNAME_.
         report The message score was _SCORE_.
         report Contact me at _CONTACTADDRESS_.
 
     Will result in the final option being evaluated as::
 
-        ["This message it was marked as spam on _HOSTNAME_.",
+        ["This message was marked as spam on _HOSTNAME_.",
          "The message score was _SCORE_.",
          "Contact me at _CONTACTADDRESS_."]
 **clear**
