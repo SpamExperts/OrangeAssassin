@@ -294,7 +294,7 @@ DNS
 
 **default_dns_timeout** 2.0 (type `float`)
     Set the timeout for a DNS lookup from a single nameserver.
-
+.. _dns_available:
 **dns_available** yes ( type `str` )
     Configure whether DNS resolving is available or not. If you specify it as
     yes or no then no tests will be performed. Example::
@@ -412,4 +412,18 @@ in tags which can be accessed with the next keywords:
     Message identification number given by the machine who received the message
 **_AUTH_**
     Authentication
+**_RELAYSTRUSTED_**
+    Relays used and deemed to be trusted
+**_RELAYSUNTRUSTED_**
+    Relays used that can not be trusted
+**_RELAYSINTERNAL_**
+    Relays used and deemed to be internal
+**_RELAYSEXTERNAL_**
+    Relays used and deemed to be external
+**_LASTEXTERNALIP_**
+    IP address of client in the external-to-internal SMTP handover
+**_LASTEXTERNALRDNS_**
+    Reverse-DNS of client in the external-to-internal SMTP handover
+**_LASTEXTERNALHELO_**
+    HELO string used by client in the external-to-internal SMTP handover
 
