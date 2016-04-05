@@ -161,25 +161,25 @@ Reporting
 Network Options
 ---------------
 
-    Syntax::
+Syntax::
 
-        trusted_networks [!]IP_ADDRESS[/MASKLEN] [...]
-        
-        internal_networks [!]IP_ADDRESS[/MASKLEN] [...]
-        
-        msa_networks [!]IP_ADDRESS[/MASKLEN] [...]
+    trusted_networks [!]IP_ADDRESS[/MASKLEN] [...]
 
-    `!`
-        excludes the network from the list
-    `MASKLEN`
-        the CIDR-style netmask length specified in bits. If it's not specified
-        it will be deduced from the IP_ADDRESS
-    `IP_ADDRESS`
-        an IPv4 or IPv6 address optionally enclosed in square brackets. If no
-        masklen is specified then one will be deduced from the ip like this: If
-        the ip has less than 4 octets and ends with a trailing dot then the
-        masklen is `num_octets * 8` if there is no trailing dot then the mask
-        will be `32` for IPv4 addresses and `128` for IPv6 addresses
+    internal_networks [!]IP_ADDRESS[/MASKLEN] [...]
+        
+    msa_networks [!]IP_ADDRESS[/MASKLEN] [...]
+
+`!`
+    excludes the network from the list
+`MASKLEN`
+    the CIDR-style netmask length specified in bits. If it's not specified
+    it will be deduced from the IP_ADDRESS
+`IP_ADDRESS`
+    an IPv4 or IPv6 address optionally enclosed in square brackets. If no
+    masklen is specified then one will be deduced from the ip like this: If
+    the ip has less than 4 octets and ends with a trailing dot then the
+    masklen is `num_octets * 8` if there is no trailing dot then the mask
+    will be `32` for IPv4 addresses and `128` for IPv6 addresses
 
 **trusted_networks** [] (type `append split`)
 
