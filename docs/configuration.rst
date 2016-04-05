@@ -241,7 +241,11 @@ Network Options
         127.0.0.0/8 and ::1 are always included in trusted_networks and cannot
         be overriden
 
-**internal_networks** [] (type `append split`)
+**clear_internal_networks** N/A (type `clear`)
+    Empties the list of internal networks. 127.0.0.0/8 and ::1 will still exist
+    and they cannot be removed
+    
+**msa_networks** [] (type `append split`)
     MSA hosts, also known as MX relays are hosts that accept mail from your own
     users and authenticate them properly.
 
@@ -259,10 +263,6 @@ Network Options
         You shouldn't include an msa that is also an MX or an intermediate
         relay for an MX in this setting because it will result in uknown
         external relays being trusted
-
-**clear_internal_networks** N/A (type `clear`)
-    Empties the list of internal networks. 127.0.0.0/8 and ::1 will still exist
-    and they cannot be removed
 
 **clear_msa_networks** N/A (type `clear`)
     Empties the list of msa networks
