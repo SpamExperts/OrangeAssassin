@@ -182,7 +182,6 @@ Syntax::
     will be `32` for IPv4 addresses and `128` for IPv6 addresses
 
 **trusted_networks** [] (type `append split`)
-
     You can specify multiple networks. With each network specified, it will be
     added to the list of trusted networks. 
 
