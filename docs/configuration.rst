@@ -203,15 +203,23 @@ Network Options
 
     Examples::
         # Trust all in 192.168.*.*
+        
         trusted_networks 192.168.
+        
         # or
+        
         trusted_networks 192.168.0.0/16
 
         # Trust all in 192.168.*.* except those in 192.168.1.*
+        
         trusted_networks !192.168.1. 192.168. 
+        
         # or
+        
         trusted_networks !192.168.1.0/24 192.168.0.0/16
+        
         # or
+        
         trusted_networks !192.168.1.0/24
         trusted_networks !192.168.0.0/16
 
@@ -270,23 +278,29 @@ DNS
     specified as IPv4 or IPv6 address with an optional port followed. Example::
 
         dns_server 127.0.0.1
+        
         dns_server 127.0.0.1:53
+        
         dns_server [::1]:53
 
     If no such nameserver is specified, the default ones from `/etc/resolv.conf`
     will be used.
 **clear_dns_servers** N/A (type `clear`)
     Clear any custom nameserver set by `dns_server`.
+
 **default_dns_lifetime** 10.0 (type `float`)
     Sets the timeout for a full DNS lookup. I.e. any DNS lookup will have at
     most 10 seconds to get a valid response from one of the DNS server.
+
 **default_dns_timeout** 2.0 (type `float`)
     Set the timeout for a DNS lookup from a single nameserver.
+
 **dns_available** yes ( type `str` )
     Configure whether DNS resolving is available or not. If you specify it as
     yes or no then no tests will be performed. Example::
         
         dns_available yes
+        
         dns_available no
     
     If you want to determine the availability dynamically you can use the value
@@ -310,7 +324,9 @@ DNS
     determine the the time unit (s, m, h, d, w) Example::
     
         dns_test_interval 600
+        
         dns_test_interval 600s
+        
         dns_test_interval 10m 
 
 **dns_query_restriction** "" ( type `string` )
