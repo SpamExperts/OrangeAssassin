@@ -163,7 +163,9 @@ Network Options
 
     Syntax::
         trusted_networks [!]IP_ADDRESS[/MASKLEN] [...]
+        
         internal_networks [!]IP_ADDRESS[/MASKLEN] [...]
+        
         msa_networks [!]IP_ADDRESS[/MASKLEN] [...]
 
     `!`
