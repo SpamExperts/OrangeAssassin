@@ -182,8 +182,8 @@ Network Options
 
 **trusted_networks** [] (type `append split`)
 
-    The option can be specified multiple times, each one adding to the list of
-    of networks to be searched.
+    You can specify multiple networks. With each network specified, it will be
+    added to the list of trusted networks. 
 
     The networks are searched sequentially with the first match stopping the
     search, so you should write more specific subnets first.
@@ -223,6 +223,10 @@ Network Options
         trusted_networks !192.168.1.0/24
         trusted_networks !192.168.0.0/16
 
+**clear_trusted_networks** N/A (type `clear`)
+    Empties the list of trusted networks. 127.0.0.0/8 and ::1 will still exist
+    and they cannot be removed
+
 **internal_networks** [] (type `append split`)
     When you define an internal network then all hosts in the network are
     considered to be MXes for your domains or internal relays.
@@ -255,10 +259,6 @@ Network Options
         You shouldn't include an msa that is also an MX or an intermediate
         relay for an MX in this setting because it will result in uknown
         external relays being trusted
-
-**clear_trusted_networks** N/A (type `clear`)
-    Empties the list of trusted networks. 127.0.0.0/8 and ::1 will still exist
-    and they cannot be removed
 
 **clear_internal_networks** N/A (type `clear`)
     Empties the list of internal networks. 127.0.0.0/8 and ::1 will still exist
