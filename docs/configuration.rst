@@ -162,6 +162,7 @@ Network Options
 ---------------
 
     Syntax::
+
         trusted_networks [!]IP_ADDRESS[/MASKLEN] [...]
         
         internal_networks [!]IP_ADDRESS[/MASKLEN] [...]
@@ -188,7 +189,8 @@ Network Options
     The networks are searched sequentially with the first match stopping the
     search, so you should write more specific subnets first.
 
-        Note::
+    .. note::
+        
         127.0.0.0/8 and ::1 are always included in trusted_networks and cannot
         be overriden
 
@@ -202,6 +204,7 @@ Network Options
     relays or MXes for your domains
 
     Examples::
+
         # Trust all in 192.168.*.*
         
         trusted_networks 192.168.
@@ -237,7 +240,8 @@ Network Options
     If trusted networks is set and internal_networks is not then trusted
     networks will also be considered internal networks. 
 
-        Note::
+    .. note::
+
         127.0.0.0/8 and ::1 are always included in trusted_networks and cannot
         be overriden
 
@@ -259,7 +263,8 @@ Network Options
     and make sure that the MSA includes visible auth tokens in it's Received
     header 
 
-        Warning::
+    .. warning::
+
         You shouldn't include an msa that is also an MX or an intermediate
         relay for an MX in this setting because it will result in uknown
         external relays being trusted
