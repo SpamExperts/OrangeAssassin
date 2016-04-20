@@ -81,7 +81,7 @@ class TestFunctionalRelayCountry(tests.util.TestBase):
                         pre_config=PRE_CONFIG)
         result = self.check_pad(MSG, message_only=True, report_only=False)
         msg = email.message_from_string(result)
-        self.assertEqual(msg["X-Spam-Relay-Country"], "** DE")
+        self.assertEqual(msg["X-Spam-Relay-Country"], "DE")
 
     def test_bad_relay(self):
         """Test the bad relay rule with a msg containing ipV4"""
@@ -126,7 +126,7 @@ class TestFunctionalRelayCountry(tests.util.TestBase):
                         pre_config=PRE_CONFIG)
         result = self.check_pad(GOOD_MSG, message_only=True, report_only=False)
         msg = email.message_from_string(result)
-        self.assertEqual(msg["X-Spam-Relay-Country"], "** FI")
+        self.assertEqual(msg["X-Spam-Relay-Country"], "FI")
 
     def test_good_relay_ipV6(self):
         """Test the good relay rule with a msg containing ipV6"""
@@ -141,7 +141,7 @@ class TestFunctionalRelayCountry(tests.util.TestBase):
                         pre_config=PRE_CONFIG)
         result = self.check_pad(GOOD_MSG, message_only=True, report_only=False)
         msg = email.message_from_string(result)
-        self.assertEqual(msg["X-Spam-Relay-Country"], "** FI")
+        self.assertEqual(msg["X-Spam-Relay-Country"], "FI")
 
     def test_good_relay_parentheses(self):
         """Test the good relay rule with a msg containing ipV4 in parentheses"""

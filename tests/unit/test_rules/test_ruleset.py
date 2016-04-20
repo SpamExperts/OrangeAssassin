@@ -21,7 +21,9 @@ class TestRuleSet(unittest.TestCase):
             "remove_header": [],
             "required_score": 5,
             "report_contact": "",
-            "report_safe": 1
+            "report_safe": 1,
+            "dns_query_restriction": [],
+            "dns_options": "",
         })
 
     def tearDown(self):

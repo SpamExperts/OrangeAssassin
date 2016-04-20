@@ -18,6 +18,14 @@ import pad.errors
 
 _TAG_RE = re.compile(r"(_([A-Z_]*?)_)")
 
+_DNS_OPTIONS_RE = re.compile(r"""
+[
+(?P<edns>(no)?edns0?=\d*)?,?
+(?P<rotate>(no)?rotate)?,?
+(?P<dns0x20>(no)?dns0x20)?,?
+]
+""", re.I | re.X | re.M)
+
 
 class RuleSet(object):
     """A set of rules used to match against a message."""
@@ -275,6 +283,27 @@ class RuleSet(object):
         for value in self.conf["remove_header"]:
             self._add_header_rule(value, True)
         del self.conf["remove_header"]
+
+        for value in self.conf['dns_query_restriction']:
+            try:
+                option, qname = value.split(" ", 1)
+            except ValueError:
+                self.ctxt.log.info(
+                    "Invalid value for dns_query_restriction: %s", value)
+
+            if option not in ("allow", "deny"):
+                self.ctxt.log.info(
+                    "Invalid value for dns_query_restriction %s", value)
+                continue
+            self.ctxt.dns.query_restrictions[qname] = option == "deny"
+        dns_options = {"edns": "edns=4096",
+                       "rotate": "norotate",
+                       "dns0x20": "nodns0x20"}
+        dns_options_match = _DNS_OPTIONS_RE.match(self.conf['dns_options'])
+        if dns_options_match:
+            dns_options.update(dns_options_match.groupdict())
+        self.ctxt.dns.rotate = dns_options['rotate']
+        self.ctxt.dns.edns = dns_options['edns']
 
     def match(self, msg):
         """Match the message against all the rules in this ruleset."""

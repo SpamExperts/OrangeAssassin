@@ -1,7 +1,6 @@
 """Internal representation of email messages."""
 
-from __future__ import unicode_literals
-
+from builtins import str
 from builtins import set
 from builtins import list
 from builtins import dict
@@ -9,7 +8,6 @@ from builtins import object
 
 import re
 import email
-import socket
 import functools
 import ipaddress
 import email.utils
@@ -20,8 +18,11 @@ import email.mime.base
 import email.mime.text
 import email.mime.multipart
 
+from future.utils import PY3
+
 import pad
 import pad.context
+from pad.received_parser import ReceivedParser
 
 URL_RE = re.compile(r"""
 (
@@ -129,7 +130,7 @@ class Message(pad.context.MessageContext):
         self.addr_headers = _Headers()
         self.name_headers = _Headers()
         self.mime_headers = _Headers()
-        self.received_headers = _Headers()
+        self.received_headers = list()
         self.raw_mime_headers = _Headers()
         self.header_ips = _Headers()
         self.text = ""
@@ -142,6 +143,12 @@ class Message(pad.context.MessageContext):
         # Data
         self.sender_address = ""
         self.hostname_with_ip = list()
+        self.internal_relays = []
+        self.external_relays = []
+        self.last_internal_relay_index = 0
+        self.last_trusted_relay_index = 0
+        self.trusted_relays = []
+        self.untrusted_relays = []
         self._parse_message()
         self._hook_parsed_metadata()
 
@@ -179,14 +186,18 @@ class Message(pad.context.MessageContext):
             decoded_header = email.header.decode_header(header)
         except (ValueError, email.header.HeaderParseError):
             return
+
         for value, encoding in decoded_header:
             if encoding:
                 try:
                     parts.append(value.decode(encoding, "ignore"))
-                except (LookupError, UnicodeDecodeError, AssertionError):
+                except (LookupError, UnicodeError, AssertionError):
                     continue
             else:
-                parts.append(value)
+                if PY3:
+                    parts.append(value)
+                else:
+                    parts.append(value.decode("utf-8", "ignore"))
         return "".join(parts)
 
     def get_raw_header(self, header_name):
@@ -209,27 +220,14 @@ class Message(pad.context.MessageContext):
 
         :return: A list of `ipaddress.ip_address`.
         """
-        # XXX This should take into consideration the network
-        # XXX options. #40
-        return self.get_header_ips()
+        ips = [ip for ip in self.get_header_ips()
+               if ip not in self.ctxt.networks.trusted]
+        return ips
 
     def get_header_ips(self):
         values = list()
-        for value in self.get_received_headers("Received"):
-            ips = IPFRE.findall(value)
-            for ip in ips:
-                clean_ip = ip.strip("[ ]();\n")
-                try:
-                    values.append(ipaddress.ip_address(clean_ip))
-                except ValueError:
-                    continue
-        return values
-
-    @_memoize("received_headers")
-    def get_received_headers(self, header_name="Received"):
-        values = list()
-        for value in self.get_decoded_header(header_name):
-            values.append(value)
+        for header in self.received_headers:
+            values.append(ipaddress.ip_address(header["ip"]))
         return values
 
     @_memoize("addr_headers")
@@ -268,15 +266,6 @@ class Message(pad.context.MessageContext):
             values.append(self._decode_header(value))
         return values
 
-    def iter_raw_headers(self):
-        """Iterate through all the raw headers.
-
-        Yields strings like "<header_name>: <header_value>"
-        """
-        for header_name, values in self.raw_headers.items():
-            for value in values:
-                yield "%s: %s" % (header_name, value)
-
     def iter_decoded_headers(self):
         """Iterate through all the decoded headers.
 
@@ -286,56 +275,104 @@ class Message(pad.context.MessageContext):
             for value in self.get_decoded_header(header_name):
                 yield "%s: %s" % (header_name, value)
 
-    def iter_addr_headers(self):
-        """Iterate through all the addr decoded headers.
-
-        Yields strings like "<header_name>: <addr>"
-        """
-        for header_name in self.raw_headers:
-            for value in self.get_addr_header(header_name):
-                yield "%s: %s" % (header_name, value)
-
-    def iter_name_headers(self):
-        """Iterate through all the name decoded headers.
-
-        Yields strings like "<header_name>: <name>"
-        """
-        for header_name in self.raw_headers:
-            for value in self.get_name_header(header_name):
-                yield "%s: %s" % (header_name, value)
-
-    def iter_raw_mime_headers(self):
-        """Iterate through all the raw mime headers.
-
-        Yields strings like "<header_name>: <header_value>"
-        """
-        for header_name, values in self.raw_mime_headers.items():
-            for value in values:
-                yield "%s: %s" % (header_name, value)
-
-    def iter_mime_headers(self):
-        """Iterate through all the mime decoded headers.
-
-        Yields strings like "<header_name>: <header_value>"
-        """
-        for header_name in self.raw_mime_headers:
-            for value in self.get_decoded_mime_header(header_name):
-                yield "%s: %s" % (header_name, value)
+    def _create_plugin_tags(self, header):
+        for key, value in header.items():
+            self.plugin_tags[key.upper()] = value
 
     def _parse_sender(self):
         """Extract the envelope sender from the message."""
+
+        always_trust_envelope_from = self.ctxt.conf[
+            'always_trust_envelope_sender']
         headers = self.ctxt.conf["envelope_sender_header"] or DEFAULT_SENDERH
-        for sender_header in headers:
-            try:
-                sender = self.get_addr_header(sender_header)[0]
-            except IndexError:
-                continue
+
+        if self.external_relays:
+            sender = self.external_relays[0].get("envfrom").strip()
             if sender:
-                self.sender_address = sender.strip()
-                self.ctxt.log.debug("Using %s as sender: %s", sender_header,
-                                    sender)
+                self.sender_address = sender
                 return
-        # XXX This requires an advanced Received parsers #48
+        else:
+            if self.trusted_relays and not always_trust_envelope_from:
+                return
+
+            for sender_header in headers:
+                try:
+                    sender = self.get_addr_header(sender_header)[0]
+                except IndexError:
+                    continue
+                if sender:
+                    self.sender_address = sender.strip()
+                    self.ctxt.log.debug("Using %s as sender: %s",
+                                        sender_header, sender)
+                    return
+        return
+
+    def _parse_relays(self, relays):
+        """Walks though a relays list to extract
+        [un]trusted/internal/external relays"""
+        is_trusted = True
+        is_internal = True
+        found_msa = False
+
+        for position, relay in enumerate(relays):
+            relay['msa'] = 0
+            if relay['ip']:
+                ip = ipaddress.ip_address(str(relay['ip']))
+                in_internal = ip in self.ctxt.networks.internal
+                in_trusted = ip in self.ctxt.networks.trusted
+                in_msa = ip in self.ctxt.networks.msa
+                has_auth = relay.get("auth", None)
+                if is_trusted and not found_msa:
+                    if self.ctxt.networks.configured:
+                        if not in_trusted and not has_auth:
+                            is_trusted = False
+                            is_internal = False
+
+                        else:
+                            if is_internal and not has_auth and not in_internal:
+                                is_internal = False
+
+                            if in_msa:
+                                relay['msa'] = 1
+                                found_msa = True
+
+                    elif not ip.is_private and not has_auth:
+                        pass
+
+                relay['intl'] = int(is_internal)
+                if is_internal:
+                    self.internal_relays.append(relay)
+                    self.last_internal_relay_index = position
+                else:
+                    self.external_relays.append(relay)
+
+                if is_trusted:
+                    self.trusted_relays.append(relay)
+                    self.last_trusted_relay_index = position
+                else:
+                    self.untrusted_relays.append(relay)
+        tag_template = ("[ ip={ip} rdns={rdns} helo={helo} by={by} "
+                        "ident={ident} envfrom={envfrom} intl={intl} id={id} auth={auth} "
+                        "msa={msa} ]")
+
+        relays_tags = {
+            "RELAYSTRUSTED": " ".join([tag_template.format(**x)
+                                       for x in self.trusted_relays]),
+            "RELAYSUNTRUSTED": " ".join([tag_template.format(**x)
+                                         for x in self.untrusted_relays]),
+            "RELAYSINTERNAL": " ".join([tag_template.format(**x)
+                                        for x in self.internal_relays]),
+            "RELAYSEXTERNAL": " ".join([tag_template.format(**x)
+                                        for x in self.external_relays]),
+        }
+        if self.external_relays:
+            relays_tags.update({
+                "LASTEXTERNALIP": self.external_relays[-1]['ip'],
+                "LASTEXTERNALRDNS": self.external_relays[-1]['rdns'],
+                "LASTEXTERNALHELO": self.external_relays[-1]['helo']
+            })
+
+        self._create_plugin_tags(relays_tags)
 
     def _parse_message(self):
         """Parse the message."""
@@ -369,16 +406,22 @@ class Message(pad.context.MessageContext):
         self.text = " ".join(body)
         self.raw_text = "\n".join(raw_body)
         self._parse_sender()
+        received_headers = self.get_decoded_header("Received")
+        for header in self.ctxt.conf["originating_ip_headers"]:
+            headers = ["X-ORIGINATING-IP: %s" % x
+                       for x in self.get_decoded_header(header)]
+            received_headers.extend(headers)
+        received_obj = ReceivedParser(received_headers)
+        self.received_headers = received_obj.received
+        self._parse_relays(self.received_headers)
 
-        for value in self.get_received_headers("Received"):
-            if 'from' in value:
-                hostname = value.split(' ')[1]
-                ip = IPFRE.search(value).group()
-                clean_ip = ip.strip("[ ]();\n")
-                try:
-                    self.hostname_with_ip.append((hostname, clean_ip))
-                except ValueError:
-                    continue
+        try:
+            self._create_plugin_tags(self.received_headers[0])
+        except IndexError:
+            pass
+
+        for header in self.received_headers:
+            self.hostname_with_ip.append((header["rdns"], header["ip"]))
 
     @staticmethod
     def _iter_parts(msg):

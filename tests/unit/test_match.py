@@ -24,7 +24,7 @@ class TestRevokeReport(unittest.TestCase):
                         "parser.parse_pad_rules").start()
         self.ctxt = ruleset.return_value.get_ruleset.return_value.ctxt
         patch("scripts.match.MessageList").start()
-        patch("scripts.match.pad.config.get_config_files").start()
+        self.mock_get_configs = patch("pad.config.get_config_files").start()
         msg_class = patch("scripts.match.pad.message.Message").start()
         self.messages = [msg_class(self.ctxt, x) for x in self.raw_messages]
 
@@ -40,6 +40,22 @@ class TestRevokeReport(unittest.TestCase):
         patch("scripts.match.parse_arguments",
               return_value=options).start()
         scripts.match.main()
+        calls = [call(x) for x in self.messages]
+        self.ctxt.hook_report.assert_has_calls(calls)
+        self.ctxt.hook_revoke.assert_not_called()
+
+    def test_report_user_prefs(self):
+        options = scripts.match.parse_arguments(["--report",
+                                                 "--siteconfigpath", ".",
+                                                 "--configpath", ".",
+                                                 "--prefspath", "/prefs/path"])
+        options.messages = [[StringIO(x) for x in self.raw_messages]]
+        patch("scripts.match.parse_arguments",
+              return_value=options).start()
+        self.mock_get_configs.return_value = ["1.pre", "2.cf"]
+        scripts.match.main()
+        self.assertEqual(self.mock_get_configs.call_args,
+                         call('.', '.', '/prefs/path'))
         calls = [call(x) for x in self.messages]
         self.ctxt.hook_report.assert_has_calls(calls)
         self.ctxt.hook_revoke.assert_not_called()
@@ -90,8 +106,7 @@ class TestRevokeReport(unittest.TestCase):
         options.messages = [[StringIO(x) for x in self.raw_messages]]
         patch("scripts.match.parse_arguments",
               return_value=options).start()
-        self.mock_parse = patch(
-            "pad.config.get_config_files", return_value=[]).start()
+        self.mock_get_configs.return_value = []
         with self.assertRaises(SystemExit):
             scripts.match.main()
 

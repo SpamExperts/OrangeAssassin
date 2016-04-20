@@ -14,6 +14,7 @@ from builtins import dict
 from builtins import object
 
 import re
+import os
 import warnings
 import contextlib
 import collections
@@ -114,7 +115,9 @@ class PADParser(object):
         if _depth > MAX_RECURSION:
             raise pad.errors.MaxRecursionDepthExceeded()
         self.ctxt.log.debug("Parsing file: %s", filename)
-
+        if not os.path.isfile(filename):
+            self.ctxt.log.warn("Ignoring %s, not a file", filename)
+            return
         with open(filename, "rb") as rulef:
             for line_no, line in enumerate(rulef):
                 try:
@@ -188,6 +191,13 @@ class PADParser(object):
                 self.results[name]["type"] = rtype
                 self.results[name]["value"] = value
             else:
+                if rtype == 'priority':
+                    try:
+                        int(value)
+                    except ValueError:
+                        self.ctxt.err("%s:%s Invalid type for priority value "
+                                      "in configuration line: %s, setting it by"
+                                      " default to 0", filename, line_no, line)
                 self.results[name][rtype] = value
         else:
             if not self.ctxt.hook_parse_config(rtype, value):

@@ -1,5 +1,6 @@
 """Test DNSEval"""
 import unittest
+import pad.dns_interface
 import collections
 
 try:
@@ -21,7 +22,8 @@ class TestDNSEval(unittest.TestCase):
         self.local_data = {}
         self.global_data = {}
         self.mock_ctxt = MagicMock()
-        self.mock_ctxt.reverse_ip = pad.context.GlobalContext().reverse_ip
+        self.mock_ctxt.dns.reverse_ip = pad.dns_interface.DNSInterface().reverse_ip
+        self.mock_ctxt.skip_rbl_checks = False
         self.mock_msg = MagicMock()
         self.mock_msg.sender_address = "sender@example.com"
         self.mock_msg.get_untrusted_ips.return_value = self.ips
@@ -50,7 +52,7 @@ class TestDNSEval(unittest.TestCase):
         self.plugin.check_rbl(
             self.mock_msg, "example_ser", "example.com"
         )
-        self.mock_ctxt.query_dns.assert_called_with(
+        self.mock_ctxt.dns.query.assert_called_with(
             "1.0.0.127.example.com", 'A')
 
     def test_check_rbl_subnet(self):
@@ -58,7 +60,7 @@ class TestDNSEval(unittest.TestCase):
         self.plugin.check_rbl(
             self.mock_msg, "example_ser", "example.com", "127.0.0.1"
         )
-        self.mock_ctxt.query_dns.assert_called_with(
+        self.mock_ctxt.dns.query.assert_called_with(
             "1.0.0.127.example.com", 'A')
 
     def test_check_rbl_txt(self):
@@ -66,7 +68,7 @@ class TestDNSEval(unittest.TestCase):
         self.plugin.check_rbl_txt(
             self.mock_msg, "example_ser", "example.com", "127.0.0.2"
         )
-        self.mock_ctxt.query_dns.assert_called_with(
+        self.mock_ctxt.dns.query.assert_called_with(
             "1.0.0.127.example.com", 'TXT')
 
     def test_check_rbl_sub(self):
@@ -77,7 +79,7 @@ class TestDNSEval(unittest.TestCase):
         self.plugin.check_rbl_sub(
             self.mock_msg, "example_ser", "127.0.0.1",
         )
-        self.mock_ctxt.query_dns.assert_called_with(
+        self.mock_ctxt.dns.query.assert_called_with(
             "1.0.0.127.example.com", 'A')
 
     def test_check_rbl_sub_multi(self):
@@ -94,7 +96,7 @@ class TestDNSEval(unittest.TestCase):
         self.plugin.check_rbl_sub(
             self.mock_msg, "example_ser", "127.0.0.1",
         )
-        self.mock_ctxt.query_dns.assert_called_with(
+        self.mock_ctxt.dns.query.assert_called_with(
             "1.0.0.127.rbl.example.com.", 'A')
 
     def test_check_dns_sender_with_a_records(self):
@@ -103,7 +105,7 @@ class TestDNSEval(unittest.TestCase):
         def mock_query(domain, rtype="A"):
             return ["127.0.0.1"]
 
-        self.mock_ctxt.query_dns.side_effect = mock_query
+        self.mock_ctxt.dns.query.side_effect = mock_query
         result = self.plugin.check_dns_sender(self.mock_msg)
         self.assertFalse(result)
 
@@ -116,8 +118,8 @@ class TestDNSEval(unittest.TestCase):
         def mock_query_mx(domain, rtype="MX"):
             return ["127.0.0.1"]
 
-        self.mock_ctxt.query_dns.side_effect = mock_query_a
-        self.mock_ctxt.query_dns.side_effect = mock_query_mx
+        self.mock_ctxt.dns.query.side_effect = mock_query_a
+        self.mock_ctxt.dns.query.side_effect = mock_query_mx
         restult = self.plugin.check_dns_sender(self.mock_msg)
         self.assertFalse(restult)
 
@@ -130,8 +132,8 @@ class TestDNSEval(unittest.TestCase):
         def mock_query_mx(domain, rtype="MX"):
             return []
 
-        self.mock_ctxt.query_dns.side_effect = mock_query_a
-        self.mock_ctxt.query_dns.side_effect = mock_query_mx
+        self.mock_ctxt.dns.query.side_effect = mock_query_a
+        self.mock_ctxt.dns.query.side_effect = mock_query_mx
 
         result = self.plugin.check_dns_sender(self.mock_msg)
         self.assertTrue(result)
@@ -141,7 +143,7 @@ class TestDNSEval(unittest.TestCase):
         self.plugin.check_rbl_envfrom(
             self.mock_msg, "example_set", "example.org"
         )
-        self.mock_ctxt.query_dns.assert_called_with(
+        self.mock_ctxt.dns.query.assert_called_with(
             "example.com.example.org", 'A')
 
     def test_check_rbl_from_host(self):
@@ -151,7 +153,7 @@ class TestDNSEval(unittest.TestCase):
         self.plugin.check_rbl_from_host(
             self.mock_msg, "example_set", "example.com"
         )
-        self.mock_ctxt.query_dns.assert_called_with(
+        self.mock_ctxt.dns.query.assert_called_with(
             "example.net.example.com", 'A')
 
     def test_check_rbl_from_domain(self):
@@ -161,7 +163,7 @@ class TestDNSEval(unittest.TestCase):
         self.plugin.check_rbl_from_domain(
             self.mock_msg, "example_set", "example.com"
         )
-        self.mock_ctxt.query_dns.assert_called_with(
+        self.mock_ctxt.dns.query.assert_called_with(
             "example.org.example.com", 'A')
 
     def test_check_rbl_from_domain_addr(self):
@@ -172,7 +174,7 @@ class TestDNSEval(unittest.TestCase):
         self.plugin.check_rbl_from_domain(
             self.mock_msg, "example_set", "example.com", "127.0.0.1"
         )
-        self.mock_ctxt.query_dns.assert_called_with(
+        self.mock_ctxt.dns.query.assert_called_with(
             "domain.example.com.example.com", 'A')
 
     def test_check_rbl_accreditor(self):
@@ -181,7 +183,7 @@ class TestDNSEval(unittest.TestCase):
         self.plugin.check_rbl_accreditor(
             self.mock_msg, "accredit", "example.com", "127.0.0.1", "accreditor"
         )
-        self.mock_ctxt.query_dns.assert_called_with(
+        self.mock_ctxt.dns.query.assert_called_with(
             "1.0.0.127.example.com", 'A')
 
     def test_check_rbl_accreditor_from_header_no_match(self):
@@ -206,5 +208,36 @@ class TestDNSEval(unittest.TestCase):
             "accreditor"
         )
         # accredit', 'example.net', '127.0.1.2','accreditor1'
-        self.mock_ctxt.query_dns.assert_called_with(
+        self.mock_ctxt.dns.query.assert_called_with(
             "1.0.0.127.example.com", 'A')
+
+
+    def test_check_rbl_skip_rbl_check(self):
+        """Test the check_rbl method with skip_rbl_checks True."""
+        self.mock_ctxt.skip_rbl_checks = True
+
+        self.plugin._check_rbl(
+            self.mock_msg, "example_ser" 
+        )
+
+        self.mock_ctxt.dns.query.assert_not_called()
+
+    def test_check_rbl_addr_skip_rbl_check(self):
+        """Test the check_rbl method with skip_rbl_checks True."""
+        self.mock_ctxt.skip_rbl_checks = True
+
+        self.plugin._check_rbl_addr(
+            ['test@example.com'], "example_ser" 
+        )
+
+        self.mock_ctxt.dns.query.assert_not_called()
+
+    def test_check_multi_rbl_skip_rbl_check(self):
+        """Test the check_rbl method with skip_rbl_checks True."""
+        self.mock_ctxt.skip_rbl_checks = True
+
+        self.plugin._check_multi_rbl(
+            self.mock_msg, "example_ser" 
+        )
+
+        self.mock_ctxt.dns.query.assert_not_called()

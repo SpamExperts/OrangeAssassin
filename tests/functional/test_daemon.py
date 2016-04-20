@@ -1,10 +1,14 @@
 """Test the daemon protocol."""
+from __future__ import print_function
+
 import os
 import sys
 import time
 import email
 import socket
 import shutil
+import signal
+import getpass
 import unittest
 import platform
 import subprocess
@@ -12,6 +16,7 @@ import subprocess
 PRE_CONFIG = r"""
 # Plugins and settings here
 loadplugin Mail::SpamAssassin::Plugin::Check
+allow_user_rules True
 """
 
 CONFIG = r"""
@@ -19,9 +24,14 @@ CONFIG = r"""
 body GTUBE      /XJS\*C4JDBQADN1\.NSBN3\*2IDNEN\*GTUBE-STANDARD-ANTI-UBE-TEST-EMAIL\*C\.34X/
 describe GTUBE  Generic Test for Unsolicited Bulk Email
 score GTUBE     1000
+
+body STUBE      /XJS\*C4JDBQADN1\.NSBN3\*2IDNEN\*STUBE-STANDARD-ANTI-UBE-TEST-EMAIL\*C\.34X/
+describe STUBE  Generic Test for Unsolicited Bulk Email
+score STUBE     1000
 """
 
 GTUBE = "XJS*C4JDBQADN1.NSBN3*2IDNEN*GTUBE-STANDARD-ANTI-UBE-TEST-EMAIL*C.34X"
+STUBE = "XJS*C4JDBQADN1.NSBN3*2IDNEN*STUBE-STANDARD-ANTI-UBE-TEST-EMAIL*C.34X"
 
 TEST_MSG = """Subject: Email Flow Test
 From: Geo <test@example.com>
@@ -36,6 +46,10 @@ This is a test message.
 GTUBE_MSG = """Subject: test
 
 XJS*C4JDBQADN1.NSBN3*2IDNEN*GTUBE-STANDARD-ANTI-UBE-TEST-EMAIL*C.34X
+"""
+STUBE_MSG = """Subject: test
+
+XJS*C4JDBQADN1.NSBN3*2IDNEN*STUBE-STANDARD-ANTI-UBE-TEST-EMAIL*C.34X
 """
 
 MULTIPART_MSG = r"""From: Marco Antonio Islas Cruz <marco@seinternal.com>
@@ -70,8 +84,28 @@ Testing rule one-two-three
 --Apple-Mail=_9311E301-2E56-423D-B730-30A522F3844C--
 """
 
+USER_CONFIG = r"""
+body CUSTOM_RULE /abcdef123456/
+score CUSTOM_RULE 5
 
-class TestDaemon(unittest.TestCase):
+# This overrides the score from the site config
+score STUBE 7
+"""
+
+USER_CONFIG_GTUBE = r"""
+score GTUBE     7
+"""
+
+USER_TEST_MSG = """Subject: Email Flow Test
+From: Geo <test@example.com>
+To: jimi@example.com
+
+This is a abcdef123456 test message.
+
+"""
+
+
+class TestDaemonBase(unittest.TestCase):
     daemon_script = "scripts/padd.py"
     # Uncomment this to test under spamd
     # daemon_script = "spamd"
@@ -86,7 +120,7 @@ class TestDaemon(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        super(TestDaemon, cls).setUpClass()
+        super(TestDaemonBase, cls).setUpClass()
         cls.padd_procs = []
         try:
             os.makedirs(cls.test_conf)
@@ -115,17 +149,11 @@ class TestDaemon(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls):
-        super(TestDaemon, cls).tearDownClass()
+        super(TestDaemonBase, cls).tearDownClass()
         for padd_proc in cls.padd_procs:
             padd_proc.terminate()
             padd_proc.wait()
         shutil.rmtree(cls.test_conf, True)
-
-    def setUp(self):
-        unittest.TestCase.setUp(self)
-
-    def tearDown(self):
-        unittest.TestCase.tearDown(self)
 
     def send_to_proc(self, text):
         connection = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -147,6 +175,14 @@ class TestDaemon(unittest.TestCase):
             return "".join(response).split(None, 1)[1]
         except IndexError:
             self.fail("Failed to parse response: %r" % response)
+
+
+class TestDaemon(TestDaemonBase):
+    def setUp(self):
+        unittest.TestCase.setUp(self)
+
+    def tearDown(self):
+        unittest.TestCase.tearDown(self)
 
     def test_ping(self):
         """Return a confirmation that padd.py/spamd is alive."""
@@ -437,10 +473,201 @@ class TestDaemon(unittest.TestCase):
         self.assertEqual(expected, result)
 
 
+class TestUserConfigDaemon(TestDaemon):
+    """This runs the ALL the tests from TestDaemon but
+    appends always send the User: with each request.
+
+    Apart from the tests from TestDaemon this also has some tests
+    specific to the User Preferences.
+    """
+
+    username = getpass.getuser()
+    user_pref = USER_CONFIG
+    user_dir = os.path.join("/home", username, ".spamassassin")
+    user_msg_len = len(USER_TEST_MSG) + 2
+
+    @classmethod
+    def setUpClass(cls):
+        super(TestUserConfigDaemon, cls).setUpClass()
+        try:
+            os.makedirs(cls.user_dir)
+        except OSError as e:
+            print(e, file=sys.stderr)
+        with open(os.path.join(cls.user_dir, "user_prefs"), "w") as userf:
+            userf.write(cls.user_pref)
+
+    @classmethod
+    def tearDownClass(cls):
+        super(TestUserConfigDaemon, cls).tearDownClass()
+        try:
+            shutil.rmtree(cls.user_dir)
+        except OSError:
+            pass
+
+    def send_to_proc(self, text):
+        """Like the super method but also add the username to
+        the request.
+        """
+        try:
+            command, body = text.split("\r\n\r\n", 1)
+            text = "%s\r\nUser: %s\r\n\r\n%s" % (command, self.username, body)
+        except ValueError:
+            text = "%s\r\nUser: %s\r\n" % (text.strip(), self.username)
+
+        return super(TestUserConfigDaemon, self).send_to_proc(text)
+
+    def test_user_msg_symbols_spam(self):
+        """Check if message is spam or not, and return score plus list of
+        symbols hit"""
+        process_row = "SYMBOLS"
+        content_row = "Content-length: %s\r\n" % self.user_msg_len
+        command = ("%s SPAMC/1.2\r\n%s\r\n%s\r\n" %
+                   (process_row, content_row, USER_TEST_MSG))
+        result = self.send_to_proc(command).split("\r\n")
+        expected = [u'0 EX_OK',
+                    u'Spam: True ; 5.0 / 5.0',
+                    u'Content-length: 11',
+                    u'', u'CUSTOM_RULE']
+        self.assertEqual(result, expected)
+
+    def test_user_msg_check_no_match(self):
+        """Check if message is spam or not, and return score"""
+        process_row = "CHECK"
+        content_row = "Content-length: %s\r\n" % self.user_msg_len
+        command = ("%s SPAMC/1.2\r\n%s\r\n%s\r\n" %
+                   (process_row, content_row,
+                    USER_TEST_MSG.replace("abcdef123456", "abcdef555555")))
+        result = self.send_to_proc(command).split("\r\n")
+        expected = [u'0 EX_OK', u'Spam: False ; 0 / 5.0',
+                    u'Content-length: 0', u'', u'']
+        self.assertEqual(result, expected)
+
+    def test_user_msg_report_spam(self):
+        """Check if message is spam or not, and return score plus report"""
+        process_row = "REPORT"
+        content_row = "Content-length: %s\r\n" % self.user_msg_len
+        command = ("%s SPAMC/1.2\r\n%s\r\n%s\r\n" %
+                   (process_row, content_row, USER_TEST_MSG))
+        result = self.send_to_proc(command).split("\r\n")
+        expected = [u'0 EX_OK',
+                    u'Spam: True ; 5.0 / 5.0',
+                    u'Content-length: 28',
+                    u'',
+                    u'\n(no report template found)\n']
+        self.assertEqual(result, expected)
+
+    def test_user_msg_reportifspam_spam(self):
+        """Check if message is spam or not, and return score plus report"""
+        process_row = "REPORT_IFSPAM"
+        content_row = "Content-length: %s\r\n" % self.user_msg_len
+        command = ("%s SPAMC/1.2\r\n%s\r\n%s\r\n" %
+                   (process_row, content_row, USER_TEST_MSG))
+        result = self.send_to_proc(command).split("\r\n")
+        expected = [u'0 EX_OK',
+                    u'Spam: True ; 5.0 / 5.0',
+                    u'Content-length: 28',
+                    u'',
+                    u'\n(no report template found)\n']
+        self.assertEqual(result, expected)
+
+    def test_user_msg_skip(self):
+        """Check if message is spam or not, and skip it"""
+        process_row = "SKIP"
+        content_row = "Content-length: %s\r\n" % self.user_msg_len
+        command = ("%s SPAMC/1.2\r\n%s\r\n%s\r\n" %
+                   (process_row, content_row, USER_TEST_MSG))
+        with self.assertRaises(AssertionError):
+            self.send_to_proc(command).split("\r\n")
+
+    def test_user_msg_spam_override(self):
+        """Just check if the passed message is spam and verify that
+        score from user preferences overrides the one from config"""
+        process_row = "CHECK"
+        content_row = "Content-length: %s\r\n" % self.content_len
+        command = ("%s SPAMC/1.2\r\n%s\r\n%s\r\n" %
+                   (process_row, content_row, STUBE_MSG))
+        result = self.send_to_proc(command).split("\r\n")
+        expected = [u'0 EX_OK', u'Spam: True ; 7.0 / 5.0',
+                    u'Content-length: 0', u'', u'']
+        self.assertEqual(result, expected)
+
+
+class TestDaemonReload(TestDaemonBase):
+    username = getpass.getuser()
+    user_pref = USER_CONFIG
+    user_dir = os.path.join("/home", username, ".spamassassin")
+    user_msg_len = len(USER_TEST_MSG) + 2
+
+    @classmethod
+    def setUpClass(cls):
+        super(TestDaemonReload, cls).setUpClass()
+        try:
+            os.makedirs(cls.user_dir)
+        except OSError as e:
+            print(e, file=sys.stderr)
+        with open(os.path.join(cls.user_dir, "user_prefs"), "w") as userf:
+            userf.write(cls.user_pref)
+
+    @classmethod
+    def tearDownClass(cls):
+        super(TestDaemonReload, cls).tearDownClass()
+        try:
+            shutil.rmtree(cls.user_dir)
+        except OSError:
+            pass
+
+    def send_to_proc(self, text):
+        """Like the super method but also add the username to
+        the request.
+        """
+        try:
+            command, body = text.split("\r\n\r\n", 1)
+            text = "%s\r\nUser: %s\r\n\r\n%s" % (command, self.username, body)
+        except ValueError:
+            text = "%s\r\nUser: %s\r\n" % (text.strip(), self.username)
+
+        return super(TestDaemonReload, self).send_to_proc(text)
+
+    def test_user_msg_spam_override_reload(self):
+        """Test that after the daemon reloads newly added option
+        are correctly parsed.
+        """
+        # The first time this is used the score should be taken from
+        # the site config
+
+        process_row = "CHECK"
+        content_row = "Content-length: %s\r\n" % self.content_len
+        command = ("%s SPAMC/1.2\r\n%s\r\n%s\r\n" %
+                   (process_row, content_row, GTUBE_MSG))
+        result = self.send_to_proc(command).split("\r\n")
+        expected = [u'0 EX_OK', u'Spam: True ; 1000.0 / 5.0',
+                    u'Content-length: 0', u'', u'']
+        self.assertEqual(result, expected)
+
+        # We add an override and reload the daemon
+        with open(os.path.join(self.user_dir, "user_prefs"), "a") as userf:
+            userf.write(USER_CONFIG_GTUBE)
+        for padd_proc in self.padd_procs:
+            padd_proc.send_signal(signal.SIGUSR1)
+        time.sleep(1)
+
+        # Check the daemon again, the score should change.
+        process_row = "CHECK"
+        content_row = "Content-length: %s\r\n" % self.content_len
+        command = ("%s SPAMC/1.2\r\n%s\r\n%s\r\n" %
+                   (process_row, content_row, GTUBE_MSG))
+        result = self.send_to_proc(command).split("\r\n")
+        expected = [u'0 EX_OK', u'Spam: True ; 7.0 / 5.0',
+                    u'Content-length: 0', u'', u'']
+        self.assertEqual(result, expected)
+
+
 def suite():
     """Gather all the tests from this package in a test suite."""
     test_suite = unittest.TestSuite()
     test_suite.addTest(unittest.makeSuite(TestDaemon, "test"))
+    test_suite.addTest(unittest.makeSuite(TestUserConfigDaemon, "test"))
+    test_suite.addTest(unittest.makeSuite(TestDaemonReload, "test"))
     return test_suite
 
 

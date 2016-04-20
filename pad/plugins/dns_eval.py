@@ -11,12 +11,10 @@ from builtins import str
 import pad.rules.eval_
 import pad.plugins.base
 
-
 ACCREDITOR_RE = re.compile(r"[@.]a--([a-z0-9]{3,})\.", re.I)
 
 
 class DNSEval(pad.plugins.base.BasePlugin):
-
     eval_rules = (
         "check_rbl",
         "check_rbl_txt",
@@ -27,7 +25,7 @@ class DNSEval(pad.plugins.base.BasePlugin):
         "check_rbl_from_domain",
         "check_rbl_accreditor",
         # Deprecated in SA
-        #"check_rbl_results_for",
+        # "check_rbl_results_for",
     )
 
     def finish_parsing_end(self, ruleset):
@@ -75,6 +73,9 @@ class DNSEval(pad.plugins.base.BasePlugin):
         :return: True if there is a match and the subtest
           passes and False otherwise.
         """
+        if self.ctxt.skip_rbl_checks:
+            return False
+
         if subtest is not None:
             try:
                 subtest = re.compile(subtest)
@@ -83,8 +84,8 @@ class DNSEval(pad.plugins.base.BasePlugin):
                 return False
 
         for ip in msg.get_untrusted_ips():
-            rev = self.ctxt.reverse_ip(ip)
-            results = self.ctxt.query_dns("%s.%s" % (rev, rbl_server), qtype)
+            rev = self.ctxt.dns.reverse_ip(ip)
+            results = self.ctxt.dns.query("%s.%s" % (rev, rbl_server), qtype)
 
             if results and not subtest:
                 return True
@@ -105,6 +106,9 @@ class DNSEval(pad.plugins.base.BasePlugin):
         :return: True if there is a match and the mask
           passes and False otherwise.
         """
+        if self.ctxt.skip_rbl_checks:
+            return False
+
         if mask is not None:
             try:
                 mask = int(mask)
@@ -116,8 +120,8 @@ class DNSEval(pad.plugins.base.BasePlugin):
                     return False
 
         for ip in msg.get_untrusted_ips():
-            rev = self.ctxt.reverse_ip(ip)
-            results = self.ctxt.query_dns("%s.%s" % (rev, rbl_server), "A")
+            rev = self.ctxt.dns.reverse_ip(ip)
+            results = self.ctxt.dns.query("%s.%s" % (rev, rbl_server), "A")
 
             if results and not mask:
                 return True
@@ -139,6 +143,10 @@ class DNSEval(pad.plugins.base.BasePlugin):
         :return: True if there is a match and the subtest
           passes and False otherwise.
         """
+
+        if self.ctxt.skip_rbl_checks:
+            return False
+
         if subtest is not None:
             try:
                 subtest = re.compile(subtest)
@@ -151,7 +159,7 @@ class DNSEval(pad.plugins.base.BasePlugin):
                 domain = addr.rsplit("@", 1)[1].strip()
             else:
                 domain = addr.strip()
-            results = self.ctxt.query_dns("%s.%s" % (domain, rbl_server), "A")
+            results = self.ctxt.dns.query("%s.%s" % (domain, rbl_server), "A")
 
             if results and not subtest:
                 return True
@@ -247,7 +255,7 @@ class DNSEval(pad.plugins.base.BasePlugin):
         except KeyError as e:
             self.ctxt.err("Invalid zone %s: %s", zone_set, e)
             return False
-        return self._check_multi_rbl(msg,rbl_server, subtest)
+        return self._check_multi_rbl(msg, rbl_server, subtest)
 
     def check_dns_sender(self, msg, target=None):
         """Check if the sender domain has MX or A records.
@@ -264,9 +272,9 @@ class DNSEval(pad.plugins.base.BasePlugin):
         else:
             domain = msg.sender_address
 
-        if self.ctxt.query_dns(domain, "A"):
+        if self.ctxt.dns.query(domain, "A"):
             return False
-        if self.ctxt.query_dns(domain, "MX"):
+        if self.ctxt.dns.query(domain, "MX"):
             return False
         self.ctxt.log.debug("Sending domain %s has no MX or A records",
                             domain)
@@ -314,4 +322,3 @@ class DNSEval(pad.plugins.base.BasePlugin):
 
     # This two do the same thing
     check_rbl_from_host = check_rbl_from_domain
-

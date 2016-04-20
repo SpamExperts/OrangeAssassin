@@ -58,7 +58,13 @@ class EvalRule(pad.rules.base.BaseRule):
         self.eval_rule = new_method
 
     def match(self, msg):
-        return self.eval_rule(msg)
+        try:
+            return self.eval_rule(msg)
+        except Exception as e:
+            log = msg.ctxt.log
+            log.critical("Error while processing %s in function %s: %s",
+                         self.name, self.eval_rule_name, e, exc_info=True)
+            return False
 
     @staticmethod
     def get_rule_kwargs(data):

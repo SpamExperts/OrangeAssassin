@@ -2,7 +2,6 @@
 
 """Tests for pad.message"""
 
-import re
 import unittest
 import collections
 import email.header
@@ -85,7 +84,9 @@ class TestParseMessage(unittest.TestCase):
                                  "_headers": self.mime_headers
                                  })
         self.conf = {
-            "envelope_sender_header": []
+            "originating_ip_headers": [],
+            "envelope_sender_header": [],
+            "always_trust_envelope_sender": "0"
         }
         self.mock_ctxt = Mock(plugins={}, conf=self.conf)
 
@@ -235,7 +236,9 @@ class TestMessageVarious(unittest.TestCase):
     def setUp(self):
         unittest.TestCase.setUp(self)
         self.conf = {
-            "envelope_sender_header": []
+            "envelope_sender_header": [],
+            "originating_ip_headers": [],
+            "always_trust_envelope_sender": "0"
         }
         self.mock_ctxt = Mock(plugins={}, conf=self.conf)
 
@@ -255,10 +258,9 @@ class TestMessageVarious(unittest.TestCase):
         result = pad.message.Message.translate_line_breaks(text)
         self.assertEqual(result, expected)
 
-    @unittest.SkipTest
     def test_translate_line_breaks_nonascii(self):
-        text = "X-Envelope-Sender: 'ant㮩o.parreira'@credimedia.pt"
-        expected = "X-Envelope-Sender: 'ant㮩o.parreira'@credimedia.pt"
+        text = u"X-Envelope-Sender: 'ant㮩o.parreira'@credimedia.pt"
+        expected = u"X-Envelope-Sender: 'ant㮩o.parreira'@credimedia.pt"
         result = pad.message.Message.translate_line_breaks(text)
         self.assertEqual(result, expected)
 
@@ -280,12 +282,11 @@ class TestMessageVarious(unittest.TestCase):
         result = pad.message.Message._decode_header(enc_header)
         self.assertEqual(result, header)
 
-    @unittest.SkipTest
     def test_decode_header_no_encoding(self):
         header = "<alexey@spamexperts.com>"
         enc_header = email.header.make_header([(header, "utf-8"), ])
         patch("email.header.decode_header",
-              return_value=[(b'<alexey@spamexperts.com>', None), ]).start()
+              return_value=[('<alexey@spamexperts.com>', None), ]).start()
         result = pad.message.Message._decode_header(enc_header)
         self.assertEqual(result, header)
 
@@ -294,6 +295,8 @@ class TestGetHeaders(unittest.TestCase):
     def setUp(self):
         unittest.TestCase.setUp(self)
         self.conf = {
+            "originating_ip_headers": [],
+            "always_trust_envelope_sender": "0",
             "envelope_sender_header": []
         }
         self.mock_ctxt = Mock(plugins={}, conf=self.conf)
@@ -370,18 +373,6 @@ class TestGetHeaders(unittest.TestCase):
         self.msg.mime_headers = {name: expected}
         self.assertEqual(self.msg.get_decoded_mime_header(name), expected)
 
-    def test_iter_raw_headers(self):
-        headers = collections.OrderedDict()
-        headers["test1"] = ["1value1", "1value2"]
-        headers["test2"] = ["2value1", "2value2"]
-        headers["test3"] = ["3value1", "3value2"]
-        expected = ['test1: 1value1', 'test1: 1value2',
-                    'test2: 2value1', 'test2: 2value2',
-                    'test3: 3value1', 'test3: 3value2', ]
-        self.msg.raw_headers = headers
-        results = list(self.msg.iter_raw_headers())
-        self.assertEqual(results, expected)
-
     def test_iter_decoded_headers(self):
         headers = collections.OrderedDict()
         headers["test1"] = ["1value1", "1value2"]
@@ -394,54 +385,28 @@ class TestGetHeaders(unittest.TestCase):
         results = list(self.msg.iter_decoded_headers())
         self.assertEqual(results, expected)
 
-    def test_iter_addr_headers(self):
-        headers = collections.OrderedDict()
-        headers["test1"] = ["1value1", "1value2"]
-        headers["test2"] = ["2value1", "2value2"]
-        headers["test3"] = ["3value1", "3value2"]
-        expected = ['test1: 1value1', 'test1: 1value2',
-                    'test2: 2value1', 'test2: 2value2',
-                    'test3: 3value1', 'test3: 3value2', ]
-        self.msg.raw_headers = headers
-        results = list(self.msg.iter_addr_headers())
-        self.assertEqual(results, expected)
 
-    def test_iter_name_headers(self):
-        headers = collections.OrderedDict()
-        headers["test1"] = ["1value1 <>", "1value2 <>"]
-        headers["test2"] = ["2value1 <>", "2value2 <>"]
-        headers["test3"] = ["3value1 <>", "3value2 <>"]
-        expected = ['test1: 1value1', 'test1: 1value2',
-                    'test2: 2value1', 'test2: 2value2',
-                    'test3: 3value1', 'test3: 3value2', ]
-        self.msg.raw_headers = headers
-        results = list(self.msg.iter_name_headers())
-        self.assertEqual(results, expected)
+class TestParseRelays(unittest.TestCase):
+    def setUp(self):
+        unittest.TestCase.setUp(self)
+        self.conf = {
+            "originating_ip_headers": [],
+            "always_trust_envelope_sender": "0",
+            "envelope_sender_header": []
+        }
+        self.mock_ctxt = Mock(plugins={}, conf=self.conf)
+        self.msg = pad.message.Message(self.mock_ctxt, "Subject: test\n\n")
 
-    def test_iter_raw_mime_headers(self):
-        headers = collections.OrderedDict()
-        headers["test1"] = ["1value1", "1value2"]
-        headers["test2"] = ["2value1", "2value2"]
-        headers["test3"] = ["3value1", "3value2"]
-        expected = ['test1: 1value1', 'test1: 1value2',
-                    'test2: 2value1', 'test2: 2value2',
-                    'test3: 3value1', 'test3: 3value2', ]
-        self.msg.raw_mime_headers = headers
-        results = list(self.msg.iter_raw_mime_headers())
-        self.assertEqual(results, expected)
+    def tearDown(self):
+        unittest.TestCase.tearDown(self)
 
-    def test_iter_decoded_mime_headers(self):
-        headers = collections.OrderedDict()
-        headers["test1"] = ["1value1", "1value2"]
-        headers["test2"] = ["2value1", "2value2"]
-        headers["test3"] = ["3value1", "3value2"]
-        expected = ['test1: 1value1', 'test1: 1value2',
-                    'test2: 2value1', 'test2: 2value2',
-                    'test3: 3value1', 'test3: 3value2', ]
-        self.msg.raw_mime_headers = headers
-        results = list(self.msg.iter_mime_headers())
-        self.assertEqual(results, expected)
-
+    def test_parse_relays_blank_ip(self):
+        """parse_relays when 'ip' equals ''"""
+        relays = [{'ident': '', 'envfrom': '', 'id': u'md50000059687.msg',
+                   'ip': '', 'helo': '', 'by': u'proxy.example.local',
+                   'auth': '', 'rdns': u'mail.example.com'}, ]
+        self.msg._parse_relays(relays)
+        self.assertEqual(self.msg.external_relays, [])
 
 
 def suite():
@@ -453,6 +418,7 @@ def suite():
     test_suite.addTest(unittest.makeSuite(TestIterPartsMessage, "test"))
     test_suite.addTest(unittest.makeSuite(TestMessageVarious, "test"))
     test_suite.addTest(unittest.makeSuite(TestGetHeaders, "test"))
+    test_suite.addTest(unittest.makeSuite(TestParseRelays, "test"))
     return test_suite
 
 if __name__ == '__main__':

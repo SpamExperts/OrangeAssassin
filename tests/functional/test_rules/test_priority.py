@@ -37,6 +37,18 @@ priority TEST_OUT  3
 priority TEST_OUT -1
 
 body MONEY /money/
+priority MONEY 0.2
+"""
+
+CONFIG_INVALID = r"""
+body EMAIL /email/
+priority EMAIL -5
+
+body MONEY /money/
+priority MONEY first
+
+body TEST_RULE /abcd/
+priority TEST_RULE 2
 """
 
 CONFIG_HEADER = r"""
@@ -231,3 +243,9 @@ class TestPriorityRules(tests.util.TestBase):
         self.setup_conf(config=CONFIG_EVAL, pre_config=PRE_CONFIG)
         result = self.check_pad(MSG)
         self.check_report(result, 2.0, ["SPF_WHITELIST", "SPF_PASS"])
+
+    def test_priority_rule_invalid_value(self):
+        """Test priority for eval rules"""
+        self.setup_conf(config=CONFIG_INVALID, pre_config=PRE_CONFIG)
+        result = self.check_pad(MSG % "money email abcd")
+        self.check_report(result, 3.0, ["TEST_RULE", "MONEY", "EMAIL"])

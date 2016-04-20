@@ -1,0 +1,27 @@
+language: python
+build_image: drydock/u14pytall:tip
+python:
+  - 2.7
+
+install:
+  - sudo apt-get update
+  - sudo apt-get install python-dev libjpeg-dev build-essential zlib1g-dev
+  - pip install -r requirements/base.txt
+  - pip install -r requirements/python2.txt
+  - pip install -r requirements/tests.txt
+  - python setup.py install
+  - wget http://geolite.maxmind.com/download/geoip/database/GeoLiteCountry/GeoIP.dat.gz
+  - gunzip GeoIP.dat.gz
+  - wget http://geolite.maxmind.com/download/geoip/database/GeoIPv6.dat.gz
+  - gunzip GeoIPv6.dat.gz
+
+# Make folders for the reports
+before_script:
+  - mkdir -p shippable/testresults
+  - mkdir -p shippable/codecoverage
+
+script:
+  - py.test tests/ --cov pad --cov scripts --cov-report term-missing --junit-xml=shippable/testresults/py.test.xml
+after_script:
+  - coverage xml -o shippable/codecoverage/coverage.xml
+

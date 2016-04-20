@@ -20,11 +20,16 @@ class PyzorPlugin(pad.plugins.base.BasePlugin):
         super(PyzorPlugin, self).finish_parsing_end(ruleset)
         # Store a single Pyzor client in the global context at plugin
         # initialization, rather than creating a new one for every message
-        self["client"] = pyzor.client.BatchClient(self["pyzor_timeout"])
+        self["client"] = pyzor.client.BatchClient(
+            timeout=self["pyzor_timeout"]
+        )
 
     def check_pyzor(self, msg, target=None):
-        """Check the message with the defined pyzor servers. Stores the
-        digest so it can be used
+        """Check the message with the defined pyzor servers.
+        Stores the digest so it can be later used for reporting.
+
+        :return: True if the message is listed on Pyzor at least
+          `pyzor_max` times and was never whitelisted.
         """
         if not self["use_pyzor"]:
             return False
@@ -32,6 +37,7 @@ class PyzorPlugin(pad.plugins.base.BasePlugin):
         # Store the digest data in the local message context, so it can be
         # used for reporting later.
         self.set_local(msg, "digest", digest)
+        msg.plugin_tags["PYZOR_DIGEST"] = digest
 
         client = self["client"]
         self.ctxt.log.debug("Checking digest %s with Pyzor", digest)
@@ -41,6 +47,8 @@ class PyzorPlugin(pad.plugins.base.BasePlugin):
             wl_count = int(response["WL-Count"])
             self.ctxt.log.debug("Response from %s: (%s, %s)", server, r_count,
                                 wl_count)
+            msg.plugin_tags["PYZOR_COUNT"] = r_count
+            msg.plugin_tags["PYZOR_WL_COUNT"] = wl_count
             if r_count >= self["pyzor_max"] and not wl_count:
                 return True
         return False
