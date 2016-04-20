@@ -151,6 +151,7 @@ class GlobalContext(_Context):
         # XXX network options. #40.
         # XXX We should likely cache responses here as
         # XXX well.
+        self.log.debug("Querying %s for %s record", qname, qtype)
         if qtype == "PTR":
             qname = dns.reversename.from_address(qname)
         try:
@@ -317,6 +318,8 @@ class GlobalContext(_Context):
             self._resolver.nameservers = nameservers
             self._resolver.port = int(cport)
         del self.conf["dns_server"]
+        self._resolver.lifetime = self.conf["default_dns_lifetime"]
+        self._resolver.timeout = self.conf["default_dns_timeout"]
 
     @_callback_chain
     def hook_parsing_end(self, ruleset):
