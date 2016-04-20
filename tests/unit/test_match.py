@@ -22,7 +22,7 @@ class TestRevokeReport(unittest.TestCase):
     def setUp(self):
         ruleset = patch("scripts.match.pad.rules."
                         "parser.parse_pad_rules").start()
-        self.ctxt = ruleset.return_value.ctxt
+        self.ctxt = ruleset.return_value.get_ruleset.return_value.ctxt
         patch("scripts.match.MessageList").start()
         patch("scripts.match.pad.config.get_config_files").start()
         msg_class = patch("scripts.match.pad.message.Message").start()
@@ -47,7 +47,7 @@ class TestRevokeReport(unittest.TestCase):
     def test_revoke(self):
         options = scripts.match.parse_arguments(["--revoke",
                                                  "--siteconfigpath", ".",
-                                                 "--configpath", "."])
+                                                 "--configpath", ".", "-D"])
         options.messages = [[StringIO(x) for x in self.raw_messages]]
         patch("scripts.match.parse_arguments",
               return_value=options).start()

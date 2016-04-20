@@ -19,7 +19,9 @@ class TestProcessCommand(unittest.TestCase):
         self.conf = {
             "required_score": 5
         }
+        self.mockserver = Mock()
         self.mockrules = Mock(conf=self.conf)
+        self.mockserver.get_user_ruleset.return_value = self.mockrules
         for klass in ("ProcessCommand", "HeadersCommand"):
             patch("pad.protocol.process.%s.get_and_handle" % klass).start()
         self.msg = Mock(score=0)
@@ -30,14 +32,14 @@ class TestProcessCommand(unittest.TestCase):
 
     def test_process(self):
         cmd = pad.protocol.process.ProcessCommand(self.mockr, self.mockw,
-                                                  self.mockrules)
+                                                  self.mockserver)
         self.mockrules.get_adjusted_message.return_value = "Test"
         result = list(cmd.handle(self.msg, {}))
         self.mockrules.match.assert_called_with(self.msg)
 
     def test_process_result(self):
         cmd = pad.protocol.process.ProcessCommand(self.mockr, self.mockw,
-                                                  self.mockrules)
+                                                  self.mockserver)
         self.mockrules.get_adjusted_message.return_value = "Test"
         result = list(cmd.handle(self.msg, {}))
         self.assertEqual(result, ['Spam: False ; 0 / 5\r\n',
@@ -46,14 +48,14 @@ class TestProcessCommand(unittest.TestCase):
 
     def test_headers(self):
         cmd = pad.protocol.process.HeadersCommand(self.mockr, self.mockw,
-                                                  self.mockrules)
+                                                  self.mockserver)
         self.mockrules.get_adjusted_message.return_value = "Test"
         result = list(cmd.handle(self.msg, {}))
         self.mockrules.match.assert_called_with(self.msg)
 
     def test_headers_result(self):
         cmd = pad.protocol.process.HeadersCommand(self.mockr, self.mockw,
-                                                  self.mockrules)
+                                                  self.mockserver)
         self.mockrules.get_adjusted_message.return_value = "Test"
         result = list(cmd.handle(self.msg, {}))
         self.assertEqual(result, ['Spam: False ; 0 / 5\r\n',

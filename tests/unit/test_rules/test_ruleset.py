@@ -415,6 +415,7 @@ class TestRuleSet(unittest.TestCase):
                          b"Test report.")
         self.assertEqual(parts[2].get_payload(decode=True), text.encode("utf8"))
 
+
 def suite():
     """Gather all the tests from this package in a test suite."""
     test_suite = unittest.TestSuite()

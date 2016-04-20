@@ -136,3 +136,33 @@ For more details on the report see the report section of the documentation.
 
     This configuration is optional and any rule that doesn't have it will
     get "No description available".
+
+.. _priority-rule-options:
+
+Priority option
+===============
+
+This option can be used to prioritize rules to be evaluated before others. By default
+the rules are checked in the order they are defined in the config file and their
+priority value is 0. A negative priority will leave the evaluation at the end. Also
+note that the value of the priority must be integer.
+
+Example configuration::
+
+    body    TEST_RULE1  /test/
+    body    TEST_RULE2  /test/
+    body    TEST_RULE3  /test/
+    priority TEST_RULE2 5
+    priority TEST_RULE1 -1
+
+They will be evaluated in the next order::
+
+    TEST_RULE2
+    TEST_RULE3
+    TEST_RULE1
+
+.. note::
+
+    This configuration is optional and any rule that doesn't have it will get
+    the priority 0.
+

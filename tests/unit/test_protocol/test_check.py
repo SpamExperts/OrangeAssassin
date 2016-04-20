@@ -24,7 +24,9 @@ class TestCheckCommand(unittest.TestCase):
         self.conf = {
             "required_score": 5
         }
+        self.mockserver = Mock()
         self.mockrules = Mock(conf=self.conf)
+        self.mockserver.get_user_ruleset.return_value = self.mockrules
 
     def tearDown(self):
         unittest.TestCase.tearDown(self)
@@ -32,13 +34,13 @@ class TestCheckCommand(unittest.TestCase):
 
     def test_check(self):
         cmd = pad.protocol.check.CheckCommand(self.mockr, self.mockw,
-                                              self.mockrules)
+                                              self.mockserver)
         result = list(cmd.handle(self.msg, {}))
         self.mockrules.match.assert_called_with(self.msg)
 
     def test_check_score(self):
         cmd = pad.protocol.check.CheckCommand(self.mockr, self.mockw,
-                                              self.mockrules)
+                                              self.mockserver)
         self.msg.score = 2442
         result = list(cmd.handle(self.msg, {}))
         self.assertEqual(result, ["Spam: %s ; %s / %s\r\n" % (True, 2442, 5),
@@ -46,7 +48,7 @@ class TestCheckCommand(unittest.TestCase):
 
     def test_check_score_not_spam(self):
         cmd = pad.protocol.check.CheckCommand(self.mockr, self.mockw,
-                                              self.mockrules)
+                                              self.mockserver)
         self.msg.score = 1
         result = list(cmd.handle(self.msg, {}))
         self.assertEqual(result, ["Spam: %s ; %s / %s\r\n" % (False, 1, 5),
@@ -54,7 +56,7 @@ class TestCheckCommand(unittest.TestCase):
 
     def test_symbols_score(self):
         cmd = pad.protocol.check.SymbolsCommand(self.mockr, self.mockw,
-                                                self.mockrules)
+                                                self.mockserver)
         self.msg.score = 2442
         self.msg.rules_checked = collections.OrderedDict()
         self.msg.rules_checked['TEST_RULE_1'] = True
@@ -67,7 +69,7 @@ class TestCheckCommand(unittest.TestCase):
 
     def test_symbols_score_not_spam(self):
         cmd = pad.protocol.check.SymbolsCommand(self.mockr, self.mockw,
-                                                self.mockrules)
+                                                self.mockserver)
         self.msg.score = 3
         self.msg.rules_checked = collections.OrderedDict()
         self.msg.rules_checked['TEST_RULE_1'] = True
@@ -80,7 +82,7 @@ class TestCheckCommand(unittest.TestCase):
 
     def test_report_score(self):
         cmd = pad.protocol.check.ReportCommand(self.mockr, self.mockw,
-                                               self.mockrules)
+                                               self.mockserver)
         self.msg.score = 2442
         self.mockrules.get_report.return_value = "Test report"
         result = list(cmd.handle(self.msg, {}))
@@ -90,7 +92,7 @@ class TestCheckCommand(unittest.TestCase):
 
     def test_report_score_not_spam(self):
         cmd = pad.protocol.check.ReportCommand(self.mockr, self.mockw,
-                                               self.mockrules)
+                                               self.mockserver)
         self.msg.score = 4
         self.mockrules.get_report.return_value = "Test report"
         result = list(cmd.handle(self.msg, {}))
@@ -100,7 +102,7 @@ class TestCheckCommand(unittest.TestCase):
 
     def test_report_ifspam_score(self):
         cmd = pad.protocol.check.ReportIfSpamCommand(
-                self.mockr, self.mockw, self.mockrules)
+                self.mockr, self.mockw, self.mockserver)
         self.msg.score = 2442
         self.mockrules.get_report.return_value = "Test report"
         result = list(cmd.handle(self.msg, {}))
@@ -110,7 +112,7 @@ class TestCheckCommand(unittest.TestCase):
 
     def test_report_ifspam_score_not_spam(self):
         cmd = pad.protocol.check.ReportIfSpamCommand(
-                self.mockr, self.mockw, self.mockrules)
+                self.mockr, self.mockw, self.mockserver)
         self.msg.score = 4
         self.mockrules.get_report.return_value = "Test report"
         result = list(cmd.handle(self.msg, {}))
