@@ -7,4 +7,4 @@ langdetect==1.0.6
 sqlalchemy==1.0.12
 PyPDF2==1.25.1
 mysqlclient==1.3.7
-pyspf==2.0.12
+pyspf==2.0.12t
