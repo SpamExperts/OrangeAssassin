@@ -1,5 +1,5 @@
 future==0.15.2
-raven==5.13.0
+raven==5.14.0
 pyzor==1.0.0
 Pillow==3.2.0
 pygeoip==0.3.2
@@ -7,4 +7,4 @@ langdetect==1.0.6
 sqlalchemy==1.0.12
 PyPDF2==1.25.1
 mysqlclient==1.3.7
-pyspf==2.0.12t
+pyspf==2.0.12
