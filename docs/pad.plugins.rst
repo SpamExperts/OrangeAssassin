@@ -113,3 +113,10 @@ Plugin :mod:`whitelist_subject`
     :undoc-members:
     :show-inheritance:
 
+Plugin :mod:`spf`
+-------------------------------
+
+.. automodule:: pad.plugins.spf
+    :members:
+    :undoc-members:
+    :show-inheritance:
