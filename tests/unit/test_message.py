@@ -386,6 +386,29 @@ class TestGetHeaders(unittest.TestCase):
         self.assertEqual(results, expected)
 
 
+class TestParseRelays(unittest.TestCase):
+    def setUp(self):
+        unittest.TestCase.setUp(self)
+        self.conf = {
+            "originating_ip_headers": [],
+            "always_trust_envelope_sender": "0",
+            "envelope_sender_header": []
+        }
+        self.mock_ctxt = Mock(plugins={}, conf=self.conf)
+        self.msg = pad.message.Message(self.mock_ctxt, "Subject: test\n\n")
+
+    def tearDown(self):
+        unittest.TestCase.tearDown(self)
+
+    def test_parse_relays_blank_ip(self):
+        """parse_relays when 'ip' equals ''"""
+        relays = [{'ident': '', 'envfrom': '', 'id': u'md50000059687.msg',
+                   'ip': '', 'helo': '', 'by': u'proxy.example.local',
+                   'auth': '', 'rdns': u'mail.example.com'}, ]
+        self.msg._parse_relays(relays)
+        self.assertEqual(self.msg.external_relays, [])
+
+
 def suite():
     """Gather all the tests from this package in a test suite."""
     test_suite = unittest.TestSuite()
@@ -395,6 +418,7 @@ def suite():
     test_suite.addTest(unittest.makeSuite(TestIterPartsMessage, "test"))
     test_suite.addTest(unittest.makeSuite(TestMessageVarious, "test"))
     test_suite.addTest(unittest.makeSuite(TestGetHeaders, "test"))
+    test_suite.addTest(unittest.makeSuite(TestParseRelays, "test"))
     return test_suite
 
 if __name__ == '__main__':

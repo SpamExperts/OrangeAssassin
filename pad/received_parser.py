@@ -316,27 +316,24 @@ AUTH_RE2 = re.compile(r'.*? \(authenticated as (\S+)\)')
 AUTH_RE3 = re.compile(r"""
 \)\s\(Authenticated\ssender:\s\S+\)\sby\s\S+\s\(Postfix\)\swith\s""", re.X)
 
-ORIGINATING_IP_HEADER_RE = r"^({}).*"
+ORIGINATING_IP_HEADER_RE = r"^X-ORIGINATING-IP: ({}).*"
 
 # ========================================================
 
 
 class ReceivedParser(object):
-    def __init__(self, received_headers, originating_header_names=None):
-        self.originating_header_names = tuple()
-        if originating_header_names:
-            self.originating_header_names = tuple(originating_header_names)
+    def __init__(self, received_headers):
         self.received_headers = list()
         self.received = list()
         for header in received_headers:
-            if (self.originating_header_names and
-                    header.startswith(self.originating_header_names)):
-                self.received_headers.append(header)
-            elif header.startswith('from'):
+            if header.startswith('from'):
                 header = re.sub(r'\s+', ' ', header)  # removing '\n\t' chars
                 header = header.replace('from ', '', 1)
                 header = header.split(';')[0]
                 self.received_headers.append(header)
+            elif header.startswith("X-ORIGINATING-IP"):
+                self.received_headers.append(header)
+
         self._parse_message()
 
     @staticmethod
@@ -477,6 +474,8 @@ class ReceivedParser(object):
         private_ips = list()
         for item in ips:
             clean_ip = item.strip("[ ]();\n")
+            clean_ip = clean_ip.lower().replace('ipv6:','')
+            clean_ip = clean_ip.lower().replace('::ffff:','')
             if IP_PRIVATE.search(clean_ip):
                 count += 1
                 private_ips.append(clean_ip)
@@ -563,9 +562,14 @@ class ReceivedParser(object):
         :return: auth if is found if not it returns an empty string
         """
         auth = ""
-        if AUTH_RE3.search(header):
+        if ' by ' in header and AUTH_RE.match(header):
+            try:
+                auth = AUTH_RE.match(header).groups()[0]
+            except IndexError:
+                pass
+        elif AUTH_RE3.search(header):
             auth = 'Postfix'
-        elif ' by mx.google.com ' in header:
+        elif ' by mx.google.com with ESMTPS id ' in header:
             try:
                 version, cipher = AUTH_VC_RE.match(header).groups()
                 auth = "GMail - transport={version} " \
@@ -574,11 +578,6 @@ class ReceivedParser(object):
                 pass
         elif 'SquirrelMail authenticated ' in header:
             auth = "SquirrelMail"
-        elif ' by ' in header and AUTH_RE.match(header):
-            try:
-                auth = AUTH_RE.match(header).groups()[0]
-            except IndexError:
-                pass
         elif 'authenticated' in header and AUTH_RE2.search(header):
             auth = "CriticalPath"
         elif 'authenticated' in header:
@@ -596,8 +595,7 @@ class ReceivedParser(object):
                 id = self.get_id(header)
                 envfrom = self.get_envfrom(header)
                 auth = self.get_auth(header)
-                if (self.originating_header_names and
-                        header.startswith(self.originating_header_names)):
+                if header.startswith("X-ORIGINATING-IP"):
                     self.received.append({
                         "rdns": "", "ip": ip, "by": "",
                         "helo": "", "ident": "", "id": "", "envfrom": "",

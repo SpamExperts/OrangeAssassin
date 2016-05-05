@@ -3,6 +3,7 @@
 
 from __future__ import absolute_import, print_function
 import unittest
+from builtins import str
 
 import tests.util
 
@@ -98,9 +99,35 @@ TEST_IDNA = """Received: from %s
  o6PCS1im002238
  for <user@example.com>; Mon, 01 Feb 2016 03:45:37 -0600 (EST)"""
 
+
+MSGRELAYS = """Received: from mx6-05.smtp.antispamcloud.com
+ (mx6-05.smtp.antispamcloud.com [9.9.9.9]) by mx.google.com with ESMTPSA id
+ ld8si17897891wjc.77.2016.03.07.00.56.45 for <backendteam@gapps.spamexperts.com>
+ (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128)
+Received: from mx6-05.smtp.antispamcloud.com
+ (mx6-05.smtp.antispamcloud.com [9.8.9.8]) by mx.google.com with ESMTPSA id
+ ld8si17897891wjc.77.2016.03.07.00.56.45 for <backendteam@gapps.spamexperts.com>
+ (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128)
+Received: from mx6-06.smtp.antispamcloud.com
+ (mx6-06.smtp.antispamcloud.com [8.8.8.8]) by mx.google.com with id
+ ld8si17897891wjc.77.2016.03.07.00.56.45 for <backendteam@gapps.spamexperts.com>
+ (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128)
+ 
+ """
+
+IPHEADER = """Received: from mx6-05.smtp.antispamcloud.com
+ (mx6-05.smtp.antispamcloud.com [9.9.9.9]) by mx.google.com with ESMTPSA id
+ ld8si17897891wjc.77.2016.03.07.00.56.45 for <backendteam@gapps.spamexperts.com>
+ (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128)
+X-ORIGINATING-IP: 7.8.9.0
+
+"""
+
+
 class TestReceivedParser(tests.util.TestBase):
     """Test the parser for received headers"""
     def setUp(self):
+        self.maxDiff = None
         tests.util.TestBase.setUp(self)
 
     def tearDown(self):
@@ -234,8 +261,7 @@ class TestReceivedParser(tests.util.TestBase):
         by = "mx.google.com"
         helo = "mx6-05.smtp.antispamcloud.com."
         id = "ld8si17897891wjc.77.2016.03.07.00.56.45"
-        auth = ("GMail - transport=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 "
-                "bits=128/128")
+        auth = "ESMTPSA"
         expected = {"rdns": rdns, "ip": ip, "by": by, "helo": helo,
                     "ident": "", "id": id, "envfrom": "", "auth": auth}
         self._check_parser(MSG6, expected)
@@ -252,7 +278,6 @@ class TestReceivedParser(tests.util.TestBase):
                     "id": id, "envfrom": envfrom, "auth": auth}
         self._check_parser(TEST_IDENT, expected)
 
-    @unittest.skip("Refs. #48 - This case must be fixed. Currently test fail.")
     def test_header_ip4_mapped(self):
         """Test parsing IPs from Received header with IPv4 mapped"""
         rdns = "relay.example.com"
@@ -275,3 +300,135 @@ class TestReceivedParser(tests.util.TestBase):
         expected = {"rdns": domain, "ip": ip, "by": domain, "helo": domain,
                     "ident": "", "id": id, "envfrom": "", "auth": auth}
         self._check_parser(msg, expected)
+
+
+class TestTrustPath(tests.util.TestBase):
+
+    def setUp(self):
+        self.maxDiff = None
+        tests.util.TestBase.setUp(self)
+
+    def tearDown(self):
+        tests.util.TestBase.tearDown(self)
+
+    def test_relays_trusted(self):
+        config = ("clear_trusted_networks",
+                  "clear_internal_networks",
+                  "clear_msa_networks",
+                  "trusted_networks 9.9.9.9",
+                  "internal_networks 10.10.10.10\n")
+        self.setup_conf(pre_config="report _RELAYSTRUSTED_",
+                        config="\n".join(config))
+
+        expected = ("[ ip=9.9.9.9 rdns=mx6-05.smtp.antispamcloud.com "
+                    "helo=mx6-05.smtp.antispamcloud.com by=mx.google.com "
+                    "ident= envfrom= intl=1 id=ld8si17897891wjc.77.2016.03.07.00.56.45 "
+                    "auth=ESMTPSA msa=0 ] [ ip=9.8.9.8 rdns=mx6-05.smtp.antispamcloud.com "
+                    "helo=mx6-05.smtp.antispamcloud.com by=mx.google.com ident= envfrom= "
+                    "intl=1 id=ld8si17897891wjc.77.2016.03.07.00.56.45 auth=ESMTPSA msa=0 ]")
+
+        result = self.check_pad(MSGRELAYS)
+        self.assertAlmostEqual(str(expected), str(result))
+
+    def test_relays_untrusted(self):
+        config = ("clear_trusted_networks",
+                  "clear_internal_networks",
+                  "clear_msa_networks",
+                  "trusted_networks 9.9.9.9",
+                  "internal_networks 10.10.10.10\n")
+        self.setup_conf(pre_config="report _RELAYSUNTRUSTED_",
+                        config="\n".join(config))
+        expected = ("[ ip=8.8.8.8 rdns=mx6-06.smtp.antispamcloud.com "
+                    "helo=mx6-06.smtp.antispamcloud.com "
+                    "by=mx.google.com ident= envfrom= intl=0 "
+                    "id=ld8si17897891wjc.77.2016.03.07.00.56.45 auth= msa=0 ]")
+
+        result = self.check_pad(MSGRELAYS)
+        self.assertEqual(str(expected), str(result))
+
+    def test_relays_internal(self):
+        config = ("clear_trusted_networks",
+                  "clear_internal_networks",
+                  "clear_msa_networks",
+                  "trusted_networks 9.9.9.9",
+                  "internal_networks 10.10.10.10\n")
+        self.setup_conf(pre_config="report _RELAYSINTERNAL_",
+                        config="\n".join(config))
+        expected = ("[ ip=9.9.9.9 rdns=mx6-05.smtp.antispamcloud.com "
+                    "helo=mx6-05.smtp.antispamcloud.com "
+                    "by=mx.google.com ident= envfrom= intl=1 "
+                    "id=ld8si17897891wjc.77.2016.03.07.00.56.45 auth=ESMTPSA msa=0 ] "
+                    "[ ip=9.8.9.8 rdns=mx6-05.smtp.antispamcloud.com "
+                    "helo=mx6-05.smtp.antispamcloud.com "
+                    "by=mx.google.com ident= envfrom= intl=1 "
+                    "id=ld8si17897891wjc.77.2016.03.07.00.56.45 auth=ESMTPSA msa=0 ]")
+        result = self.check_pad(MSGRELAYS)
+        self.assertEqual(str(expected), str(result))
+
+    def test_relays_external(self):
+        config = ("clear_trusted_networks",
+                  "clear_internal_networks",
+                  "clear_msa_networks",
+                  "trusted_networks 9.9.9.9",
+                  "internal_networks 10.10.10.10\n")
+        self.setup_conf(pre_config="report _RELAYSEXTERNAL_",
+                        config="\n".join(config))
+
+
+        expected = ("[ ip=8.8.8.8 rdns=mx6-06.smtp.antispamcloud.com "
+                    "helo=mx6-06.smtp.antispamcloud.com by=mx.google.com "
+                    "ident= envfrom= intl=0 id=ld8si17897891wjc.77.2016.03."
+                    "07.00.56.45 auth= msa=0 ]")
+
+        result = self.check_pad(MSGRELAYS, debug=True)
+        self.assertEqual(str(expected), str(result))
+
+    def test_relays_last_external_ip(self):
+        config = ("clear_trusted_networks",
+                  "clear_internal_networks",
+                  "clear_msa_networks",
+                  "trusted_networks 9.9.9.9",
+                  "internal_networks 10.10.10.10\n")
+        self.setup_conf(pre_config="report _LASTEXTERNALIP_",
+                        config="\n".join(config))
+        expected = ("8.8.8.8")
+        result = self.check_pad(MSGRELAYS)
+        self.assertEqual(str(expected), str(result))
+
+    def test_relays_last_external_rdns(self):
+        config = ("clear_trusted_networks",
+                  "clear_internal_networks",
+                  "clear_msa_networks",
+                  "trusted_networks 9.9.9.9",
+                  "internal_networks 10.10.10.10\n")
+        self.setup_conf(pre_config="report _LASTEXTERNALRDNS_",
+                        config="\n".join(config))
+        expected = ("mx6-06.smtp.antispamcloud.com")
+        result = self.check_pad(MSGRELAYS)
+        self.assertEqual(str(expected), str(result))
+
+    def test_relays_last_external_helo(self):
+        config = ("clear_trusted_networks",
+                  "clear_internal_networks",
+                  "clear_msa_networks",
+                  "trusted_networks 9.9.9.9",
+                  "internal_networks 10.10.10.10\n")
+        self.setup_conf(pre_config="report _LASTEXTERNALHELO_",
+                        config="\n".join(config))
+        expected = ("mx6-06.smtp.antispamcloud.com")
+        result = self.check_pad(MSGRELAYS)
+        self.assertEqual(str(expected), str(result))
+
+    def test_relays_originating_ip(self):
+        config = ("clear_trusted_networks",
+                  "clear_internal_networks",
+                  "clear_msa_networks",
+                  "clear_originating_ip_headers",
+                  "originating_ip_headers X-ORIGINATING-IP",
+                  "trusted_networks 10.10.10.10",
+                  "internal_networks 10.10.10.10\n")
+        self.setup_conf(pre_config="report _LASTEXTERNALIP_",
+                        config="\n".join(config))
+        expected = "7.8.9.0"
+        result = self.check_pad(IPHEADER, debug=True)
+        self.assertEqual(str(expected), str(result))

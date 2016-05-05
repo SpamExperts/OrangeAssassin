@@ -60,13 +60,13 @@ SpamPAD accepts various types of configuration options. The current types are:
     settings. Every time the option is specified the values are appended to
     to a list. For example for the report option::
 
-        report This message is was marked as spam on _HOSTNAME_.
+        report This message was marked as spam on _HOSTNAME_.
         report The message score was _SCORE_.
         report Contact me at _CONTACTADDRESS_.
 
     Will result in the final option being evaluated as::
 
-        ["This message is was marked as spam on _HOSTNAME_.",
+        ["This message was marked as spam on _HOSTNAME_.",
          "The message score was _SCORE_.",
          "Contact me at _CONTACTADDRESS_."]
 **clear**
@@ -161,32 +161,35 @@ Reporting
 Network Options
 ---------------
 
-    Syntax::
-        trusted_networks [!]IP_ADDRESS[/MASKLEN] [...]
-        internal_networks [!]IP_ADDRESS[/MASKLEN] [...]
-        msa_networks [!]IP_ADDRESS[/MASKLEN] [...]
+Syntax::
 
-    `!`
-        excludes the network from the list
-    `MASKLEN`
-        the CIDR-style netmask length specified in bits. If it's not specified
-        it will be deduced from the IP_ADDRESS
-    `IP_ADDRESS`
-        an IPv4 or IPv6 address optionally enclosed in square brackets. If no
-        masklen is specified then one will be deduced from the ip like this: If
-        the ip has less than 4 octets and ends with a trailing dot then the
-        masklen is `num_octets * 8` if there is no trailing dot then the mask
-        will be `32` for IPv4 addresses and `128` for IPv6 addresses
+    trusted_networks [!]IP_ADDRESS[/MASKLEN] [...]
+
+    internal_networks [!]IP_ADDRESS[/MASKLEN] [...]
+        
+    msa_networks [!]IP_ADDRESS[/MASKLEN] [...]
+
+`!`
+    excludes the network from the list
+`MASKLEN`
+    the CIDR-style netmask length specified in bits. If it's not specified
+    it will be deduced from the IP_ADDRESS
+`IP_ADDRESS`
+    an IPv4 or IPv6 address optionally enclosed in square brackets. If no
+    masklen is specified then one will be deduced from the ip like this: If
+    the ip has less than 4 octets and ends with a trailing dot then the
+    masklen is `num_octets * 8` if there is no trailing dot then the mask
+    will be `32` for IPv4 addresses and `128` for IPv6 addresses
 
 **trusted_networks** [] (type `append split`)
-
-    The option can be specified multiple times, each one adding to the list of
-    of networks to be searched.
+    You can specify multiple networks. With each network specified, it will be
+    added to the list of trusted networks. 
 
     The networks are searched sequentially with the first match stopping the
     search, so you should write more specific subnets first.
 
-        Note::
+    .. note::
+        
         127.0.0.0/8 and ::1 are always included in trusted_networks and cannot
         be overriden
 
@@ -200,18 +203,31 @@ Network Options
     relays or MXes for your domains
 
     Examples::
+
         # Trust all in 192.168.*.*
+        
         trusted_networks 192.168.
+        
         # or
+        
         trusted_networks 192.168.0.0/16
 
         # Trust all in 192.168.*.* except those in 192.168.1.*
+        
         trusted_networks !192.168.1. 192.168. 
+        
         # or
+        
         trusted_networks !192.168.1.0/24 192.168.0.0/16
+        
         # or
+        
         trusted_networks !192.168.1.0/24
         trusted_networks !192.168.0.0/16
+
+**clear_trusted_networks** N/A (type `clear`)
+    Empties the list of trusted networks. 127.0.0.0/8 and ::1 will still exist
+    and they cannot be removed
 
 **internal_networks** [] (type `append split`)
     When you define an internal network then all hosts in the network are
@@ -223,11 +239,16 @@ Network Options
     If trusted networks is set and internal_networks is not then trusted
     networks will also be considered internal networks. 
 
-        Note::
+    .. note::
+
         127.0.0.0/8 and ::1 are always included in trusted_networks and cannot
         be overriden
 
-**internal_networks** [] (type `append split`)
+**clear_internal_networks** N/A (type `clear`)
+    Empties the list of internal networks. 127.0.0.0/8 and ::1 will still exist
+    and they cannot be removed
+    
+**msa_networks** [] (type `append split`)
     MSA hosts, also known as MX relays are hosts that accept mail from your own
     users and authenticate them properly.
 
@@ -241,18 +262,11 @@ Network Options
     and make sure that the MSA includes visible auth tokens in it's Received
     header 
 
-        Warning::
+    .. warning::
+
         You shouldn't include an msa that is also an MX or an intermediate
         relay for an MX in this setting because it will result in uknown
         external relays being trusted
-
-**clear_trusted_networks** N/A (type `clear`)
-    Empties the list of trusted networks. 127.0.0.0/8 and ::1 will still exist
-    and they cannot be removed
-
-**clear_internal_networks** N/A (type `clear`)
-    Empties the list of internal networks. 127.0.0.0/8 and ::1 will still exist
-    and they cannot be removed
 
 **clear_msa_networks** N/A (type `clear`)
     Empties the list of msa networks
@@ -268,23 +282,29 @@ DNS
     specified as IPv4 or IPv6 address with an optional port followed. Example::
 
         dns_server 127.0.0.1
+        
         dns_server 127.0.0.1:53
+        
         dns_server [::1]:53
 
     If no such nameserver is specified, the default ones from `/etc/resolv.conf`
     will be used.
 **clear_dns_servers** N/A (type `clear`)
     Clear any custom nameserver set by `dns_server`.
+
 **default_dns_lifetime** 10.0 (type `float`)
     Sets the timeout for a full DNS lookup. I.e. any DNS lookup will have at
     most 10 seconds to get a valid response from one of the DNS server.
+
 **default_dns_timeout** 2.0 (type `float`)
     Set the timeout for a DNS lookup from a single nameserver.
+.. _dns_available:
 **dns_available** yes ( type `str` )
     Configure whether DNS resolving is available or not. If you specify it as
     yes or no then no tests will be performed. Example::
         
         dns_available yes
+        
         dns_available no
     
     If you want to determine the availability dynamically you can use the value
@@ -308,7 +328,9 @@ DNS
     determine the the time unit (s, m, h, d, w) Example::
     
         dns_test_interval 600
+        
         dns_test_interval 600s
+        
         dns_test_interval 10m 
 
 **dns_query_restriction** "" ( type `string` )
@@ -394,4 +416,18 @@ in tags which can be accessed with the next keywords:
     Message identification number given by the machine who received the message
 **_AUTH_**
     Authentication
+**_RELAYSTRUSTED_**
+    Relays used and deemed to be trusted
+**_RELAYSUNTRUSTED_**
+    Relays used that can not be trusted
+**_RELAYSINTERNAL_**
+    Relays used and deemed to be internal
+**_RELAYSEXTERNAL_**
+    Relays used and deemed to be external
+**_LASTEXTERNALIP_**
+    IP address of client in the external-to-internal SMTP handover
+**_LASTEXTERNALRDNS_**
+    Reverse-DNS of client in the external-to-internal SMTP handover
+**_LASTEXTERNALHELO_**
+    HELO string used by client in the external-to-internal SMTP handover
 

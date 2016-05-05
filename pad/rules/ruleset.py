@@ -295,7 +295,7 @@ class RuleSet(object):
                 self.ctxt.log.info(
                     "Invalid value for dns_query_restriction %s", value)
                 continue
-            self.ctxt.dns.query_restrictions[qname] = option == "allow"
+            self.ctxt.dns.query_restrictions[qname] = option == "deny"
         dns_options = {"edns": "edns=4096",
                        "rotate": "norotate",
                        "dns0x20": "nodns0x20"}

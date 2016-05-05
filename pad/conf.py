@@ -176,7 +176,7 @@ class PADConf(Conf):
         "clear_originating_ip_headers": ("clear", ["originating_ip_headers"]),
         "clear_dns_query_restriction": ("clear", ["dns_query_restriction"]),
         "always_trust_envelope_sender": ("int", 0),
-        "dns_available": ("string", "yes"),
+        "dns_available": ("str", "yes"),
         "dns_local_ports_permit": ("append_split", []),
         "dns_local_ports_avoid": ("append_split", []),
         "dns_test_interval": ("str", "600"),
