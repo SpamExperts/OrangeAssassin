@@ -1,5 +1,5 @@
 future==0.15.2
-raven==5.16.0
+raven==5.17.0
 pyzor==1.0.0
 Pillow==3.2.0
 pygeoip==0.3.2
