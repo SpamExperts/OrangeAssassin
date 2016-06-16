@@ -85,6 +85,16 @@ class RuleSet(object):
                 data["TESTS"] = "none"
             else:
                 data["TESTS"] = ",".join(matched_rules)
+
+        if "TESTSSCORES" in self.tags:
+            matched_rules = ["%s=%s" % (name, int(result))
+                             for name, result in msg.rules_checked.items()
+                             if result]
+            if not matched_rules:
+                data["TESTSSCORES"] = "none"
+            else:
+                data["TESTSSCORES"] = ",".join(matched_rules)
+
         if "SUMMARY" in self.tags:
             data["SUMMARY"] = self.get_summary_report(msg)
         if "PREVIEW" in self.tags:

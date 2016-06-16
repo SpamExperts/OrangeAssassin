@@ -37,6 +37,7 @@ Available plugins
     pad.plugins.textcat
     pad.plugins.uri_detail
     pad.plugins.whitelist_subject
+    pad.plugins.spf
 
 
 Plugin reference
