@@ -1,7 +1,7 @@
 future==0.15.2
 raven==5.21.0
 pyzor==1.0.0
-Pillow==3.2.0
+Pillow==3.3.0
 pygeoip==0.3.2
 langdetect==1.0.6
 sqlalchemy==1.0.13
