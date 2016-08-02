@@ -113,6 +113,8 @@ class HTML(HTMLParser):
 
     def handle_data(self, data):
         """Handle the text in anchors"""
+        if not all([data, self.last_start_tag, self.current_link]):
+            return
         if self.last_start_tag in ("a", "link"):
             self.links[self.current_link]["text"] = data
 

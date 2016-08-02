@@ -18,7 +18,7 @@ Contribute
 ==========
 
 - `Issue Tracker <http://github.com/SpamExperts/SpamPAD/issues>`_
-- `Source Code <http://github.com/SpamExperts/SpaPAD>`_
+- `Source Code <http://github.com/SpamExperts/SpamPAD>`_
 
 Getting the source
 ==================

@@ -107,17 +107,16 @@ class NetworkListTest(unittest.TestCase):
     def tearDown(self):
         super(NetworkListTest, self).tearDown()
 
-    def test_format_network_string_no_mask(self):
-        network = self.networks._format_network_str("127.", "32")
+    def test_format_network_string_full_mask(self):
+        network = pad.networks._format_network_str("127.", "32")
+        self.assertEqual(network, "127.0.0.0/32")
+
+    def test_format_network_string_full_mask_partial(self):
+        network = pad.networks._format_network_str("127.0.0.", "32")
         self.assertEqual(network, "127.0.0.0/32")
 
     def test_format_network_string_no_mask(self):
-        network = self.networks._format_network_str("127.0.0.", "32")
-        self.assertEqual(network, "127.0.0.0/32")
-
-
-    def test_format_network_string_no_mask(self):
-        network = self.networks._format_network_str("127.", "")
+        network = pad.networks._format_network_str("127.", "")
         self.assertEqual(network, "127.0.0.0/8")
 
     def test_extract_network(self):
