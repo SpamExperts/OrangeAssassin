@@ -1,26 +1,22 @@
 from __future__ import absolute_import
 
 import re
-import pad.regex
-import pad.errors
-import pad.plugins.base
-import logging
-import os
-import dns
-# import spamexperts
-import pad.message
-import ipaddress
 from collections import defaultdict
+
+import dns
+import ipaddress
+
+import pad.plugins.base
 from pad.networks import _format_network_str
 
-# USER_AGENT = "SpamExperts/%s (filter/dns)" % spamexperts.__version__
 
-FROM_HEADERS = (
-'From', "Envelope-Sender", 'Resent-From', 'X-Envelope-From', 'EnvelopeFrom')
+FROM_HEADERS = ('From', "Envelope-Sender", 'Resent-From', 'X-Envelope-From',
+                'EnvelopeFrom')
 TO_HEADERS = ('To', 'Resent-To', 'Resent-Cc', 'Apparently-To', 'Delivered-To',
               'Envelope-Recipients', 'Apparently-Resent-To', 'X-Envelope-To',
               'Envelope-To',
-              'X-Delivered-To', 'X-Original-To', 'X-Rcpt-To', 'X-Real-To', 'Cc')
+              'X-Delivered-To', 'X-Original-To', 'X-Rcpt-To', 'X-Real-To',
+              'Cc')
 TL_TLDS = ['.com', '.co.uk']
 
 
@@ -68,6 +64,9 @@ class WLBLEvalPlugin(pad.plugins.base.BasePlugin):
     }
 
     def check_start(self, msg):
+        """Parses all the required white and blacklists. Stores
+        the results in the the "parsed" versions.
+        """
         self['parsed_whitelist_from'] = self.parse_list('whitelist_from')
         self['parsed_whitelist_to'] = self.parse_list('whitelist_to')
         self['parsed_blacklist_from'] = self.parse_list('blacklist_from')
@@ -183,33 +182,6 @@ class WLBLEvalPlugin(pad.plugins.base.BasePlugin):
                 for address in msg.get_addr_header(key):
                     yield address
 
-    # def load_two_level_tlds():
-    #     """Load the most recent version of two-level TLDs (cached, ideally).
-    #     """
-    #     logger = logging.getLogger("se-filter")
-    #     cache = os.path.join("/var", "cache", "spamexperts", "tl-tlds")
-    #     if os.path.exists(cache):
-    #         with open(cache, "rb") as cachef:
-    #             data = cachef.read()
-    #     else:
-    #         req = urllib2.Request(
-    #             "http://download.seinternal.com/domain/two-level-tlds",
-    #             headers={"User-Agent": USER_AGENT})
-    #         url = urllib2.urlopen(req)
-    #         data = url.read()
-    #         try:
-    #             with open(cache, "wb") as cachef:
-    #                 cachef.write(data)
-    #         except IOError as e:
-    #             logger.warn("Unable to create top-level TLDs cache: %s", e)
-    #         else:
-    #             logger.info("Loaded two-level TLD list.")
-    #     for tld in data.split():
-    #         if tld.strip():
-    #             TL_TLDS.add(tld.strip())
-    #
-    # load_two_level_tlds()
-
     def base_domain(self, address):
         domain = address
         parts = domain.split('.')
@@ -228,65 +200,58 @@ class WLBLEvalPlugin(pad.plugins.base.BasePlugin):
 
     # done
     def check_from_in_whitelist(self, msg, target=None):
+        return self._check_whitelist(msg, "from_in_whitelist")
+
+    def _check_whitelist(self, msg, check_name):
         addresses = self.get_from_addresses(msg)
         list_name = 'parsed_whitelist_from'
-        if self.get_local(msg, "from_in_whitelist") == 0:
+        if self.get_local(msg, check_name) == 0:
             exists = self.check_in_list(msg, addresses, list_name,
-                                        "from_in_whitelist")
-        return self.get_local(msg, "from_in_whitelist") > 0
+                                        check_name)
+        return self.get_local(msg, check_name) > 0
 
     # done
     def check_to_in_whitelist(self, msg, target=None):
-        addresses = self.get_to_addresses(msg)
-        list_name = 'parsed_whitelist_to'
-        return self.check_address_in_list(addresses, list_name)
+        return self.check_address_in_list(self.get_to_addresses(msg),
+                                          'parsed_whitelist_to')
 
     # done
     def check_from_in_blacklist(self, msg, target=None):
-        addresses = self.get_from_addresses(msg)
-        list_name = 'parsed_blacklist_from'
-        return self.check_address_in_list(addresses, list_name)
+        return self.check_address_in_list(self.get_from_addresses(msg),
+                                          'parsed_blacklist_from')
 
     # done
     def check_to_in_blacklist(self, msg, target=None):
-        addresses = self.get_to_addresses(msg)
-        list_name = 'parsed_blacklist_to'
-        return self.check_address_in_list(addresses, list_name)
+        return self.check_address_in_list(self.get_to_addresses(msg),
+                                          'parsed_blacklist_to')
 
     # done
     def check_from_in_list(self, msg, list_name, target=None):
         if not list_name:
             return False
-        addresses = self.get_from_addresses(msg)
-        return self.check_address_in_list(addresses, list_name)
-
-    # done
-    def check_to_in_all_spam(self, msg, target=None):
-        addresses = self.get_to_addresses(msg)
-        list_name = 'parsed_all_spam_to'
-        return self.check_address_in_list(addresses, list_name)
-
-    # done
-    def check_to_in_more_spam(self, msg, target=None):
-        addresses = self.get_to_addresses(msg)
-        list_name = 'parsed_more_spam_to list'
-        return self.check_address_in_list(addresses, list_name)
+        return self.check_address_in_list(self.get_from_addresses(msg),
+                                          list_name)
 
     # done
     def check_to_in_list(self, msg, list_name, target=None):
         if not list_name:
             return False
-        addresses = self.get_to_addresses(msg)
-        return self.check_address_in_list(addresses, list_name)
+        return self.check_address_in_list(self.get_to_addresses(msg),
+                                          list_name)
+
+    # done
+    def check_to_in_all_spam(self, msg, target=None):
+        return self.check_address_in_list(self.get_to_addresses(msg),
+                                          'parsed_all_spam_to')
+
+    # done
+    def check_to_in_more_spam(self, msg, target=None):
+        return self.check_address_in_list(self.get_to_addresses(msg),
+                                          'parsed_more_spam_to list')
 
     # done
     def check_from_in_default_whitelist(self, msg, target=None):
-        addresses = self.get_from_addresses(msg)
-        list_name = 'parsed_def_whitelist_from_rcvd'
-        if self.get_local(msg, "from_in_default_whitelist") == 0:
-            exists = self.check_in_list(msg, addresses, list_name,
-                                        "from_in_default_whitelist")
-        return self.get_local(msg, "from_in_default_whitelist") > 0
+        return self._check_whitelist(msg, "from_in_default_whitelist")
 
     # done
     def check_mailfrom_matches_rcvd(self, msg, target=None):
@@ -330,7 +295,6 @@ class WLBLEvalPlugin(pad.plugins.base.BasePlugin):
 
     # done
     def check_whitelist_rcvd(self, msg, list_name, target=None):
-        self.ctxt.log.debug("MESSAGE CHECK_WHITELIST_RCVD")
         if len(msg.untrusted_relays) + len(msg.trusted_relays) < 0:
             return 0
         relays = []
@@ -345,28 +309,34 @@ class WLBLEvalPlugin(pad.plugins.base.BasePlugin):
             regexp = white_addr.replace("*", ".*")
             for domain in self[list_name][white_addr]:
                 if re.search(regexp, address):
-                    match = 0  # pe else
-                    for relay in relays:
-                        # extract the string between "[ ... ]"
-                        wl_ip = domain.strip("[ ").rstrip(" ]")
-                        rly_ip = relay['ip']
-                        # check if is an IP address
-                        try:
-                            network = _format_network_str(str(wl_ip), None)
-                            network = ipaddress.ip_network(network)
-                            # same network
-                            if ipaddress.ip_address(rly_ip) in network:
-                                match = 1
-                                break
-                        except ValueError:
-                            # it's not a valid IP - match by rdns
-                            rdns = relay['rdns'].lower()
-                            if domain in rdns:
-                                match = 1
-                                break
+                    match = self.check_rcvd(domain, match, relays)
                     if match:
                         return 1
                     found_forged = -1
+        found_forged = self.check_found_forged(address, found_forged)
+        return found_forged
+
+    def check_rcvd(self, domain, match, relays):
+        for relay in relays:
+            # extract the string between "[ ... ]"
+            wl_ip = domain.strip("[ ").rstrip(" ]")
+            # check if is an IP address
+            try:
+                network = ipaddress.ip_network(_format_network_str(str(wl_ip),
+                                                                   None))
+                # same network
+                if ipaddress.ip_address(relay['ip']) in network:
+                    match = 1
+                    break
+            except ValueError:
+                # it's not a valid IP - match by rdns
+                rdns = relay['rdns'].lower()
+                if domain in rdns:
+                    match = 1
+                    break
+        return match
+
+    def check_found_forged(self, address, found_forged):
         if found_forged:
             wlist = self['parsed_whitelist_allow_relays']
             for key in wlist:
@@ -390,8 +360,8 @@ class WLBLEvalPlugin(pad.plugins.base.BasePlugin):
 
     # done
     def check_uri_host_in_whitelist(self, msg, target=None):
-        return self.check_uri_host_listed(self, msg, 'WHITE', None)
+        return self.check_uri_host_listed(msg, 'WHITE', None)
 
     # done
     def check_uri_host_in_blacklist(self, msg, target=None):
-        return self.check_uri_host_listed(self, msg, 'BLACK', None)
+        return self.check_uri_host_listed(msg, 'BLACK', None)
