@@ -44,15 +44,16 @@ class TestDaemon(unittest.TestCase):
         self.mock_pfs.assert_called_with(
             ("0.0.0.0", 783), '/etc/mail/spamassassin',
             '/etc/mail/spamassassin', paranoid=False,
-            ignore_unknown=True, prefork=6
+            ignore_unknown=True
         )
+        self.assertEqual(self.mock_pfs.return_value.prefork, 6)
         self.mock_pfs.return_value.serve_forever.assert_called_with()
 
 
 class TestAction(unittest.TestCase):
     def setUp(self):
         unittest.TestCase.setUp(self)
-        self.mock_kill = patch("scripts.padd.os.kill").start()
+        self.mock_send = patch("scripts.padd.spoon.daemon.send_action").start()
         patch("scripts.padd.pad.config.setup_logging").start()
         patch("scripts.padd.os.path.exists", return_value=True).start()
         self.argv = ["padd.py"]
@@ -69,12 +70,12 @@ class TestAction(unittest.TestCase):
     def test_reload(self):
         self.argv.append("reload")
         scripts.padd.main()
-        self.mock_kill.assert_called_with(1001, signal.SIGUSR1)
+        self.mock_send.assert_called_with("reload", "/var/run/padd.pid")
 
     def test_stop(self):
         self.argv.append("stop")
         scripts.padd.main()
-        self.mock_kill.assert_called_with(1001, signal.SIGTERM)
+        self.mock_send.assert_called_with("stop", "/var/run/padd.pid")
 
 
 
