@@ -18,6 +18,16 @@ _NETWORK_RE = re.compile(r"""
 """, re.I | re.S | re.M | re.X)
 
 
+def _format_network_str(network, mask):
+    padding = ""
+    if network.endswith("."):
+        padding = ".".join(["0"] * (4 - network.count(".")))
+        if not mask:
+            mask = network.count(".") * 8
+    if mask:
+        return str("%s%s/%s" % (network, padding, mask))
+    return str("%s%s" % (network, padding))
+
 class NetworkListBase(object):
     _always_accepted = ()
     configured = False
@@ -67,19 +77,11 @@ class NetworkList(object):
     def configured(self):
         return self.internal.configured or self.trusted.configured
 
-    def _format_network_str(self, network, mask):
-        padding = ""
-        if network.endswith("."):
-            padding = ".".join(["0"] * (4 - network.count(".")))
-            if not mask:
-                mask = network.count(".") * 8
-        if mask:
-            return str("%s%s/%s" % (network, padding, mask))
-        return str("%s%s" % (network, padding))
+
 
     def _extract_network(self, network_str):
         excluded, network, mask = _NETWORK_RE.match(network_str).groups()
-        clean_value = self._format_network_str(network, mask)
+        clean_value = _format_network_str(network, mask)
         try:
             network = ipaddress.ip_network(clean_value)
         except ValueError:
