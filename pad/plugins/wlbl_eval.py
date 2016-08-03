@@ -221,14 +221,15 @@ class WLBLEvalPlugin(pad.plugins.base.BasePlugin):
                     yield address
 
     def base_domain(self, address):
+        """ Handle numeric IPs in URIs similarly, but reverse the octet
+        ordering before comparison against the RBL. For example,
+        http://10.20.30.40/ is checked as 40.30.20.10.multi.surbl.org.
+        """
         domain = address
         parts = domain.split('.')
         if len(parts) < 3:
             return ".".join(parts)
         if len([p for p in parts if not p.isdigit()]) == 0:
-            # Handle numeric IPs in URIs similarly, but reverse the octet
-            # ordering before comparison against the RBL. For example,
-            # http://10.20.30.40/ is checked as 40.30.20.10.multi.surbl.org.
             return ".".join(parts[::-1])
         if ".".join(parts[-3:]) in TL_TLDS:
             return ".".join(parts[-4:])
