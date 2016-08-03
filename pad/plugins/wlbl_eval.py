@@ -11,7 +11,8 @@ import pad.plugins.base
 from pad.networks import _format_network_str
 
 
-FROM_HEADERS = ('From', "Envelope-Sender", 'Resent-From', 'X-Envelope-From', 'EnvelopeFrom')
+FROM_HEADERS = ('From', "Envelope-Sender", 'Resent-From', 'X-Envelope-From',
+                'EnvelopeFrom')
 TO_HEADERS = ('To', 'Resent-To', 'Resent-Cc', 'Apparently-To', 'Delivered-To',
               'Envelope-Recipients', 'Apparently-Resent-To', 'X-Envelope-To',
               'Envelope-To',
@@ -123,8 +124,12 @@ class WLBLEvalPlugin(pad.plugins.base.BasePlugin):
             self.add_in_list(key, item, parsed_list)
         return parsed_list
 
-#!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     def parse_list_uri(self, list_name):
+        """Parse the list into a dictionary with the list_name as key and a
+        dictonary as value (in order to know which domains to ignore or not).
+        Add the domains from "whitelist_uri_host" and "blacklist_uri_host" from
+        config file
+        """
         parsed_list = defaultdict(self.my_list)
         for x in self[list_name]:
             uri_host_list = x.split()
@@ -137,8 +142,11 @@ class WLBLEvalPlugin(pad.plugins.base.BasePlugin):
                          parsed_list)
         return parsed_list
 
-#!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!  #_check_from_in_whitelist
-    def check_in_list(self, msg, addresses, list_name, param):
+    def check_in_list(self, msg, addresses, list_name):
+        """Check if addresses match the regexes from list_name and modify
+        "from_in_whitelist" msg value based on the list name
+        """
+        param = "from_in_whitelist"
         for address in addresses:
             if not self.check_address_in_list(address, self[list_name]):
                 self.set_local(msg, param, 1)
@@ -165,7 +173,8 @@ class WLBLEvalPlugin(pad.plugins.base.BasePlugin):
         return False
 
 #!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!    #_check_from_in_default_whitelist
-    def check_in_default_whitelist(self, msg, addresses, list_name, param):
+    def check_in_default_whitelist(self, msg, addresses, list_name):
+        param = "from_in_default_whitelist"
         for address in addresses:
             wh = self.check_whitelist_rcvd(msg, list_name, address)
             if wh == 1:
@@ -231,11 +240,9 @@ class WLBLEvalPlugin(pad.plugins.base.BasePlugin):
         list_name = 'parsed_whitelist_from'
         if not self.get_local(msg, check_name):
             if check_name is "from_in_whitelist":
-                self.check_in_list(msg, addresses, list_name,
-                                        check_name)
+                self.check_in_list(msg, addresses, list_name)
             else:
-                self.check_in_default_whitelist(msg, addresses, list_name,
-                                        check_name)
+                self.check_in_default_whitelist(msg, addresses, list_name)
         return self.get_local(msg, check_name) > 0
 
     def check_to_in_whitelist(self, msg, target=None):
@@ -341,6 +348,8 @@ class WLBLEvalPlugin(pad.plugins.base.BasePlugin):
 
 
     def check_whitelist_rcvd(self, msg, list_name, address):
+        """look up address and trusted relays in a whitelist with rcvd
+        """
         if len(msg.untrusted_relays) + len(msg.trusted_relays) < 0:
             return 0
         relays = []
@@ -364,19 +373,17 @@ class WLBLEvalPlugin(pad.plugins.base.BasePlugin):
 
 
     def check_rcvd(self, domain, match, relays):
+        """Check if it is a match by IP address or is a subnet.
+        If is not a valid IP address, try to match by rdns"""
         for relay in relays:
-            # extract the string between "[ ... ]"
             wl_ip = domain.strip("[ ").rstrip(" ]")
-            # check if is an IP address
             try:
                 network = ipaddress.ip_network(_format_network_str(str(wl_ip),
                                                                    None))
-                # same network
                 if ipaddress.ip_address(relay['ip']) in network:
                     match = 1
                     break
             except ValueError:
-                # it's not a valid IP - match by rdns
                 rdns = relay['rdns'].lower()
                 if domain in rdns:
                     match = 1
@@ -384,6 +391,7 @@ class WLBLEvalPlugin(pad.plugins.base.BasePlugin):
         return match
 
     def check_found_forged(self, address, found_forged):
+        """If it is forged, check the address in list """
         if found_forged:
             wlist = self['parsed_whitelist_allow_relays']
             for key in wlist:
