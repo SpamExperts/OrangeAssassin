@@ -123,6 +123,7 @@ class WLBLEvalPlugin(pad.plugins.base.BasePlugin):
             self.add_in_list(key, item, parsed_list)
         return parsed_list
 
+#!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     def parse_list_uri(self, list_name):
         parsed_list = defaultdict(self.my_list)
         for x in self[list_name]:
@@ -136,13 +137,17 @@ class WLBLEvalPlugin(pad.plugins.base.BasePlugin):
                          parsed_list)
         return parsed_list
 
+#!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!  #_check_from_in_whitelist
     def check_in_list(self, msg, addresses, list_name, param):
         for address in addresses:
+            if not self.check_address_in_list(address, self[list_name]):
+                self.set_local(msg, param, 1)
+                return True
             for regex in self[list_name]:
                 if re.search(regex.replace("*", ".*"), address):
                     self.set_local(msg, param, 1)
                     return True
-            wh = self.check_whitelist_rcvd(msg, list_name, None)
+            wh = self.check_whitelist_rcvd(msg, list_name, address)
             if wh == 1:
                 self.set_local(msg, param, 1)
                 return True
@@ -159,9 +164,10 @@ class WLBLEvalPlugin(pad.plugins.base.BasePlugin):
                     return True
         return False
 
+#!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!    #_check_from_in_default_whitelist
     def check_in_default_whitelist(self, msg, addresses, list_name, param):
         for address in addresses:
-            wh = self.check_whitelist_rcvd(msg, list_name, None)
+            wh = self.check_whitelist_rcvd(msg, list_name, address)
             if wh == 1:
                 self.set_local(msg, param, 1)
                 return True
@@ -223,8 +229,12 @@ class WLBLEvalPlugin(pad.plugins.base.BasePlugin):
     def _check_whitelist(self, msg, check_name):
         addresses = self.get_from_addresses(msg)
         list_name = 'parsed_whitelist_from'
-        if self.get_local(msg, check_name) == 0:
-            exists = self.check_in_list(msg, addresses, list_name,
+        if not self.get_local(msg, check_name):
+            if check_name is "from_in_whitelist":
+                self.check_in_list(msg, addresses, list_name,
+                                        check_name)
+            else:
+                self.check_in_default_whitelist(msg, addresses, list_name,
                                         check_name)
         return self.get_local(msg, check_name) > 0
 
@@ -318,6 +328,7 @@ class WLBLEvalPlugin(pad.plugins.base.BasePlugin):
                 return True
         return False
 
+
     def check_forged_in_whitelist(self, msg, target=None):
         self.check_from_in_whitelist(msg)
         self.check_from_in_default_whitelist(msg)
@@ -325,9 +336,11 @@ class WLBLEvalPlugin(pad.plugins.base.BasePlugin):
         checked_dw = (self.get_local(msg, "from_in_default_whitelist") == 0)
         return checked_w and checked_dw
 
+
     check_forged_in_default_whitelist = check_forged_in_whitelist
 
-    def check_whitelist_rcvd(self, msg, list_name, target=None):
+
+    def check_whitelist_rcvd(self, msg, list_name, address):
         if len(msg.untrusted_relays) + len(msg.trusted_relays) < 0:
             return 0
         relays = []
@@ -336,7 +349,7 @@ class WLBLEvalPlugin(pad.plugins.base.BasePlugin):
         elif len(msg.trusted_relays) > 0:
             relays.extend(msg.trusted_relays)
 
-        address = msg.sender_address.lower()
+        address = address.lower()
         found_forged = 0
         for white_addr in self[list_name]:
             regexp = white_addr.replace("*", ".*")
@@ -348,6 +361,7 @@ class WLBLEvalPlugin(pad.plugins.base.BasePlugin):
                     found_forged = -1
         found_forged = self.check_found_forged(address, found_forged)
         return found_forged
+
 
     def check_rcvd(self, domain, match, relays):
         for relay in relays:
