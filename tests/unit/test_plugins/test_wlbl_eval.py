@@ -104,6 +104,166 @@ class TestWhitelist(unittest.TestCase):
         self.mock_addr_in_list.assert_called_with(addresses[0],
                                                   ["*@example.com"])
 
+class TestParseList(unittest.TestCase):
+    def setUp(self):
+        unittest.TestCase.setUp(self)
+        self.options = {}
+        self.global_data = {}
+        self.msg_data = {}
+
+        self.mock_ctxt = MagicMock(**{
+            "get_plugin_data.side_effect": lambda p, k: self.global_data[k],
+            "set_plugin_data.side_effect": lambda p, k,
+                                                  v: self.global_data.setdefault(
+                k, v)}
+                                   )
+        self.mock_msg = MagicMock(**{
+            "get_plugin_data.side_effect": lambda p, k: self.msg_data[k],
+            "set_plugin_data.side_effect": lambda p, k,
+                                                  v: self.msg_data.setdefault(k,
+                                                                              v),
+        })
+        self.mock_rcvd = patch("pad.plugins.wlbl_eval."
+                               "WLBLEvalPlugin.check_whitelist_rcvd").start()
+
+
+        self.plug = pad.plugins.wlbl_eval.WLBLEvalPlugin(self.mock_ctxt)
+
+    def tearDown(self):
+        unittest.TestCase.tearDown(self)
+        patch.stopall()
+
+    def test_parse_list(self):
+        list_name = "whitelist_from"
+        self.global_data["whitelist_from"] = ["*@example.com user1@example.com",
+                                              "*@example.com user2@example.com",
+                                              "*@exam.com user@exam.com"
+                                             ]
+        result = self.plug.parse_list(list_name)
+        result_expected = {"*@example.com": ["user1@example.com",
+                                             "user2@example.com"],
+                           "*@exam.com": ["user@exam.com"]}
+        self.assertEqual(result, result_expected)
+
+    def test_add_in_list_not(self):
+        # def add_in_list(self, key, item, parsed_list):
+        #
+        #     if item.startswith("!"):
+        #         parsed_list[key]["not_in_list"].append(item.strip("!"))
+        #     else:
+        #         parsed_list[key]["in_list"].append("." + item)
+        #     return parsed_list
+        key = 'BLACK'
+        item = "!example2.com"
+        parsed_list = {
+            "WHITE": {
+                "in_list": ["example.com"],
+                "not_in_list": ["ex.example.com"]
+            },
+            "BLACK": {
+                "in_list": ["example.com"],
+                "not_in_list": ["ex.example.com"]
+            },
+            "MYLIST": {
+                "in_list": ["example.com"],
+                "not_in_list": ["ex.example.com"]
+            }
+        }
+        result = self.plug.add_in_list(key,item,parsed_list)
+        result_expected = {
+            "WHITE": {
+                "in_list": ["example.com"],
+                "not_in_list": ["ex.example.com"]
+            },
+            "BLACK": {
+                "in_list": ["example.com"],
+                "not_in_list": ["ex.example.com", "example2.com"]
+            },
+            "MYLIST": {
+                "in_list": ["example.com"],
+                "not_in_list": ["ex.example.com"]
+            }
+        }
+        self.assertEqual(result, result_expected)
+
+    def test_add_in_list_in(self):
+        key = 'BLACK'
+        item = "example2.com"
+        parsed_list = {
+            "WHITE": {
+                "in_list": ["example.com"],
+                "not_in_list": ["ex.example.com"]
+            },
+            "BLACK": {
+                "in_list": ["example.com"],
+                "not_in_list": ["ex.example.com"]
+            },
+            "MYLIST": {
+                "in_list": ["example.com"],
+                "not_in_list": ["ex.example.com"]
+            }
+        }
+        result = self.plug.add_in_list(key, item, parsed_list)
+        result_expected = {
+            "WHITE": {
+                "in_list": ["example.com"],
+                "not_in_list": ["ex.example.com"]
+            },
+            "BLACK": {
+                "in_list": ["example.com", ".example2.com"],
+                "not_in_list": ["ex.example.com"]
+            },
+            "MYLIST": {
+                "in_list": ["example.com"],
+                "not_in_list": ["ex.example.com"]
+            }
+        }
+        self.assertEqual(result, result_expected)
+
+
+
+class TestAddressInList(unittest.TestCase):
+    def setUp(self):
+        unittest.TestCase.setUp(self)
+        self.options = {}
+        self.global_data = {}
+        self.msg_data = {}
+
+        self.mock_ctxt = MagicMock(**{
+            "get_plugin_data.side_effect": lambda p, k: self.global_data[k],
+            "set_plugin_data.side_effect": lambda p, k,
+                                                  v: self.global_data.setdefault(
+                k, v)}
+                                   )
+        self.mock_msg = MagicMock(**{
+            "get_plugin_data.side_effect": lambda p, k: self.msg_data[k],
+            "set_plugin_data.side_effect": lambda p, k,
+                                                  v: self.msg_data.setdefault(k,
+                                                                              v),
+        })
+        self.mock_rcvd = patch("pad.plugins.wlbl_eval."
+                               "WLBLEvalPlugin.check_whitelist_rcvd").start()
+
+
+        self.plug = pad.plugins.wlbl_eval.WLBLEvalPlugin(self.mock_ctxt)
+
+    def tearDown(self):
+        unittest.TestCase.tearDown(self)
+        patch.stopall()
+
+    def test_check_address_in_list_one_address(self):
+        list_name = "whitelist_from"
+        addresses = ["test@example.com"]
+        self.global_data["whitelist_from"] = ["*@example.com"]
+        result = self.plug.check_address_in_list(addresses, list_name)
+        self.assertTrue(result)
+
+    def test_check_address_in_list_two_addresses(self):
+        self.global_data["whitelist_from"] = ["*@example.com"]
+        list_name = "whitelist_from"
+        addresses = ["test1@example.com", "test2@example.com"]
+        result = self.plug.check_address_in_list(addresses, list_name)
+        self.assertTrue(result)
 
 
 

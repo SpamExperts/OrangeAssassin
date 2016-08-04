@@ -83,7 +83,6 @@ class WLBLEvalPlugin(pad.plugins.base.BasePlugin):
         self["parsed_delist_uri_host"] = self.parse_delist_uri()
         self['parsed_enlist_uri_host'] = self.parse_list_uri('enlist_uri_host')
 
-#cata
     def parse_list(self, list_name):
         """Parse the list into a dictionary with the regex as key and the
         domain as value.
@@ -111,7 +110,6 @@ class WLBLEvalPlugin(pad.plugins.base.BasePlugin):
                 parsed_list['ALL'].extend(uri_host_list)
         return parsed_list
 
-#cata
     def add_in_list(self, key, item, parsed_list):
         """Add elements in parsed list
         """
@@ -174,13 +172,12 @@ class WLBLEvalPlugin(pad.plugins.base.BasePlugin):
                 self.set_local(msg, param, -1)
         return False
 
-#cata
     def check_address_in_list(self, addresses, list_name):
         """Check if addresses match the regexes from list_name.
         """
         for address in addresses:
             for regex in self[list_name]:
-                if re.search(regex.replace("*", ".*"), address):
+                if re.match(regex.replace("*", ".*"), address):
                     return True
         return False
 
