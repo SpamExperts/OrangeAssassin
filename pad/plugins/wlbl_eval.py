@@ -152,7 +152,7 @@ class WLBLEvalPlugin(pad.plugins.base.BasePlugin):
                          parsed_list)
         return parsed_list
 
-#rox
+#rox ------------------------in progress
     def check_in_list(self, msg, addresses, list_name):
         """Check if addresses match the regexes from list_name and modify
         "from_in_whitelist" msg value based on the list name
@@ -184,6 +184,7 @@ class WLBLEvalPlugin(pad.plugins.base.BasePlugin):
                     return True
         return False
 
+#rox    --------------done
 #rox
     def check_in_default_whitelist(self, msg, addresses, list_name):
         """Check if addresses match the regexes from list_name and modify
