@@ -82,6 +82,10 @@ class WLBLEvalPlugin(pad.plugins.base.BasePlugin):
             'whitelist_allow_relays')
         self["parsed_delist_uri_host"] = self.parse_delist_uri()
         self['parsed_enlist_uri_host'] = self.parse_list_uri('enlist_uri_host')
+        self['parsed_whitelist_uri_host'] = self.parse_wlbl_uri(
+            'whitelist_uri_host')
+        self['parsed_blacklist_uri_host'] = self.parse_wlbl_uri(
+            'blacklist_uri_host')
 
 #cata
     def parse_list(self, list_name):
@@ -133,6 +137,12 @@ class WLBLEvalPlugin(pad.plugins.base.BasePlugin):
             self.add_in_list(key, item, parsed_list)
         return parsed_list
 
+    def parse_wlbl_uri(self, list_name):
+        """Parse witleist_uri_host and blacklist_uri_host"""
+        parsed_list = []
+        for x in list_name:
+            parsed_list.extend(x.split())
+        return parsed_list
 #cata
     def parse_list_uri(self, list_name):
         """Parse the list into a dictionary with the list_name as key and a
@@ -146,20 +156,20 @@ class WLBLEvalPlugin(pad.plugins.base.BasePlugin):
             key = uri_host_list[0].strip("( ").rstrip(" )")
             self.add_in_dict(uri_host_list[1:], key, parsed_list)
 
-        self.add_in_dict(self['whitelist_uri_host'], 'WHITE',
+        self.add_in_dict(self['parsed_whitelist_uri_host'], 'WHITE',
                          parsed_list)
-        self.add_in_dict(self['blacklist_uri_host'], 'BLACK',
+        self.add_in_dict(self['parsed_blacklist_uri_host'], 'BLACK',
                          parsed_list)
         return parsed_list
 
-#rox ------------------------in progress
+#rox ------------------------done
     def check_in_list(self, msg, addresses, list_name):
         """Check if addresses match the regexes from list_name and modify
         "from_in_whitelist" msg value based on the list name
         """
         param = "from_in_whitelist"
         for address in addresses:
-            if not self.check_address_in_list(address, self[list_name]):
+            if self.check_address_in_list(address, self[list_name]) is True:
                 self.set_local(msg, param, 1)
                 return True
             for regex in self[list_name]:
