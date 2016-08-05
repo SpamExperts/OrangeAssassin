@@ -18,7 +18,7 @@ TO_HEADERS = ('To', 'Resent-To', 'Resent-Cc', 'Apparently-To', 'Delivered-To',
               'Envelope-To',
               'X-Delivered-To', 'X-Original-To', 'X-Rcpt-To', 'X-Real-To',
               'Cc')
-TL_TLDS = ['.com', '.co.uk']
+TL_TLDS = ['com', 'co.uk', 'multi.surbl.org']
 
 
 class WLBLEvalPlugin(pad.plugins.base.BasePlugin):
@@ -136,11 +136,13 @@ class WLBLEvalPlugin(pad.plugins.base.BasePlugin):
         return parsed_list
 
     def parse_wlbl_uri(self, list_name):
-        """Parse witleist_uri_host and blacklist_uri_host"""
+        """Parse witleist_uri_host and blacklist_uri_host
+        """
         parsed_list = []
         for x in list_name:
             parsed_list.extend(x.split())
         return parsed_list
+
 #cata
     def parse_list_uri(self, list_name):
         """Parse the list into a dictionary with the list_name as key and a
@@ -155,19 +157,19 @@ class WLBLEvalPlugin(pad.plugins.base.BasePlugin):
             self.add_in_dict(uri_host_list[1:], key, parsed_list)
 
         self.add_in_dict(self['parsed_whitelist_uri_host'], 'WHITE',
-                         parsed_list)
+                        parsed_list)
         self.add_in_dict(self['parsed_blacklist_uri_host'], 'BLACK',
                          parsed_list)
         return parsed_list
 
-#rox ------------------------done
+#rox ------------------------in progress
     def check_in_list(self, msg, addresses, list_name):
         """Check if addresses match the regexes from list_name and modify
         "from_in_whitelist" msg value based on the list name
         """
         param = "from_in_whitelist"
         for address in addresses:
-            if self.check_address_in_list(address, self[list_name]) is True:
+            if not self.check_address_in_list(address, self[list_name]):
                 self.set_local(msg, param, 1)
                 return True
             for regex in self[list_name]:
@@ -187,7 +189,7 @@ class WLBLEvalPlugin(pad.plugins.base.BasePlugin):
         """
         for address in addresses:
             for regex in self[list_name]:
-                if re.match(regex.replace("*", ".*"), address):
+                if re.search(regex.replace("*", ".*"), address):
                     return True
         return False
 
@@ -207,7 +209,6 @@ class WLBLEvalPlugin(pad.plugins.base.BasePlugin):
                 self.set_local(msg, param, -1)
         return False
 
-#cata
     def get_from_addresses(self, msg):
         """Get addresses from 'Resent-From' header,
         and if there are no addresses, get from
@@ -238,7 +239,6 @@ class WLBLEvalPlugin(pad.plugins.base.BasePlugin):
                 for address in msg.get_addr_header(key):
                     yield address
 
-#cata
     def base_domain(self, address):
         """ Handle numeric IPs in URIs similarly, but reverse the octet
         ordering before comparison against the RBL. For example,
@@ -285,7 +285,6 @@ class WLBLEvalPlugin(pad.plugins.base.BasePlugin):
         return self.check_address_in_list(self.get_to_addresses(msg),
                                           'parsed_whitelist_to')
 
-#cata
     def check_from_in_blacklist(self, msg, target=None):
         """Get all the from addresses and
         check if they match the blacklist regexes.
@@ -301,7 +300,6 @@ class WLBLEvalPlugin(pad.plugins.base.BasePlugin):
         return self.check_address_in_list(self.get_to_addresses(msg),
                                           'parsed_blacklist_to')
 
-#cata
     def check_from_in_list(self, msg, list_name, target=None):
         """Get all the from addresses with and
         check if they match the given list regexes.
@@ -321,7 +319,6 @@ class WLBLEvalPlugin(pad.plugins.base.BasePlugin):
         return self.check_address_in_list(self.get_to_addresses(msg),
                                           list_name)
 
-#cata
     def check_to_in_all_spam(self, msg, target=None):
         """Get all the to addresses and check if they match
         the 'all_spam_to' regexes.
@@ -337,7 +334,6 @@ class WLBLEvalPlugin(pad.plugins.base.BasePlugin):
         return self.check_address_in_list(self.get_to_addresses(msg),
                                           'parsed_more_spam_to list')
 
-#cata
     def check_from_in_default_whitelist(self, msg, target=None):
         """Get all the from addresses and check if they match
         the 'from_in_default_whitelist' regexes.
@@ -386,7 +382,7 @@ class WLBLEvalPlugin(pad.plugins.base.BasePlugin):
         checked_dw = (self.get_local(msg, "from_in_default_whitelist") == 0)
         return checked_w and checked_dw
 
-#rox
+#cata
     check_forged_in_default_whitelist = check_forged_in_whitelist
 
 #cata
@@ -418,7 +414,8 @@ class WLBLEvalPlugin(pad.plugins.base.BasePlugin):
 #rox
     def check_rcvd(self, domain, match, relays):
         """Check if it is a match by IP address or is a subnet.
-        If is not a valid IP address, try to match by rdns
+        If is not a valid IP address, try to matc
+        h by rdns
         """
         for relay in relays:
             wl_ip = domain.strip("[ ").rstrip(" ]")

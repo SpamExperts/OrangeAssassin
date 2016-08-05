@@ -7,6 +7,123 @@ except ImportError:
 
 import pad.plugins.wlbl_eval
 
+class TestGetHeader(unittest.TestCase):
+    def setUp(self):
+        unittest.TestCase.setUp(self)
+        self.options = {}
+        self.global_data = {}
+        self.msg_data = {}
+
+        self.mock_ctxt = MagicMock(**{
+            "get_plugin_data.side_effect": lambda p, k: self.global_data[k],
+            "set_plugin_data.side_effect": lambda p, k, v: self.global_data.setdefault(k, v)}
+        )
+        self.mock_msg = MagicMock(**{
+            "get_plugin_data.side_effect": lambda p, k: self.msg_data[k],
+            "set_plugin_data.side_effect": lambda p, k, v: self.msg_data.setdefault(k, v),
+        })
+
+        self.mock_addr_header = patch(
+            "pad.message.Message.get_addr_header").start()
+
+        self.plug = pad.plugins.wlbl_eval.WLBLEvalPlugin(self.mock_ctxt)
+
+        FROM_HEADERS = ('From', "Envelope-Sender", 'Resent-From',
+                        'X-Envelope-From','EnvelopeFrom')
+
+    def tearDown(self):
+        unittest.TestCase.tearDown(self)
+        patch.stopall()
+
+    def get_resent_from_header(self, header):
+        if header == "Resent-From":
+            return ["addr1", "addr2"]
+        elif header == "From":
+            return ["address1", "address2", "address3"]
+        return list()
+
+    def get_from_header(self, header):
+        if header == "From":
+            return ["address1", "address2", "address3"]
+
+        return list()
+
+    def test_get_from_addresses_resent_header(self):
+        self.mock_msg.get_addr_header.side_effect = self.get_resent_from_header
+
+        result = self.plug.get_from_addresses(self.mock_msg)
+        self.assertEqual(list(result), ["addr1", "addr2"])
+
+    def test_get_from_addresses_from_headers(self):
+        self.mock_msg.get_addr_header.side_effect = self.get_from_header
+
+        self.mock_from_headers = patch("pad.plugins.wlbl_eval.FROM_HEADERS",
+                                     ["From"]).start()
+        result = self.plug.get_from_addresses(self.mock_msg)
+        self.assertEqual(list(result),
+                         ["address1", "address2", "address3"])
+
+
+
+class TestBaseDomain(unittest.TestCase):
+    def setUp(self):
+        unittest.TestCase.setUp(self)
+        self.options = {}
+        self.global_data = {}
+        self.msg_data = {}
+
+        self.mock_ctxt = MagicMock(**{
+            "get_plugin_data.side_effect": lambda p, k: self.global_data[k],
+            "set_plugin_data.side_effect": lambda p, k,
+                                                  v: self.global_data.setdefault(
+                k, v)}
+                                   )
+        self.mock_msg = MagicMock(**{
+            "get_plugin_data.side_effect": lambda p, k: self.msg_data[k],
+            "set_plugin_data.side_effect": lambda p, k,
+                                                  v: self.msg_data.setdefault(k,
+                                                                              v),
+        })
+
+        self.plug = pad.plugins.wlbl_eval.WLBLEvalPlugin(self.mock_ctxt)
+
+    def tearDown(self):
+        unittest.TestCase.tearDown(self)
+        patch.stopall()
+
+    def test_base_domain_no_address(self):
+        address = ""
+        result = self.plug.base_domain(address)
+        self.assertEqual(result, "")
+
+    def test_base_domain_first(self):
+        """Test if len(parts) < 3"""
+        address = "surbl.org"
+        result = self.plug.base_domain(address)
+        self.assertEqual(result, "surbl.org")
+
+    def test_base_domain_second(self):
+        """Test if parts has no digits"""
+        address = "multi.surbl.com"
+        result = self.plug.base_domain(address)
+        self.assertEqual(result, "surbl.com")
+
+    def test_base_domain_third(self):
+        """Test if ".".join(parts[-3:]) in TL_TLDS """
+        address = "40.30.20.10.multi.co.uk"
+        result = self.plug.base_domain(address)
+        self.assertEqual(result, "multi.co.uk")
+
+    def test_base_domain_fourth(self):
+        """Test if ".".join(parts[-2:]) in TL_TLDS"""
+        address = "40.30.20.10.multi.co.uk"
+        result = self.plug.base_domain(address)
+        self.assertEqual(result, "multi.co.uk")
+
+    def test_base_domain_return(self):
+        address = "40.30.20.10.multi.surbl"
+        result = self.plug.base_domain(address)
+        self.assertEqual(result, "multi.surbl")
 
 class TestWhitelist(unittest.TestCase):
     def setUp(self):
@@ -190,7 +307,91 @@ class TestWhitelist(unittest.TestCase):
                                          list_name)
         self.assertNotIn("from_in_whitelist", self.msg_data)
 
+
+class TestCheckFoundForged(unittest.TestCase):
+    def setUp(self):
+        unittest.TestCase.setUp(self)
+        self.options = {}
+        self.global_data = {}
+        self.msg_data = {}
+
+        self.mock_ctxt = MagicMock(**{
+            "get_plugin_data.side_effect": lambda p, k: self.global_data[k],
+            "set_plugin_data.side_effect":
+                lambda p, k, v: self.global_data.setdefault(k, v)}
+                                   )
+        self.mock_msg = MagicMock(**{
+            "get_plugin_data.side_effect": lambda p, k: self.msg_data[k],
+            "set_plugin_data.side_effect":
+                lambda p, k, v: self.msg_data.setdefault(k, v),
+        })
+
+
+        self.plug = pad.plugins.wlbl_eval.WLBLEvalPlugin(self.mock_ctxt)
+
+    def tearDown(self):
+        unittest.TestCase.tearDown(self)
+        patch.stopall()
+
+    def test_check_found_forged_zero(self):
+        found_forged = 0
+        address = "example@example.com"
+        result = self.plug.check_found_forged(address, found_forged)
+        self.assertEqual(result, 0)
+    """
+    def test_check_found_forged(self):
+        found_forged = -1
+        address = "example@example.com"
+        result = self.plug.check_found_forged(address, found_forged)
+        self.assertEqual(result, 0)
+    """
+
+
+
 class TestParseList(unittest.TestCase):
+    def setUp(self):
+        unittest.TestCase.setUp(self)
+        self.options = {}
+        self.global_data = {}
+        self.msg_data = {}
+
+        self.mock_ctxt = MagicMock(**{
+            "get_plugin_data.side_effect": lambda p, k: self.global_data[k],
+            "set_plugin_data.side_effect":
+                lambda p, k,v: self.global_data.setdefault(k, v)}
+                                   )
+        self.mock_msg = MagicMock(**{
+            "get_plugin_data.side_effect": lambda p, k: self.msg_data[k],
+            "set_plugin_data.side_effect":
+                lambda p, k,v: self.msg_data.setdefault(k,v),
+        })
+        self.mock_rcvd = patch("pad.plugins.wlbl_eval."
+                               "WLBLEvalPlugin.check_whitelist_rcvd").start()
+
+        self.mock_addr_in_list = patch("pad.plugins.wlbl_eval."
+                                       "WLBLEvalPlugin.check_address_in_list").start()
+
+        self.plug = pad.plugins.wlbl_eval.WLBLEvalPlugin(self.mock_ctxt)
+
+    def tearDown(self):
+        unittest.TestCase.tearDown(self)
+        patch.stopall()
+
+    def test_parse_list(self):
+        list_name = "whitelist_from"
+        self.global_data["whitelist_from"] = ["*@example.com user1@example.com",
+                                              "*@example.com user2@example.com",
+                                              "*@exam.com user@exam.com"
+                                             ]
+        result = self.plug.parse_list(list_name)
+        result_expected = {"*@example.com": ["user1@example.com",
+                                             "user2@example.com"],
+                           "*@exam.com": ["user@exam.com"]}
+        self.assertEqual(result, result_expected)
+
+
+
+class TestAddInList(unittest.TestCase):
     def setUp(self):
         unittest.TestCase.setUp(self)
         self.options = {}
@@ -212,33 +413,13 @@ class TestParseList(unittest.TestCase):
         self.mock_rcvd = patch("pad.plugins.wlbl_eval."
                                "WLBLEvalPlugin.check_whitelist_rcvd").start()
 
-
         self.plug = pad.plugins.wlbl_eval.WLBLEvalPlugin(self.mock_ctxt)
 
     def tearDown(self):
         unittest.TestCase.tearDown(self)
         patch.stopall()
 
-    def test_parse_list(self):
-        list_name = "whitelist_from"
-        self.global_data["whitelist_from"] = ["*@example.com user1@example.com",
-                                              "*@example.com user2@example.com",
-                                              "*@exam.com user@exam.com"
-                                             ]
-        result = self.plug.parse_list(list_name)
-        result_expected = {"*@example.com": ["user1@example.com",
-                                             "user2@example.com"],
-                           "*@exam.com": ["user@exam.com"]}
-        self.assertEqual(result, result_expected)
-
     def test_add_in_list_not(self):
-        # def add_in_list(self, key, item, parsed_list):
-        #
-        #     if item.startswith("!"):
-        #         parsed_list[key]["not_in_list"].append(item.strip("!"))
-        #     else:
-        #         parsed_list[key]["in_list"].append("." + item)
-        #     return parsed_list
         key = 'BLACK'
         item = "!example2.com"
         parsed_list = {
@@ -255,7 +436,7 @@ class TestParseList(unittest.TestCase):
                 "not_in_list": ["ex.example.com"]
             }
         }
-        result = self.plug.add_in_list(key,item,parsed_list)
+        result = self.plug.add_in_list(key, item, parsed_list)
         result_expected = {
             "WHITE": {
                 "in_list": ["example.com"],
@@ -305,6 +486,66 @@ class TestParseList(unittest.TestCase):
             }
         }
         self.assertEqual(result, result_expected)
+
+
+class TestCheckToFrom(unittest.TestCase):
+    def setUp(self):
+        unittest.TestCase.setUp(self)
+        self.options = {}
+        self.global_data = {}
+        self.msg_data = {}
+
+        self.mock_ctxt = MagicMock(**{
+            "get_plugin_data.side_effect": lambda p, k: self.global_data[k],
+            "set_plugin_data.side_effect":
+                lambda p, k,v: self.global_data.setdefault(k, v)}
+        )
+        self.mock_msg = MagicMock(**{
+            "get_plugin_data.side_effect": lambda p, k: self.msg_data[k],
+            "set_plugin_data.side_effect":
+                lambda p, k,v: self.msg_data.setdefault(k, v),
+        })
+        self.mock_rcvd = patch("pad.plugins.wlbl_eval."
+                               "WLBLEvalPlugin.check_whitelist_rcvd").start()
+        self.mock_check_address = patch("pad.plugins.wlbl_eval."
+                               "WLBLEvalPlugin.check_address_in_list").start()
+        self.mock_check_whitelist = patch("pad.plugins.wlbl_eval."
+                                "WLBLEvalPlugin._check_whitelist").start()
+
+        self.plug = pad.plugins.wlbl_eval.WLBLEvalPlugin(self.mock_ctxt)
+
+    def tearDown(self):
+        unittest.TestCase.tearDown(self)
+        patch.stopall()
+
+    def test_check_from_in_blacklist(self):
+        self.mock_check_address.return_value = True
+        result = self.plug.check_from_in_blacklist(self.mock_msg)
+        self.assertTrue(result)
+
+    def test_check_from_in_list(self):
+        list_name = "*@example.com    smt@example.com"
+        self.mock_check_address.return_value = True
+        result = self.plug.check_from_in_list(self.mock_msg, list_name)
+        self.assertTrue(result)
+
+    def test_check_from_in_list_null(self):
+        list_name = ""
+        self.mock_check_address.return_value = True
+        result = self.plug.check_from_in_list(self.mock_msg, list_name)
+        self.assertFalse(result)
+
+    def test_check_to_in_all_spam(self):
+        self.mock_check_address.return_value = True
+        result = self.plug.check_to_in_all_spam(self.mock_msg)
+        self.assertTrue(result)
+
+    def test_check_from_in_default_whitelist(self):
+        self.mock_check_whitelist.return_value = True
+        result = self.plug.check_from_in_default_whitelist(self.mock_msg)
+        self.assertTrue(result)
+
+
 
 
 
