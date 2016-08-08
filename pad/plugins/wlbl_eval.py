@@ -81,11 +81,11 @@ class WLBLEvalPlugin(pad.plugins.base.BasePlugin):
         self['parsed_whitelist_allow_relays'] = self.parse_list(
             'whitelist_allow_relays')
         self["parsed_delist_uri_host"] = self.parse_delist_uri()
-        self['parsed_enlist_uri_host'] = self.parse_list_uri('enlist_uri_host')
         self['parsed_whitelist_uri_host'] = self.parse_wlbl_uri(
             'whitelist_uri_host')
         self['parsed_blacklist_uri_host'] = self.parse_wlbl_uri(
             'blacklist_uri_host')
+        self['parsed_enlist_uri_host'] = self.parse_list_uri('enlist_uri_host')
 
     def parse_list(self, list_name):
         """Parse the list into a dictionary with the regex as key and the
@@ -120,7 +120,6 @@ class WLBLEvalPlugin(pad.plugins.base.BasePlugin):
             parsed_list[key]["not_in_list"].append(item.strip("!"))
         else:
             parsed_list[key]["in_list"].append("." + item)
-        return parsed_list
 
     def add_in_dict(self, list_name, key, parsed_list):
         """Add elements in the parsed list dictionary and ignore
@@ -233,9 +232,7 @@ class WLBLEvalPlugin(pad.plugins.base.BasePlugin):
                     yield address
 
     def base_domain(self, address):
-        """ Handle numeric IPs in URIs similarly, but reverse the octet
-        ordering before comparison against the RBL. For example,
-        http://10.20.30.40/ is checked as 40.30.20.10.multi.surbl.org.
+        """ Parse the address in order to extract the domain and the TLD
         """
         domain = address
         parts = domain.split('.')
@@ -347,9 +344,7 @@ class WLBLEvalPlugin(pad.plugins.base.BasePlugin):
         for relay in relays:
             ip = ipaddress.ip_address(relay['ip']).exploded
             reversed_ip = str(dns.reversename.from_address(ip))
-            parts = reversed_ip.rsplit(".", 2)
-            ip = parts.pop(0)
-            relay_domain = ".".join(parts)
+            relay_domain = self.base_domain(reversed_ip.rsplit(".", 1)[0])
             if relay_domain == domain:
                 return True
         return False
@@ -406,7 +401,7 @@ class WLBLEvalPlugin(pad.plugins.base.BasePlugin):
                     break
             except ValueError:
                 rdns = relay['rdns'].lower()
-                if domain in rdns:
+                if wl_ip == rdns or rdns.endswith(".%s" % wl_ip):
                     match = 1
                     break
         return match
@@ -426,13 +421,14 @@ class WLBLEvalPlugin(pad.plugins.base.BasePlugin):
         """Check if the message has URIs that are listed
         in the specified hostname
         """
+        parsed_list = 'parsed_enlist_uri_host'
         for uri in msg.uri_list:
-            if uri in self['parsed_enlist_uri_host'][list_name]['not_in_list']:
+            if uri in self[parsed_list][list_name]['not_in_list']:
                 continue
-            for _uri_list_name in self['parsed_enlist_uri_host'][list_name]:
+            for _uri_list_name in self[parsed_list][list_name]['in_list']:
                 if uri.endswith(_uri_list_name):
                     return True
-        return True
+        return False
 
     def check_uri_host_in_whitelist(self, msg, target=None):
         """Shorthand for check_uri_host_listed('WHITE')
