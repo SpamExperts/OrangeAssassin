@@ -18,7 +18,7 @@ TO_HEADERS = ('To', 'Resent-To', 'Resent-Cc', 'Apparently-To', 'Delivered-To',
               'Envelope-To',
               'X-Delivered-To', 'X-Original-To', 'X-Rcpt-To', 'X-Real-To',
               'Cc')
-TL_TLDS = ['.com', '.co.uk']
+TL_TLDS = ['com', 'co.uk', 'multi.surbl.org']
 
 
 class WLBLEvalPlugin(pad.plugins.base.BasePlugin):
@@ -155,6 +155,7 @@ class WLBLEvalPlugin(pad.plugins.base.BasePlugin):
                          parsed_list)
         self.add_in_dict(self['parsed_blacklist_uri_host'], 'BLACK',
                          parsed_list)
+
         return parsed_list
 
     def check_in_list(self, msg, addresses, list_name):
@@ -163,7 +164,7 @@ class WLBLEvalPlugin(pad.plugins.base.BasePlugin):
         """
         param = "from_in_whitelist"
         for address in addresses:
-            if self.check_address_in_list(address, self[list_name]) is True:
+            if self.check_address_in_list(address, self[list_name]):
                 self.set_local(msg, param, 1)
                 return True
             for regex in self[list_name]:
@@ -364,7 +365,7 @@ class WLBLEvalPlugin(pad.plugins.base.BasePlugin):
     def check_whitelist_rcvd(self, msg, list_name, address):
         """Look up address and trusted relays in a whitelist with rcvd
         """
-        if len(msg.untrusted_relays) + len(msg.trusted_relays) < 0:
+        if len(msg.untrusted_relays) + len(msg.trusted_relays) == 0:
             return 0
         relays = []
         if len(msg.untrusted_relays) > 0:
@@ -374,6 +375,7 @@ class WLBLEvalPlugin(pad.plugins.base.BasePlugin):
 
         address = address.lower()
         found_forged = 0
+        match = -1
         for white_addr in self[list_name]:
             regexp = white_addr.replace("*", ".*")
             for domain in self[list_name][white_addr]:
@@ -385,10 +387,10 @@ class WLBLEvalPlugin(pad.plugins.base.BasePlugin):
         found_forged = self.check_found_forged(address, found_forged)
         return found_forged
 
-
     def check_rcvd(self, domain, match, relays):
         """Check if it is a match by IP address or is a subnet.
-        If is not a valid IP address, try to match by rdns
+        If is not a valid IP address, try to match
+        h by rdns
         """
         for relay in relays:
             wl_ip = domain.strip("[ ").rstrip(" ]")
