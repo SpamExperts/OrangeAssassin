@@ -130,7 +130,7 @@ class WLBLEvalPlugin(pad.plugins.base.BasePlugin):
             if item in delist[key] or item in delist['ALL']:
                 continue
             self.add_in_list(key, item, parsed_list)
-        return parsed_list
+
 
     def parse_wlbl_uri(self, list_name):
         """Parse witleist_uri_host and blacklist_uri_host"""
