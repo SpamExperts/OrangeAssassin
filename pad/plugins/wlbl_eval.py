@@ -18,7 +18,7 @@ TO_HEADERS = ('To', 'Resent-To', 'Resent-Cc', 'Apparently-To', 'Delivered-To',
               'Envelope-To',
               'X-Delivered-To', 'X-Original-To', 'X-Rcpt-To', 'X-Real-To',
               'Cc')
-TL_TLDS = ['com', 'co.uk', 'multi.surbl.org']
+#TL_TLDS = ['com', 'co.uk', 'multi.surbl.org']
 
 
 class WLBLEvalPlugin(pad.plugins.base.BasePlugin):
@@ -45,7 +45,10 @@ class WLBLEvalPlugin(pad.plugins.base.BasePlugin):
         "enlist_uri_host": ("list", []),
         "delist_uri_host": ("list", []),
         "blacklist_uri_host": ("list", []),
-        "whitelist_uri_host": ("list", [])
+        "whitelist_uri_host": ("list", []),
+        "util_rb_tld": ("append_split", []),
+        "util_rb_2tld": ("append_split", []),
+        "util_rb_3tld": ("append_split", [])
     }
 
     parsed_lists = {
@@ -231,6 +234,16 @@ class WLBLEvalPlugin(pad.plugins.base.BasePlugin):
                 for address in msg.get_addr_header(key):
                     yield address
 
+
+    def check_in_TL_TLDS(self, address):
+        if address in self["util_rb_tld"]:
+            return True
+        if address in self["util_rb_2tld"]:
+            return True
+        if address in self["util_rb_3tld"]:
+            return True
+        return False
+
     def base_domain(self, address):
         """ Parse the address in order to extract the domain and the TLD
         """
@@ -240,9 +253,9 @@ class WLBLEvalPlugin(pad.plugins.base.BasePlugin):
             return ".".join(parts)
         if len([p for p in parts if not p.isdigit()]) == 0:
             return ".".join(parts[::-1])
-        if ".".join(parts[-3:]) in TL_TLDS:
+        if self.check_in_TL_TLDS(".".join(parts[-3:])):
             return ".".join(parts[-4:])
-        if ".".join(parts[-2:]) in TL_TLDS:
+        if self.check_in_TL_TLDS(".".join(parts[-2:])):
             return ".".join(parts[-3:])
         return ".".join(parts[-2:])
 

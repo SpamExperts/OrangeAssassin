@@ -88,7 +88,10 @@ class TestBaseDomain(unittest.TestCase):
                                                                               v),
         })
 
+
         self.plug = pad.plugins.wlbl_eval.WLBLEvalPlugin(self.mock_ctxt)
+        self.mock_check_in_TL_TLDS = patch(
+            "pad.plugins.wlbl_eval.WLBLEvalPlugin.check_in_TL_TLDS").start()
 
     def tearDown(self):
         unittest.TestCase.tearDown(self)
@@ -99,32 +102,34 @@ class TestBaseDomain(unittest.TestCase):
         result = self.plug.base_domain(address)
         self.assertEqual(result, "")
 
+    def test_base_domain_no_TLD(self):
+        address = "1.2.3.4"
+        result = self.plug.base_domain(address)
+        self.assertEqual(result, "4.3.2.1")
+
     def test_base_domain_first(self):
         """Test if len(parts) < 3"""
         address = "surbl.org"
         result = self.plug.base_domain(address)
         self.assertEqual(result, "surbl.org")
 
-    def test_base_domain_second(self):
-        """Test if parts has no digits"""
-        address = "multi.surbl.com"
-        result = self.plug.base_domain(address)
-        self.assertEqual(result, "surbl.com")
-
     def test_base_domain_third(self):
         """Test if ".".join(parts[-3:]) in TL_TLDS """
         address = "40.30.20.10.multi.surbl.org"
+        self.mock_check_in_TL_TLDS.side_effect = [True, False]
         result = self.plug.base_domain(address)
         self.assertEqual(result, "10.multi.surbl.org")
 
     def test_base_domain_fourth(self):
         """Test if ".".join(parts[-2:]) in TL_TLDS"""
         address = "40.30.20.10.multi.co.uk"
+        self.mock_check_in_TL_TLDS.side_effect = [False, True]
         result = self.plug.base_domain(address)
         self.assertEqual(result, "multi.co.uk")
 
     def test_base_domain_return(self):
         address = "40.30.20.10.multi.surbl"
+        self.mock_check_in_TL_TLDS.side_effect = [False, False]
         result = self.plug.base_domain(address)
         self.assertEqual(result, "multi.surbl")
 
@@ -312,6 +317,33 @@ class TestWhitelist(unittest.TestCase):
                                          list_name)
         self.assertNotIn("from_in_whitelist", self.msg_data)
 
+    def test_check_in_tld(self):
+        self.global_data["util_rb_tld"] = ["com"]
+        self.global_data["util_rb_2tld"] = []
+        self.global_data["util_rb_3tld"] = []
+        result = self.plug.check_in_TL_TLDS("com")
+        self.assertTrue(result)
+
+    def test_check_in_2tld(self):
+        self.global_data["util_rb_tld"] = ["com"]
+        self.global_data["util_rb_2tld"] = ["co.uk"]
+        self.global_data["util_rb_3tld"] = []
+        result = self.plug.check_in_TL_TLDS("co.uk")
+        self.assertTrue(result)
+
+    def test_check_in_3tld(self):
+        self.global_data["util_rb_tld"] = ["com"]
+        self.global_data["util_rb_2tld"] = ["co.uk"]
+        self.global_data["util_rb_3tld"] = ["sa.edu.au"]
+        result = self.plug.check_in_TL_TLDS("sa.edu.au")
+        self.assertTrue(result)
+
+    def test_check_in_tld_not_found(self):
+        self.global_data["util_rb_tld"] = ["com"]
+        self.global_data["util_rb_2tld"] = ["co.uk"]
+        self.global_data["util_rb_3tld"] = ["sa.edu.au"]
+        result = self.plug.check_in_TL_TLDS("cm")
+        self.assertFalse(result)
 
 class TestUrilist(unittest.TestCase):
     def setUp(self):
@@ -420,6 +452,10 @@ class TestUrilist(unittest.TestCase):
         result = self.plug.add_in_dict(list_name, "MYLIST", parsed_list)
         self.mock_add_in_list.assert_called_with("MYLIST",
                                                  list_name[0], parsed_list)
+
+    def test_my_list(self):
+        result = self.plug.my_list()
+        self.assertEqual(result, {"in_list": [], "not_in_list": []})
 
     def test_parse_wlbl_uri_true(self):
         list_name = [
@@ -648,6 +684,13 @@ class TestMatchRcvd(unittest.TestCase):
         self.mock_msg.trusted_relays = []
         result = self.plug.check_mailfrom_matches_rcvd(self.mock_msg)
         self.assertTrue(result)
+
+    def test_check_mailfrom_matches_rcvd_except(self):
+        self.mock_base_domain.return_value = "in-addr.arpa"
+        self.mock_msg.untrusted_relays = [{"ip": "127.0.0.1.2"}]
+        self.mock_msg.trusted_relays = []
+        result = self.plug.check_mailfrom_matches_rcvd(self.mock_msg)
+        self.assertFalse(result)
 
     def test_check_rcvd_match_rdns(self):
         relays = [{"ip": "127.0.0.1", "rdns": "1.0.0.127.in-addr.arpa."}]
@@ -1003,6 +1046,13 @@ class TestAddressInList(unittest.TestCase):
         result = self.plug.check_address_in_list(addresses, list_name)
         self.assertTrue(result)
 
+    def test_check_address_in_list_no_match(self):
+        list_name = "whitelist_from"
+        addresses = ["test@example.com"]
+        self.global_data["whitelist_from"] = ["*@ex.com"]
+        result = self.plug.check_address_in_list(addresses, list_name)
+        self.assertFalse(result)
+
 
 class TestCheckWhitelist(unittest.TestCase):
     def setUp(self):
@@ -1351,6 +1401,23 @@ class TestCheckWhitelistRcvd(unittest.TestCase):
         result = self.plug.check_whitelist_rcvd(self.mock_msg, list_name,
                                                 address)
         self.assertEqual(result, 0)
+
+    def test_check_whitelist_rcvd_trusted_relays_not_match(self):
+        list_name = "parsed_whitelist_from"
+        self.global_data["parsed_whitelist_from"] = {
+            "*@example.com": ["user1@example.com", "user2@example.com"],
+            "*@exmp.com": ["user@exmp.com"]
+        }
+        address = "user@ele.com"
+
+        self.mock_msg.untrusted_relays = []
+        self.mock_msg.trusted_relays = [{"ip": "127.0.0.1"}]
+
+        self.mock_check_rcvd.return_value = -1
+        self.mock_check_found_forged.return_value = -1
+        result = self.plug.check_whitelist_rcvd(self.mock_msg, list_name,
+                                                address)
+        self.assertEqual(result, -1)
 
 
 
