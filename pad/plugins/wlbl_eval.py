@@ -259,7 +259,7 @@ class WLBLEvalPlugin(pad.plugins.base.BasePlugin):
         addresses = self.get_from_addresses(msg)
         list_name = 'parsed_whitelist_from'
         if not self.get_local(msg, check_name):
-            if check_name is "from_in_whitelist":
+            if check_name == "from_in_whitelist":
                 self.check_in_list(msg, addresses, list_name)
             else:
                 self.check_in_default_whitelist(msg, addresses, list_name)
