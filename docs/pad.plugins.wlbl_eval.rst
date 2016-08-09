@@ -58,40 +58,40 @@ EVAL rules
 ==========
 
 .. automethod:: pad.plugins.wlbl_eval.WLBLEvalPlugin.check_from_in_whitelist
-:noindex:
+    :noindex:
 .. automethod:: pad.plugins.wlbl_eval.WLBLEvalPlugin.check_to_in_whitelist
-:noindex:
+    :noindex:
 .. automethod:: pad.plugins.wlbl_eval.WLBLEvalPlugin.check_from_in_blacklist
-:noindex:
+    :noindex:
 .. automethod:: pad.plugins.wlbl_eval.WLBLEvalPlugin.check_to_in_blacklist
-:noindex:
+    :noindex:
 .. automethod:: pad.plugins.wlbl_eval.WLBLEvalPlugin.check_from_in_list
-:noindex:
+    :noindex:
 .. automethod:: pad.plugins.wlbl_eval.WLBLEvalPlugin.check_to_in_all_spam
-:noindex:
+    :noindex:
 .. automethod:: pad.plugins.wlbl_eval.WLBLEvalPlugin.check_to_in_list
-:noindex:
+    :noindex:
 .. automethod:: pad.plugins.wlbl_eval.WLBLEvalPlugin.
-                                        check_mailfrom_matches_rcvd
-:noindex:
+                                            check_mailfrom_matches_rcvd
+    :noindex:
 .. automethod:: pad.plugins.wlbl_eval.WLBLEvalPlugin.
-                                        check_from_in_default_whitelist
-:noindex:
+                                            check_from_in_default_whitelist
+    :noindex:
 .. automethod:: pad.plugins.wlbl_eval.WLBLEvalPlugin.check_forged_in_whitelist
-:noindex:
+    :noindex:
 .. automethod:: pad.plugins.wlbl_eval.WLBLEvalPlugin.check_to_in_more_spam
-:noindex:
+    :noindex:
 .. automethod:: pad.plugins.wlbl_eval.WLBLEvalPlugin.
-                                        check_forged_in_default_whitelist
-:noindex:
+                                            check_forged_in_default_whitelist
+    :noindex:
 .. automethod:: pad.plugins.wlbl_eval.WLBLEvalPlugin.check_uri_host_listed
-:noindex:
+    :noindex:
 .. automethod:: pad.plugins.wlbl_eval.WLBLEvalPlugin.
-                                        check_uri_host_in_whitelist
-:noindex:
+                                            check_uri_host_in_whitelist
+    :noindex:
 .. automethod:: pad.plugins.wlbl_eval.WLBLEvalPlugin.
-                                        check_uri_host_in_blacklist
-:noindex:
+                                            check_uri_host_in_blacklist
+    :noindex:
 
 Tags
 ====
