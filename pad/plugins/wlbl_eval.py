@@ -1,6 +1,6 @@
 """ WLBLEval plugin."""
 from __future__ import absolute_import
-
+from builtins import str
 import re
 from collections import defaultdict
 
@@ -341,12 +341,15 @@ class WLBLEvalPlugin(pad.plugins.base.BasePlugin):
             relays.extend(msg.trusted_relays)
         else:
             return False
-        for relay in relays:
-            ip = ipaddress.ip_address(relay['ip']).exploded
-            reversed_ip = str(dns.reversename.from_address(ip))
-            relay_domain = self.base_domain(reversed_ip.rsplit(".", 1)[0])
-            if relay_domain == domain:
-                return True
+        try:
+            for relay in relays:
+                ip = ipaddress.ip_address(str(relay['ip'])).exploded
+                reversed_ip = str(dns.reversename.from_address(ip))
+                relay_domain = self.base_domain(reversed_ip.rsplit(".", 1)[0])
+                if relay_domain == domain:
+                    return True
+        except ValueError:
+            return False
         return False
 
     def check_forged_in_whitelist(self, msg, target=None):
@@ -397,7 +400,7 @@ class WLBLEvalPlugin(pad.plugins.base.BasePlugin):
             try:
                 network = ipaddress.ip_network(_format_network_str(str(wl_ip),
                                                                    None))
-                if ipaddress.ip_address(relay['ip']) in network:
+                if ipaddress.ip_address(str(relay['ip'])) in network:
                     match = 1
                     break
             except ValueError:
