@@ -71,6 +71,9 @@ class WLBLEvalPlugin(pad.plugins.base.BasePlugin):
         """Parses all the required white and blacklists. Stores
         the results in the the "parsed" versions.
         """
+        self.set_local(msg, "from_in_whitelist", 0)
+        self.set_local(msg, "from_in_default_whitelist", 0)
+
         self['parsed_whitelist_from'] = self.parse_list('whitelist_from')
         self['parsed_whitelist_to'] = self.parse_list('whitelist_to')
         self['parsed_blacklist_from'] = self.parse_list('blacklist_from')
@@ -186,7 +189,7 @@ class WLBLEvalPlugin(pad.plugins.base.BasePlugin):
         """Check if addresses match the regexes from list_name.
         """
         for address in addresses:
-            for regex in self[list_name]:
+            for regex in list_name:
                 if re.search(regex.replace("*", ".*"), address):
                     return True
         return False
@@ -271,12 +274,13 @@ class WLBLEvalPlugin(pad.plugins.base.BasePlugin):
         '''
         addresses = self.get_from_addresses(msg)
         list_name = 'parsed_whitelist_from'
-        if not self.get_local(msg, check_name):
-            if check_name == "from_in_whitelist":
+        if self.get_local(msg, check_name) == 0:
+            if check_name is "from_in_whitelist":
                 self.check_in_list(msg, addresses, list_name)
             else:
                 self.check_in_default_whitelist(msg, addresses, list_name)
         return self.get_local(msg, check_name) > 0
+
 
     def check_to_in_whitelist(self, msg, target=None):
         """Get all the to addresses with get_to_addresses and
@@ -391,23 +395,23 @@ class WLBLEvalPlugin(pad.plugins.base.BasePlugin):
 
         address = address.lower()
         found_forged = 0
-        match = -1
         for white_addr in self[list_name]:
             regexp = white_addr.replace("*", ".*")
             for domain in self[list_name][white_addr]:
                 if re.search(regexp, address):
-                    match = self.check_rcvd(domain, match, relays)
-                    if match:
+                    match = self.check_rcvd(domain, relays)
+                    if match == 1:
                         return 1
                     found_forged = -1
         found_forged = self.check_found_forged(address, found_forged)
         return found_forged
 
-    def check_rcvd(self, domain, match, relays):
+    def check_rcvd(self, domain, relays):
         """Check if it is a match by IP address or is a subnet.
         If is not a valid IP address, try to match
         h by rdns
         """
+        match = -1
         for relay in relays:
             wl_ip = domain.strip("[ ").rstrip(" ]")
             try:

@@ -694,18 +694,18 @@ class TestMatchRcvd(unittest.TestCase):
 
     def test_check_rcvd_match_rdns(self):
         relays = [{"ip": "127.0.0.1", "rdns": "1.0.0.127.in-addr.arpa."}]
-        result = self.plug.check_rcvd("[in-addr.arpa.]", 0, relays)
+        result = self.plug.check_rcvd("[in-addr.arpa.]", relays)
         self.assertEqual(result, 1)
 
     def test_check_rcvd_match_ip(self):
         relays = [{"ip": "127.0.0.1", "rdns": "1.0.0.127.in-addr.arpa."}]
-        result = self.plug.check_rcvd("[127.0.0.1]", 0, relays)
+        result = self.plug.check_rcvd("[127.0.0.1]", relays)
         self.assertEqual(result, 1)
 
     def test_check_rcvd_unmatch(self):
         relays = [{"ip": "127.0.0.1", "rdns": "1.0.0.127.in-addr.arpa."}]
-        result = self.plug.check_rcvd("[addr.arpa]", 0, relays)
-        self.assertEqual(result, 0)
+        result = self.plug.check_rcvd("[addr.arpa]", relays)
+        self.assertEqual(result, -1)
 
 
 class TestUriHost(unittest.TestCase):
