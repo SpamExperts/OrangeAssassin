@@ -220,8 +220,7 @@ class WLBLEvalPlugin(pad.plugins.base.BasePlugin):
         param = "from_in_default_whitelist"
         found_match = 0
         for address in addresses:
-            wh = self.check_whitelist_rcvd(msg, "def_whitelist_from_rcvd",
-                                           address)
+            wh = self.check_whitelist_rcvd(msg, list_name, address)
             if wh == 1:
                 self.set_local(msg, param, 1)
                 return True
