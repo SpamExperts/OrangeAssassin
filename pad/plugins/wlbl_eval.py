@@ -208,7 +208,7 @@ class WLBLEvalPlugin(pad.plugins.base.BasePlugin):
         """Check if addresses match the regexes from list_name.
         """
         for address in addresses:
-            for regex in list_name:
+            for regex in self[list_name]:
                 if re.search(regex, address):
                     return True
         return False
