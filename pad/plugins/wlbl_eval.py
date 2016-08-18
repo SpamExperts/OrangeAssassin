@@ -33,15 +33,18 @@ class WLBLEvalPlugin(pad.plugins.base.BasePlugin):
                   "check_uri_host_in_blacklist"
                   )
     options = {
-        "blacklist_from": ("list", []),
-        "whitelist_from": ("list", []),
-        "whitelist_to": ("list", []),
-        "blacklist_to": ("list", []),
-        "all_spam_to": ("list", []),
-        "more_spam_to": ("list", []),
+        "blacklist_from": ("append_split", []),
+        "whitelist_from": ("append_split", []),
+        "whitelist_to": ("append_split", []),
+        "blacklist_to": ("append_split", []),
+        "all_spam_to": ("append_split", []),
+        "more_spam_to": ("append_split", []),
+
         "def_whitelist_from_rcvd": ("list", []),
         "whitelist_from_rcvd": ("list", []),
-        "whitelist_allow_relays": ("list", []),
+
+        "whitelist_allow_relays": ("append_split", []),
+
         "enlist_uri_host": ("list", []),
         "delist_uri_host": ("list", []),
         "blacklist_uri_host": ("list", []),
@@ -52,15 +55,18 @@ class WLBLEvalPlugin(pad.plugins.base.BasePlugin):
     }
 
     parsed_lists = {
-        "parsed_blacklist_from": ("dict", {}),
-        "parsed_whitelist_from": ("dict", {}),
-        "parsed_whitelist_to": ("dict", {}),
-        "parsed_blacklist_to": ("dict", {}),
-        "parsed_all_spam_to": ("dict", {}),
-        "parsed_more_spam_to": ("dict", {}),
+        "parsed_blacklist_from": ("list", []),
+        "parsed_whitelist_from": ("list", []),
+        "parsed_whitelist_to": ("list", []),
+        "parsed_blacklist_to": ("list", []),
+        "parsed_all_spam_to": ("list", []),
+        "parsed_more_spam_to": ("list", []),
+
         "parsed_def_whitelist_from_rcvd": ("dict", {}),
-        "parsed_whiparsed_telist_from_rcvd": ("dict", {}),
-        "parsed_whitelist_allow_relays": ("dict", {}),
+        "parsed_whitelist_from_rcvd": ("dict", {}),
+
+        "parsed_whitelist_allow_relays": ("list", []),
+
         "parsed_enlist_uri_host": ("dict", {}),
         "parsed_delist_uri_host": ("dict", {}),
         "parsed_whitelist_uri_host": ("dict", {}),
@@ -80,12 +86,17 @@ class WLBLEvalPlugin(pad.plugins.base.BasePlugin):
         self['parsed_blacklist_to'] = self.parse_list('blacklist_to')
         self['parsed_all_spam_to'] = self.parse_list('all_spam_to')
         self['parsed_more_spam_to'] = self.parse_list('more_spam_to')
-        self['parsed_def_whitelist_from_rcvd'] = self.parse_list(
+
+        #nu e folosita.....................................
+        self['parsed_def_whitelist_from_rcvd'] = self.parse_input(
             'def_whitelist_from_rcvd')
-        self['parsed_whitelist_from_rcvd'] = self.parse_list(
+        # nu e folosita....................................
+        self['parsed_whitelist_from_rcvd'] = self.parse_input(
             'whitelist_from_rcvd')
+
         self['parsed_whitelist_allow_relays'] = self.parse_list(
             'whitelist_allow_relays')
+
         self["parsed_delist_uri_host"] = self.parse_delist_uri()
         self['parsed_whitelist_uri_host'] = self.parse_wlbl_uri(
             'whitelist_uri_host')
@@ -93,13 +104,20 @@ class WLBLEvalPlugin(pad.plugins.base.BasePlugin):
             'blacklist_uri_host')
         self['parsed_enlist_uri_host'] = self.parse_list_uri('enlist_uri_host')
 
-    def parse_list(self, list_name):
+    def parse_input(self, list_name):
         """Parse the list into a dictionary with the regex as key and the
         domain as value.
         """
         parsed_list = defaultdict(list)
         for x in self[list_name]:
             parsed_list[x.split()[0]].append(x.split()[1])
+        return parsed_list
+
+    def parse_list(self, list_name):
+        parsed_list = []
+        for addr in self[list_name]:
+            parsed_list.append(re.escape(addr).replace(r"\*", ".*").
+                               replace(r"\?", "."))
         return parsed_list
 
     def my_list(self):
@@ -170,13 +188,14 @@ class WLBLEvalPlugin(pad.plugins.base.BasePlugin):
         """
         param = "from_in_whitelist"
         for address in addresses:
-            if self.check_address_in_list(address, self[list_name]):
+            if self.check_address_in_list(address, list_name):
                 self.set_local(msg, param, 1)
                 return True
             for regex in self[list_name]:
-                if re.search(regex.replace("*", ".*"), address):
+                if re.search(regex, address):
                     self.set_local(msg, param, 1)
                     return True
+            list_name = "parsed_whitelist_from_rcvd"
             wh = self.check_whitelist_rcvd(msg, list_name, address)
             if wh == 1:
                 self.set_local(msg, param, 1)
@@ -190,7 +209,7 @@ class WLBLEvalPlugin(pad.plugins.base.BasePlugin):
         """
         for address in addresses:
             for regex in list_name:
-                if re.search(regex.replace("*", ".*"), address):
+                if re.search(regex, address):
                     return True
         return False
 
@@ -273,11 +292,12 @@ class WLBLEvalPlugin(pad.plugins.base.BasePlugin):
         "parsed_whitelist_from"
         '''
         addresses = self.get_from_addresses(msg)
-        list_name = 'parsed_whitelist_from'
         if self.get_local(msg, check_name) == 0:
             if check_name == "from_in_whitelist":
+                list_name = 'parsed_whitelist_from'
                 self.check_in_list(msg, addresses, list_name)
             else:
+                list_name = 'parsed_def_whitelist_from_rcvd'
                 self.check_in_default_whitelist(msg, addresses, list_name)
         return self.get_local(msg, check_name) > 0
 
@@ -334,9 +354,7 @@ class WLBLEvalPlugin(pad.plugins.base.BasePlugin):
                                           'parsed_more_spam_to')
 
     def check_from_in_default_whitelist(self, msg, target=None):
-        """Get all the from addresses and check if they match
-        the 'from_in_default_whitelist' regexes.
-        """
+
         return self._check_whitelist(msg, "from_in_default_whitelist")
 
     def check_mailfrom_matches_rcvd(self, msg, target=None):
@@ -431,11 +449,10 @@ class WLBLEvalPlugin(pad.plugins.base.BasePlugin):
         """If it is forged, check the address in list """
         if found_forged:
             wlist = self['parsed_whitelist_allow_relays']
-            for key in wlist:
-                for fuzzy_addr in wlist[key]:
-                    if re.search(fuzzy_addr, address):
-                        found_forged = 0
-                        break
+            for addr in wlist:
+                if re.search(addr, address):
+                    found_forged = 0
+                    break
         return found_forged
 
     def check_uri_host_listed(self, msg, list_name, target=None):
