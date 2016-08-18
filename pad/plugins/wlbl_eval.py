@@ -199,13 +199,16 @@ class WLBLEvalPlugin(pad.plugins.base.BasePlugin):
         "from_in_default_whitelist" msg value based on the list name
         """
         param = "from_in_default_whitelist"
+        found_match = 0
         for address in addresses:
-            wh = self.check_whitelist_rcvd(msg, list_name, address)
+            wh = self.check_whitelist_rcvd(msg, "def_whitelist_from_rcvd",
+                                           address)
             if wh == 1:
                 self.set_local(msg, param, 1)
                 return True
             elif wh == -1:
-                self.set_local(msg, param, -1)
+                found_match = -1
+        self.set_local(msg, param, found_match)
         return False
 
     def get_from_addresses(self, msg):
