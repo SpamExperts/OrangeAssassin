@@ -191,9 +191,13 @@ class WLBLEvalPlugin(pad.plugins.base.BasePlugin):
         """
         param = "from_in_whitelist"
         for address in addresses:
-            if self.check_address_in_list(address, list_name):
-                self.set_local(msg, param, 1)
-                return True
+            # if self.check_address_in_list(address, list_name):
+            #     self.set_local(msg, param, 1)
+            #     return True
+            for regex in self[list_name]:
+                if re.search(regex, address):
+                    self.set_local(msg, param, 1)
+                    return True
             wh = self.check_whitelist_rcvd(msg, "parsed_whitelist_from_rcvd",
                                            address)
             if wh == 1:
@@ -203,12 +207,13 @@ class WLBLEvalPlugin(pad.plugins.base.BasePlugin):
                 self.set_local(msg, param, -1)
         return False
 
-    def check_address_in_list(self, address, list_name):
+    def check_address_in_list(self, addresses, list_name):
         """Check if addresses match the regexes from list_name.
         """
-        for regex in self[list_name]:
-            if re.search(regex, address):
-                return True
+        for address in addresses:
+            for regex in self[list_name]:
+                if re.search(regex, address):
+                    return True
         return False
 
     def check_in_default_whitelist(self, msg, addresses, list_name):
