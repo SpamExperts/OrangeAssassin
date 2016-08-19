@@ -241,6 +241,15 @@ class Message(pad.context.MessageContext):
                     break
         return values
 
+    def get_all_addr_header(self, header_name):
+        """Get a list of all the addresses from this header."""
+        values = list()
+        for value in self.get_decoded_header(header_name):
+            for dummy, addr in email.utils.getaddresses([value]):
+                if addr:
+                    values.append(addr)
+        return values
+
     @_memoize("name_headers")
     def get_name_header(self, header_name):
         """Get a list of the first names from this header."""

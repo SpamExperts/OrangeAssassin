@@ -116,8 +116,11 @@ class WLBLEvalPlugin(pad.plugins.base.BasePlugin):
     def parse_list(self, list_name):
         parsed_list = []
         for addr in self[list_name]:
-            parsed_list.append(re.escape(addr).replace(r"\*", ".*").
-                               replace(r"\?", "."))
+            address = re.escape(addr).replace(r"\*", ".*").replace(r"\?", ".?")
+            if "@" in address:
+                parsed_list.append(address)
+            else:
+                parsed_list.append(".*@"+address)
         return parsed_list
 
     def my_list(self):
@@ -191,12 +194,8 @@ class WLBLEvalPlugin(pad.plugins.base.BasePlugin):
             if self.check_address_in_list(address, list_name):
                 self.set_local(msg, param, 1)
                 return True
-            for regex in self[list_name]:
-                if re.search(regex, address):
-                    self.set_local(msg, param, 1)
-                    return True
-            list_name = "parsed_whitelist_from_rcvd"
-            wh = self.check_whitelist_rcvd(msg, list_name, address)
+            wh = self.check_whitelist_rcvd(msg, "parsed_whitelist_from_rcvd",
+                                           address)
             if wh == 1:
                 self.set_local(msg, param, 1)
                 return True
@@ -204,13 +203,12 @@ class WLBLEvalPlugin(pad.plugins.base.BasePlugin):
                 self.set_local(msg, param, -1)
         return False
 
-    def check_address_in_list(self, addresses, list_name):
+    def check_address_in_list(self, address, list_name):
         """Check if addresses match the regexes from list_name.
         """
-        for address in addresses:
-            for regex in self[list_name]:
-                if re.search(regex, address):
-                    return True
+        for regex in self[list_name]:
+            if re.search(regex, address):
+                return True
         return False
 
     def check_in_default_whitelist(self, msg, addresses, list_name):
@@ -234,13 +232,13 @@ class WLBLEvalPlugin(pad.plugins.base.BasePlugin):
         and if there are no addresses, get from
         all FROM_HEADERS.
         """
-        addresses = msg.get_addr_header('Resent-From')
+        addresses = msg.get_all_addr_header('Resent-From')
         if addresses:
             for address in addresses:
                 yield address
         else:
             for key in FROM_HEADERS:
-                for address in msg.get_addr_header(key):
+                for address in msg.get_all_addr_header(key):
                     yield address
 
     def get_to_addresses(self, msg):
@@ -248,14 +246,14 @@ class WLBLEvalPlugin(pad.plugins.base.BasePlugin):
         headers, ad if there are no addresses, get from
         all TO_HEADERS.
         """
-        addresses = msg.get_addr_header('Resent-To')
-        addresses.extend(msg.get_addr_header('Resent-Cc'))
+        addresses = msg.get_all_addr_header('Resent-To')
+        addresses.extend(msg.get_all_addr_header('Resent-Cc'))
         if addresses:
             for address in addresses:
                 yield address
         else:
             for key in TO_HEADERS:
-                for address in msg.get_addr_header(key):
+                for address in msg.get_all_addr_header(key):
                     yield address
 
 
@@ -418,7 +416,7 @@ class WLBLEvalPlugin(pad.plugins.base.BasePlugin):
         for white_addr in self[list_name]:
             regexp = white_addr.replace("*", ".*")
             for domain in self[list_name][white_addr]:
-                if re.search(regexp, address):
+                if re.search(white_addr, address):
                     match = self.check_rcvd(domain, relays)
                     if match == 1:
                         return 1
