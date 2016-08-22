@@ -87,10 +87,8 @@ class WLBLEvalPlugin(pad.plugins.base.BasePlugin):
         self['parsed_all_spam_to'] = self.parse_list('all_spam_to')
         self['parsed_more_spam_to'] = self.parse_list('more_spam_to')
 
-        #nu e folosita.....................................
         self['parsed_def_whitelist_from_rcvd'] = self.parse_input(
             'def_whitelist_from_rcvd')
-        # nu e folosita....................................
         self['parsed_whitelist_from_rcvd'] = self.parse_input(
             'whitelist_from_rcvd')
 
@@ -191,9 +189,6 @@ class WLBLEvalPlugin(pad.plugins.base.BasePlugin):
         """
         param = "from_in_whitelist"
         for address in addresses:
-            # if self.check_address_in_list(address, list_name):
-            #     self.set_local(msg, param, 1)
-            #     return True
             for regex in self[list_name]:
                 if re.search(regex, address):
                     self.set_local(msg, param, 1)
