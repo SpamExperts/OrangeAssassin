@@ -160,7 +160,6 @@ class TestWhitelist(unittest.TestCase):
 
         self.plug = pad.plugins.wlbl_eval.WLBLEvalPlugin(self.mock_ctxt)
 
-        self.msg_data["from_in_whitelist"] = 0
 
     def tearDown(self):
         unittest.TestCase.tearDown(self)
@@ -280,6 +279,7 @@ class TestWhitelist(unittest.TestCase):
 
     def test_check_in_list_set_cached_undefined(self):
         self.mock_rcvd.return_value = 0
+        self.msg_data["from_in_whitelist"] = 0
         list_name = "whitelist_from"
         addresses = ["test@example.com"]
         self.global_data["whitelist_from"] = [".*@ex.com"]
