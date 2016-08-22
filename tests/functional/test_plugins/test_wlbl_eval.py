@@ -42,24 +42,23 @@ class TestFunctionalWLBLEval(tests.util.TestBase):
         tests.util.TestBase.tearDown(self)
 
     # General cases
+
     def test_wlbl_from_when_resent_from_is_set(self):
-        """ If Resent-From is set, use that; otherwise check all addresses taken from the following set of headers:
-        Envelope-Sender
-        Resent-Sender
-        X-Envelope-From
-        From"""
+        """ If Resent-From is set, use that; otherwise check all addresses
+        taken from the following set of headers: Envelope-Sender, Resent-Sender
+        X-Envelope-From, From"""
         lists = """
-            whitelist_from example.net
-            blacklist_from example.net
+            whitelist_from test@example.com
+            blacklist_from test@example.com
         """
 
-        email = """Resent-From: test@example.com
-        From: test@example.net
+        email = """Resent-From: email@example.com
+        From: test@example.com
         """
 
         self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG + lists)
         result = self.check_pad(email)
-        self.check_report(result, 2, ['CHECK_FROM_IN_WHITELIST', 'CHECK_FROM_IN_BLACKLIST'])
+        self.check_report(result, 0, [])
 
     def test_wlbl_from_on_to_header(self):
         lists = """
