@@ -412,7 +412,7 @@ class WLBLEvalPlugin(pad.plugins.base.BasePlugin):
         for white_addr in self[list_name]:
             regexp = white_addr.replace("*", ".*")
             for domain in self[list_name][white_addr]:
-                if re.search(white_addr, address):
+                if re.search(regexp, address):
                     match = self.check_rcvd(domain, relays)
                     if match == 1:
                         return 1

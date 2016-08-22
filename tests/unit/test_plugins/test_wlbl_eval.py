@@ -999,23 +999,23 @@ class TestAddressInList(unittest.TestCase):
         patch.stopall()
 
     def test_check_address_in_list_one_address(self):
-        list_name = "whitelist_from"
+        list_name = "parsed_whitelist_from"
         addresses = ["test@example.com"]
-        self.global_data["whitelist_from"] = [".*@example.com"]
+        self.global_data["parsed_whitelist_from"] = [".*@example.com"]
         result = self.plug.check_address_in_list(addresses, list_name)
         self.assertTrue(result)
 
     def test_check_address_in_list_two_addresses(self):
-        self.global_data["whitelist_from"] = [".*@example.com"]
-        list_name = "whitelist_from"
+        self.global_data["parsed_whitelist_from"] = [".*@example.com"]
+        list_name = "parsed_whitelist_from"
         addresses = ["test1@example.com", "test2@example.com"]
         result = self.plug.check_address_in_list(addresses, list_name)
         self.assertTrue(result)
 
     def test_check_address_in_list_no_match(self):
-        list_name = "whitelist_from"
+        list_name = "parsed_whitelist_from"
         addresses = ["test@example.com"]
-        self.global_data["whitelist_from"] = [".*@ex.com"]
+        self.global_data["parsed_whitelist_from"] = [".*@ex.com"]
         result = self.plug.check_address_in_list(addresses, list_name)
         self.assertFalse(result)
 
@@ -1160,145 +1160,145 @@ class TestParseList(unittest.TestCase):
 
 
 
-# class TestCheckToFrom(unittest.TestCase):
-#     def setUp(self):
-#         unittest.TestCase.setUp(self)
-#         self.options = {}
-#         self.global_data = {}
-#         self.msg_data = {}
-#
-#         self.mock_ctxt = MagicMock(**{
-#             "get_plugin_data.side_effect": lambda p, k: self.global_data[k],
-#             "set_plugin_data.side_effect":
-#                 lambda p, k,v: self.global_data.setdefault(k, v)}
-#         )
-#         self.mock_msg = MagicMock(**{
-#             "get_plugin_data.side_effect": lambda p, k: self.msg_data[k],
-#             "set_plugin_data.side_effect":
-#                 lambda p, k,v: self.msg_data.setdefault(k, v),
-#         })
-#         self.mock_rcvd = patch("pad.plugins.wlbl_eval."
-#                                "WLBLEvalPlugin.check_whitelist_rcvd").start()
-#         self.mock_check_address = patch("pad.plugins.wlbl_eval."
-#                                "WLBLEvalPlugin.check_address_in_list").start()
-#         self.mock_check_whitelist = patch("pad.plugins.wlbl_eval."
-#                                 "WLBLEvalPlugin._check_whitelist").start()
-#
-#         self.plug = pad.plugins.wlbl_eval.WLBLEvalPlugin(self.mock_ctxt)
-#
-#     def tearDown(self):
-#         unittest.TestCase.tearDown(self)
-#         patch.stopall()
-#
-#     def test_check_from_in_blacklist(self):
-#         self.mock_check_address.return_value = True
-#         result = self.plug.check_from_in_blacklist(self.mock_msg)
-#         self.assertTrue(result)
-#
-#     def test_check_from_in_list(self):
-#         list_name = "*@example.com    smt@example.com"
-#         self.mock_check_address.return_value = True
-#         result = self.plug.check_from_in_list(self.mock_msg, list_name)
-#         self.assertTrue(result)
-#
-#     def test_check_from_in_list_null(self):
-#         list_name = ""
-#         self.mock_check_address.return_value = True
-#         result = self.plug.check_from_in_list(self.mock_msg, list_name)
-#         self.assertFalse(result)
-#
-#     def test_check_to_in_all_spam(self):
-#         self.mock_check_address.return_value = True
-#         result = self.plug.check_to_in_all_spam(self.mock_msg)
-#         self.assertTrue(result)
-#
-#     def test_check_from_in_default_whitelist(self):
-#         self.mock_check_whitelist.return_value = True
-#         result = self.plug.check_from_in_default_whitelist(self.mock_msg)
-#         self.assertTrue(result)
-#
-#
-# class TestAddressInList(unittest.TestCase):
-#     def setUp(self):
-#         unittest.TestCase.setUp(self)
-#         self.options = {}
-#         self.global_data = {}
-#         self.msg_data = {}
-#
-#         self.mock_ctxt = MagicMock(**{
-#             "get_plugin_data.side_effect": lambda p, k: self.global_data[k],
-#             "set_plugin_data.side_effect": lambda p, k,
-#                                                   v: self.global_data.setdefault(
-#                 k, v)}
-#                                    )
-#         self.mock_msg = MagicMock(**{
-#             "get_plugin_data.side_effect": lambda p, k: self.msg_data[k],
-#             "set_plugin_data.side_effect": lambda p, k,
-#                                                   v: self.msg_data.setdefault(k,
-#                                                                               v),
-#         })
-#         self.mock_rcvd = patch("pad.plugins.wlbl_eval."
-#                                "WLBLEvalPlugin.check_whitelist_rcvd").start()
-#
-#
-#         self.plug = pad.plugins.wlbl_eval.WLBLEvalPlugin(self.mock_ctxt)
-#
-#     def tearDown(self):
-#         unittest.TestCase.tearDown(self)
-#         patch.stopall()
-#
-#     def test_check_address_in_list_one_address(self):
-#         list_name = "whitelist_from"
-#         addresses = ["test@example.com"]
-#         self.global_data["whitelist_from"] = ["*@example.com"]
-#         result = self.plug.check_address_in_list(addresses, list_name)
-#         self.assertTrue(result)
-#
-#     def test_check_address_in_list_two_addresses(self):
-#         self.global_data["whitelist_from"] = ["*@example.com"]
-#         list_name = "whitelist_from"
-#         addresses = ["test1@example.com", "test2@example.com"]
-#         result = self.plug.check_address_in_list(addresses, list_name)
-#         self.assertTrue(result)
-#
-#
-# class TestCheckUriWB(unittest.TestCase):
-#     def setUp(self):
-#         unittest.TestCase.setUp(self)
-#         self.options = {}
-#         self.global_data = {}
-#         self.msg_data = {}
-#
-#         self.mock_ctxt = MagicMock(**{
-#             "get_plugin_data.side_effect": lambda p, k: self.global_data[k],
-#             "set_plugin_data.side_effect": lambda p, k,
-#                                                   v: self.global_data.setdefault(
-#                 k, v)}
-#                                    )
-#         self.mock_msg = MagicMock(**{
-#             "get_plugin_data.side_effect": lambda p, k: self.msg_data[k],
-#             "set_plugin_data.side_effect": lambda p, k,
-#                                                   v: self.msg_data.setdefault(k,
-#                                                                               v),
-#         })
-#         self.mock_check_uri_host_listed = patch("pad.plugins.wlbl_eval."
-#                                "WLBLEvalPlugin.check_uri_host_listed").start()
-#
-#         self.plug = pad.plugins.wlbl_eval.WLBLEvalPlugin(self.mock_ctxt)
-#
-#     def tearDown(self):
-#         unittest.TestCase.tearDown(self)
-#         patch.stopall()
-#
-#     def test_check_uri_host_whitelist(self):
-#         result = self.plug.check_uri_host_in_whitelist(self.mock_msg)
-#         self.assertTrue(result)
-#
-#     def test_check_uri_host_blacklist(self):
-#         result = self.plug.check_uri_host_in_blacklist(self.mock_msg)
-#         self.assertTrue(result)
-#
-#
+class TestCheckToFrom(unittest.TestCase):
+    def setUp(self):
+        unittest.TestCase.setUp(self)
+        self.options = {}
+        self.global_data = {}
+        self.msg_data = {}
+
+        self.mock_ctxt = MagicMock(**{
+            "get_plugin_data.side_effect": lambda p, k: self.global_data[k],
+            "set_plugin_data.side_effect":
+                lambda p, k,v: self.global_data.setdefault(k, v)}
+        )
+        self.mock_msg = MagicMock(**{
+            "get_plugin_data.side_effect": lambda p, k: self.msg_data[k],
+            "set_plugin_data.side_effect":
+                lambda p, k,v: self.msg_data.setdefault(k, v),
+        })
+        self.mock_rcvd = patch("pad.plugins.wlbl_eval."
+                               "WLBLEvalPlugin.check_whitelist_rcvd").start()
+        self.mock_check_address = patch("pad.plugins.wlbl_eval."
+                               "WLBLEvalPlugin.check_address_in_list").start()
+        self.mock_check_whitelist = patch("pad.plugins.wlbl_eval."
+                                "WLBLEvalPlugin._check_whitelist").start()
+
+        self.plug = pad.plugins.wlbl_eval.WLBLEvalPlugin(self.mock_ctxt)
+
+    def tearDown(self):
+        unittest.TestCase.tearDown(self)
+        patch.stopall()
+
+    def test_check_from_in_blacklist(self):
+        self.mock_check_address.return_value = True
+        result = self.plug.check_from_in_blacklist(self.mock_msg)
+        self.assertTrue(result)
+
+    def test_check_from_in_list(self):
+        list_name = "*@example.com    smt@example.com"
+        self.mock_check_address.return_value = True
+        result = self.plug.check_from_in_list(self.mock_msg, list_name)
+        self.assertTrue(result)
+
+    def test_check_from_in_list_null(self):
+        list_name = ""
+        self.mock_check_address.return_value = True
+        result = self.plug.check_from_in_list(self.mock_msg, list_name)
+        self.assertFalse(result)
+
+    def test_check_to_in_all_spam(self):
+        self.mock_check_address.return_value = True
+        result = self.plug.check_to_in_all_spam(self.mock_msg)
+        self.assertTrue(result)
+
+    def test_check_from_in_default_whitelist(self):
+        self.mock_check_whitelist.return_value = True
+        result = self.plug.check_from_in_default_whitelist(self.mock_msg)
+        self.assertTrue(result)
+
+
+class TestAddressInList(unittest.TestCase):
+    def setUp(self):
+        unittest.TestCase.setUp(self)
+        self.options = {}
+        self.global_data = {}
+        self.msg_data = {}
+
+        self.mock_ctxt = MagicMock(**{
+            "get_plugin_data.side_effect": lambda p, k: self.global_data[k],
+            "set_plugin_data.side_effect": lambda p, k,
+                                                  v: self.global_data.setdefault(
+                k, v)}
+                                   )
+        self.mock_msg = MagicMock(**{
+            "get_plugin_data.side_effect": lambda p, k: self.msg_data[k],
+            "set_plugin_data.side_effect": lambda p, k,
+                                                  v: self.msg_data.setdefault(k,
+                                                                              v),
+        })
+        self.mock_rcvd = patch("pad.plugins.wlbl_eval."
+                               "WLBLEvalPlugin.check_whitelist_rcvd").start()
+
+
+        self.plug = pad.plugins.wlbl_eval.WLBLEvalPlugin(self.mock_ctxt)
+
+    def tearDown(self):
+        unittest.TestCase.tearDown(self)
+        patch.stopall()
+
+    def test_check_address_in_list_one_address(self):
+        list_name = "parsed_whitelist_from"
+        addresses = ["test@example.com"]
+        self.global_data["parsed_whitelist_from"] = [".*@example.com"]
+        result = self.plug.check_address_in_list(addresses, list_name)
+        self.assertTrue(result)
+
+    def test_check_address_in_list_two_addresses(self):
+        self.global_data["parsed_whitelist_from"] = [".*@example.com"]
+        list_name = "parsed_whitelist_from"
+        addresses = ["test1@example.com", "test2@example.com"]
+        result = self.plug.check_address_in_list(addresses, list_name)
+        self.assertTrue(result)
+
+
+class TestCheckUriWB(unittest.TestCase):
+    def setUp(self):
+        unittest.TestCase.setUp(self)
+        self.options = {}
+        self.global_data = {}
+        self.msg_data = {}
+
+        self.mock_ctxt = MagicMock(**{
+            "get_plugin_data.side_effect": lambda p, k: self.global_data[k],
+            "set_plugin_data.side_effect": lambda p, k,
+                                                  v: self.global_data.setdefault(
+                k, v)}
+                                   )
+        self.mock_msg = MagicMock(**{
+            "get_plugin_data.side_effect": lambda p, k: self.msg_data[k],
+            "set_plugin_data.side_effect": lambda p, k,
+                                                  v: self.msg_data.setdefault(k,
+                                                                              v),
+        })
+        self.mock_check_uri_host_listed = patch("pad.plugins.wlbl_eval."
+                               "WLBLEvalPlugin.check_uri_host_listed").start()
+
+        self.plug = pad.plugins.wlbl_eval.WLBLEvalPlugin(self.mock_ctxt)
+
+    def tearDown(self):
+        unittest.TestCase.tearDown(self)
+        patch.stopall()
+
+    def test_check_uri_host_whitelist(self):
+        result = self.plug.check_uri_host_in_whitelist(self.mock_msg)
+        self.assertTrue(result)
+
+    def test_check_uri_host_blacklist(self):
+        result = self.plug.check_uri_host_in_blacklist(self.mock_msg)
+        self.assertTrue(result)
+
+
 class TestCheckWhitelistRcvd(unittest.TestCase):
     def setUp(self):
         unittest.TestCase.setUp(self)
@@ -1329,70 +1329,70 @@ class TestCheckWhitelistRcvd(unittest.TestCase):
         unittest.TestCase.tearDown(self)
         patch.stopall()
 
-    # def test_check_whitelist_rcvd_match(self):
-    #     list_name = "parsed_whitelist_from"
-    #     self.global_data["parsed_whitelist_from"] = {
-    #         "*@example.com": ["user1@example.com", "user2@example.com"],
-    #         "*@exmp.com": ["user@exmp.com"]
-    #     }
-    #     address = "user@example.com"
-    #
-    #     self.mock_msg.untrusted_relays = [{"ip": "127.0.0.1"}]
-    #     self.mock_msg.trusted_relays = [{"ip": "123.0.0.2"}]
-    #
-    #     self.mock_check_rcvd.return_value = 1
-    #     self.mock_check_found_forged.return_value = 0
-    #     result = self.plug.check_whitelist_rcvd(self.mock_msg, list_name,
-    #                                             address)
-    #     self.assertEqual(result, 1)
-    #
-    # def test_check_whitelist_rcvd_not_match(self):
-    #     list_name = "parsed_whitelist_from"
-    #     self.global_data["parsed_whitelist_from"] = {
-    #         "*@example.com": ["user1@example.com", "user2@example.com"],
-    #         "*@exmp.com": ["user@exmp.com"]
-    #     }
-    #     address = "user@ele.com"
-    #
-    #     self.mock_msg.untrusted_relays = [{"ip": "127.0.0.1"}]
-    #     self.mock_msg.trusted_relays = [{"ip": "123.0.0.2"}]
-    #
-    #     self.mock_check_rcvd.return_value = 1
-    #     self.mock_check_found_forged.return_value = -1
-    #     result = self.plug.check_whitelist_rcvd(self.mock_msg, list_name,
-    #                                             address)
-    #     self.assertEqual(result, -1)
-    #
-    # def test_check_whitelist_rcvd_no_relays(self):
-    #     list_name = "parsed_whitelist_from"
-    #     self.global_data["parsed_whitelist_from"] = {
-    #         "*@example.com": ["user1@example.com", "user2@example.com"],
-    #         "*@exmp.com": ["user@exmp.com"]
-    #     }
-    #     address = "user@ele.com"
-    #     self.mock_check_found_forged.return_value = 0
-    #     self.mock_msg.untrusted_relays = []
-    #     self.mock_msg.trusted_relays = []
-    #     result = self.plug.check_whitelist_rcvd(self.mock_msg, list_name,
-    #                                             address)
-    #     self.assertEqual(result, 0)
-    #
-    # def test_check_whitelist_rcvd_trusted_relays_not_match(self):
-    #     list_name = "parsed_whitelist_from"
-    #     self.global_data["parsed_whitelist_from"] = {
-    #         "*@example.com": ["user1@example.com", "user2@example.com"],
-    #         "*@exmp.com": ["user@exmp.com"]
-    #     }
-    #     address = "user@ele.com"
-    #
-    #     self.mock_msg.untrusted_relays = []
-    #     self.mock_msg.trusted_relays = [{"ip": "127.0.0.1"}]
-    #
-    #     self.mock_check_rcvd.return_value = -1
-    #     self.mock_check_found_forged.return_value = -1
-    #     result = self.plug.check_whitelist_rcvd(self.mock_msg, list_name,
-    #                                             address)
-    #     self.assertEqual(result, -1)
+    def test_check_whitelist_rcvd_match(self):
+        list_name = "parsed_whitelist_from_rcvd"
+        self.global_data["parsed_whitelist_from_rcvd"] = {
+            "*@example.com": ["user1@example.com", "user2@example.com"],
+            "*@exmp.com": ["user@exmp.com"]
+        }
+        address = "user@exmp.com"
+
+        self.mock_msg.untrusted_relays = [{"ip": "127.0.0.1"}]
+        self.mock_msg.trusted_relays = [{"ip": "123.0.0.2"}]
+
+        self.mock_check_rcvd.return_value = 1
+        self.mock_check_found_forged.return_value = 0
+        result = self.plug.check_whitelist_rcvd(self.mock_msg, list_name,
+                                                address)
+        self.assertEqual(result, 1)
+
+    def test_check_whitelist_rcvd_not_match(self):
+        list_name = "parsed_whitelist_from"
+        self.global_data["parsed_whitelist_from"] = {
+            "*@example.com": ["user1@example.com", "user2@example.com"],
+            "*@exmp.com": ["user@exmp.com"]
+        }
+        address = "user@ele.com"
+
+        self.mock_msg.untrusted_relays = [{"ip": "127.0.0.1"}]
+        self.mock_msg.trusted_relays = [{"ip": "123.0.0.2"}]
+
+        self.mock_check_rcvd.return_value = 1
+        self.mock_check_found_forged.return_value = -1
+        result = self.plug.check_whitelist_rcvd(self.mock_msg, list_name,
+                                                address)
+        self.assertEqual(result, -1)
+
+    def test_check_whitelist_rcvd_no_relays(self):
+        list_name = "parsed_whitelist_from"
+        self.global_data["parsed_whitelist_from"] = {
+            "*@example.com": ["user1@example.com", "user2@example.com"],
+            "*@exmp.com": ["user@exmp.com"]
+        }
+        address = "user@ele.com"
+        self.mock_check_found_forged.return_value = 0
+        self.mock_msg.untrusted_relays = []
+        self.mock_msg.trusted_relays = []
+        result = self.plug.check_whitelist_rcvd(self.mock_msg, list_name,
+                                                address)
+        self.assertEqual(result, 0)
+
+    def test_check_whitelist_rcvd_trusted_relays_not_match(self):
+        list_name = "parsed_whitelist_from"
+        self.global_data["parsed_whitelist_from"] = {
+            "*@example.com": ["user1@example.com", "user2@example.com"],
+            "*@exmp.com": ["user@exmp.com"]
+        }
+        address = "user@ele.com"
+
+        self.mock_msg.untrusted_relays = []
+        self.mock_msg.trusted_relays = [{"ip": "127.0.0.1"}]
+
+        self.mock_check_rcvd.return_value = -1
+        self.mock_check_found_forged.return_value = -1
+        result = self.plug.check_whitelist_rcvd(self.mock_msg, list_name,
+                                                address)
+        self.assertEqual(result, -1)
 
 
 
