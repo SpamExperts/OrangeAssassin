@@ -86,11 +86,8 @@ class WLBLEvalPlugin(pad.plugins.base.BasePlugin):
         self['parsed_blacklist_to'] = self.parse_list('blacklist_to')
         self['parsed_all_spam_to'] = self.parse_list('all_spam_to')
         self['parsed_more_spam_to'] = self.parse_list('more_spam_to')
-
-        #nu e folosita.....................................
         self['parsed_def_whitelist_from_rcvd'] = self.parse_input(
             'def_whitelist_from_rcvd')
-        # nu e folosita....................................
         self['parsed_whitelist_from_rcvd'] = self.parse_input(
             'whitelist_from_rcvd')
 
@@ -154,13 +151,12 @@ class WLBLEvalPlugin(pad.plugins.base.BasePlugin):
         """
         delist = self['parsed_delist_uri_host']
         for item in list_name:
-            if item in delist[key] or item in delist['ALL']:
-                continue
-            self.add_in_list(key, item, parsed_list)
-
+            if item not in delist[key] and item not in delist['ALL']:
+                self.add_in_list(key, item, parsed_list)
 
     def parse_wlbl_uri(self, list_name):
-        """Parse witleist_uri_host and blacklist_uri_host"""
+        """Parse witleist_uri_host and blacklist_uri_host
+        """
         parsed_list = set()
         for x in list_name:
             parsed_list.update(x.split())
@@ -261,7 +257,6 @@ class WLBLEvalPlugin(pad.plugins.base.BasePlugin):
                 for address in msg.get_all_addr_header(key):
                     yield address
 
-
     def check_in_TL_TLDS(self, address):
         if address in self["util_rb_tld"]:
             return True
@@ -305,7 +300,6 @@ class WLBLEvalPlugin(pad.plugins.base.BasePlugin):
                 list_name = 'parsed_def_whitelist_from_rcvd'
                 self.check_in_default_whitelist(msg, addresses, list_name)
         return self.get_local(msg, check_name) > 0
-
 
     def check_to_in_whitelist(self, msg, target=None):
         """Get all the to addresses with get_to_addresses and
