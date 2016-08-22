@@ -31,6 +31,8 @@ REIMPLEMENTED_PLUGINS = {
         "pad.plugins.spf.SpfPlugin",
     "Mail::SpamAssassin::Plugin::WLBLEval":
         "pad.plugins.wlbl_eval.WLBLEvalPlugin",
+    "Mail::SpamAssassin::Plugin::Razor2":
+        "pad.plugins.razor2.Razor2Plugin",
     "Mail::SpamAssassin::Plugin::FreeMail":
         "pad.plugins.free_mail.FreeMail",
 }

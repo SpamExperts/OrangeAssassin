@@ -187,9 +187,6 @@ class WLBLEvalPlugin(pad.plugins.base.BasePlugin):
         """
         param = "from_in_whitelist"
         for address in addresses:
-            # if self.check_address_in_list(address, list_name):
-            #     self.set_local(msg, param, 1)
-            #     return True
             for regex in self[list_name]:
                 if re.search(regex, address):
                     self.set_local(msg, param, 1)
