@@ -106,18 +106,25 @@ class WLBLEvalPlugin(pad.plugins.base.BasePlugin):
         domain as value.
         """
         parsed_list = defaultdict(list)
+        characters = ["?", "@", ".", "*@"]
         for x in self[list_name]:
-            parsed_list[x.split()[0]].append(x.split()[1])
+            line = x.split(maxsplit=1)
+            if len(line) == 2:
+                #line[0].append(line[1].split())
+                if len([e for e in characters if e in line[0]]):
+                    parsed_list[x.split()[0]].append(x.split()[1])
         return parsed_list
 
     def parse_list(self, list_name):
         parsed_list = []
+        characters = ["?", "@", ".", "*@"]
         for addr in self[list_name]:
-            address = re.escape(addr).replace(r"\*", ".*").replace(r"\?", ".?")
-            if "@" in address:
-                parsed_list.append(address)
-            else:
-                parsed_list.append(".*@"+address)
+            if len([e for e in characters if e in addr]):
+                address = re.escape(addr).replace(r"\*", ".*").replace(r"\?", ".?")
+                if "@" in address:
+                    parsed_list.append(address)
+                else:
+                    parsed_list.append(".*@"+address)
         return parsed_list
 
     def my_list(self):
@@ -186,6 +193,7 @@ class WLBLEvalPlugin(pad.plugins.base.BasePlugin):
         "from_in_whitelist" msg value based on the list name
         """
         param = "from_in_whitelist"
+        print(self[list_name])
         for address in addresses:
             for regex in self[list_name]:
                 if re.search(regex, address):
@@ -291,6 +299,7 @@ class WLBLEvalPlugin(pad.plugins.base.BasePlugin):
         addresses = self.get_from_addresses(msg)
         if self.get_local(msg, check_name) == 0:
             if check_name == "from_in_whitelist":
+                print("ramura ok")
                 list_name = 'parsed_whitelist_from'
                 self.check_in_list(msg, addresses, list_name)
             else:
