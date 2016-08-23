@@ -325,15 +325,17 @@ class WLBLEvalPlugin(pad.plugins.base.BasePlugin):
         """
         if not list_name:
             return False
+        parsed_list_name = "parsed_%s" % list_name
         return self.check_address_in_list(self.get_from_addresses(msg),
-                                          list_name)
+                                          parsed_list_name)
 
     def check_to_in_list(self, msg, list_name, target=None):
         """Get all the to addresses and check if they match
         the given list regexes.
         """
+        parsed_list_name = "parsed_%s" % list_name
         return self.check_address_in_list(self.get_to_addresses(msg),
-                                          list_name)
+                                          parsed_list_name)
 
     def check_to_in_all_spam(self, msg, target=None):
         """Get all the to addresses and check if they match
@@ -422,8 +424,7 @@ class WLBLEvalPlugin(pad.plugins.base.BasePlugin):
 
     def check_rcvd(self, domain, relays):
         """Check if it is a match by IP address or is a subnet.
-        If is not a valid IP address, try to match
-        h by rdns
+        If is not a valid IP address, try to match by rdns
         """
         match = -1
         for relay in relays:
