@@ -22,9 +22,9 @@ body   CHECK_TO_IN_BLACKLIST               eval:check_to_in_blacklist()
 body   CHECK_TO_IN_MORE_SPAM               eval:check_to_in_more_spam()
 body   CHECK_TO_IN_ALL_SPAM                eval:check_to_in_all_spam()
 
-body   CHECK_URI_HOST_LISTED_MYLIST        eval::check_uri_host_listed('MYLIST')
-body   CHECK_URI_HOST_IN_WHITELIST         eval::check_uri_host_in_whitelist()
-body   CHECK_URI_HOST_IN_BLACKLIST         eval::check_uri_host_in_blacklist()
+body   CHECK_URI_HOST_LISTED_MYLIST        eval:check_uri_host_listed('MYLIST')
+body   CHECK_URI_HOST_IN_WHITELIST         eval:check_uri_host_in_whitelist()
+body   CHECK_URI_HOST_IN_BLACKLIST         eval:check_uri_host_in_blacklist()
 """
 
 
@@ -674,7 +674,7 @@ Received: from spamexperts.com [5.79.73.204]"""
                 """
 
         email = """From: test@example.com, test@example.net, test@spamexperts.com
-        Received: from spamexperts.com [5.79.73.204]"""
+Received: from spamexperts.com [5.79.73.204]"""
 
         self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG + lists)
         result = self.check_pad(email)
