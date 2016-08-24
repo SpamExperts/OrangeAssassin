@@ -323,7 +323,7 @@ class TestUrilist(unittest.TestCase):
         self.msg_data = {}
         self.parsed_delist = {
             "ALL": ["example.com", "ceva.example.net", "example1.com",
-                    "!ceva.example.net"],
+                    "ceva.example.net"],
             "WHITE": ["example.com", "ceva.example.net", "example1.com",
                       "ceva1.example.net"],
             "BLACK": ["example.com", "ceva.example.net"]
@@ -450,25 +450,25 @@ class TestUrilist(unittest.TestCase):
         self.assertEqual(result, {"in_list": [], "not_in_list": []})
 
     def test_parse_wlbl_uri_true(self):
-        list_name = [
+        self.global_data["whitelist_uri_host"] = [
             "example.com !ceva.example.net",
             "example1.com !ceva1.example.net"
         ]
         parsed_set = {"example.com", "!ceva.example.net",
                       "example1.com", "!ceva1.example.net"
                       }
-        result = self.plug.parse_wlbl_uri(list_name)
+        result = self.plug.parse_wlbl_uri("whitelist_uri_host")
         self.assertEqual(result, parsed_set)
 
     def test_parse_wlbl_uri_duplicate_values(self):
-        list_name = [
+        self.global_data["whitelist_uri_host"] = [
             "example.com !ceva.example.net",
             "example1.com !ceva.example.net"
         ]
         parsed_list = {"example.com", "!ceva.example.net",
                        "example1.com"
                        }
-        result = self.plug.parse_wlbl_uri(list_name)
+        result = self.plug.parse_wlbl_uri("whitelist_uri_host")
         self.assertEqual(result, parsed_list)
 
 
@@ -879,7 +879,7 @@ class TestAddInList(unittest.TestCase):
         self.plug.add_in_list(key, item, parsed_list)
         result_expected = {
             "BLACK": {
-                "in_list": ["example.com", ".example2.com"],
+                "in_list": ["example.com", "example2.com"],
                 "not_in_list": ["ex.example.com"]
             }
         }
@@ -1093,9 +1093,9 @@ class TestParseList(unittest.TestCase):
             "*@example.com user2@example.com",
             "*@exam.com user@exam.com"]
         result = self.plug.parse_input(list_name)
-        result_expected = {"*@example.com": ["user1@example.com",
+        result_expected = {".*\\@example\\.com": ["user1@example.com",
                                              "user2@example.com"],
-                           "*@exam.com": ["user@exam.com"]}
+                           ".*\\@exam\\.com": ["user@exam.com"]}
         self.assertEqual(result, result_expected)
 
     def test_parse_list(self):
