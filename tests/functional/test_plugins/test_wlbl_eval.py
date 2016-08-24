@@ -21,6 +21,10 @@ body   CHECK_TO_IN_WHITELIST               eval:check_to_in_whitelist()
 body   CHECK_TO_IN_BLACKLIST               eval:check_to_in_blacklist()
 body   CHECK_TO_IN_MORE_SPAM               eval:check_to_in_more_spam()
 body   CHECK_TO_IN_ALL_SPAM                eval:check_to_in_all_spam()
+
+body   CHECK_URI_HOST_LISTED_MYLIST        eval::check_uri_host_listed('MYLIST')
+body   CHECK_URI_HOST_IN_WHITELIST         eval::check_uri_host_in_whitelist()
+body   CHECK_URI_HOST_IN_BLACKLIST         eval::check_uri_host_in_blacklist()
 """
 
 
@@ -467,6 +471,20 @@ class TestFunctionalWLBLEval(tests.util.TestBase):
 
     # From header, default whitelist tests
 
+    def test_from_in_def_wl_ignore_headers_if_resent_from_exist(self):
+        lists = """
+                    def_whitelist_from_rcvd test@spamexperts.com [5.79.73.204]
+                    whitelist_from_rcvd     test@spamexperts.com [5.79.73.204]
+                """
+
+        email = """Resent-From: test@example.com
+From: test@spamexperts.com
+Received: from spamexperts.com [5.79.73.204]"""
+
+        self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG + lists)
+        result = self.check_pad(email)
+        self.check_report(result, 0, [])
+
     def test_from_in_def_wl_with_full_address_with_ip(self):
         lists = """
                     def_whitelist_from_rcvd test@spamexperts.com [5.79.73.204]
@@ -675,6 +693,259 @@ Received: from example.com [1.2.3.4]
         self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG + lists)
         result = self.check_pad(email)
         self.check_report(result, 0, [])
+
+    # Enlist uri host tests
+
+    def test_enlist_uri_host_domain_match(self):
+        lists = """
+                    enlist_uri_host (MYLIST) example.com
+                    blacklist_uri_host example.com
+                    whitelist_uri_host example.com
+                """
+
+        email = """Hello everyone this is a test email from http://example.com"""
+
+        self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG + lists)
+        result = self.check_pad(email)
+        self.check_report(result, 3, ['CHECK_URI_HOST_LISTED_MYLIST', 'CHECK_URI_HOST_IN_WHITELIST',
+                                      'CHECK_URI_HOST_IN_BLACKLIST'])
+
+    def test_enlist_uri_host_domain_match_sub_domain(self):
+        lists = """
+                    enlist_uri_host (MYLIST) example.com
+                    blacklist_uri_host example.com
+                    whitelist_uri_host example.com
+                """
+
+        email = """Hello everyone this is a test email from http://sub.example.com"""
+
+        self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG + lists)
+        result = self.check_pad(email)
+        print(result)
+        self.check_report(result, 3, ['CHECK_URI_HOST_LISTED_MYLIST', 'CHECK_URI_HOST_IN_WHITELIST',
+                                  'CHECK_URI_HOST_IN_BLACKLIST'])
+
+    def test_enlist_uri_host_domain_not_match(self):
+        lists = """
+                    enlist_uri_host (MYLIST) example.com
+                    blacklist_uri_host example.com
+                    whitelist_uri_host example.com
+                """
+
+        email = """Hello everyone this is a test email from example"""
+
+        self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG + lists)
+        result = self.check_pad(email)
+        self.check_report(result, 0, [])
+
+    def test_enlist_uri_host_sub_domain_not_match(self):
+        lists = """
+                    enlist_uri_host (MYLIST) example.com !sub.example.com
+                    blacklist_uri_host example.com !sub.example.com
+                    whitelist_uri_host example.com !sub.example.com
+                """
+
+        email = """From:Hello everyone this is a test email from http://sub.example.com"""
+
+        self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG + lists)
+        result = self.check_pad(email)
+        self.check_report(result, 0, [])
+
+    def test_enlist_uri_host_ip_match(self):
+        lists = """
+                    enlist_uri_host (MYLIST) 1.2.3.4
+                    blacklist_uri_host 1.2.3.4
+                    whitelist_uri_host 1.2.3.4
+                """
+
+        email = """Hello everyone this is a test email from http://1.2.3.4"""
+
+        self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG + lists)
+        result = self.check_pad(email)
+        self.check_report(result, 3, ['CHECK_URI_HOST_LISTED_MYLIST', 'CHECK_URI_HOST_IN_WHITELIST',
+                                      'CHECK_URI_HOST_IN_BLACKLIST'])
+
+    def test_enlist_uri_host_multi_list(self):
+        lists = """
+                    enlist_uri_host (MYLIST) example.com example.net example.org
+                    blacklist_uri_host example.com example.net example.org
+                    whitelist_uri_host example.com example.net example.org
+                """
+
+        email = """Hello everyone this is a test email from http://example.org"""
+
+        self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG + lists)
+        result = self.check_pad(email)
+        self.check_report(result, 3, ['CHECK_URI_HOST_LISTED_MYLIST', 'CHECK_URI_HOST_IN_WHITELIST',
+                                      'CHECK_URI_HOST_IN_BLACKLIST'])
+
+    def test_enlist_uri_host_split_list(self):
+        lists = """
+                    enlist_uri_host (MYLIST) example.com
+                    blacklist_uri_host example.com
+                    whitelist_uri_host example.com
+                    enlist_uri_host (MYLIST) example.net
+                    blacklist_uri_host example.net
+                    whitelist_uri_host example.net
+                    enlist_uri_host (MYLIST) example.org
+                    blacklist_uri_host example.org
+                    whitelist_uri_host example.org
+                """
+
+        email = """Hello everyone this is a test email from http://example.org"""
+
+        self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG + lists)
+        result = self.check_pad(email)
+        self.check_report(result, 3, ['CHECK_URI_HOST_LISTED_MYLIST', 'CHECK_URI_HOST_IN_WHITELIST',
+                                      'CHECK_URI_HOST_IN_BLACKLIST'])
+
+    def test_enlist_uri_host_multi_url(self):
+        lists = """
+                    enlist_uri_host (MYLIST) example.com
+                    blacklist_uri_host example.net
+                    whitelist_uri_host example.org
+                """
+
+        email = """Hello everyone this is a test email from http://example.org please visit http://example.net and
+        http://example.com"""
+
+        self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG + lists)
+        result = self.check_pad(email)
+        self.check_report(result, 3, ['CHECK_URI_HOST_LISTED_MYLIST', 'CHECK_URI_HOST_IN_WHITELIST',
+                                      'CHECK_URI_HOST_IN_BLACKLIST'])
+
+    def test_enlist_uri_host_empty_list(self):
+        lists = """
+                    enlist_uri_host (MYLIST)
+                    blacklist_uri_host
+                    whitelist_uri_host
+                """
+
+        email = """Hello everyone this is a test email from http://example.org please visit http://example.net and
+            http://example.com"""
+
+        self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG + lists)
+        result = self.check_pad(email)
+        self.check_report(result, 0, [])
+
+    # Delist uri host tests
+
+    def test_delist_uri_host_remove_domain_from_all_lists(self):
+        lists = """
+                    enlist_uri_host (MYLIST) example.com
+                    blacklist_uri_host example.com
+                    whitelist_uri_host example.com
+                    delist_uri_host example.com
+                """
+
+        email = """Hello everyone this is a test email from http://example.com"""
+
+        self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG + lists)
+        result = self.check_pad(email)
+        self.check_report(result, 0, [])
+
+    def test_delist_uri_host_remove_ip_from_all_lists(self):
+        lists = """
+                    enlist_uri_host (MYLIST) 1.2.3.4
+                    blacklist_uri_host 1.2.3.4
+                    whitelist_uri_host 1.2.3.4
+                    delist_uri_host 1.2.3.4
+                """
+
+        email = """Hello everyone this is a test email from http://1.2.3.4"""
+
+        self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG + lists)
+        result = self.check_pad(email)
+        self.check_report(result, 0, [])
+
+    def test_delist_uri_host_remove_domain_from_single_list(self):
+        lists = """
+                    enlist_uri_host (MYLIST) example.com
+                    blacklist_uri_host example.com
+                    whitelist_uri_host example.com
+                    delist_uri_host (MYLIST) example.com
+                """
+
+        email = """Hello everyone this is a test email from http://example.com"""
+
+        self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG + lists)
+        result = self.check_pad(email)
+        self.check_report(result, 2, ['CHECK_URI_HOST_IN_WHITELIST', 'CHECK_URI_HOST_IN_BLACKLIST'])
+
+    def test_delist_uri_host_remove_not_existing_domain(self):
+        lists = """
+                    enlist_uri_host (MYLIST) example.com
+                    blacklist_uri_host example.com
+                    whitelist_uri_host example.com
+                    delist_uri_host example.org
+                """
+
+        email = """Hello everyone this is a test email from http://example.com"""
+
+        self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG + lists)
+        result = self.check_pad(email)
+        self.check_report(result, 3, ['CHECK_URI_HOST_LISTED_MYLIST', 'CHECK_URI_HOST_IN_WHITELIST',
+                                      'CHECK_URI_HOST_IN_BLACKLIST'])
+
+    def test_delist_uri_host_remove_domain_with_exclamation_mark(self):
+        lists = """
+                    enlist_uri_host (MYLIST) example.com
+                    blacklist_uri_host example.com
+                    whitelist_uri_host example.com
+                    delist_uri_host !example.com
+                """
+
+        email = """Hello everyone this is a test email from http://example.com"""
+
+        self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG + lists)
+        result = self.check_pad(email)
+        self.check_report(result, 0, [])
+
+    def test_delist_uri_host_remove_not_matching_domain(self):
+        lists = """
+                    enlist_uri_host (MYLIST) example.com !sub.example.com
+                    blacklist_uri_host example.com !sub.example.com
+                    whitelist_uri_host example.com !sub.example.com
+                    delist_uri_host sub.example.com
+                """
+
+        email = """Hello everyone this is a test email from http://sub.example.com"""
+
+        self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG + lists)
+        result = self.check_pad(email)
+        self.check_report(result, 3, ['CHECK_URI_HOST_LISTED_MYLIST', 'CHECK_URI_HOST_IN_WHITELIST',
+                                      'CHECK_URI_HOST_IN_BLACKLIST'])
+
+    def test_delist_uri_host_no_effect(self):
+        lists = """
+                    delist_uri_host example.com
+                    enlist_uri_host (MYLIST) example.com
+                    blacklist_uri_host example.com
+                    whitelist_uri_host example.com
+                """
+
+        email = """Hello everyone this is a test email from http://example.com"""
+
+        self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG + lists)
+        result = self.check_pad(email)
+        self.check_report(result, 3, ['CHECK_URI_HOST_LISTED_MYLIST', 'CHECK_URI_HOST_IN_WHITELIST',
+                                      'CHECK_URI_HOST_IN_BLACKLIST'])
+
+    def test_delist_uri_host_empty_list(self):
+        lists = """
+                    enlist_uri_host (MYLIST) example.com
+                    blacklist_uri_host example.com
+                    whitelist_uri_host example.com
+                    delist_uri_host
+                """
+
+        email = """Hello everyone this is a test email from http://example.com"""
+
+        self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG + lists)
+        result = self.check_pad(email)
+        self.check_report(result, 3, ['CHECK_URI_HOST_LISTED_MYLIST', 'CHECK_URI_HOST_IN_WHITELIST',
+                                      'CHECK_URI_HOST_IN_BLACKLIST'])
+
 
 def suite():
     """Gather all the tests from this package in a test suite."""
