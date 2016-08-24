@@ -38,6 +38,7 @@ Available plugins
     pad.plugins.uri_detail
     pad.plugins.whitelist_subject
     pad.plugins.spf
+    pad.plugins.wlbl_eval
 
 
 Plugin reference

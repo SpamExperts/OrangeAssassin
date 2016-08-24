@@ -114,9 +114,17 @@ Plugin :mod:`whitelist_subject`
     :show-inheritance:
 
 Plugin :mod:`spf`
--------------------------------
+-----------------
 
 .. automodule:: pad.plugins.spf
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+Plugin :mod:`wlbl_eval`
+-----------------------
+
+.. automodule:: pad.plugins.wlbl_eval
     :members:
     :undoc-members:
     :show-inheritance:
