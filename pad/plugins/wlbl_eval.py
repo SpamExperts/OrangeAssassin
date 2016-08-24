@@ -145,9 +145,11 @@ class WLBLEvalPlugin(pad.plugins.base.BasePlugin):
             uri_host_list = x.split()
             if "(" in x:
                 key = uri_host_list[0].strip("( ").rstrip(" )")
-                parsed_list[key].extend(uri_host_list[1:])
+                for uri in uri_host_list[1:]:
+                    parsed_list[key].append(uri.strip("."))
             else:
-                parsed_list['ALL'].extend(uri_host_list)
+                for uri in uri_host_list:
+                    parsed_list['ALL'].append(uri.strip("!"))
         return parsed_list
 
     def add_in_list(self, key, item, parsed_list):
@@ -156,7 +158,8 @@ class WLBLEvalPlugin(pad.plugins.base.BasePlugin):
         if item.startswith("!"):
             parsed_list[key]["not_in_list"].append(item.strip("!"))
         else:
-            parsed_list[key]["in_list"].append("." + item)
+            # parsed_list[key]["in_list"].append("." + item)
+            parsed_list[key]["in_list"].append(item)
 
     def add_in_dict(self, list_name, key, parsed_list):
         """Add elements in the parsed list dictionary and ignore
@@ -171,7 +174,7 @@ class WLBLEvalPlugin(pad.plugins.base.BasePlugin):
         """Parse witleist_uri_host and blacklist_uri_host
         """
         parsed_list = set()
-        for x in list_name:
+        for x in self[list_name]:
             parsed_list.update(x.split())
         return parsed_list
 
@@ -198,20 +201,12 @@ class WLBLEvalPlugin(pad.plugins.base.BasePlugin):
         """Check if addresses match the regexes from list_name and modify
         "from_in_whitelist" msg value based on the list name
         """
-        print("CHECK_IN_LIST METHOD")
-        # print("............")
-        # print(list(addresses)) ['test@spamexperts.com']
-        # print("............")
         param = "from_in_whitelist"
         for address in addresses:
-            # print("adresa este: "+address)
-            # print("//////////////////// "+list_name)
-            # print(self[list_name]) lista e goala
             for regex in self[list_name]:
                 if re.search(regex, address):
                     self.set_local(msg, param, 1)
                     return True
-            # print("AJUNGE AICI")
             wh = self.check_whitelist_rcvd(msg, "parsed_whitelist_from_rcvd",
                                            address)
             if wh == 1:
@@ -422,27 +417,20 @@ class WLBLEvalPlugin(pad.plugins.base.BasePlugin):
     def check_whitelist_rcvd(self, msg, list_name, address):
         """Look up address and trusted relays in a whitelist with rcvd
         """
-        print("list name = "+list_name)
         if len(msg.untrusted_relays) + len(msg.trusted_relays) == 0:
             return 0
         relays = []
         if len(msg.untrusted_relays) > 0:
             relays = msg.untrusted_relays[0]
         elif len(msg.trusted_relays) > 0:
-            print(msg.trusted_relays)
             relays.extend(msg.trusted_relays)
 
         address = address.lower()
         found_forged = 0
         for white_addr in self[list_name]:
-            print("white_addr "+white_addr)
             regexp = white_addr.replace("*", ".*")
-            print("white_addr after " + white_addr)
-            # regexp = ".*" + regexp
-            # print(regexp)
             for domain in self[list_name][white_addr]:
                 if re.search(regexp, address):
-                    print("........................")
                     match = self.check_rcvd(domain, relays)
                     if match == 1:
                         return 1
@@ -454,7 +442,6 @@ class WLBLEvalPlugin(pad.plugins.base.BasePlugin):
         """Check if it is a match by IP address or is a subnet.
         If is not a valid IP address, try to match by rdns
         """
-        print("domain "+domain)
         match = -1
         for relay in relays:
             wl_ip = domain.strip("[ ").rstrip(" ]")
@@ -467,10 +454,7 @@ class WLBLEvalPlugin(pad.plugins.base.BasePlugin):
                     match = 1
                     break
             except ValueError:
-                print("RDNS")
                 rdns = relay['rdns'].lower()
-                print("rdns= "+ rdns)
-                print("wl_ip "+wl_ip)
                 if wl_ip == rdns or rdns.endswith(".%s" % wl_ip):
                     match = 1
                     break
