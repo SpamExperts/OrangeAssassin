@@ -22,7 +22,7 @@ body   CHECK_TO_IN_BLACKLIST               eval:check_to_in_blacklist()
 body   CHECK_TO_IN_MORE_SPAM               eval:check_to_in_more_spam()
 body   CHECK_TO_IN_ALL_SPAM                eval:check_to_in_all_spam()
 
-body   CHECK_URI_HOST_LISTED_MYLIST        eval:check_uri_host_listed('MYLIST')
+header   CHECK_URI_HOST_LISTED_MYLIST        eval:check_uri_host_listed('MYLIST')
 body   CHECK_URI_HOST_IN_WHITELIST         eval:check_uri_host_in_whitelist()
 body   CHECK_URI_HOST_IN_BLACKLIST         eval:check_uri_host_in_blacklist()
 """
@@ -505,7 +505,7 @@ Received: from spamexperts.com [5.79.73.204]"""
                 """
 
         email = """From: test@spamexperts.com
-Received: from example.com [5.79.73.204]"""
+Received: from spamexperts.com [5.79.73.204]"""
 
         self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG + lists)
         result = self.check_pad(email)
@@ -806,8 +806,8 @@ Received: from example.com [1.2.3.4]
                     whitelist_uri_host example.org
                 """
 
-        email = """Hello everyone this is a test email from http://example.org please visit http://example.net and
-        http://example.com"""
+        email = """Hello everyone this is a test email from http://example.org please visit http://example.net
+        and http://example.com"""
 
         self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG + lists)
         result = self.check_pad(email)
@@ -910,21 +910,6 @@ Received: from example.com [1.2.3.4]
                 """
 
         email = """Hello everyone this is a test email from http://sub.example.com"""
-
-        self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG + lists)
-        result = self.check_pad(email)
-        self.check_report(result, 3, ['CHECK_URI_HOST_LISTED_MYLIST', 'CHECK_URI_HOST_IN_WHITELIST',
-                                      'CHECK_URI_HOST_IN_BLACKLIST'])
-
-    def test_delist_uri_host_no_effect(self):
-        lists = """
-                    delist_uri_host example.com
-                    enlist_uri_host (MYLIST) example.com
-                    blacklist_uri_host example.com
-                    whitelist_uri_host example.com
-                """
-
-        email = """Hello everyone this is a test email from http://example.com"""
 
         self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG + lists)
         result = self.check_pad(email)
