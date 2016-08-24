@@ -114,7 +114,7 @@ class WLBLEvalPlugin(pad.plugins.base.BasePlugin):
         """
         parsed_list = defaultdict(list)
         for addr in self[list_name]:
-            line = addr.split(maxsplit=1)
+            line = addr.split(None, 1)
             if len(line) == 2:
                 if self.check_input(line[0]):
                     for dom in line[1].split():
