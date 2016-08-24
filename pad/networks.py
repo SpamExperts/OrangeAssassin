@@ -20,10 +20,11 @@ _NETWORK_RE = re.compile(r"""
 
 def _format_network_str(network, mask):
     padding = ""
-    length = len(network.split("."))
-    if length == 3 or length == 7:
-        network = network + "."
-
+    if not network.endswith("."):
+        length = len(network.split("."))
+        if length == 3 or length == 7:
+            if "/" not in network:
+                network = network + "."
     if network.endswith("."):
         padding = ".".join(["0"] * (4 - network.count(".")))
         if not mask:

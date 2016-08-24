@@ -448,7 +448,8 @@ class WLBLEvalPlugin(pad.plugins.base.BasePlugin):
             try:
                 # import sys
                 # import pdb; pdb.Pdb(stdin=sys.stdin).set_trace()
-                network = ipaddress.ip_network(_format_network_str(str(wl_ip),
+                swl_ip =str(wl_ip)
+                network = ipaddress.ip_network(_format_network_str(swl_ip,
                                                                    None))
                 if ipaddress.ip_address(str(relay['ip'])) in network:
                     match = 1
