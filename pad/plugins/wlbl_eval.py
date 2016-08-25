@@ -412,7 +412,16 @@ class WLBLEvalPlugin(pad.plugins.base.BasePlugin):
         checked_dw = (self.get_local(msg, "from_in_default_whitelist") == 0)
         return checked_w and checked_dw
 
-    check_forged_in_default_whitelist = check_forged_in_whitelist
+    def check_forged_in_default_whitelist(self, msg, target=None):
+        """First does a 'check_from_in_whitelist' and then
+        'check_from_in_default_whitelist' and return the state of
+        the msg values: "from_in_whitelist" and "from_in_default_whitelist".
+        """
+        self.check_from_in_whitelist(msg)
+        self.check_from_in_default_whitelist(msg)
+        checked_w = (self.get_local(msg, "from_in_whitelist") == 0)
+        checked_dw = (self.get_local(msg, "from_in_default_whitelist") < 0)
+        return checked_w and checked_dw
 
     def check_whitelist_rcvd(self, msg, list_name, address):
         """Look up address and trusted relays in a whitelist with rcvd
