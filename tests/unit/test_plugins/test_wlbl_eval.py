@@ -825,6 +825,20 @@ class TestCheckForged(unittest.TestCase):
         result = self.plug.check_forged_in_whitelist(self.mock_msg)
         self.assertFalse(result)
 
+    def test_check_forged_in_default_whitelist(self):
+        self.plug.set_local(self.mock_msg, "from_in_whitelist", 0)
+        self.plug.set_local(self.mock_msg, "from_in_default_whitelist",-1)
+
+        result = self.plug.check_forged_in_default_whitelist(self.mock_msg)
+        self.assertTrue(result)
+
+    def test_check_forged_in_default_whitelist_false(self):
+        self.plug.set_local(self.mock_msg, "from_in_whitelist", -1)
+        self.plug.set_local(self.mock_msg, "from_in_default_whitelist", 0)
+
+        result = self.plug.check_forged_in_default_whitelist(self.mock_msg)
+        self.assertFalse(result)
+
 
 class TestAddInList(unittest.TestCase):
     def setUp(self):

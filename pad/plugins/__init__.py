@@ -35,4 +35,6 @@ REIMPLEMENTED_PLUGINS = {
         "pad.plugins.razor2.Razor2Plugin",
     "Mail::SpamAssassin::Plugin::FreeMail":
         "pad.plugins.free_mail.FreeMail",
+    "Mail::SpamAssassin::Plugin::SpamCop":
+        "pad.plugins.spam_cop.SpamCopPlugin",
 }
