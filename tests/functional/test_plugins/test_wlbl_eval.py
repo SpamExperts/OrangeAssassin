@@ -29,6 +29,7 @@ body   CHECK_URI_HOST_IN_WHITELIST         eval:check_uri_host_in_whitelist()
 body   CHECK_URI_HOST_IN_BLACKLIST         eval:check_uri_host_in_blacklist()
 
 body   CHECK_MAILFROM_MATCHES_RCVD         eval:check_mailfrom_matches_rcvd()
+
 """
 
 
@@ -93,7 +94,7 @@ class TestFunctionalWLBLEval(tests.util.TestBase):
 
         self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG + lists)
         result = self.check_pad(email)
-        self.check_report(result, 3, ['CHECK_FROM_IN_WHITELIST', 'CHECK_FROM_IN_BLACKLIST', 'CHECK_FROM_IN_LIST'])
+        self.check_report(result, 0, [])
 
     def test_from_wlbl_with_wild_domain(self):
         lists = """
@@ -289,9 +290,7 @@ class TestFunctionalWLBLEval(tests.util.TestBase):
 
         self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG + lists)
         result = self.check_pad(email)
-        self.check_report(result, 5, ['CHECK_TO_IN_WHITELIST', 'CHECK_TO_IN_BLACKLIST',
-                                      'CHECK_TO_IN_MORE_SPAM', 'CHECK_TO_IN_ALL_SPAM',
-                                      'CHECK_TO_IN_LIST'])
+        self.check_report(result, 0, [])
 
     def test_to_wlbl_with_wild_domain(self):
         lists = """
@@ -553,7 +552,7 @@ Received: from spamexperts.com [5.79.73.204]"""
 
         self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG + lists)
         result = self.check_pad(email)
-        self.check_report(result, 2, ['CHECK_FROM_IN_WHITELIST', 'CHECK_FROM_IN_DEFAULT_WHITELIST'])
+        self.check_report(result, 0, [])
 
     def test_from_def_wl_with_wild_domain(self):
         lists = """
