@@ -27,19 +27,13 @@ body   CHECK_TO_IN_LIST                    eval:check_to_in_list('whitelist_to')
 header CHECK_URI_HOST_LISTED_MYLIST        eval:check_uri_host_listed('MYLIST')
 body   CHECK_URI_HOST_IN_WHITELIST         eval:check_uri_host_in_whitelist()
 body   CHECK_URI_HOST_IN_BLACKLIST         eval:check_uri_host_in_blacklist()
+
+body   CHECK_MAILFROM_MATCHES_RCVD         eval:check_mailfrom_matches_rcvd()
 """
 
 
 class TestFunctionalWLBLEval(tests.util.TestBase):
     """Functional Tests for the WLBLEval Plugin"""
-
-    def setUp(self):
-        tests.util.TestBase.setUp(self)
-
-    def tearDown(self):
-        tests.util.TestBase.tearDown(self)
-
-    # From header tests
 
     def test_wlbl_from_on_to_header(self):
         lists = """
@@ -942,6 +936,20 @@ Received: from example.com [1.2.3.4]
         self.check_report(result, 3, ['CHECK_URI_HOST_LISTED_MYLIST', 'CHECK_URI_HOST_IN_WHITELIST',
                                       'CHECK_URI_HOST_IN_BLACKLIST'])
 
+    # Check mailfrom matches rcvd
+
+    def test_mailfrom_matches_rcvd_with_trusted_relays(self):
+
+        email = """Received: from rdns.example.com ([217.70.183.195])
+by by.example.org with esmtps (TLSv1.2:DHE-RSA-AES256-SHA:256)
+ (Exim 4.85)
+ (envelope-from <envfrom@example.com>)
+ id 1aVFVG-0000me-LC
+ for user@example.org; Mon, 15 Feb 2016 10:31:35 +0100"""
+
+        self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG)
+        result = self.check_pad(email)
+        self.check_report(result, 0, [])
 
 def suite():
     """Gather all the tests from this package in a test suite."""
