@@ -16,13 +16,15 @@ CONFIG = """
 body   CHECK_FROM_IN_WHITELIST             eval:check_from_in_whitelist()
 body   CHECK_FROM_IN_BLACKLIST             eval:check_from_in_blacklist()
 body   CHECK_FROM_IN_DEFAULT_WHITELIST     eval:check_from_in_default_whitelist()
+body   CHECK_FROM_IN_LIST                  eval:check_from_in_list('whitelist_from')
 
 body   CHECK_TO_IN_WHITELIST               eval:check_to_in_whitelist()
 body   CHECK_TO_IN_BLACKLIST               eval:check_to_in_blacklist()
 body   CHECK_TO_IN_MORE_SPAM               eval:check_to_in_more_spam()
 body   CHECK_TO_IN_ALL_SPAM                eval:check_to_in_all_spam()
+body   CHECK_TO_IN_LIST                    eval:check_to_in_list('whitelist_to')
 
-header   CHECK_URI_HOST_LISTED_MYLIST        eval:check_uri_host_listed('MYLIST')
+header CHECK_URI_HOST_LISTED_MYLIST        eval:check_uri_host_listed('MYLIST')
 body   CHECK_URI_HOST_IN_WHITELIST         eval:check_uri_host_in_whitelist()
 body   CHECK_URI_HOST_IN_BLACKLIST         eval:check_uri_host_in_blacklist()
 """
@@ -61,7 +63,7 @@ class TestFunctionalWLBLEval(tests.util.TestBase):
 
         self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG + lists)
         result = self.check_pad(email)
-        self.check_report(result, 2, ['CHECK_FROM_IN_WHITELIST', 'CHECK_FROM_IN_BLACKLIST'])
+        self.check_report(result, 3, ['CHECK_FROM_IN_WHITELIST', 'CHECK_FROM_IN_BLACKLIST', 'CHECK_FROM_IN_LIST'])
 
     def test_from_in_wlbl_with_full_address_negative(self):
         lists = """
@@ -85,7 +87,7 @@ class TestFunctionalWLBLEval(tests.util.TestBase):
 
         self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG + lists)
         result = self.check_pad(email)
-        self.check_report(result, 2, ['CHECK_FROM_IN_WHITELIST', 'CHECK_FROM_IN_BLACKLIST'])
+        self.check_report(result, 3, ['CHECK_FROM_IN_WHITELIST', 'CHECK_FROM_IN_BLACKLIST', 'CHECK_FROM_IN_LIST'])
 
     def test_from_wlbl_with_full_domain(self):
         lists = """
@@ -97,7 +99,7 @@ class TestFunctionalWLBLEval(tests.util.TestBase):
 
         self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG + lists)
         result = self.check_pad(email)
-        self.check_report(result, 2, ['CHECK_FROM_IN_WHITELIST', 'CHECK_FROM_IN_BLACKLIST'])
+        self.check_report(result, 3, ['CHECK_FROM_IN_WHITELIST', 'CHECK_FROM_IN_BLACKLIST', 'CHECK_FROM_IN_LIST'])
 
     def test_from_wlbl_with_wild_domain(self):
         lists = """
@@ -109,7 +111,7 @@ class TestFunctionalWLBLEval(tests.util.TestBase):
 
         self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG + lists)
         result = self.check_pad(email)
-        self.check_report(result, 2, ['CHECK_FROM_IN_WHITELIST', 'CHECK_FROM_IN_BLACKLIST'])
+        self.check_report(result, 3, ['CHECK_FROM_IN_WHITELIST', 'CHECK_FROM_IN_BLACKLIST', 'CHECK_FROM_IN_LIST'])
 
     def test_from_wlbl_with_regex(self):
         lists = """
@@ -133,7 +135,7 @@ class TestFunctionalWLBLEval(tests.util.TestBase):
 
         self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG + lists)
         result = self.check_pad(email)
-        self.check_report(result, 2, ['CHECK_FROM_IN_WHITELIST', 'CHECK_FROM_IN_BLACKLIST'])
+        self.check_report(result, 3, ['CHECK_FROM_IN_WHITELIST', 'CHECK_FROM_IN_BLACKLIST', 'CHECK_FROM_IN_LIST'])
 
     def test_from_wlbl_no_lists(self):
         email = "From: test@example.com"
@@ -176,7 +178,7 @@ class TestFunctionalWLBLEval(tests.util.TestBase):
 
         self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG + lists)
         result = self.check_pad(email)
-        self.check_report(result, 2, ['CHECK_FROM_IN_WHITELIST', 'CHECK_FROM_IN_BLACKLIST'])
+        self.check_report(result, 3, ['CHECK_FROM_IN_WHITELIST', 'CHECK_FROM_IN_BLACKLIST', 'CHECK_FROM_IN_LIST'])
 
     def test_from_wlbl_split_lists(self):
         lists = """
@@ -192,7 +194,7 @@ class TestFunctionalWLBLEval(tests.util.TestBase):
 
         self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG + lists)
         result = self.check_pad(email)
-        self.check_report(result, 2, ['CHECK_FROM_IN_WHITELIST', 'CHECK_FROM_IN_BLACKLIST'])
+        self.check_report(result, 3, ['CHECK_FROM_IN_WHITELIST', 'CHECK_FROM_IN_BLACKLIST', 'CHECK_FROM_IN_LIST'])
 
     def test_from_wlbl_ignore_headers_if_resent_from_exist(self):
         lists = """
@@ -217,7 +219,7 @@ class TestFunctionalWLBLEval(tests.util.TestBase):
 
         self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG + lists)
         result = self.check_pad(email)
-        self.check_report(result, 2, ['CHECK_FROM_IN_WHITELIST', 'CHECK_FROM_IN_BLACKLIST'])
+        self.check_report(result, 3, ['CHECK_FROM_IN_WHITELIST', 'CHECK_FROM_IN_BLACKLIST', 'CHECK_FROM_IN_LIST'])
 
     # To header tests
 
@@ -247,8 +249,9 @@ class TestFunctionalWLBLEval(tests.util.TestBase):
 
         self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG + lists)
         result = self.check_pad(email)
-        self.check_report(result, 4, ['CHECK_TO_IN_WHITELIST', 'CHECK_TO_IN_BLACKLIST',
-                                      'CHECK_TO_IN_MORE_SPAM', 'CHECK_TO_IN_ALL_SPAM'])
+        self.check_report(result, 5, ['CHECK_TO_IN_WHITELIST', 'CHECK_TO_IN_BLACKLIST',
+                                      'CHECK_TO_IN_MORE_SPAM', 'CHECK_TO_IN_ALL_SPAM',
+                                      'CHECK_TO_IN_LIST'])
 
     def test_to_in_wlbl_with_full_address_negative(self):
         lists = """
@@ -276,8 +279,9 @@ class TestFunctionalWLBLEval(tests.util.TestBase):
 
         self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG + lists)
         result = self.check_pad(email)
-        self.check_report(result, 4, ['CHECK_TO_IN_WHITELIST', 'CHECK_TO_IN_BLACKLIST',
-                                      'CHECK_TO_IN_MORE_SPAM', 'CHECK_TO_IN_ALL_SPAM'])
+        self.check_report(result, 5, ['CHECK_TO_IN_WHITELIST', 'CHECK_TO_IN_BLACKLIST',
+                                      'CHECK_TO_IN_MORE_SPAM', 'CHECK_TO_IN_ALL_SPAM',
+                                      'CHECK_TO_IN_LIST'])
 
     def test_to_wlbl_with_full_domain(self):
         lists = """
@@ -291,8 +295,9 @@ class TestFunctionalWLBLEval(tests.util.TestBase):
 
         self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG + lists)
         result = self.check_pad(email)
-        self.check_report(result, 4, ['CHECK_TO_IN_WHITELIST', 'CHECK_TO_IN_BLACKLIST',
-                                      'CHECK_TO_IN_MORE_SPAM', 'CHECK_TO_IN_ALL_SPAM'])
+        self.check_report(result, 5, ['CHECK_TO_IN_WHITELIST', 'CHECK_TO_IN_BLACKLIST',
+                                      'CHECK_TO_IN_MORE_SPAM', 'CHECK_TO_IN_ALL_SPAM',
+                                      'CHECK_TO_IN_LIST'])
 
     def test_to_wlbl_with_wild_domain(self):
         lists = """
@@ -306,8 +311,9 @@ class TestFunctionalWLBLEval(tests.util.TestBase):
 
         self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG + lists)
         result = self.check_pad(email)
-        self.check_report(result, 4, ['CHECK_TO_IN_WHITELIST', 'CHECK_TO_IN_BLACKLIST',
-                                      'CHECK_TO_IN_MORE_SPAM', 'CHECK_TO_IN_ALL_SPAM'])
+        self.check_report(result, 5, ['CHECK_TO_IN_WHITELIST', 'CHECK_TO_IN_BLACKLIST',
+                                      'CHECK_TO_IN_MORE_SPAM', 'CHECK_TO_IN_ALL_SPAM',
+                                      'CHECK_TO_IN_LIST'])
 
     def test_to_wlbl_with_regex(self):
         lists = """
@@ -335,8 +341,9 @@ class TestFunctionalWLBLEval(tests.util.TestBase):
 
         self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG + lists)
         result = self.check_pad(email)
-        self.check_report(result, 4, ['CHECK_TO_IN_WHITELIST', 'CHECK_TO_IN_BLACKLIST',
-                                      'CHECK_TO_IN_MORE_SPAM', 'CHECK_TO_IN_ALL_SPAM'])
+        self.check_report(result, 5, ['CHECK_TO_IN_WHITELIST', 'CHECK_TO_IN_BLACKLIST',
+                                      'CHECK_TO_IN_MORE_SPAM', 'CHECK_TO_IN_ALL_SPAM',
+                                      'CHECK_TO_IN_LIST'])
 
     def test_to_wlbl_no_lists(self):
         email = "To: test@example.com"
@@ -383,8 +390,9 @@ class TestFunctionalWLBLEval(tests.util.TestBase):
 
         self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG + lists)
         result = self.check_pad(email)
-        self.check_report(result, 4, ['CHECK_TO_IN_WHITELIST', 'CHECK_TO_IN_BLACKLIST',
-                                      'CHECK_TO_IN_MORE_SPAM', 'CHECK_TO_IN_ALL_SPAM'])
+        self.check_report(result, 5, ['CHECK_TO_IN_WHITELIST', 'CHECK_TO_IN_BLACKLIST',
+                                      'CHECK_TO_IN_MORE_SPAM', 'CHECK_TO_IN_ALL_SPAM',
+                                      'CHECK_TO_IN_LIST'])
 
     def test_to_wlbl_split_lists(self):
         lists = """
@@ -406,8 +414,9 @@ class TestFunctionalWLBLEval(tests.util.TestBase):
 
         self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG + lists)
         result = self.check_pad(email)
-        self.check_report(result, 4, ['CHECK_TO_IN_WHITELIST', 'CHECK_TO_IN_BLACKLIST',
-                                      'CHECK_TO_IN_MORE_SPAM', 'CHECK_TO_IN_ALL_SPAM'])
+        self.check_report(result, 5, ['CHECK_TO_IN_WHITELIST', 'CHECK_TO_IN_BLACKLIST',
+                                      'CHECK_TO_IN_MORE_SPAM', 'CHECK_TO_IN_ALL_SPAM',
+                                      'CHECK_TO_IN_LIST'])
 
     def test_to_wlbl_ignore_headers_if_resent_to_exist(self):
         lists = """
@@ -451,8 +460,9 @@ class TestFunctionalWLBLEval(tests.util.TestBase):
 
         self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG + lists)
         result = self.check_pad(email)
-        self.check_report(result, 4, ['CHECK_TO_IN_WHITELIST', 'CHECK_TO_IN_BLACKLIST',
-                                      'CHECK_TO_IN_MORE_SPAM', 'CHECK_TO_IN_ALL_SPAM'])
+        self.check_report(result, 5, ['CHECK_TO_IN_WHITELIST', 'CHECK_TO_IN_BLACKLIST',
+                                      'CHECK_TO_IN_MORE_SPAM', 'CHECK_TO_IN_ALL_SPAM',
+                                      'CHECK_TO_IN_LIST'])
 
     def test_to_wlbl_resent_cc(self):
         lists = """
@@ -466,8 +476,9 @@ class TestFunctionalWLBLEval(tests.util.TestBase):
 
         self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG + lists)
         result = self.check_pad(email)
-        self.check_report(result, 4, ['CHECK_TO_IN_WHITELIST', 'CHECK_TO_IN_BLACKLIST',
-                                      'CHECK_TO_IN_MORE_SPAM', 'CHECK_TO_IN_ALL_SPAM'])
+        self.check_report(result, 5, ['CHECK_TO_IN_WHITELIST', 'CHECK_TO_IN_BLACKLIST',
+                                      'CHECK_TO_IN_MORE_SPAM', 'CHECK_TO_IN_ALL_SPAM',
+                                      'CHECK_TO_IN_LIST'])
 
     # From header, default whitelist tests
 
