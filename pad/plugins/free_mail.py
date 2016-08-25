@@ -123,11 +123,11 @@ class FreeMail(pad.plugins.base.BasePlugin):
                     return False
         try:
             from_email = self.get_global('email_re').search(msg.msg['From']).group()
-        except (AttributeError, TypeError):
+        except (AttributeError, TypeError, KeyError):
             from_email = ''
         try:
             reply_to = self.get_global('email_re').search(msg.msg['Reply-To']).group()
-        except (AttributeError, TypeError):
+        except (AttributeError, TypeError, KeyError):
             reply_to = ''
         from_email_frm = self._is_freemail(from_email)
         reply_to_frm = self._is_freemail(reply_to)
