@@ -949,7 +949,7 @@ by by.example.org with esmtps (TLSv1.2:DHE-RSA-AES256-SHA:256)
 
         self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG)
         result = self.check_pad(email)
-        self.check_report(result, 0, [])
+        self.check_report(result, 1, ['CHECK_MAILFROM_MATCHES_RCVD'])
 
 def suite():
     """Gather all the tests from this package in a test suite."""
