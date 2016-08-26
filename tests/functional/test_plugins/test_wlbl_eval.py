@@ -938,8 +938,28 @@ Received: from example.com [1.2.3.4]
                                       'CHECK_URI_HOST_IN_BLACKLIST'])
 
     # Check mailfrom matches rcvd
-
     def test_mailfrom_matches_rcvd_with_untrusted_relays(self):
+
+        untrusted_networks = """trusted_networks !1.2.3.4
+trusted_networks !4.5.6.7
+trusted_networks !7.8.9.0"""
+
+        email = """Received: from example.com (example.com [1.2.3.4])
+    by example.com
+    (envelope-from <envfrom@example.com>)
+Received: from sub1.example.com (sub1.example.com [4.5.6.7])
+    by example.com
+Received: from sub2.example.com (sub2.example.com [7.8.9.0])
+    by example.com"""
+
+        self.setup_conf(config=CONFIG + untrusted_networks, pre_config=PRE_CONFIG)
+        result = self.check_pad(email)
+        self.check_report(result, 1, ['CHECK_MAILFROM_MATCHES_RCVD'])
+
+
+
+    # May fail because SpamPAD set all relays as trusted by default and Spamassassin don't
+    def test_mailfrom_matches_rcvd_with_default_untrusted_relays(self):
 
         email = """Received: from example.com (example.com [1.2.3.4])
     by example.com
@@ -985,10 +1005,6 @@ Received: from sub2.example.com (sub2.example.com [7.8.9.0])
         self.setup_conf(config=CONFIG + trusted_networks, pre_config=PRE_CONFIG)
         result = self.check_pad(email)
         self.check_report(result, 0, [])
-
-
-
-
 
 
 def suite():
