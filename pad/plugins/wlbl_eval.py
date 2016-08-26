@@ -379,6 +379,7 @@ class WLBLEvalPlugin(pad.plugins.base.BasePlugin):
         of the domain matches the last part of the rdns.
         """
         address = msg.sender_address
+        print("ADDRESS "+address)
         relays = []
         if address:
             domain = self.base_domain(address.split("@")[1])
@@ -392,10 +393,8 @@ class WLBLEvalPlugin(pad.plugins.base.BasePlugin):
             return False
         try:
             for relay in relays:
-                ip = ipaddress.ip_address(str(relay['ip'])).exploded
-                reversed_ip = str(dns.reversename.from_address(ip))
-                relay_domain = self.base_domain(reversed_ip.rsplit(".", 1)[0])
-                if relay_domain == domain:
+                relay_domain = relay["rdns"]
+                if domain.endswith(relay_domain):
                     return True
         except ValueError:
             return False
