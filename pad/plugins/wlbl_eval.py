@@ -379,7 +379,6 @@ class WLBLEvalPlugin(pad.plugins.base.BasePlugin):
         of the domain matches the last part of the rdns.
         """
         address = msg.sender_address
-        print("ADDRESS "+address)
         relays = []
         if address:
             domain = self.base_domain(address.split("@")[1])
@@ -391,13 +390,11 @@ class WLBLEvalPlugin(pad.plugins.base.BasePlugin):
             relays.extend(msg.trusted_relays)
         else:
             return False
-        try:
-            for relay in relays:
-                relay_domain = relay["rdns"]
-                if domain.endswith(relay_domain):
-                    return True
-        except ValueError:
-            return False
+        for relay in relays:
+            relay_domain = relay["rdns"]
+            if domain.endswith(relay_domain):
+                return True
+
         return False
 
     def check_forged_in_whitelist(self, msg, target=None):

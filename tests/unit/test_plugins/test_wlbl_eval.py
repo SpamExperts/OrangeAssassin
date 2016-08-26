@@ -659,27 +659,27 @@ class TestMatchRcvd(unittest.TestCase):
     def test_check_mailfrom_matches_rcvd_no_untrusted_relays(self):
         self.mock_base_domain.return_value = ".co.uk"
         self.mock_msg.untrusted_relays = []
-        self.mock_msg.trusted_relays = [{"ip": "127.0.0.1"}]
+        self.mock_msg.trusted_relays = [{"ip": "127.0.0.1", "rdns": ".co.uk"}]
         result = self.plug.check_mailfrom_matches_rcvd(self.mock_msg)
         self.assertTrue(result)
 
     def test_check_mailfrom_matches_rcvd_no_trusted_relays(self):
         self.mock_base_domain.return_value = ".co.uk"
-        self.mock_msg.untrusted_relays = [{"ip": "127.0.0.1"}]
+        self.mock_msg.untrusted_relays = [{"ip": "127.0.0.1", "rdns": ".co.uk"}]
         self.mock_msg.trusted_relays = []
         result = self.plug.check_mailfrom_matches_rcvd(self.mock_msg)
         self.assertTrue(result)
 
     def test_check_mailfrom_matches_rcvd_domain(self):
         self.mock_base_domain.return_value = "in-addr.arpa"
-        self.mock_msg.untrusted_relays = [{"ip": "127.0.0.1"}]
+        self.mock_msg.untrusted_relays = [{"ip": "127.0.0.1", "rdns": "in-addr.arpa"}]
         self.mock_msg.trusted_relays = []
         result = self.plug.check_mailfrom_matches_rcvd(self.mock_msg)
         self.assertTrue(result)
 
     def test_check_mailfrom_matches_rcvd_except(self):
         self.mock_base_domain.return_value = "in-addr.arpa"
-        self.mock_msg.untrusted_relays = [{"ip": "127.0.0.1.2"}]
+        self.mock_msg.untrusted_relays = [{"ip": "127.0.0.1", "rdns": "co.uk"}]
         self.mock_msg.trusted_relays = []
         result = self.plug.check_mailfrom_matches_rcvd(self.mock_msg)
         self.assertFalse(result)
