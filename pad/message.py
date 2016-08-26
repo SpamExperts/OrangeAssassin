@@ -414,7 +414,7 @@ class Message(pad.context.MessageContext):
             self._hook_extract_metadata(payload, text, part)
         self.text = " ".join(body)
         self.raw_text = "\n".join(raw_body)
-        self._parse_sender()
+
         received_headers = self.get_decoded_header("Received")
         for header in self.ctxt.conf["originating_ip_headers"]:
             headers = ["X-ORIGINATING-IP: %s" % x
@@ -424,6 +424,7 @@ class Message(pad.context.MessageContext):
         self.received_headers = received_obj.received
         self._parse_relays(self.received_headers)
 
+
         try:
             self._create_plugin_tags(self.received_headers[0])
         except IndexError:
@@ -431,6 +432,7 @@ class Message(pad.context.MessageContext):
 
         for header in self.received_headers:
             self.hostname_with_ip.append((header["rdns"], header["ip"]))
+        self._parse_sender()
 
     @staticmethod
     def _iter_parts(msg):
