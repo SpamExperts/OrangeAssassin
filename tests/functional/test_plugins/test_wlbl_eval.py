@@ -939,18 +939,57 @@ Received: from example.com [1.2.3.4]
 
     # Check mailfrom matches rcvd
 
-    def test_mailfrom_matches_rcvd_with_trusted_relays(self):
+    def test_mailfrom_matches_rcvd_with_untrusted_relays(self):
 
-        email = """Received: from rdns.example.com ([217.70.183.195])
-by by.example.org with esmtps (TLSv1.2:DHE-RSA-AES256-SHA:256)
- (Exim 4.85)
- (envelope-from <envfrom@example.com>)
- id 1aVFVG-0000me-LC
- for user@example.org; Mon, 15 Feb 2016 10:31:35 +0100"""
+        email = """Received: from example.com (example.com [1.2.3.4])
+    by example.com
+    (envelope-from <envfrom@example.com>)
+Received: from sub1.example.com (sub1.example.com [4.5.6.7])
+    by example.com
+Received: from sub2.example.com (sub2.example.com [7.8.9.0])
+    by example.com"""
 
         self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG)
         result = self.check_pad(email)
         self.check_report(result, 1, ['CHECK_MAILFROM_MATCHES_RCVD'])
+
+    def test_mailfrom_matches_rcvd_with_trusted_relays(self):
+
+        trusted_networks = """trusted_networks 1.2.3.4
+trusted_networks 4.5.6.7
+trusted_networks 7.8.9.0"""
+
+        email = """Received: from sub1.example.com (sub1.example.com [4.5.6.7])
+    by example.com
+Received: from sub2.example.com (sub2.example.com [7.8.9.0])
+    by example.com
+Received: from example.com (example.com [1.2.3.4])
+    by example.com
+    (envelope-from <envfrom@example.com>)"""
+
+        self.setup_conf(config=CONFIG + trusted_networks, pre_config=PRE_CONFIG)
+        result = self.check_pad(email)
+        self.check_report(result, 1, ['CHECK_MAILFROM_MATCHES_RCVD'])
+
+    def test_mailfrom_matches_rcvd_with_mixed_relays(self):
+        trusted_networks = """trusted_networks 1.2.3.4"""
+
+        email = """Received: from example.com (example.com [1.2.3.4])
+    by example.com
+    (envelope-from <envfrom@example.com>)
+Received: from sub1.example.com (sub1.example.com [4.5.6.7])
+    by example.com
+Received: from sub2.example.com (sub2.example.com [7.8.9.0])
+    by example.com"""
+
+        self.setup_conf(config=CONFIG + trusted_networks, pre_config=PRE_CONFIG)
+        result = self.check_pad(email)
+        self.check_report(result, 0, [])
+
+
+
+
+
 
 def suite():
     """Gather all the tests from this package in a test suite."""
