@@ -91,7 +91,7 @@ class TestRazor2(unittest.TestCase):
     def test_plugin_report_OSError(self):
         self.mock_subprocess_Popen.side_effect = OSError
         result = self.plug.plugin_report(self.mock_msg)
-        self.assertEqual(result, False)
+        self.assertEqual(result, None)
 
     def test_plugin_revoke_returncode(self):
         proc_obj = self.mock_subprocess_Popen.return_value
@@ -102,7 +102,7 @@ class TestRazor2(unittest.TestCase):
     def test_plugin_revoke_OSError(self):
         self.mock_subprocess_Popen.side_effect = OSError
         result = self.plug.plugin_revoke(self.mock_msg)
-        self.assertEqual(result, False)
+        self.assertEqual(result, None)
 
     def test_plugin_revoke_timer(self):
         mock_kill_process = patch(

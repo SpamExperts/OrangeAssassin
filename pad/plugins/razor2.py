@@ -1,6 +1,9 @@
-import pad.plugins.base
+"""Razor2 check plugin."""
+
+import threading
 import subprocess
-from threading import Timer
+
+import pad.plugins.base
 
 
 def kill_process(process, log):
@@ -59,8 +62,8 @@ class Razor2Plugin(pad.plugins.base.BasePlugin):
             self.ctxt.log.error("Unable to run razor-check: %s", e)
             return
 
-        my_timer = Timer(self["razor_timeout"], kill_process,
-                         [proc, self.ctxt.log])
+        my_timer = threading.Timer(self["razor_timeout"], kill_process,
+                                   [proc, self.ctxt.log])
         try:
             my_timer.start()
             proc.communicate(input=str.encode(msg.raw_msg))
@@ -80,38 +83,45 @@ class Razor2Plugin(pad.plugins.base.BasePlugin):
                                     stderr=subprocess.PIPE,
                                     stdin=subprocess.PIPE,
                                     stdout=subprocess.PIPE)
-            my_timer = Timer(self["razor_timeout"], kill_process,
-                             [proc, self.ctxt.log])
-            my_timer.start()
-            proc.communicate(input=str.encode(msg.raw_msg))
-            return proc.returncode
-
         except OSError:
             self.ctxt.log.warning("Unable to run razor-report")
+            return
+
+        my_timer = threading.Timer(self["razor_timeout"], kill_process,
+                                       [proc, self.ctxt.log])
+        my_timer.start()
+        try:
+            proc.communicate(input=str.encode(msg.raw_msg))
+            return proc.returncode
+        except (IOError, OSError):
+            self.ctxt.log.warning("Unable to communicate to razor-report")
         finally:
-            if not my_timer:
+            if my_timer:
                 my_timer.cancel()
 
         return False
 
     def plugin_revoke(self, msg):
         """Report the message to razor server as ham."""
-        my_timer = None
+
         try:
             proc = subprocess.Popen("razor-revoke",
                                     stderr=subprocess.PIPE,
                                     stdin=subprocess.PIPE,
                                     stdout=subprocess.PIPE)
-            my_timer = Timer(self["razor_timeout"], kill_process,
-                             [proc, self.ctxt.log])
-            my_timer.start()
-            proc.communicate(input=str.encode(msg.raw_msg))
-            return proc.returncode
-
         except OSError:
             self.ctxt.log.warning("Unable to run razor-revoke")
+            return
+
+        my_timer = threading.Timer(self["razor_timeout"], kill_process,
+                                   [proc, self.ctxt.log])
+        my_timer.start()
+        try:
+            proc.communicate(input=str.encode(msg.raw_msg))
+            return proc.returncode
+        except (IOError, OSError):
+            self.ctxt.log.warning("Unable to communicate to razor-revoke")
         finally:
-            if not my_timer:
-                my_timer.cancel()
+            my_timer.cancel()
 
         return False

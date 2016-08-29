@@ -130,7 +130,7 @@ Plugin :mod:`wlbl_eval`
     :show-inheritance:
 
 Plugin :mod:`razor2`
------------------------
+--------------------
 
 .. automodule:: pad.plugins.razor2
     :members:
