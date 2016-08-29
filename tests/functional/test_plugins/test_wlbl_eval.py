@@ -663,6 +663,8 @@ Received: from spamexperts.com [5.79.73.204]"""
         lists ="""
             def_whitelist_from_rcvd test@spamexperts.com [5.79.73.204]
             whitelist_from_rcvd test@spamexperts.com [5.79.73.204]
+            trusted_networks 5.1.3.7
+            trusted_networks 5.79.73.204
         """
 
         email = """From: test@spamexperts.com
