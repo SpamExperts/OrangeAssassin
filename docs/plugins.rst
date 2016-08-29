@@ -39,6 +39,7 @@ Available plugins
     pad.plugins.whitelist_subject
     pad.plugins.spf
     pad.plugins.wlbl_eval
+    pad.plugins.razor2
 
 
 Plugin reference

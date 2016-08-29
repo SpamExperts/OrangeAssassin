@@ -128,3 +128,11 @@ Plugin :mod:`wlbl_eval`
     :members:
     :undoc-members:
     :show-inheritance:
+
+Plugin :mod:`razor2`
+-----------------------
+
+.. automodule:: pad.plugins.razor2
+    :members:
+    :undoc-members:
+    :show-inheritance:
