@@ -426,7 +426,7 @@ class WLBLEvalPlugin(pad.plugins.base.BasePlugin):
             return 0
         relays = []
         if len(msg.untrusted_relays) > 0:
-            relays = msg.untrusted_relays[0]
+            relays.append(msg.untrusted_relays[0])
         elif len(msg.trusted_relays) > 0:
             relays.extend(msg.trusted_relays)
 
@@ -451,8 +451,6 @@ class WLBLEvalPlugin(pad.plugins.base.BasePlugin):
         for relay in relays:
             wl_ip = domain.strip("[ ").rstrip(" ]")
             try:
-                # import sys
-                # import pdb; pdb.Pdb(stdin=sys.stdin).set_trace()
                 swl_ip =str(wl_ip)
                 network = ipaddress.ip_network(_format_network_str(swl_ip,
                                                                    None))

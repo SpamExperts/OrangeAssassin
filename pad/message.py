@@ -346,7 +346,8 @@ class Message(pad.context.MessageContext):
                                 found_msa = True
 
                     elif not ip.is_private and not has_auth:
-                        pass
+                        is_internal = False
+                        is_trusted = False
 
                 relay['intl'] = int(is_internal)
                 if is_internal:
@@ -423,6 +424,7 @@ class Message(pad.context.MessageContext):
         received_obj = ReceivedParser(received_headers)
         self.received_headers = received_obj.received
         self._parse_relays(self.received_headers)
+        self._parse_sender()
 
 
         try:
@@ -432,7 +434,6 @@ class Message(pad.context.MessageContext):
 
         for header in self.received_headers:
             self.hostname_with_ip.append((header["rdns"], header["ip"]))
-        self._parse_sender()
 
     @staticmethod
     def _iter_parts(msg):
