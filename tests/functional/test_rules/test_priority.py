@@ -108,8 +108,9 @@ header SPF_WHITELIST    eval:check_for_spf_whitelist_from()
 priority SPF_WHITELIST 2
 """
 
-MSG = """Received: from 127.0.0.1  (EHLO m1.util24.eu) [213.133.99.176]
-  by mta1329.mail.bf1.yahoo.com with SMTPS; Fri, 29 Jan 2016 05:57:28 +0000
+MSG = """Received: from sub1.example.com (sub1.example.com [4.5.6.7])
+    by example.com
+    (envelope-from <test@example.com>)
 Subject: Test Message is a spam subject.
 From: test@example.com
 X-Header: match_header
