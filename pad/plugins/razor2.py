@@ -17,31 +17,31 @@ class Razor2Plugin(pad.plugins.base.BasePlugin):
                "razor_config": ("str", "")
                }
 
-    def check_razor2_range(self, msg, a, b, c, target=None):
-        """Nothing to be done here, for the moment
-
+    def check_razor2_range(self, msg, engine, min, max, target=None):
+        """
+        Not implemented. Use pyzor in order to check range conditions.
         :param msg:
-        :param a:
-        :param b:
-        :param c:
+        :param engine:
+        :param min:
+        :param max:
         :param target:
         :return:
         """
 
     def check_razor2(self, msg, full="", target=None):
-        """
-
-        :param msg:
+        """ Checks a mail against the distributed Razor Catalogue
+        by communicating with a Razor Catalogue Server.
+            If we have returncode = 1 => it's not a spam
+            If we have returncode = 0 => it's a spam
+        :param msg: Message to be check
         :param full: Not used
-        :param target:
-        :return:
+        :param target: "None" by default
+        :return:True if the message is listed on Rayzor
         """
         if not self["use_razor2"]:
             return 0
 
         try:
-            # import pdb;
-            # pdb.set_trace()
             return self.get_local(msg, "razor2_result")
         except KeyError:
             pass
@@ -69,12 +69,11 @@ class Razor2Plugin(pad.plugins.base.BasePlugin):
 
         if proc.returncode in (1, 0):
             self.set_local(msg, "razor2_result", proc.returncode)
-        # return code = 1 => not a spam
         self.ctxt.log.debug(proc.returncode)
         return not proc.returncode
 
     def plugin_report(self, msg):
-        """Report the digest to razor as spam."""
+        """Report the message to razor server as spam."""
         my_timer = None
         try:
             proc = subprocess.Popen(["razor-revoke"],
@@ -90,13 +89,13 @@ class Razor2Plugin(pad.plugins.base.BasePlugin):
         except OSError:
             self.ctxt.log.warning("Unable to run razor-report")
         finally:
-            if my_timer != None:
+            if not my_timer:
                 my_timer.cancel()
 
         return False
 
     def plugin_revoke(self, msg):
-        """Report the digest to razor as ham."""
+        """Report the message to razor server as ham."""
         my_timer = None
         try:
             proc = subprocess.Popen("razor-revoke",
@@ -112,7 +111,7 @@ class Razor2Plugin(pad.plugins.base.BasePlugin):
         except OSError:
             self.ctxt.log.warning("Unable to run razor-revoke")
         finally:
-            if my_timer != None:
+            if not my_timer:
                 my_timer.cancel()
 
         return False
