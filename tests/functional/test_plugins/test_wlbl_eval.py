@@ -1029,7 +1029,7 @@ Received: from mx1.antispamcloud.com (mx1.antispamcloud.com. [2001:1af8:4500:a05
 
     def test_forged_in_default_whitelist(self):
 
-         lists = """
+        lists = """
                     def_whitelist_from_rcvd sender@example.com [2001:1af8:4500:a050:13::1]
                 """
 
@@ -1041,7 +1041,7 @@ Received: from mx1.antispamcloud.com (mx1.antispamcloud.com. [2001:1af8:4500:a05
         self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG + lists)
         result = self.check_pad(email)
         print(result)
-        self.check_report(result, 1, ['CHECK_FORGED_IN_WHITELIST'])
+        self.check_report(result, 1, ['CHECK_FORGED_IN_DEFAULT_WHITELIST '])
 
 
 
