@@ -31,6 +31,7 @@ body   CHECK_URI_HOST_IN_BLACKLIST         eval:check_uri_host_in_blacklist()
 body   CHECK_MAILFROM_MATCHES_RCVD         eval:check_mailfrom_matches_rcvd()
 
 body   CHECK_FORGED_IN_WHITELIST           eval:check_forged_in_whitelist()
+body   CHECK_FORGED_IN_DEFAULT_WHITELIST   eval:check_forged_in_default_whitelist()
 """
 
 
@@ -1025,6 +1026,23 @@ Received: from mx1.antispamcloud.com (mx1.antispamcloud.com. [2001:1af8:4500:a05
         result = self.check_pad(email)
         print(result)
         self.check_report(result, 1, ['CHECK_FORGED_IN_WHITELIST'])
+
+    def test_forged_in_default_whitelist(self):
+
+         lists = """
+                    def_whitelist_from_rcvd sender@example.com [2001:1af8:4500:a050:13::1]
+                """
+
+        email = """From: sender@example.com
+Received: from mx1.antispamcloud.com (mx1.antispamcloud.com. [2001:1af8:4500:a050:13::1])
+    by mx.google.com with ESMTPS id ub9si31735747wjb.62.2016.08.29.04.55.25"""
+
+
+        self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG + lists)
+        result = self.check_pad(email)
+        print(result)
+        self.check_report(result, 1, ['CHECK_FORGED_IN_WHITELIST'])
+
 
 
 
