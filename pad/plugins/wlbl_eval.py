@@ -4,7 +4,6 @@ from builtins import str
 import re
 from collections import defaultdict
 
-import dns
 import ipaddress
 
 import pad.plugins.base
@@ -392,7 +391,7 @@ class WLBLEvalPlugin(pad.plugins.base.BasePlugin):
             return False
         for relay in relays:
             relay_domain = relay["rdns"]
-            if domain.endswith(relay_domain):
+            if relay_domain.endswith(domain):
                 return True
 
         return False
@@ -402,8 +401,10 @@ class WLBLEvalPlugin(pad.plugins.base.BasePlugin):
         'check_from_in_default_whitelist' and return the state of
         the msg values: "from_in_whitelist" and "from_in_default_whitelist".
         """
+
         self.check_from_in_whitelist(msg)
         self.check_from_in_default_whitelist(msg)
+        # este 0
         checked_w = (self.get_local(msg, "from_in_whitelist") < 0)
         checked_dw = (self.get_local(msg, "from_in_default_whitelist") == 0)
         return checked_w and checked_dw
@@ -439,7 +440,7 @@ class WLBLEvalPlugin(pad.plugins.base.BasePlugin):
                     match = self.check_rcvd(domain, relays)
                     if match == 1:
                         return 1
-                    found_forged = -1
+                found_forged = -1
         found_forged = self.check_found_forged(address, found_forged)
         return found_forged
 
