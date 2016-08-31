@@ -216,6 +216,40 @@ class TestEvalRules(TestFreeMailBase):
                                                    regex="?^&$")
         self.assertFalse(result)
 
+    def test_freemail_body_no_body_emails(self):
+        result = self.plugin.check_freemail_body(self.mock_msg)
+        self.assertFalse(result)
+
+    def test_freemail_body_bad_regex(self):
+        result = self.plugin.check_freemail_body(self.mock_msg,
+                                                 regex="?^&$")
+        self.assertFalse(result)
+
+    def test_freemail_body_not_parsed(self):
+        patch("pad.plugins.free_mail.FreeMail._parse_body", return_value=False).start()
+        result = self.plugin.check_freemail_body(self.mock_msg)
+        self.assertFalse(result)
+
+    def test_freemail_body_parsed(self):
+        patch("pad.plugins.free_mail.FreeMail._parse_body", return_value=True).start()
+        self.global_data["body_emails"] = ["body@example.com",
+                                           "body@freemail.example.com",
+                                           "body2@freemail2.example.com"]
+        self.global_data["freemail_body_emails"] = ["body@freemail.example.com",
+                                                    "body2@freemail2.example.com"]
+        result = self.plugin.check_freemail_body(self.mock_msg)
+        self.assertTrue(result)
+
+    def test_freemail_body_parsed_regex(self):
+        patch("pad.plugins.free_mail.FreeMail._parse_body", return_value=True).start()
+        self.global_data["body_emails"] = ["body@example.com",
+                                           "body@freemail.example.com",
+                                           "body2@freemail2.example.com"]
+        self.global_data["freemail_body_emails"] = ["body@freemail.example.com",
+                                                    "body2@freemail2.example.com"]
+        result = self.plugin.check_freemail_body(self.mock_msg, regex=r"^.*\d@")
+        self.assertTrue(result)
+
 
 class TestIsFreemail(TestFreeMailBase):
     """Test _is_freemail(email) method"""
@@ -252,3 +286,50 @@ class TestIsFreemail(TestFreeMailBase):
         result = self.plugin._is_freemail(email=email)
         self.assertFalse(result)
 
+
+class TestParseBody(TestFreeMailBase):
+    """Test _parse_body() method"""
+
+    def setUp(self):
+        super(TestParseBody, self).setUp()
+        self.plugin.check_start(self.mock_msg)
+
+    def test_parse_body_already_parsed(self):
+        self.global_data["check_if_parsed"] = True
+        result = self.plugin._parse_body()
+        self.assertTrue(result)
+
+    def test_parse_body_no_body_emails_skip(self):
+        self.global_data["freemail_max_body_emails"] = 5
+        self.global_data["freemail_skip_when_over_max"] = True
+        result = self.plugin._parse_body()
+        self.assertTrue(result)
+
+    def test_parse_body_with_emails(self):
+        self.global_data["body_emails"] = ["body@example.com",
+                                           "body2@example.com",
+                                           "body3@example.com"]
+        self.global_data["freemail_max_body_emails"] = 2
+        self.global_data["freemail_skip_when_over_max"] = False
+        result = self.plugin._parse_body()
+        self.assertFalse(result)
+
+    def test_parse_body_with_freemail(self):
+        self.global_data["body_emails"] = ["body@freemail.example.com",
+                                           "body2@freemail2.example.com"]
+        self.global_data["freemail_max_body_emails"] = 5
+        self.global_data["freemail_skip_when_over_max"] = True
+        self.global_data["freemail_max_body_freemails"] = 3
+        result = self.plugin._parse_body()
+        self.assertTrue(result)
+        self.assertEqual(self.global_data["body_emails"],
+                         self.global_data["freemail_body_emails"])
+
+    def test_parse_body_with_freemail_limit(self):
+        self.global_data["body_emails"] = ["body@freemail.example.com",
+                                           "body2@freemail2.example.com"]
+        self.global_data["freemail_max_body_emails"] = 5
+        self.global_data["freemail_skip_when_over_max"] = True
+        self.global_data["freemail_max_body_freemails"] = 1
+        result = self.plugin._parse_body()
+        self.assertFalse(result)
