@@ -401,10 +401,8 @@ class WLBLEvalPlugin(pad.plugins.base.BasePlugin):
         'check_from_in_default_whitelist' and return the state of
         the msg values: "from_in_whitelist" and "from_in_default_whitelist".
         """
-
         self.check_from_in_whitelist(msg)
         self.check_from_in_default_whitelist(msg)
-        # este 0
         checked_w = (self.get_local(msg, "from_in_whitelist") < 0)
         checked_dw = (self.get_local(msg, "from_in_default_whitelist") == 0)
         return checked_w and checked_dw

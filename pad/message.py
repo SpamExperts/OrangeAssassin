@@ -296,24 +296,32 @@ class Message(pad.context.MessageContext):
         headers = self.ctxt.conf["envelope_sender_header"] or DEFAULT_SENDERH
 
         if self.external_relays:
-            sender = self.external_relays[0].get("envfrom").strip()
+            sender = self.external_relays[0].get("envfrom")
             if sender:
-                self.sender_address = sender
+                self.sender_address = sender.strip()
                 return
         else:
             if self.trusted_relays and not always_trust_envelope_from:
-                return
-
-            for sender_header in headers:
-                try:
-                    sender = self.get_addr_header(sender_header)[0]
-                except IndexError:
-                    continue
+                sender = self.trusted_relays[-1].get("envfrom")
                 if sender:
                     self.sender_address = sender.strip()
-                    self.ctxt.log.debug("Using %s as sender: %s",
-                                        sender_header, sender)
                     return
+            if self.untrusted_relays:
+                sender = self.untrusted_relays[0].get("envfrom")
+                if sender:
+                    self.sender_address = sender.strip()
+                    return
+
+        for sender_header in headers:
+            try:
+                sender = self.get_addr_header(sender_header)[0]
+            except IndexError:
+                continue
+            if sender:
+                self.sender_address = sender.strip()
+                self.ctxt.log.debug("Using %s as sender: %s",
+                                    sender_header, sender)
+                return
         return
 
     def _parse_relays(self, relays):
