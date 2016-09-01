@@ -57,12 +57,13 @@ class SpamCopPlugin(pad.plugins.base.BasePlugin):
         :param receiver:
         :param message:
         """
-        regex = re.search(".*@.*", receiver)
-        domain = regex.group().split('@')[1]
-        # return value like '0 mail.domain.com.'
-        mx_domain = dns.resolver.query(domain, 'MX')[0].to_text()
-        mx_domain = mx_domain.split()[1][:-1]
         try:
+            regex = re.search(".*@.*", receiver)
+            domain = regex.group().split('@')[1]
+            # return value like '0 mail.domain.com.'
+            mx_domain = dns.resolver.query(domain, 'MX')[0].to_text()
+            mx_domain = mx_domain.split()[1][:-1]
+
             smtp_obj = smtplib.SMTP()
             smtp_obj.connect(mx_domain, 25)
             smtp_obj.helo(mx_domain.split('.')[1])
@@ -70,6 +71,9 @@ class SpamCopPlugin(pad.plugins.base.BasePlugin):
             smtp_obj.quit()
         except BaseException:
             self.ctxt.log.warning("SpamCop report failed.")
+            return False
+        except AttributeError:
+            self.ctxt.log.warning("Invalid values")
             return False
         return True
 
@@ -102,8 +106,7 @@ class SpamCopPlugin(pad.plugins.base.BasePlugin):
             x = self["spamcop_max_report_size"]*1024
             original = original[:x] + "\n[truncated by SpamPad]\n"
 
-        self.ctxt.log.debug("Sending email to... %s",
-                            self["spamcop_to_address"])
+        self.ctxt.log.debug("Sending email to...%s", self["spamcop_to_address"])
         message = ""
         head["To"] = self["spamcop_to_address"]
         for header in head:
