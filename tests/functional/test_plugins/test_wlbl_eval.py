@@ -990,7 +990,7 @@ Received: from sub2.example.com (sub2.example.com [7.8.9.0])
     by example.com
 Received: from example.com (example.com [1.2.3.4])
     by example.com
-    (envelopfrom <envfrom@example.com>)"""
+    (envelope-from <envfrom@example.com>)"""
 
         self.setup_conf(config=CONFIG + trusted_networks, pre_config=PRE_CONFIG)
         result = self.check_pad(email)
