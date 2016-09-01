@@ -1,5 +1,8 @@
 import unittest
 
+import time
+import datetime
+import email.utils
 try:
     from unittest.mock import patch, Mock, MagicMock, call
 except ImportError:
@@ -149,17 +152,17 @@ class TestGetDate(unittest.TestCase):
         patch.stopall()
 
     def test_get_now_date(self):
-        import datetime
-        import time
         time_now = datetime.datetime.now()
         now_date = time.mktime(time_now.timetuple())
         result = self.plug.get_now_date()
         self.assertEqual(result, now_date)
 
     def test_get_mail_date(self):
-        self.mock_msg.get_raw_mime_header.return_value = ['Fri, 28 Aug 2016 10:30:08 +0300']
+        time_mail = 'Fri, 26 Aug 2016 10:30:08 +0300'
+        self.mock_msg.get_raw_mime_header.return_value = [time_mail]
+        result_expected = time.mktime(email.utils.parsedate(time_mail))
         result = self.plug.get_mail_date(self.mock_msg)
-        self.assertEqual(result, 1472369408.0)
+        self.assertEqual(result, result_expected)
 
 
 def suite():

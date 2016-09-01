@@ -25,6 +25,10 @@ class SpamCopPlugin(pad.plugins.base.BasePlugin):
     }
 
     def _spamcop_report(self, msg):
+        """
+        Check if message should be reported as spam or not.
+        :param msg:
+        """
         if not self["dont_report_to_spamcop"]:
             if self.plugin_report(msg):
                 self.ctxt.log.debug("Spam reported to SpamCop")
@@ -78,6 +82,12 @@ class SpamCopPlugin(pad.plugins.base.BasePlugin):
         return True
 
     def plugin_report(self, msg):
+        """
+        Report spam to "spamcop_to_address". If the message is larger than
+        "spamcop_max_report_size", then it will be truncated in report
+        message.
+        :param msg:
+        """
         mail_date = self.get_mail_date(msg)
         now_date = self.get_now_date()
         if not mail_date or mail_date < now_date - 2*86400:
