@@ -300,9 +300,9 @@ class WLBLEvalPlugin(pad.plugins.base.BasePlugin):
         return self._check_whitelist(msg, "from_in_whitelist")
 
     def _check_whitelist(self, msg, check_name):
-        '''Check addresses from "default whitelist"/"whitelist" in
+        """Check addresses from "default whitelist"/"whitelist" in
         "parsed_whitelist_from"
-        '''
+        """
         addresses = self.get_from_addresses(msg)
         if self.get_local(msg, check_name) == 0:
             if check_name == "from_in_whitelist":

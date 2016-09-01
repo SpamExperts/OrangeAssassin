@@ -111,7 +111,7 @@ class _memoize(object):
 
 
 DEFAULT_SENDERH = (
-    "X-Sender", "X-Envelope-From", "Envelope-Sender", "Return-Path", "From"
+    "X-Sender", "X-Envelope-From", "Envelope-Sender", "Return-Path"
 )
 
 
@@ -312,16 +312,16 @@ class Message(pad.context.MessageContext):
                     self.sender_address = sender.strip()
                     return
 
-        for sender_header in headers:
-            try:
-                sender = self.get_addr_header(sender_header)[0]
-            except IndexError:
-                continue
-            if sender:
-                self.sender_address = sender.strip()
-                self.ctxt.log.debug("Using %s as sender: %s",
-                                    sender_header, sender)
-                return
+            for sender_header in headers:
+                try:
+                    sender = self.get_addr_header(sender_header)[0]
+                except IndexError:
+                    continue
+                if sender:
+                    self.sender_address = sender.strip()
+                    self.ctxt.log.debug("Using %s as sender: %s",
+                                        sender_header, sender)
+                    return
         return
 
     def _parse_relays(self, relays):
