@@ -977,7 +977,7 @@ Received: from sub2.example.com (sub2.example.com [7.8.9.0])
         result = self.check_pad(email)
         self.check_report(result, 1, ['CHECK_MAILFROM_MATCHES_RCVD'])
 
-    def test_mailfrom_matches_rcvd_with_trusted_relays(self):
+    def test_mailfrom_matches_rcvd_with_trusted_relays_match_on_field_1(self):
         trusted_networks = """
                                 trusted_networks 1.2.3.4
                                 trusted_networks 4.5.6.7
@@ -986,9 +986,9 @@ Received: from sub2.example.com (sub2.example.com [7.8.9.0])
 
         email = """Received: from sub1.example.com (sub1.example.com [4.5.6.7])
     by example.com
-Received: from sub2.example.com (sub2.example.com [7.8.9.0])
+Received: from sub2.example.com (sub2.example.net [7.8.9.0])
     by example.com
-Received: from example.com (example.com [1.2.3.4])
+Received: from example.com (example.org [1.2.3.4])
     by example.com
     (envelope-from <envfrom@example.com>)"""
 
@@ -996,7 +996,43 @@ Received: from example.com (example.com [1.2.3.4])
         result = self.check_pad(email)
         self.check_report(result, 1, ['CHECK_MAILFROM_MATCHES_RCVD'])
 
+    def test_mailfrom_matches_rcvd_with_trusted_relays_match_on_field_2(self):
+        trusted_networks = """
+                                trusted_networks 1.2.3.4
+                                trusted_networks 4.5.6.7
+                                trusted_networks 7.8.9.0
+                           """
 
+        email = """Received: from sub1.example.com (sub1.example.com [4.5.6.7])
+    by example.com
+Received: from sub2.example.com (sub2.example.net [7.8.9.0])
+    by example.com
+Received: from example.com (example.org [1.2.3.4])
+    by example.com
+    (envelope-from <envfrom@example.net>)"""
+
+        self.setup_conf(config=CONFIG + trusted_networks, pre_config=PRE_CONFIG)
+        result = self.check_pad(email)
+        self.check_report(result, 1, ['CHECK_MAILFROM_MATCHES_RCVD'])
+
+    def test_mailfrom_matches_rcvd_with_trusted_relays_match_on_field_3(self):
+        trusted_networks = """
+                                trusted_networks 1.2.3.4
+                                trusted_networks 4.5.6.7
+                                trusted_networks 7.8.9.0
+                           """
+
+        email = """Received: from sub1.example.com (sub1.example.com [4.5.6.7])
+    by example.com
+Received: from sub2.example.com (sub2.example.net [7.8.9.0])
+    by example.com
+Received: from example.com (example.org [1.2.3.4])
+    by example.com
+    (envelope-from <envfrom@example.org>)"""
+
+        self.setup_conf(config=CONFIG + trusted_networks, pre_config=PRE_CONFIG)
+        result = self.check_pad(email)
+        self.check_report(result, 1, ['CHECK_MAILFROM_MATCHES_RCVD'])
 
     def test_mailfrom_matches_rcvd_with_mixed_relays_negative(self):
         trusted_networks = """trusted_networks 1.2.3.4"""
@@ -1392,7 +1428,7 @@ Received: from spamexperts.com (spamexperts.com. [5.79.73.204])
         result = self.check_pad(email)
         self.check_report(result, 0, [])
 
-
+    
 def suite():
     """Gather all the tests from this package in a test suite."""
     test_suite = unittest.TestSuite()
