@@ -40,9 +40,19 @@ class TestSpamCop(unittest.TestCase):
         unittest.TestCase.tearDown(self)
         patch.stopall()
 
-    def test_plugin_report_false(self):
+    def test_plugin_report_message_older(self):
+        self.global_data["spamcop_from_address"] = "user@example.com"
+        self.global_data["spamcop_to_address"] = "user@example.com"
         self.mock_now_date.return_value = 1472540496.0
         self.mock_mail_date.return_value = 1471935131.0
+        result = self.plug.plugin_report(self.mock_msg)
+        self.assertFalse(result)
+
+    def test_plugin_report_missing_required_value(self):
+        self.global_data["spamcop_from_address"] = "user@example.com"
+        self.global_data["spamcop_to_address"] = "userexample.com"
+        self.mock_now_date.return_value = 1472540496.0
+        self.mock_mail_date.return_value = 1472539931.0
         result = self.plug.plugin_report(self.mock_msg)
         self.assertFalse(result)
 
@@ -91,11 +101,6 @@ class TestSendMail(unittest.TestCase):
     def tearDown(self):
         unittest.TestCase.tearDown(self)
         patch.stopall()
-
-    def test_send_mail_method_invalid_value(self):
-        sender = "user@example.com"
-        result = self.plug.send_mail_method(sender, "", "Message")
-        self.assertFalse(result)
 
     def test_send_mail_method_true(self):
         sender = "user@example.com"

@@ -76,9 +76,6 @@ class SpamCopPlugin(pad.plugins.base.BasePlugin):
         except BaseException:
             self.ctxt.log.warning("SpamCop report failed.")
             return False
-        except AttributeError:
-            self.ctxt.log.warning("Invalid values")
-            return False
         return True
 
     def plugin_report(self, msg):
@@ -88,14 +85,20 @@ class SpamCopPlugin(pad.plugins.base.BasePlugin):
         message.
         :param msg:
         """
+        if not re.match(".+@.+", self["spamcop_from_address"]) or not \
+                re.match(".+@.+", self["spamcop_to_address"]):
+            self.ctxt.log.warning("Missing required value")
+            return False
         mail_date = self.get_mail_date(msg)
         now_date = self.get_now_date()
         if not mail_date or mail_date < now_date - 2*86400:
-            self.ctxt.log.debug("SpamCop message older than 2 days, not reporting")
+            self.ctxt.log.debug("Message older than 2 days, not reporting")
             return False
 
+        original = msg.raw_msg
         boundary = "----------=_%X.%X" % (int(now_date),
-                                          random.randint(1, 2 ** 23))
+                                          random.randint(1, 2 ** 32))
+
         description = "spam report via %s" % sys.version[:5]
         trusted = msg.trusted_relays
         untrusted = msg.untrusted_relays
@@ -106,12 +109,11 @@ class SpamCopPlugin(pad.plugins.base.BasePlugin):
         head["Subject"] = "report spam"
         head["Date"] = time.strftime("%a, %d %b %Y %H:%M:%S %z")
         head["Message-Id"] = "<%X.%X@%s>" % (int(now_date),
-                                             random.randint(1, 2 ** 23),
+                                             random.randint(1, 2 ** 32),
                                              host)
         head["MIME-Version"] = "1.0"
         head["Content-Type"] = "multipart/mixed; boundary = %s" % boundary
 
-        original = msg.raw_msg
         if len(original) > self["spamcop_max_report_size"]*1024:
             x = self["spamcop_max_report_size"]*1024
             original = original[:x] + "\n[truncated by SpamPad]\n"
@@ -137,6 +139,5 @@ X-Spam-Relays-Untrusted: %s
         """ % (boundary, description, trusted, untrusted, original,
                    boundary)
         return self.send_mail_method(self["spamcop_from_address"],
-                              self["spamcop_to_address"], message)
+                                     self["spamcop_to_address"], message)
 
-        # 206
