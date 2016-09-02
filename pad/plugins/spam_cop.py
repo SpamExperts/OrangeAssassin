@@ -69,7 +69,7 @@ class SpamCopPlugin(pad.plugins.base.BasePlugin):
             mx_domain = mx_domain.split()[1][:-1]
 
             smtp_obj = smtplib.SMTP()
-            smtp_obj.connect(mx_domain, 25)
+            smtp_obj.connect(mx_domain, 587)
             smtp_obj.helo(mx_domain.split('.')[1])
             smtp_obj.sendmail(sender, receiver, message)
             smtp_obj.quit()
