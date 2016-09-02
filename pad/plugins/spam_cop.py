@@ -50,7 +50,8 @@ class SpamCopPlugin(pad.plugins.base.BasePlugin):
         Get mail date in timestamp format.
         :param msg:
         """
-        time_mail = msg.get_raw_mime_header('Date')[0]
+        received_header = msg.get_decoded_header("Received")[0]
+        time_mail = received_header.split(";")[1]
         mail_date = time.mktime(email.utils.parsedate(time_mail))
         return mail_date
 
@@ -85,8 +86,7 @@ class SpamCopPlugin(pad.plugins.base.BasePlugin):
         message.
         :param msg:
         """
-        if not re.match(".+@.+", self["spamcop_from_address"]) or not \
-                re.match(".+@.+", self["spamcop_to_address"]):
+        if not re.match(".+@.+", self["spamcop_to_address"]):
             self.ctxt.log.warning("Missing required value")
             return False
         mail_date = self.get_mail_date(msg)
@@ -105,7 +105,7 @@ class SpamCopPlugin(pad.plugins.base.BasePlugin):
         host = platform.node()
 
         head = defaultdict()
-        head["From"] = self["spamcop_from_address"]
+        head["From"] = self["spamcop_from_address"] or host
         head["Subject"] = "report spam"
         head["Date"] = time.strftime("%a, %d %b %Y %H:%M:%S %z")
         head["Message-Id"] = "<%X.%X@%s>" % (int(now_date),
