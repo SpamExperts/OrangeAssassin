@@ -147,8 +147,8 @@ class TestGetDate(unittest.TestCase):
                                                                               v),
         })
 
-        self.mock_get_date = patch(
-            "pad.message.Message.get_raw_mime_header").start()
+        self.mock_get_decoded_header = patch(
+            "pad.message.Message.get_decoded_header").start()
 
         self.plug = pad.plugins.spam_cop.SpamCopPlugin(self.mock_ctxt)
 
@@ -163,8 +163,10 @@ class TestGetDate(unittest.TestCase):
         self.assertEqual(result, now_date)
 
     def test_get_mail_date(self):
-        time_mail = 'Fri, 26 Aug 2016 10:30:08 +0300'
-        self.mock_msg.get_raw_mime_header.return_value = [time_mail]
+        received_header = 'by 10.25.215.16 with HTTP; Fri, 26 Aug 2016 ' \
+                          '10:30:08 +0300 (PDT)'
+        self.mock_msg.get_decoded_header.return_value = [received_header]
+        time_mail = received_header.split(";")[1]
         result_expected = time.mktime(email.utils.parsedate(time_mail))
         result = self.plug.get_mail_date(self.mock_msg)
         self.assertEqual(result, result_expected)
