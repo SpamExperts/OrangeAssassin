@@ -53,7 +53,8 @@ class Razor2Plugin(pad.plugins.base.BasePlugin):
         if not self["razor_config"]:
             args = ["razor-check"]
         else:
-            args = ["razor-check", self["razor_config"]]
+            conf_arg = "-conf=" + self["razor_config"]
+            args = ["razor-check", conf_arg]
         try:
             proc = subprocess.Popen(args, stderr=subprocess.PIPE,
                                     stdin=subprocess.PIPE,

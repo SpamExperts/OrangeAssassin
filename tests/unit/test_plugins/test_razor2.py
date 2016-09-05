@@ -70,7 +70,7 @@ class TestRazor2(unittest.TestCase):
         proc_obj.returncode = 0
         result = self.plug.check_razor2(self.mock_msg)
         self.mock_subprocess_Popen.assert_called_with(
-            ["razor-check", "config_file.cf"], stderr=subprocess.PIPE,
+            ["razor-check", "-conf=config_file.cf"], stderr=subprocess.PIPE,
             stdin=subprocess.PIPE,
             stdout=subprocess.PIPE)
         self.assertEqual(result, 1)
