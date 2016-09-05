@@ -5,21 +5,24 @@ import unittest
 import tests.util
 
 # Load FreeMail plugin and report SCORE and matching RULES
-PRE_CONFIG = """loadplugin pad.plugins.free_mail.FreeMail
+PRE_CONFIG = """loadplugin Mail::SpamAssassin::Plugin::FreeMail
 report _SCORE_
 report _TESTS_
 """
 
 # Define rules used for testing
 CONFIG = """
-header CHECK_FREEMAIL_FROM          eval:check_freemail_from()
-header CHECK_FREEMAIL_FROM_REGEX    eval:check_freemail_from('\d@')
+header CHECK_FREEMAIL_FROM                 eval:check_freemail_from()
+header CHECK_FREEMAIL_FROM_REGEX           eval:check_freemail_from('\d@')
 
-header CHECK_FREEMAIL_BODY          eval:check_freemail_body()
-header CHECK_FREEMAIL_BODY_REGEX    eval:check_freemail_body('\d@')
+header CHECK_FREEMAIL_BODY                 eval:check_freemail_body()
+header CHECK_FREEMAIL_BODY_REGEX           eval:check_freemail_body('\d@')
 
-header CHECK_FREEMAIL_HEADER        eval:check_freemail_header('From')
-header CHECK_FREEMAIL_HEADER_REGEX  eval:check_freemail_header('From', '\d@')
+header CHECK_FREEMAIL_HEADER               eval:check_freemail_header('From')
+header CHECK_FREEMAIL_HEADER_REGEX         eval:check_freemail_header('From', '\d@')
+
+header CHECK_FREEMAIL_HEADER_CUSTOM        eval:check_freemail_header('Custom')
+header CHECK_FREEMAIL_HEADER_CUSTOM_REGEX  eval:check_freemail_header('Custom', '\d@')
 """
 
 class TestFunctionalFreeMail(tests.util.TestBase):
@@ -49,7 +52,7 @@ class TestFunctionalFreeMail(tests.util.TestBase):
 
         self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG + lists)
         result = self.check_pad(email)
-        self.check_report(result, 2, ['CHECK_FREEMAIL_FROM', 'CHECK_FREEMAIL_BODY',
+        self.check_report(result, 3, ['CHECK_FREEMAIL_FROM', 'CHECK_FREEMAIL_BODY',
             'CHECK_FREEMAIL_HEADER'])
 
     def test_check_freemail_dont_match_domain(self):
@@ -106,7 +109,7 @@ class TestFunctionalFreeMail(tests.util.TestBase):
         email = """From: sender@example.com
         \nBody contains sender@example.com"""
 
-        self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG + lists)
+        self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG)
         result = self.check_pad(email)
         self.check_report(result, 0, [])
 
@@ -204,6 +207,19 @@ class TestFunctionalFreeMail(tests.util.TestBase):
         result = self.check_pad(email)
         self.check_report(result, 3, ['CHECK_FREEMAIL_FROM', 'CHECK_FREEMAIL_BODY',
             'CHECK_FREEMAIL_HEADER'])
+
+    def test_check_freemail_header_match_custom_header(self):
+        """sender1@example.com should match example.com freemail domain for
+        custom header"""
+        lists = """freemail_domains example.com"""
+
+        email = """Custom: sender1@example.com"""
+
+        self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG + lists)
+        result = self.check_pad(email)
+        self.check_report(result, 2, ['CHECK_FREEMAIL_HEADER_CUSTOM',
+            'CHECK_FREEMAIL_HEADER_CUSTOM_REGEX'])
+
 
     # Test check_freemail_from() eval rule for all from headers
 
@@ -320,7 +336,7 @@ Reply-To: test@example.com"""
         email = """From: sender@example.com
         \nBody contains test@example.com"""
 
-        self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG )
+        self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG)
         result = self.check_pad(email)
         self.check_report(result, 0, [])
 
