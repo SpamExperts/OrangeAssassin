@@ -136,3 +136,11 @@ Plugin :mod:`razor2`
     :members:
     :undoc-members:
     :show-inheritance:
+
+Plugin :mod:`spam_cop`
+----------------------
+
+.. automodule:: pad.plugins.spam_cop
+    :members:
+    :undoc-members:
+    :show-inheritance:

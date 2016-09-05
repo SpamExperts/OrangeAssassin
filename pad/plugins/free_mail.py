@@ -179,7 +179,7 @@ class FreeMail(pad.plugins.base.BasePlugin):
         if regex:
             try:
                 check_re = re.compile(regex)
-            except regex.error:
+            except re.error:
                 self.ctxt.log.warn("FreeMail::Plugin check_freemail_from"
                                    " regex error")
                 return False
@@ -187,7 +187,7 @@ class FreeMail(pad.plugins.base.BasePlugin):
             check_re = None
 
         for header in all_from_headers:
-            if msg.msg[header]:
+            if msg.msg.get(header, None):
                 header_emails = header_emails + self.get_global('email_re').findall(msg.msg[header])
         header_emails = sorted(set(header_emails))
         if not header_emails:
@@ -224,13 +224,13 @@ class FreeMail(pad.plugins.base.BasePlugin):
         if regex:
             try:
                 check_re = re.compile(regex)
-            except regex.error:
+            except re.error:
                 self.ctxt.log.warn("FreeMail::Plugin check_freemail_header"
                                    " regex error")
                 return False
         else:
             check_re = None
-        if not msg.msg[header]:
+        if not msg.msg.get(header, None):
             self.ctxt.log.debug("FreeMail::Plugin check_freemail_header"
                                 " header: %s not found", header)
             return False
@@ -267,7 +267,7 @@ class FreeMail(pad.plugins.base.BasePlugin):
         if regex:
             try:
                 check_re = re.compile(regex)
-            except regex.error:
+            except re.error:
                 self.ctxt.log.warn("FreeMail::Plugin check_freemail_from"
                                    " regex error")
                 return False
@@ -322,7 +322,10 @@ class FreeMail(pad.plugins.base.BasePlugin):
         if not email:
             return False
         email_domain = email.rsplit('@')[1]
-        freemail_re = self.get_global('freemail_domains_re')
+        try:
+            freemail_re = self.get_global('freemail_domains_re')
+        except KeyError:
+            freemail_re = None
         freemail_whitelist = self.get_global('freemail_whitelist')
         freemail_domains = self.get_global('freemail_domains')
 
@@ -335,6 +338,7 @@ class FreeMail(pad.plugins.base.BasePlugin):
         if EMAIL_WHITELIST.search(email):
             self.ctxt.log.warn("FreeMail::Plugin whitelisted domain, default: %s", email_domain)
             return False
-        if email_domain in freemail_domains or (freemail_re and freemail_re.search(email)):
+        if (email_domain in freemail_domains or
+                (freemail_re and freemail_re.search(email))):
             return True
         return False

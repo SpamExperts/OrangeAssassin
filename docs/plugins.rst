@@ -40,6 +40,7 @@ Available plugins
     pad.plugins.spf
     pad.plugins.wlbl_eval
     pad.plugins.razor2
+    pad.plugins.spam_cop
 
 
 Plugin reference
