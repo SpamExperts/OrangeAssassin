@@ -273,7 +273,56 @@ class TestFunctionalFreeMail(tests.util.TestBase):
         result = self.check_pad(email)
         self.check_report(result, 0, [])
 
-    # TODO Test check_freemail_replyto() eval rule
+    # Test check_freemail_replyto('replyto') and check_freemail_replyto('reply') eval rules
+
+    def test_check_freemail_replyto_match_all_options(self):
+        """example.com is freemail domain, Reply-To and From addresses are
+        freemail domains but they are diferent so the check_freemail_replyto
+        rules should match, also the check_freemail_from and
+        check_freemail_header rules should match"""
+        lists = """freemail_domains example.com"""
+
+        email = """From: sender@example.com
+Reply-To: test@example.com"""
+
+        self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG + lists)
+        result = self.check_pad(email)
+        self.check_report(result, 4, ['CHECK_FREEMAIL_FROM', 'CHECK_FREEMAIL_HEADER',
+            'CHECK_FREEMAIL_REPLY', 'CHECK_FREEMAIL_REPLY_TO'])
+
+    def test_check_freemail_replyto_dont_match_all_options(self):
+        """Test case like above but no freemail domains defined"""
+        email = """From: sender@example.com
+Reply-To: test@example.com"""
+
+        self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG)
+        result = self.check_pad(email)
+        self.check_report(result, 0, [])
+
+
+    def test_check_freemail_replyto_match_reply_option(self):
+        """example.com is freemail domain From address is freemail domain and
+        Reply-To header don't exist. Body contains a freemail domain email and the
+        check_freemail_replyto('reply') rule should match, also check_freemail_from(),
+        check_freemail_header(), and check_freemail_body() rules should match"""
+        lists = """freemail_domains example.com"""
+
+        email = """From: sender@example.com
+        \nBody contains test@example.com"""
+
+        self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG + lists)
+        result = self.check_pad(email)
+        self.check_report(result, 4, ['CHECK_FREEMAIL_BODY', 'CHECK_FREEMAIL_FROM',
+            'CHECK_FREEMAIL_HEADER', 'CHECK_FREEMAIL_REPLY'])
+
+    def test_check_freemail_replyto_dont_match_reply_option(self):
+        """Test case like above but no freemail domains defined"""
+        email = """From: sender@example.com
+        \nBody contains test@example.com"""
+
+        self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG )
+        result = self.check_pad(email)
+        self.check_report(result, 0, [])
 
 
 def suite():
