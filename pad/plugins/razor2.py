@@ -30,6 +30,7 @@ class Razor2Plugin(pad.plugins.base.BasePlugin):
         :param target:
         :return:
         """
+        pass
 
     def check_razor2(self, msg, full="", target=None):
         """ Checks a mail against the distributed Razor Catalogue
@@ -78,10 +79,15 @@ class Razor2Plugin(pad.plugins.base.BasePlugin):
 
     def plugin_report(self, msg):
         """Report the message to razor server as spam."""
-        my_timer = None
+
+        if not self["razor_config"]:
+            args = ["razor-report"]
+        else:
+            conf_arg = "-conf=" + self["razor_config"]
+            args = ["razor-report", conf_arg]
+
         try:
-            proc = subprocess.Popen(["razor-revoke"],
-                                    stderr=subprocess.PIPE,
+            proc = subprocess.Popen(args, stderr=subprocess.PIPE,
                                     stdin=subprocess.PIPE,
                                     stdout=subprocess.PIPE)
         except OSError:
@@ -97,17 +103,21 @@ class Razor2Plugin(pad.plugins.base.BasePlugin):
         except (IOError, OSError):
             self.ctxt.log.warning("Unable to communicate to razor-report")
         finally:
-            if my_timer:
-                my_timer.cancel()
+            my_timer.cancel()
 
         return False
 
     def plugin_revoke(self, msg):
         """Report the message to razor server as ham."""
 
+        if not self["razor_config"]:
+            args = ["razor-revoke"]
+        else:
+            conf_arg = "-conf=" + self["razor_config"]
+            args = ["razor-revoke", conf_arg]
+
         try:
-            proc = subprocess.Popen("razor-revoke",
-                                    stderr=subprocess.PIPE,
+            proc = subprocess.Popen(args, stderr=subprocess.PIPE,
                                     stdin=subprocess.PIPE,
                                     stdout=subprocess.PIPE)
         except OSError:
