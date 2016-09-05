@@ -5,7 +5,7 @@ import unittest
 import tests.util
 
 # Load FreeMail plugin and report SCORE and matching RULES
-PRE_CONFIG = """loadplugin pad.plugins.free_mail.FreeMail
+PRE_CONFIG = """loadplugin Mail::SpamAssassin::Plugin::FreeMail
 report _SCORE_
 report _TESTS_
 """
@@ -49,7 +49,7 @@ class TestFunctionalFreeMail(tests.util.TestBase):
 
         self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG + lists)
         result = self.check_pad(email)
-        self.check_report(result, 2, ['CHECK_FREEMAIL_FROM', 'CHECK_FREEMAIL_BODY',
+        self.check_report(result, 3, ['CHECK_FREEMAIL_FROM', 'CHECK_FREEMAIL_BODY',
             'CHECK_FREEMAIL_HEADER'])
 
     def test_check_freemail_dont_match_domain(self):
