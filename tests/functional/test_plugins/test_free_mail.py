@@ -344,6 +344,135 @@ Reply-To: test@example.com"""
         result = self.check_pad(email)
         self.check_report(result, 0, [])
 
+    # Tests for freemail_max_body_freemails config option
+
+    def test_default_freemail_max_body_freemails(self):
+        """If there are more than 3 freemails in body the FREEMAIL_BODY
+        rule should not match"""
+        lists = """freemail_domains example.com"""
+
+        email = """From: sender@example.net
+        \nBody contains test@example.com test2@example.com test3@example.com"""
+
+        self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG + lists)
+        result = self.check_pad(email)
+        self.check_report(result, 0, [])
+
+    def test_custom_freemail_max_body_freemails(self):
+        """Same test case like above but with custom freemail_max_body_freemails"""
+        opt = """freemail_max_body_freemails 1"""
+
+        lists = """freemail_domains example.com"""
+
+        email = """From: sender@example.net
+        \nBody contains test@example.com"""
+
+        self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG + lists + opt)
+        result = self.check_pad(email)
+        self.check_report(result, 0, [])
+
+    def test_zero_freemail_max_body_freemails(self):
+        """Same test case like above but with freemail_max_body_freemails equal to zero"""
+        opt = """freemail_max_body_freemails 0"""
+
+        lists = """freemail_domains example.com"""
+
+        email = """From: sender@example.net
+        \nBody contains test@example.com"""
+
+        self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG + lists + opt)
+        result = self.check_pad(email)
+        self.check_report(result, 0, [])
+
+    def test_negative_freemail_max_body_freemails(self):
+        """Same test case like above but with freemail_max_body_freemails is negative"""
+        opt = """freemail_max_body_freemails -1"""
+
+        lists = """freemail_domains example.com"""
+
+        email = """From: sender@example.net
+        \nBody contains test@example.com"""
+
+        self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG + lists + opt)
+        result = self.check_pad(email)
+        self.check_report(result, 0, [])
+
+    # Tests for freemail_max_body_emails config option
+
+    def test_default_freemail_max_body_emails(self):
+        """If there are more than 3 emails in body (free or not free)
+        the FREEMAIL_BODY rule should not match"""
+        lists = """freemail_domains example.org"""
+
+        email = """From: sender@example.net
+        \nBody contains test@example.com test2@example.org test3@example.net
+        test4@example.com test5@example.com"""
+
+        self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG + lists)
+        result = self.check_pad(email)
+        self.check_report(result, 0, [])
+
+    def test_custom_freemail_max_body_emails(self):
+        """Same test case like above but with custom freemail_max_body_emails"""
+        opt = """freemail_max_body_emails 1"""
+
+        lists = """freemail_domains example.com"""
+
+        email = """From: sender@example.net
+        \nBody contains test@example.com"""
+
+        self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG + lists + opt)
+        result = self.check_pad(email)
+        self.check_report(result, 0, [])
+
+    def test_zero_freemail_max_body_emails(self):
+        """Same test case like above but with freemail_max_body_emails equal to zero"""
+        opt = """freemail_max_body_emails 0"""
+
+        lists = """freemail_domains example.com"""
+
+        email = """From: sender@example.net
+        \nBody contains test@example.com"""
+
+        self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG + lists + opt)
+        result = self.check_pad(email)
+        self.check_report(result, 0, [])
+
+    def test_negative_freemail_max_body_emails(self):
+        """Same test case like above but with freemail_max_body_emails equal is negative"""
+        opt = """freemail_max_body_emails -1"""
+
+        lists = """freemail_domains example.com"""
+
+        email = """From: sender@example.net
+        \nBody contains test@example.com"""
+
+        self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG + lists + opt)
+        result = self.check_pad(email)
+        self.check_report(result, 0, [])
+
+    @unittest.skip("Needs to be checked because is not working")
+    def test_freemail_max_body_emails_with_freemail_skip_when_over_max_option(self):
+        """If there is more than one email in body (free or not free) the
+        FREEMAIL_BODY rule should match if freemail_skip_when_over_max_option
+        is disabled (set to zero)"""
+        opt = """freemail_max_body_emails 1
+        \nfreemail_skip_when_over_max 0"""
+
+        lists = """freemail_domains example.com"""
+
+        email = """From: sender@example.net
+        \nBody contains test@example.com"""
+
+        self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG + lists + opt)
+        result = self.check_pad(email)
+        self.check_report(result, 1, ['CHECK_FREEMAIL_BODY'])
+
+    # TODO Tests for freemail_skip_bulk_envfrom option
+    # TODO Tests for freemail_add_describe_email option
+    # TODO Tests for empty values config lines
+
+
 
 def suite():
     """Gather all the tests from this package in a test suite."""
