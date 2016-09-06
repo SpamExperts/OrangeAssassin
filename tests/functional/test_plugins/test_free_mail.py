@@ -233,7 +233,7 @@ class TestFunctionalFreeMail(tests.util.TestBase):
         freemail domain"""
         lists = """freemail_domains example.com"""
 
-        email = """Resent-Sender: sender@example.com"""
+        email = """Resent-From: sender@example.com"""
 
         self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG + lists)
         result = self.check_pad(email)
@@ -280,7 +280,7 @@ class TestFunctionalFreeMail(tests.util.TestBase):
         email = """EnvelopeFrom: sender@example.com"""
 
         self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG + lists)
-        result = self.check_pad(message=email)
+        result = self.check_pad(email)
         self.check_report(result, 1, ['CHECK_FREEMAIL_FROM'])
 
     def test_check_freemail_from_on_to_header(self):
