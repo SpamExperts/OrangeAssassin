@@ -33,6 +33,8 @@ class TestSpamCop(unittest.TestCase):
             "pad.plugins.spam_cop.SpamCopPlugin.get_mail_date").start()
         self.mock_send_mail = patch(
             "pad.plugins.spam_cop.SpamCopPlugin.send_mail_method").start()
+        self.mock_mime = patch(
+            "pad.plugins.spam_cop.email.mime").start()
 
         self.plug = pad.plugins.spam_cop.SpamCopPlugin(self.mock_ctxt)
 
@@ -61,6 +63,7 @@ class TestSpamCop(unittest.TestCase):
         self.global_data["spamcop_to_address"] = "user@example.com"
         self.mock_now_date.return_value = 1472540496.0
         self.mock_mail_date.return_value = 1472539931.0
+        self.mock_send_mail.return_value = True
         result = self.plug.plugin_report(self.mock_msg)
         self.assertTrue(result)
 
@@ -94,7 +97,7 @@ class TestSendMail(unittest.TestCase):
         self.mock_send_mail = patch(
             "pad.plugins.spam_cop.smtplib.sendmail").start()
         self.mock_dns = patch(
-            "pad.plugins.spam_cop.dns.resolver").start()
+            "pad.dns_interface.DNSInterface.query").start()
 
         self.plug = pad.plugins.spam_cop.SpamCopPlugin(self.mock_ctxt)
 

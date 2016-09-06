@@ -1,17 +1,16 @@
 """SpamCop plugin"""
 
 from __future__ import absolute_import
-from collections import defaultdict
 
-import email.utils
-import smtplib
-import random
-import datetime
-import time
-import sys
-import platform
-import dns.resolver
+import os
 import re
+import pwd
+import sys
+import time
+import random
+import smtplib
+import email.utils
+from email.mime import multipart, text, base
 
 import pad.plugins.base
 
@@ -41,8 +40,8 @@ class SpamCopPlugin(pad.plugins.base.BasePlugin):
         """
         Get actual date in timestamp format.
         """
-        time_now = datetime.datetime.now()
-        now_date = time.mktime(time_now.timetuple())
+        time_now = email.utils.formatdate(localtime=True)
+        now_date = time.mktime(email.utils.parsedate(time_now))
         return now_date
 
     def get_mail_date(self, msg):
@@ -66,7 +65,7 @@ class SpamCopPlugin(pad.plugins.base.BasePlugin):
             regex = re.search(".*@.*", receiver)
             domain = regex.group().split('@')[1]
             # return value like '0 mail.domain.com.'
-            mx_domain = dns.resolver.query(domain, 'MX')[0].to_text()
+            mx_domain = self.ctxt.dns.query(domain, 'MX')[0].to_text()
             mx_domain = mx_domain.split()[1][:-1]
 
             smtp_obj = smtplib.SMTP()
@@ -96,48 +95,38 @@ class SpamCopPlugin(pad.plugins.base.BasePlugin):
             return False
 
         original = msg.raw_msg
-        boundary = "----------=_%X.%X" % (int(now_date),
-                                          random.randint(1, 2 ** 32))
-
         description = "spam report via %s" % sys.version[:5]
-        trusted = msg.trusted_relays
-        untrusted = msg.untrusted_relays
-        host = platform.node()
+        trusted = str(msg.trusted_relays).strip('[]')
+        untrusted = str(msg.untrusted_relays).strip('[]')
+        host = os.uname()[1] or "unknown"
+        user = pwd.getpwuid(os.getuid())[0] or "unknown"
 
-        head = defaultdict()
-        head["From"] = self["spamcop_from_address"] or host
-        head["Subject"] = "report spam"
-        head["Date"] = time.strftime("%a, %d %b %Y %H:%M:%S %z")
-        head["Message-Id"] = "<%X.%X@%s>" % (int(now_date),
-                                             random.randint(1, 2 ** 32),
-                                             host)
-        head["MIME-Version"] = "1.0"
-        head["Content-Type"] = "multipart/mixed; boundary = %s" % boundary
-
+        message = email.mime.multipart.MIMEMultipart()
+        message["From"] = self["spamcop_from_address"] or "%s@%s" % (user, host)
+        message["To"] = self["spamcop_to_address"]
+        message["Subject"] = "report spam"
+        message["Date"] = email.utils.formatdate(localtime=True)
+        message["Message-Id"] = "<%X.%X@%s>" % (int(now_date),
+                                                random.randint(1, 2 ** 32),
+                                                host)
         if len(original) > self["spamcop_max_report_size"]*1024:
             x = self["spamcop_max_report_size"]*1024
             original = original[:x] + "\n[truncated by SpamPad]\n"
 
+        message.attach(email.mime.text.MIMEText(
+            'This is a multi-part message in MIME format.'))
+        original_attachment = email.mime.base.MIMEBase(
+            "message", "rfc822; x-spam-type=report")
+        original_attachment.add_header("Content-Disposition", "attachment")
+        original_attachment.add_header("Content-Description", description)
+        original_attachment.add_header("X-Spam-Relays-Trusted", trusted)
+        original_attachment.add_header("X-Spam-Relays-Untrusted", untrusted)
+        original_attachment.set_payload(original)
+        message.attach(original_attachment)
+
         self.ctxt.log.debug("Sending email to...%s", self["spamcop_to_address"])
-        message = ""
-        head["To"] = self["spamcop_to_address"]
-        for header in head:
-            message += "%s: %s \n" % (header, head[header])
-        message += """
-\nThis is a multi-part message in MIME format.
-
---%s
-Content-Type: message/rfc822; x-spam-type=report
-Content-Description: %s
-Content-Disposition: attachment
-Content-Transfer-Encoding: 8bit
-X-Spam-Relays-Trusted: %s
-X-Spam-Relays-Untrusted: %s
-
-%s
---%s--
-        """ % (boundary, description, trusted, untrusted, original,
-                   boundary)
         return self.send_mail_method(self["spamcop_from_address"],
-                                     self["spamcop_to_address"], message)
+                                     self["spamcop_to_address"],
+                                     message.as_string())
+
 
