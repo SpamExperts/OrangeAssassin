@@ -21,8 +21,12 @@ header CHECK_FREEMAIL_BODY_REGEX           eval:check_freemail_body('\d@')
 header CHECK_FREEMAIL_HEADER               eval:check_freemail_header('From')
 header CHECK_FREEMAIL_HEADER_REGEX         eval:check_freemail_header('From', '\d@')
 
+header CHECK_FREEMAIL_REPLY_TO eval:check_freemail_replyto('replyto')
+header CHECK_FREEMAIL_REPLY eval:check_freemail_replyto('reply')
+
 header CHECK_FREEMAIL_HEADER_CUSTOM        eval:check_freemail_header('Custom')
 header CHECK_FREEMAIL_HEADER_CUSTOM_REGEX  eval:check_freemail_header('Custom', '\d@')
+
 util_rb_tld com
 """
 
@@ -292,7 +296,6 @@ class TestFunctionalFreeMail(tests.util.TestBase):
 
     # Test check_freemail_replyto('replyto') and check_freemail_replyto('reply') eval rules
 
-    @unittest.skip("You have no such rule like CHECK_FREEMAIL_REPLY in CONFIG")
     def test_check_freemail_replyto_match_all_options(self):
         """example.com is freemail domain, Reply-To and From addresses are
         freemail domains but they are diferent so the check_freemail_replyto
@@ -317,7 +320,6 @@ Reply-To: test@example.com"""
         result = self.check_pad(email)
         self.check_report(result, 0, [])
 
-    @unittest.skip("You have no such rule like CHECK_FREEMAIL_REPLY in CONFIG")
     def test_check_freemail_replyto_match_reply_option(self):
         """example.com is freemail domain From address is freemail domain and
         Reply-To header don't exist. Body contains a freemail domain email and the
@@ -333,7 +335,6 @@ Reply-To: test@example.com"""
         self.check_report(result, 4, ['CHECK_FREEMAIL_BODY', 'CHECK_FREEMAIL_FROM',
             'CHECK_FREEMAIL_HEADER', 'CHECK_FREEMAIL_REPLY'])
 
-    @unittest.skip("You have no such rule like CHECK_FREEMAIL_REPLY in CONFIG")
     def test_check_freemail_replyto_dont_match_reply_option(self):
         """Test case like above but no freemail domains defined"""
         email = """From: sender@example.com
