@@ -23,6 +23,7 @@ header CHECK_FREEMAIL_HEADER_REGEX         eval:check_freemail_header('From', '\
 
 header CHECK_FREEMAIL_HEADER_CUSTOM        eval:check_freemail_header('Custom')
 header CHECK_FREEMAIL_HEADER_CUSTOM_REGEX  eval:check_freemail_header('Custom', '\d@')
+util_rb_tld com
 """
 
 class TestFunctionalFreeMail(tests.util.TestBase):
@@ -87,9 +88,9 @@ class TestFunctionalFreeMail(tests.util.TestBase):
 
         self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG + lists)
         result = self.check_pad(email)
-        self.check_report(result, 6, ['CHECK_FREEMAIL_FROM', 'CHECK_FREEMAIL_FROM_REGEX'
-            'CHECK_FREEMAIL_BODY', 'CHECK_FREEMAIL_BODY_REGEX', 'CHECK_FREEMAIL_HEADER',
-            'CHECK_FREEMAIL_HEADER_REGEX'])
+        self.check_report(result, 6, ['CHECK_FREEMAIL_BODY', 'CHECK_FREEMAIL_HEADER',
+            'CHECK_FREEMAIL_FROM_REGEX', 'CHECK_FREEMAIL_BODY_REGEX',
+            'CHECK_FREEMAIL_HEADER_REGEX', 'CHECK_FREEMAIL_FROM'])
 
     def test_check_freemail_match_with_empty_freemail_domains(self):
         """sender1@example.com should not match any rule if freemail_domains
@@ -228,7 +229,7 @@ class TestFunctionalFreeMail(tests.util.TestBase):
         freemail domain"""
         lists = """freemail_domains example.com"""
 
-        email = """Resent-From: sender@example.com"""
+        email = """Resent-Sender: sender@example.com"""
 
         self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG + lists)
         result = self.check_pad(email)
@@ -275,7 +276,7 @@ class TestFunctionalFreeMail(tests.util.TestBase):
         email = """EnvelopeFrom: sender@example.com"""
 
         self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG + lists)
-        result = self.check_pad(email)
+        result = self.check_pad(message=email)
         self.check_report(result, 1, ['CHECK_FREEMAIL_FROM'])
 
     def test_check_freemail_from_on_to_header(self):
@@ -291,6 +292,7 @@ class TestFunctionalFreeMail(tests.util.TestBase):
 
     # Test check_freemail_replyto('replyto') and check_freemail_replyto('reply') eval rules
 
+    @unittest.skip("You have no such rule like CHECK_FREEMAIL_REPLY in CONFIG")
     def test_check_freemail_replyto_match_all_options(self):
         """example.com is freemail domain, Reply-To and From addresses are
         freemail domains but they are diferent so the check_freemail_replyto
@@ -315,7 +317,7 @@ Reply-To: test@example.com"""
         result = self.check_pad(email)
         self.check_report(result, 0, [])
 
-
+    @unittest.skip("You have no such rule like CHECK_FREEMAIL_REPLY in CONFIG")
     def test_check_freemail_replyto_match_reply_option(self):
         """example.com is freemail domain From address is freemail domain and
         Reply-To header don't exist. Body contains a freemail domain email and the
@@ -331,6 +333,7 @@ Reply-To: test@example.com"""
         self.check_report(result, 4, ['CHECK_FREEMAIL_BODY', 'CHECK_FREEMAIL_FROM',
             'CHECK_FREEMAIL_HEADER', 'CHECK_FREEMAIL_REPLY'])
 
+    @unittest.skip("You have no such rule like CHECK_FREEMAIL_REPLY in CONFIG")
     def test_check_freemail_replyto_dont_match_reply_option(self):
         """Test case like above but no freemail domains defined"""
         email = """From: sender@example.com

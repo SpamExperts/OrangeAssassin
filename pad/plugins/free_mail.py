@@ -277,7 +277,7 @@ class FreeMail(pad.plugins.base.BasePlugin):
             return False
         if check_re:
             for email in self.get_global("freemail_body_emails"):
-                if check_re.match(email):
+                if check_re.search(email):
                     self.ctxt.log.debug("FreeMail::Plugin check_freemail_body"
                                         " HIT! %s is freemail and matches regex", email)
                     return True
