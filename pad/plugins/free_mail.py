@@ -174,7 +174,7 @@ class FreeMail(pad.plugins.base.BasePlugin):
                             " %s", 'with regex: ' + regex if regex else '')
         all_from_headers = ['From', 'Envelope-Sender',
                             'Resent-Sender', 'X-Envelope-From',
-                            'EnvelopeFrom']
+                            'EnvelopeFrom', 'Resent-From']
         header_emails = []
         if regex:
             try:
