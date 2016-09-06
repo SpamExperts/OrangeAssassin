@@ -70,7 +70,7 @@ class TestRazor2(unittest.TestCase):
         proc_obj.returncode = 0
         result = self.plug.check_razor2(self.mock_msg)
         self.mock_subprocess_Popen.assert_called_with(
-            ["razor-check", "config_file.cf"], stderr=subprocess.PIPE,
+            ["razor-check", "-conf=config_file.cf"], stderr=subprocess.PIPE,
             stdin=subprocess.PIPE,
             stdout=subprocess.PIPE)
         self.assertEqual(result, 1)
@@ -93,6 +93,17 @@ class TestRazor2(unittest.TestCase):
         result = self.plug.plugin_report(self.mock_msg)
         self.assertEqual(result, None)
 
+    def test_plugin_report_config_file(self):
+        self.global_data["razor_config"] = "config_file.cf"
+        proc_obj = self.mock_subprocess_Popen.return_value
+        proc_obj.returncode = 1
+        result = self.plug.plugin_report(self.mock_msg)
+        self.mock_subprocess_Popen.assert_called_with(
+            ["razor-report", "-conf=config_file.cf"], stderr=subprocess.PIPE,
+            stdin=subprocess.PIPE,
+            stdout=subprocess.PIPE)
+        self.assertEqual(result, 1)
+
     def test_plugin_revoke_returncode(self):
         proc_obj = self.mock_subprocess_Popen.return_value
         proc_obj.returncode = 1
@@ -109,9 +120,19 @@ class TestRazor2(unittest.TestCase):
             "pad.plugins.razor2.kill_process").start()
         self.global_data["razor_timeout"] = 1
         proc_obj = self.mock_subprocess_Popen.return_value
-        # proc_obj.returncode = 1
         result = self.plug.plugin_revoke(self.mock_msg)
         mock_kill_process.assert_not_called()
+
+    def test_plugin_revoke_config_file(self):
+        self.global_data["razor_config"] = "config_file.cf"
+        proc_obj = self.mock_subprocess_Popen.return_value
+        proc_obj.returncode = 1
+        result = self.plug.plugin_revoke(self.mock_msg)
+        self.mock_subprocess_Popen.assert_called_with(
+            ["razor-revoke", "-conf=config_file.cf"], stderr=subprocess.PIPE,
+            stdin=subprocess.PIPE,
+            stdout=subprocess.PIPE)
+        self.assertEqual(result, 1)
 
     def wait_proc(self, *args, **kwargs):
         return time.sleep(5)
@@ -125,7 +146,19 @@ class TestRazor2(unittest.TestCase):
         proc_obj.communicate = self.wait_proc
         result = self.plug.plugin_revoke(self.mock_msg)
         mock_kill_process.assert_called_with(proc_obj, self.mock_ctxt.log)
-        # self.assertEqual(result, 1)
+
+    def test_plugin_report_OSError_communicate(self):
+        proc_obj = self.mock_subprocess_Popen.return_value
+        proc_obj.communicate.side_effect = OSError
+        result = self.plug.plugin_report(self.mock_msg)
+        self.assertEqual(result, False)
+
+    def test_plugin_revoke_OSError_communicate(self):
+        proc_obj = self.mock_subprocess_Popen.return_value
+        proc_obj.communicate.side_effect = OSError
+        result = self.plug.plugin_revoke(self.mock_msg)
+        self.assertEqual(result, False)
+
 
 def suite():
     """Gather all the tests from this package in a test suite."""
