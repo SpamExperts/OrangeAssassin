@@ -519,7 +519,46 @@ Received: from example.com (example.com [5.79.73.204])
             'CHECK_FREEMAIL_REPLY', 'CHECK_FREEMAIL_REPLY_TO'])
 
 
-    # TODO Tests for freemail_add_describe_email option
+    # Tests for freemail_add_describe_email option
+    @unittest.skip("Test will fail because _REPORT_ don't have expected format")
+    def test_freemail_add_describe_email_option_enabled(self):
+        pre_config = """loadplugin Mail::SpamAssassin::Plugin::FreeMail
+                        report _REPORT_
+                    """
+
+        lists = """freemail_domains example.com"""
+
+        email = """From: sender@example.com"""
+
+        expected_result = """*  1.0 CHECK_FREEMAIL_FROM Sender address is freemail
+*      (sender[at]example.com)
+*  1.0 CHECK_FREEMAIL_HEADER Header From is freemail
+*      (sender[at]example.com)
+"""
+
+        self.setup_conf(config=CONFIG, pre_config=pre_config + lists)
+        result = self.check_pad(email)
+        self.assertEqual(result , expected_result)
+
+    @unittest.skip("Test will fail because _REPORT_ don't have expected format")
+    def test_freemail_add_describe_email_option_disabled(self):
+        pre_config = """loadplugin Mail::SpamAssassin::Plugin::FreeMail
+                        report _REPORT_
+                    """
+
+        opt = """freemail_add_describe_email 0"""
+
+        lists = """freemail_domains example.com"""
+
+        email = """From: sender@example.com"""
+
+        expected_result = """*  1.0 CHECK_FREEMAIL_HEADER Header From is freemail
+*  1.0 CHECK_FREEMAIL_FROM Sender address is freemail"""
+
+        self.setup_conf(config=CONFIG, pre_config=pre_config + lists + opt)
+        result = self.check_pad(email)
+        self.assertEqual(result , expected_result)
+
     # TODO Tests for empty values config lines
 
 
