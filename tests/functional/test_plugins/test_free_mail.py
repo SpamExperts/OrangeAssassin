@@ -145,6 +145,18 @@ class TestFunctionalFreeMail(tests.util.TestBase):
         self.check_report(result, 3, ['CHECK_FREEMAIL_FROM', 'CHECK_FREEMAIL_BODY',
             'CHECK_FREEMAIL_HEADER'])
 
+    def test_check_freemail_dont_match_if_email_is_in_default_whitelist(self):
+        """abuse|support|sales|info|helpdesk|contact|kontakt@example.com
+        should not match any rule because is on default whitelist"""
+        lists = """freemail_domains example.com"""
+
+        email = """From: abuse@example.com
+        \nBody contains support@example.com sales@example.com contact@example.com"""
+
+        self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG + lists)
+        result = self.check_pad(email)
+        self.check_report(result, 0, [])
+
     def test_check_freemail_dont_match_if_domain_in_freemail_whitelist(self):
         """sender@example.com should not match example.com freemail domain if
         example.com exist in freemail_whitelist"""
@@ -273,11 +285,13 @@ class TestFunctionalFreeMail(tests.util.TestBase):
         self.check_report(result, 1, ['CHECK_FREEMAIL_FROM'])
 
     def test_check_freemail_from_match_on_envelope_from_from_header(self):
-        """sender@example.com on EnvelopeFrom: header should match example.com
+        """sender@example.com on Reeived header in envelope-from should match example.com
         freemail domain"""
-        lists = """freemail_domains example.com"""
+        lists = """freemail_domains spamexperts.com"""
 
-        email = """EnvelopeFrom: sender@example.com"""
+        email = """Received: from spamexperts.com (spamexperts.com [5.79.73.204])
+    by example.com
+    (envelope-from <test@spamexperts.com>)"""
 
         self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG + lists)
         result = self.check_pad(email)
@@ -451,7 +465,6 @@ Reply-To: test@example.com"""
         result = self.check_pad(email)
         self.check_report(result, 0, [])
 
-    @unittest.skip("Needs to be checked because is not working")
     def test_freemail_max_body_emails_with_freemail_skip_when_over_max_option(self):
         """If there is more than one email in body (free or not free) the
         FREEMAIL_BODY rule should match if freemail_skip_when_over_max_option
@@ -468,10 +481,46 @@ Reply-To: test@example.com"""
         result = self.check_pad(email)
         self.check_report(result, 1, ['CHECK_FREEMAIL_BODY'])
 
-    # TODO Tests for freemail_skip_bulk_envfrom option
+    # Tests for freemail_skip_bulk_envfrom option
+
+    def test_freemail_skip_bulk_envfrom_option_enabled(self):
+        """CHECK_FREEMAIL_REPLY and CHECK_FREEMAIL_REPLY_TO should not match if
+        a bulk email address (noreply@example.com) is present on Received header
+        in envelope-from option"""
+        lists = """freemail_domains example.com"""
+
+        email = """From: sender@example.com
+Reply-To: test@example.com
+Received: from example.com (example.com [5.79.73.204])
+    by example.com
+    (envelope-from <noreply@example.com>)"""
+
+        self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG + lists)
+        result = self.check_pad(email)
+        self.check_report(result, 2, ['CHECK_FREEMAIL_FROM', 'CHECK_FREEMAIL_HEADER'])
+
+    def test_freemail_skip_bulk_envfrom_option_disabled(self):
+        """CHECK_FREEMAIL_REPLY and CHECK_FREEMAIL_REPLY_TO should match if
+        a bulk email address (noreply@example.com) is present on Received header
+        in envelope-from option and freemail_skip_bulk_envfrom option is disabled"""
+        opt = """freemail_skip_bulk_envfrom 0"""
+
+        lists = """freemail_domains example.com"""
+
+        email = """From: sender@example.com
+Reply-To: test@example.com
+Received: from example.com (example.com [5.79.73.204])
+    by example.com
+    (envelope-from <noreply@example.com>)"""
+
+        self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG + lists + opt)
+        result = self.check_pad(email)
+        self.check_report(result, 4, ['CHECK_FREEMAIL_FROM', 'CHECK_FREEMAIL_HEADER',
+            'CHECK_FREEMAIL_REPLY', 'CHECK_FREEMAIL_REPLY_TO'])
+
+
     # TODO Tests for freemail_add_describe_email option
     # TODO Tests for empty values config lines
-
 
 
 def suite():
