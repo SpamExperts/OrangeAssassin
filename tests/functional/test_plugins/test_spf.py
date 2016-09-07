@@ -256,10 +256,37 @@ Received-SPF: pass (example.com: domain of test@example.com) identity=helo"""
 		result = self.check_pad(email)
 		self.check_report(result, 2, ['SPF_HELO_PASS', 'SPF_FAIL'])
 
+	def test_spf_pass_other_identity(self):
+
+		email="""Received-SPF: pass (example.com: domain of test@example.com) identity=mailfrom"""
+
+		self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG)
+		result = self.check_pad(email)
+		self.check_report(result, 1, ['SPF_PASS'])
+
+	def test_spf_pass_invalid_identity(self):
+
+		email="""Received-SPF: pass (example.com: domain of test@example.com) identity=mailfro"""
+
+		self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG)
+		result = self.check_pad(email)
+		self.check_report(result, 0, [])
+
+	def test_spf_with_ignore_received_spf_header_method(self):
+
+		lists="""ignore_received_spf_header 1"""
+
+		email="""Received-SPF: pass (example.org: domain of test@example.org) 
+Received-SPF: softfail (example.org: domain of test@example.org) identity=helo"""
+
+		self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG + lists)
+		result = self.check_pad(email)
+		self.check_report(result, 0, [])
+
 def suite():
     """Gather all the tests from this package in a test suite."""
     test_suite = unittest.TestSuite()
-    test_suite.addTest(unittest.makeSuite(TestFunctionalFreeMail, "test"))
+    test_suite.addTest(unittest.makeSuite(TestFunctionalSPF, "test"))
     return test_suite
 
 if __name__ == '__main__':
