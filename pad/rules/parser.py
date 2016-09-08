@@ -18,6 +18,7 @@ import os
 import warnings
 import contextlib
 import collections
+import locale
 
 import pad.config
 import pad.errors
@@ -48,6 +49,7 @@ KNOWN_2_RTYPE = frozenset(
             "mimeheader",  # Specifies a MimeHeaderRule
             "meta",  # Specifies a MetaRule
             "eval",  # Specifies a EvalRule
+            "lang",  # Specifies a language
         )
 )
 # Rules that require 1 arguments
@@ -180,6 +182,26 @@ class PADParser(object):
             except ValueError:
                 raise pad.errors.InvalidSyntax(filename, line_no, line,
                                                "Missing argument")
+            if rtype == "lang":
+                locale.setlocale(locale.LC_ALL, '')
+                locale_language = locale.getlocale(locale.LC_MESSAGES)[0]
+                if not locale_language.startswith(name):
+                    self.ctxt.log.debug("Lang argument does not"
+                                        "correspond with locales")
+                    return
+
+                try:
+                    rtype, name, value = value.split(None, 2)
+                except ValueError:
+                    raise pad.errors.InvalidSyntax(filename, line_no, line,
+                                                   "Missing argument")
+                if rtype == "report":
+                    if not self.ctxt.hook_parse_config(rtype, value):
+                        self.ctxt.err("%s:%s Ignoring unknown"
+                                      "configuration line: %s",
+                                      filename, line_no, line)
+                    return
+
             if name not in self.results:
                 self.results[name] = dict()
 
