@@ -31,9 +31,6 @@ class TestRazor2(unittest.TestCase):
         self.mock_subprocess_Popen = patch(
             "pad.plugins.razor2.subprocess.Popen").start()
 
-        # self.mock_communicate = patch(
-        #     "pad.plugins.razor2.subprocess.Popen.communicate").start()
-
         self.plug = pad.plugins.razor2.Razor2Plugin(self.mock_ctxt)
 
     def tearDown(self):
@@ -85,19 +82,19 @@ class TestRazor2(unittest.TestCase):
     def test_plugin_report_returncode(self):
         proc_obj = self.mock_subprocess_Popen.return_value
         proc_obj.returncode = 1
-        result = self.plug.plugin_report(self.mock_msg)
+        result = self.plug.launch_subprocess(self.mock_msg, "razor-report")
         self.assertEqual(result, 1)
 
     def test_plugin_report_OSError(self):
         self.mock_subprocess_Popen.side_effect = OSError
-        result = self.plug.plugin_report(self.mock_msg)
+        result = self.plug.launch_subprocess(self.mock_msg, "razor-report")
         self.assertEqual(result, None)
 
     def test_plugin_report_config_file(self):
         self.global_data["razor_config"] = "config_file.cf"
         proc_obj = self.mock_subprocess_Popen.return_value
         proc_obj.returncode = 1
-        result = self.plug.plugin_report(self.mock_msg)
+        result = self.plug.launch_subprocess(self.mock_msg, "razor-report")
         self.mock_subprocess_Popen.assert_called_with(
             ["razor-report", "-conf=config_file.cf"], stderr=subprocess.PIPE,
             stdin=subprocess.PIPE,
@@ -107,12 +104,12 @@ class TestRazor2(unittest.TestCase):
     def test_plugin_revoke_returncode(self):
         proc_obj = self.mock_subprocess_Popen.return_value
         proc_obj.returncode = 1
-        result = self.plug.plugin_revoke(self.mock_msg)
+        result = self.plug.launch_subprocess(self.mock_msg, "razor-revoke")
         self.assertEqual(result, 1)
 
     def test_plugin_revoke_OSError(self):
         self.mock_subprocess_Popen.side_effect = OSError
-        result = self.plug.plugin_revoke(self.mock_msg)
+        result = self.plug.launch_subprocess(self.mock_msg, "razor-revoke")
         self.assertEqual(result, None)
 
     def test_plugin_revoke_timer(self):
@@ -120,14 +117,14 @@ class TestRazor2(unittest.TestCase):
             "pad.plugins.razor2.kill_process").start()
         self.global_data["razor_timeout"] = 1
         proc_obj = self.mock_subprocess_Popen.return_value
-        result = self.plug.plugin_revoke(self.mock_msg)
+        result = self.plug.launch_subprocess(self.mock_msg, "razor-revoke")
         mock_kill_process.assert_not_called()
 
     def test_plugin_revoke_config_file(self):
         self.global_data["razor_config"] = "config_file.cf"
         proc_obj = self.mock_subprocess_Popen.return_value
         proc_obj.returncode = 1
-        result = self.plug.plugin_revoke(self.mock_msg)
+        result = self.plug.launch_subprocess(self.mock_msg, "razor-revoke")
         self.mock_subprocess_Popen.assert_called_with(
             ["razor-revoke", "-conf=config_file.cf"], stderr=subprocess.PIPE,
             stdin=subprocess.PIPE,
@@ -144,21 +141,67 @@ class TestRazor2(unittest.TestCase):
         proc_obj = self.mock_subprocess_Popen.return_value
         proc_obj.returncode = 1
         proc_obj.communicate = self.wait_proc
-        result = self.plug.plugin_revoke(self.mock_msg)
+        result = self.plug.launch_subprocess(self.mock_msg, "razor-revoke")
         mock_kill_process.assert_called_with(proc_obj, self.mock_ctxt.log)
+
+    def test_plugin_kill_process(self):
+        proc_obj = self.mock_subprocess_Popen.return_value
+        pad.plugins.razor2.kill_process(proc_obj, self.mock_ctxt.log)
+        proc_obj.kill.assert_called_with()
 
     def test_plugin_report_OSError_communicate(self):
         proc_obj = self.mock_subprocess_Popen.return_value
         proc_obj.communicate.side_effect = OSError
-        result = self.plug.plugin_report(self.mock_msg)
+        result = self.plug.launch_subprocess(self.mock_msg, "razor-report")
         self.assertEqual(result, False)
 
     def test_plugin_revoke_OSError_communicate(self):
         proc_obj = self.mock_subprocess_Popen.return_value
         proc_obj.communicate.side_effect = OSError
-        result = self.plug.plugin_revoke(self.mock_msg)
+        result = self.plug.launch_subprocess(self.mock_msg, "razor-revoke")
         self.assertEqual(result, False)
 
+    def test_check_razor2_range(self):
+        result = self.plug.check_razor2_range(self.mock_msg, 1, 5, 10)
+        self.assertEqual(result, None)
+
+class TestReportRevoke(unittest.TestCase):
+    def setUp(self):
+        unittest.TestCase.setUp(self)
+        self.options = {}
+        self.global_data = {}
+        self.msg_data = {}
+
+        self.mock_ctxt = MagicMock(**{
+            "get_plugin_data.side_effect": lambda p, k: self.global_data[k],
+            "set_plugin_data.side_effect": lambda p, k, v: self.global_data.
+                                   setdefault(k, v)}
+        )
+        self.mock_msg = MagicMock(**{
+            "get_plugin_data.side_effect": lambda p, k: self.msg_data[k],
+            "set_plugin_data.side_effect": lambda p, k, v: self.msg_data.
+                                  setdefault(k, v),
+        })
+        self.mock_msg.raw_msg = "testmessage"
+
+        self.mock_subprocess_Popen = patch(
+            "pad.plugins.razor2.subprocess.Popen").start()
+
+        self.plug = pad.plugins.razor2.Razor2Plugin(self.mock_ctxt)
+        self.mock_launch_subprocess = patch(
+            "pad.plugins.razor2.Razor2Plugin.launch_subprocess").start()
+
+    def tearDown(self):
+        unittest.TestCase.tearDown(self)
+        patch.stopall()
+
+    def test_plugin_report_call(self):
+        self.plug.plugin_report(self.mock_msg)
+        self.mock_launch_subprocess.assert_called_with(self.mock_msg, "razor-report")
+
+    def test_plugin_revoke_call(self):
+        self.plug.plugin_revoke(self.mock_msg)
+        self.mock_launch_subprocess.assert_called_with(self.mock_msg, "razor-revoke")
 
 def suite():
     """Gather all the tests from this package in a test suite."""
