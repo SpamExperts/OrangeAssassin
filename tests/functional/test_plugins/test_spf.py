@@ -260,7 +260,7 @@ Received-SPF: fail (example.org: domain of test@example.org) identity=helo"""
 
 	def test_spf_multiple_match_with_use_newest_received_spf_header_method(self):
 
-		lists"""use_newest_received_spf_header 1"""
+		lists="""use_newest_received_spf_header 1"""
 
 		email="""Received-SPF: pass (example.org: domain of test@example.org) identity=helo
 Received-SPF: none (example.org: domain of test@example.org) 
@@ -421,6 +421,30 @@ Received: from google.com ([2a00:1450:4017:804::200e]) by test.com
 		self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG + lists)
 		result = self.check_pad(email)
 		self.check_report(result, 0, [])
+
+	def test_spf_with_ip_in_trusted_network(self):
+
+		lists="""trusted_networks 2a00:1450:4017:804::200e"""
+
+		email="""Received: from google.com ([2a00:1450:4017:804::200e]) by test.com
+	(envelope-from <test@google.com>)"""
+
+		self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG + lists)
+		result = self.check_pad(email)
+		self.check_report(result, 0, [])
+
+	def test_spf_with_ip_in_trusted_network_and_two_receive_headers(self):
+
+		lists="""trusted_networks 2a00:1450:4017:804::200e"""
+
+		email="""Received: from google.com ([2a00:1450:4017:804::200e]) by test.com
+	(envelope-from <test@google.com>)
+Received:from example.net (example.com [1.2.3.4]) by example.com 
+	(envelope-from <envfrom@spamexperts.com>)"""
+
+		self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG + lists)
+		result = self.check_pad(email)
+		self.check_report(result, 2, ['SPF_SOFTFAIL', 'SPF_HELO_FAIL'])
 
 	def test_spf_with_no_receive_spf_header_with_invalid_spf_timeout_method(self):
 		#should ignore spf_timeout and take default
