@@ -190,17 +190,24 @@ class PADParser(object):
                                         "correspond with locales")
                     return
 
-                try:
-                    rtype, name, value = value.split(None, 2)
-                except ValueError:
-                    raise pad.errors.InvalidSyntax(filename, line_no, line,
-                                                   "Missing argument")
-                if rtype == "report":
+                if "report" in value:
+                    try:
+                        rtype, value = value.split(None, 1)
+                    except ValueError:
+                        raise pad.errors.InvalidSyntax(filename, line_no, line,
+                                                       "Missing argument")
+
                     if not self.ctxt.hook_parse_config(rtype, value):
                         self.ctxt.err("%s:%s Ignoring unknown"
                                       "configuration line: %s",
                                       filename, line_no, line)
                     return
+
+                try:
+                    rtype, name, value = value.split(None, 2)
+                except ValueError:
+                    raise pad.errors.InvalidSyntax(filename, line_no, line,
+                                                   "Missing argument")
 
             if name not in self.results:
                 self.results[name] = dict()
@@ -221,6 +228,7 @@ class PADParser(object):
                                       "in configuration line: %s, setting it by"
                                       " default to 0", filename, line_no, line)
                 self.results[name][rtype] = value
+
         else:
             if not self.ctxt.hook_parse_config(rtype, value):
                 self.ctxt.err("%s:%s Ignoring unknown configuration line: %s",

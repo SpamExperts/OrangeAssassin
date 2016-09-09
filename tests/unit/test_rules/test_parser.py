@@ -296,6 +296,41 @@ class TestParsePADLine(unittest.TestCase):
                     }
         self.check_parse(rules, expected)
 
+    def test_parse_line_lang_describe(self):
+        rules = [b"lang en describe TEST_RULE1 /test/",
+                 b"lang en describe TEST_RULE2 /test/",
+                 b"lang en describe TEST_RULE3 /test/"]
+        expected = {"TEST_RULE1": {"describe": "/test/"},
+                    "TEST_RULE2": {"describe": "/test/"},
+                    "TEST_RULE3": {"describe": "/test/"}
+                    }
+        self.check_parse(rules, expected)
+
+    def test_parse_line_lang_describe_wrong_language(self):
+        rules = [b"describe TEST_RULE1 /test/",
+                 b"lang es describe TEST_RULE1 /test/es"]
+        expected = {"TEST_RULE1": {"describe": "/test/"}}
+        self.check_parse(rules, expected)
+
+    def test_parse_line_lang_describe_as_locales(self):
+        rules = [b"describe TEST_RULE1 /test/",
+                 b"lang en describe TEST_RULE1 /test/es"]
+        expected = {"TEST_RULE1": {"describe": "/test/es"}}
+        self.check_parse(rules, expected)
+
+    def test_parse_line_lang_report_as_locales(self):
+        rules = [b"lang en report /test/report",]
+        parser = self.check_parse(rules, {})
+        parser.ctxt.hook_parse_config.assert_called_with("report",
+                                                     "/test/report")
+
+    def test_parse_line_lang_report_wrong_language(self):
+        rules = [b"lang en report /test/report",
+                 b"lang es report /test/report/es",]
+        parser = self.check_parse(rules, {})
+        parser.ctxt.hook_parse_config.assert_called_with("report",
+                                                         "/test/report")
+
     def test_parse_line_priority(self):
         rules = [b"body TEST_RULE /test/",
                  b"priority TEST_RULE 10"]
