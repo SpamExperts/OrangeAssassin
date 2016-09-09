@@ -50,6 +50,7 @@ KNOWN_2_RTYPE = frozenset(
             "meta",  # Specifies a MetaRule
             "eval",  # Specifies a EvalRule
             "lang",  # Specifies a language
+            "tflag", #Specifies a TflagRule
         )
 )
 # Rules that require 1 arguments
@@ -176,6 +177,8 @@ class PADParser(object):
             self._handle_ifplugin(value)
         elif rtype == "loadplugin":
             self._handle_loadplugin(value)
+        elif rtype == "tflags":
+            self._handle_tflags(value)
         elif rtype in KNOWN_2_RTYPE or rtype in self.ctxt.cmds:
             try:
                 rtype, name, value = line.split(None, 2)

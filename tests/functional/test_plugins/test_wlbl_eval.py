@@ -17,19 +17,15 @@ body   CHECK_FROM_IN_WHITELIST             eval:check_from_in_whitelist()
 body   CHECK_FROM_IN_BLACKLIST             eval:check_from_in_blacklist()
 body   CHECK_FROM_IN_DEFAULT_WHITELIST     eval:check_from_in_default_whitelist()
 body   CHECK_FROM_IN_LIST                  eval:check_from_in_list('whitelist_from')
-
 body   CHECK_TO_IN_WHITELIST               eval:check_to_in_whitelist()
 body   CHECK_TO_IN_BLACKLIST               eval:check_to_in_blacklist()
 body   CHECK_TO_IN_MORE_SPAM               eval:check_to_in_more_spam()
 body   CHECK_TO_IN_ALL_SPAM                eval:check_to_in_all_spam()
 body   CHECK_TO_IN_LIST                    eval:check_to_in_list('whitelist_to')
-
 header CHECK_URI_HOST_LISTED_MYLIST        eval:check_uri_host_listed('MYLIST')
 body   CHECK_URI_HOST_IN_WHITELIST         eval:check_uri_host_in_whitelist()
 body   CHECK_URI_HOST_IN_BLACKLIST         eval:check_uri_host_in_blacklist()
-
 body   CHECK_MAILFROM_MATCHES_RCVD         eval:check_mailfrom_matches_rcvd()
-
 body   CHECK_FORGED_IN_WHITELIST           eval:check_forged_in_whitelist()
 body   CHECK_FORGED_IN_DEFAULT_WHITELIST   eval:check_forged_in_default_whitelist()
 """
