@@ -346,6 +346,24 @@ Received: from google.com ([2a00:1450:4017:804::200e]) by test.com
 		result = self.check_pad(email)
 		self.check_report(result, 2, ['SPF_PASS', 'SPF_HELO_FAIL'])	
 
+	def test_spf_with_no_receive_spf_header_ident_not_matching_ip_and_pass_on_helo(self):
+
+		email="""Received:from spamexperts.com ([5.79.73.204]) by example.com 
+	(envelope-from <envfrom@google.com>)"""
+
+		self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG)
+		result = self.check_pad(email)
+		self.check_report(result, 2, ['SPF_SOFTFAIL', 'SPF_HELO_PASS'])
+
+	def test_spf_with_no_receive_spf_header_with_two_ips(self):
+
+		email="""Received:from slack.com ([167.89.125.30] [2a00:1450:4017:804::200e]) by example.com 
+	(envelope-from <envfrom@google.com>)"""
+
+		self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG)
+		result = self.check_pad(email)
+		self.check_report(result, 2, ['SPF_PASS', 'SPF_HELO_FAIL'])
+
 	def test_spf_with_no_receive_spf_header_invalid_ip(self):
 
 		lists="""ignore_received_spf_header 1"""
@@ -444,7 +462,7 @@ Received: from google.com ([2a00:1450:4017:804::200e]) by test.com
 
 	def test_spf_with_no_receive_spf_header_with_float_spf_timeout_method(self):
 
-		lists="""ignore_received_spf_header 1
+		lists="""ignore_received_spf_header 0
 				 spf_timeout 0.5"""
 
 		email="""Received: from example.com ([2a00:1450:4017:804::200e]) by test.com
@@ -453,6 +471,118 @@ Received: from google.com ([2a00:1450:4017:804::200e]) by test.com
 		self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG + lists)
 		result = self.check_pad(email)
 		self.check_report(result, 2, ['SPF_PASS', 'SPF_HELO_FAIL'])
+
+	def test_spf_helo_with_both_receive_spf_and_receive_header(self):
+
+		lists="""use_newest_received_spf_header 0"""
+
+		email="""Received-SPF: fail (example.org: domain of test@example.org) identity=helo
+Received-SPF: pass (example.org: domain of test@example.org) identity=helo
+Received: from example.com ([1.2.3.4]) by mx37.antispamcloud.com 
+	(envelope-from <serban@example.com>)
+Received: from google.com ([2a00:1450:4017:804::200e]) by test.com
+	(envelope-from <test@google.com>)"""
+
+		self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG + lists)
+		result = self.check_pad(email)
+		self.check_report(result, 2, ['SPF_FAIL', 'SPF_HELO_PASS'])
+
+	def test_spf_helo_with_both_receive_spf_and_receive_header_and_use_newest_received_spf_header_method(self):
+
+		lists="""use_newest_received_spf_header 1"""
+
+		email="""Received-SPF: fail (example.org: domain of test@example.org) identity=helo
+Received-SPF: pass (example.org: domain of test@example.org) identity=helo
+Received: from example.com ([1.2.3.4]) by mx37.antispamcloud.com 
+	(envelope-from <serban@example.com>)
+Received: from google.com ([2a00:1450:4017:804::200e]) by test.com
+	(envelope-from <test@google.com>)"""
+
+		self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG + lists)
+		result = self.check_pad(email)
+		self.check_report(result, 2, ['SPF_FAIL', 'SPF_HELO_FAIL'])
+
+	def test_spf_with_both_receive_spf_and_receive_header(self):
+
+		lists="""use_newest_received_spf_header 0"""
+
+		email="""Received-SPF: fail (example.org: domain of test@example.org) 
+Received-SPF: pass (example.org: domain of test@example.org) 
+Received: from example.com ([1.2.3.4]) by mx37.antispamcloud.com 
+	(envelope-from <serban@example.com>)
+Received: from google.com ([2a00:1450:4017:804::200e]) by test.com
+	(envelope-from <test@google.com>)"""
+
+		self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG + lists)
+		result = self.check_pad(email)
+		self.check_report(result, 2, ['SPF_PASS', 'SPF_HELO_FAIL'])
+
+	def test_spf_with_both_receive_spf_and_receive_header_and_use_newest_received_spf_header_method(self):
+
+		lists="""use_newest_received_spf_header 1"""
+
+		email="""Received-SPF: neutral (example.org: domain of test@example.org) 
+Received-SPF: pass (example.org: domain of test@example.org) 
+Received: from example.com ([1.2.3.4]) by mx37.antispamcloud.com 
+	(envelope-from <serban@example.com>)
+Received: from google.com ([2a00:1450:4017:804::200e]) by test.com
+	(envelope-from <test@google.com>)"""
+
+		self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG + lists)
+		result = self.check_pad(email)
+		self.check_report(result, 2, ['SPF_NEUTRAL', 'SPF_HELO_FAIL'])
+
+	def test_spf_with_two_receive_header_and_no_ident_in_first(self):
+
+		email="""Received: from example.com ([1.2.3.4]) by mx37.antispamcloud.com 
+Received: from google.com ([2a00:1450:4017:804::200e]) by test.com
+	(envelope-from <test@google.com>)"""
+
+		self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG)
+		result = self.check_pad(email)
+		self.check_report(result, 1, ['SPF_HELO_FAIL'])
+
+	def test_spf_with_two_receive_header_and_no_helo_in_first(self):
+
+		email="""Received: from ceva ([1.2.3.4]) by mx37.antispamcloud.com 
+	(envelope-from <serban@example.com>)
+Received: from google.com ([2a00:1450:4017:804::200e]) by test.com
+	(envelope-from <test@google.com>)"""
+
+		self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG)
+		result = self.check_pad(email)
+		self.check_report(result, 1, ['SPF_FAIL'])
+
+	def test_spf_with_dot_in_receive(self):
+
+		email="""Received: from . ([1.2.3.4]) by mx37.antispamcloud.com 
+	(envelope-from <serban@example.com>)"""
+
+		self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG)
+		result = self.check_pad(email)
+		self.check_report(result, 2, ['SPF_FAIL', 'SPF_HELO_TEMPERROR'])
+
+	def test_spf_with_invalid_ip_in_first_receive(self):
+		#should ignore the invalid ip and check the next receive
+
+		email="""Received: from  example.com ([1.2.3333.4]) by mx37.antispamcloud.com 
+Received: from google.com ([2a00:1450:4017:804::200e]) by test.com
+	(envelope-from <test@google.com>)"""
+
+		self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG)
+		result = self.check_pad(email)
+		self.check_report(result, 2, ['SPF_PASS', 'SPF_HELO_PASS'])
+
+	def test_spf_with_invalid_helo_in_first_receive(self):
+		#should ignore the invalid ip and check the next receive
+
+		email="""Received: from example ([1.2.3.4]) by mx37.antispamcloud.com 
+Received: from google.com ([2a00:1450:4017:804::200e]) by test.com
+	(envelope-from <test@google.com>)"""
+
+		self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG)
+		result = self.check_pad(email)
+		self.check_report(result, 0, [])
 
 def suite():
     """Gather all the tests from this package in a test suite."""
