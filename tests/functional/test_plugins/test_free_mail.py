@@ -290,12 +290,12 @@ class TestFunctionalFreeMail(tests.util.TestBase):
         lists = """freemail_domains spamexperts.com"""
 
         email = """Received: from spamexperts.com (spamexperts.com [5.79.73.204])
-    by example.com
+by example.com
     (envelope-from <test@spamexperts.com>)"""
 
         self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG + lists)
         result = self.check_pad(email)
-        self.check_report(result, 1, ['CHECK_FREEMAIL_FROM'])
+        self.check_report(result, 1, ['CHECK_FREEMAIL_BODY'])
 
     def test_check_freemail_from_on_to_header(self):
         """sender@example.com on To header should not match example.com
