@@ -295,7 +295,7 @@ by example.com
 
         self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG + lists)
         result = self.check_pad(email)
-        self.check_report(result, 1, ['CHECK_FREEMAIL_BODY'])
+        self.check_report(result, 1, ['CHECK_FREEMAIL_FROM'])
 
     def test_check_freemail_from_on_to_header(self):
         """sender@example.com on To header should not match example.com
@@ -469,7 +469,7 @@ Reply-To: test@example.com"""
         """If there is more than one email in body (free or not free) the
         FREEMAIL_BODY rule should match if freemail_skip_when_over_max_option
         is disabled (set to zero)"""
-        opt = """freemail_max_body_emails 1
+        opt = """\nfreemail_max_body_emails 1
         \nfreemail_skip_when_over_max 0"""
 
         lists = """freemail_domains example.com"""
