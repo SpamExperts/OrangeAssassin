@@ -290,7 +290,7 @@ class TestFunctionalFreeMail(tests.util.TestBase):
         lists = """freemail_domains spamexperts.com"""
 
         email = """Received: from spamexperts.com (spamexperts.com [5.79.73.204])
-by example.com
+    by example.com
     (envelope-from <test@spamexperts.com>)"""
 
         self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG + lists)
@@ -503,7 +503,7 @@ Received: from example.com (example.com [5.79.73.204])
         """CHECK_FREEMAIL_REPLY and CHECK_FREEMAIL_REPLY_TO should match if
         a bulk email address (noreply@example.com) is present on Received header
         in envelope-from option and freemail_skip_bulk_envfrom option is disabled"""
-        opt = """freemail_skip_bulk_envfrom 0"""
+        opt = """\nfreemail_skip_bulk_envfrom 0"""
 
         lists = """freemail_domains example.com"""
 
