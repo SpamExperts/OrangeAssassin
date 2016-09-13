@@ -22,10 +22,11 @@ class TestBaseRule(unittest.TestCase):
         patch.stopall()
 
     def test_init_base(self):
-        rule = pad.rules.base.BaseRule("TEST", [0.75], "Some Rule")
+        rule = pad.rules.base.BaseRule("TEST", [0.75], "Some Rule", 0, ["nice"])
         self.assertEqual(rule.name, "TEST")
         self.assertEqual(rule._scores, [0.75])
         self.assertEqual(rule.description, "Some Rule")
+        self.assertEqual(rule.tflags, ["nice"])
 
     def test_init_base_no_score(self):
         rule = pad.rules.base.BaseRule("TEST", None, "Some Rule")
@@ -39,9 +40,21 @@ class TestBaseRule(unittest.TestCase):
         self.assertEqual(rule._scores, [0.75])
         self.assertEqual(rule.description, "No description available.")
 
+    def test_init_base_tflags_nice(self):
+        rule = pad.rules.base.BaseRule("TEST", None, "Some Rule", 0, ["nice"])
+        self.assertEqual(rule.name, "TEST")
+        self.assertEqual(rule._scores, [-1.0])
+        self.assertEqual(rule.description, "Some Rule")
+        self.assertEqual(rule.tflags, ["nice"])
+        self.assertEqual(rule.priority, 0)
+
     def test_init_base_invalid_score(self):
         self.assertRaises(pad.errors.InvalidRule, pad.rules.base.BaseRule,
                           "TEST", [0.75, 1.0])
+
+    def test_init_base_value_error(self):
+        rule = pad.rules.base.BaseRule("TEST", None, "Some Rule", "a")
+        self.assertEqual(rule.priority, 0)
 
     def test_match(self):
         rule = pad.rules.base.BaseRule("TEST")
@@ -70,15 +83,45 @@ class TestBaseRule(unittest.TestCase):
         rule.preprocess(mock_ruleset)
         self.assertEqual(rule.score, 3.0)
 
+    def test_preprocess_tflags_net(self):
+        mock_ruleset = Mock(conf={"use_network": False})
+        rule = pad.rules.base.BaseRule("TEST", None, "Some Rule", 0, ["net"])
+        rule.preprocess(mock_ruleset)
+        self.assertEqual(rule.score, 0.0)
+
+    def test_preprocess_tflags_noautolearn(self):
+        mock_ruleset = Mock(conf={"use_network": False, "autolearn": True})
+        rule = pad.rules.base.BaseRule("TEST", None, "Some Rule", 0,
+                                       ["noautolearn"])
+        rule.preprocess(mock_ruleset)
+        self.assertEqual(rule.score, 0.0)
+
+    def test_preprocess_tflags_learn(self):
+        mock_ruleset = Mock(conf={"use_network": True, "autolearn": False,
+                                  "training": False})
+        rule = pad.rules.base.BaseRule("TEST", None, "Some Rule", 0, ["learn"])
+        rule.preprocess(mock_ruleset)
+        self.assertEqual(rule.score, 0.0)
+
+    def test_preprocess_tflags_userconf(self):
+        mock_ruleset = Mock(conf={"use_network": False, "autolearn": False,
+                                  "training": False, "user_config": False})
+        rule = pad.rules.base.BaseRule("TEST", None, "Some Rule", 0,
+                                       ["userconf"])
+        rule.preprocess(mock_ruleset)
+        self.assertEqual(rule.score, 0.0)
+
     def test_postprocess(self):
         rule = pad.rules.base.BaseRule("TEST")
         self.assertIsNone(rule.postprocess(None))
 
     def test_get_rule_kwargs(self):
         data = {"score": "0.1 0.2 0.3",
-                "describe": "Test"}
+                "describe": "Test",
+                "tflags": ["nice"]}
         expected = {"score": [0.1, 0.2, 0.3],
-                    "desc": "Test"}
+                    "desc": "Test",
+                    "tflags": ["nice"]}
         kwargs = pad.rules.base.BaseRule.get_rule_kwargs(data)
         self.assertEqual(kwargs, expected)
 
@@ -89,6 +132,12 @@ class TestBaseRule(unittest.TestCase):
         self.assertEqual(kwargs, expected)
 
     def test_get_rule_kwargs_no_desciptions(self):
+        data = {"score": "0.1 0.2 0.3"}
+        expected = {"score": [0.1, 0.2, 0.3]}
+        kwargs = pad.rules.base.BaseRule.get_rule_kwargs(data)
+        self.assertEqual(kwargs, expected)
+
+    def test_get_rule_kwargs_no_tflags(self):
         data = {"score": "0.1 0.2 0.3"}
         expected = {"score": [0.1, 0.2, 0.3]}
         kwargs = pad.rules.base.BaseRule.get_rule_kwargs(data)

@@ -296,6 +296,13 @@ class TestParsePADLine(unittest.TestCase):
                     }
         self.check_parse(rules, expected)
 
+    def test_parse_line_tflags(self):
+        rules = [b"body TEST_RULE /test/",
+                 b"tflags TEST_RULE net learn"]
+        expected = {"TEST_RULE": {"type": "body", "value": "/test/",
+                                  "tflags": ["net", "learn"]}}
+        self.check_parse(rules, expected)
+
     def test_parse_line_lang_describe(self):
         rules = [b"lang en describe TEST_RULE1 /test/",
                  b"lang en describe TEST_RULE2 /test/",
