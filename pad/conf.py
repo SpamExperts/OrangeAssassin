@@ -182,4 +182,7 @@ class PADConf(Conf):
         "dns_test_interval": ("str", "600"),
         "dns_options": ("str", "norotate, nodns0x20, edns=4096"),
         "dns_query_restriction": ("append", []),
+        "autolearn": ("bool", False),
+        "training": ("bool", False),
+        "user_config": ("bool", True),
     }

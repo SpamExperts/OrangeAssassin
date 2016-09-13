@@ -16,9 +16,9 @@ class EvalRule(pad.rules.base.BaseRule):
     """Evaluates a registered eval function."""
 
     def __init__(self, name, eval_rule, score=None, desc=None, target=None,
-                 priority=0):
+                 priority=0, tflags=None):
         super(EvalRule, self).__init__(name, score=score, desc=desc,
-                                       priority=priority)
+                                       priority=priority, tflags=tflags)
         try:
             eval_rule_name, eval_args = _EVAL_RULE_P.match(eval_rule).groups()
             self.eval_rule_name = eval_rule_name

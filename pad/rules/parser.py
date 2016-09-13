@@ -50,7 +50,7 @@ KNOWN_2_RTYPE = frozenset(
             "meta",  # Specifies a MetaRule
             "eval",  # Specifies a EvalRule
             "lang",  # Specifies a language
-            "tflag", #Specifies a TflagRule
+            "tflags", #Specifies a TflagRule
         )
 )
 # Rules that require 1 arguments
@@ -177,14 +177,15 @@ class PADParser(object):
             self._handle_ifplugin(value)
         elif rtype == "loadplugin":
             self._handle_loadplugin(value)
-        elif rtype == "tflags":
-            self._handle_tflags(value)
         elif rtype in KNOWN_2_RTYPE or rtype in self.ctxt.cmds:
             try:
                 rtype, name, value = line.split(None, 2)
             except ValueError:
                 raise pad.errors.InvalidSyntax(filename, line_no, line,
                                                "Missing argument")
+            if rtype == "tflags":
+                value = value.split()
+
             if rtype == "lang":
                 locale.setlocale(locale.LC_ALL, '')
                 locale_language = locale.getlocale(locale.LC_MESSAGES)[0]

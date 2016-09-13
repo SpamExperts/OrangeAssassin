@@ -23,10 +23,11 @@ _SUBRULE_P = re.compile(r"([_a-zA-Z]\w*)(?=\W|$)")
 class MetaRule(pad.rules.base.BaseRule):
     """These rules are boolean or arithmetic combinations of other rules."""
 
-    def __init__(self, name, rule, score=None, desc=None, priority=0):
+    def __init__(self, name, rule, score=None, desc=None, priority=0,
+                 tflags=None):
         """Convert the rule into Python executable code."""
         super(MetaRule, self).__init__(name, score=score, desc=desc,
-                                       priority=priority)
+                                       priority=priority, tflags=tflags)
         self.subrules = set(_SUBRULE_P.findall(rule))
         rule = _SUBRULE_P.sub(r"\1(msg)", rule)
         for operator, repl in CONVERT:

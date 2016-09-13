@@ -8,6 +8,7 @@ from builtins import list
 from builtins import object
 
 import pad.errors
+import pad.conf
 
 # Maps flags for Bayesian classifier and network tests to the
 # corresponding score to use
@@ -23,13 +24,19 @@ class BaseRule(object):
     """Abstract class for rules."""
     _rule_type = ""
 
-    def __init__(self, name, score=None, desc=None, priority=0):
+    def __init__(self, name, score=None, desc=None, priority=0, tflags=None):
         self.name = name
         if name.startswith("__"):
             score = [0.0]
         elif score is None:
-            score = [1.0]
+            if tflags:
+                if "nice" in tflags:
+                    score = [-1.0]
+            if score is None:
+                score = [1.0]
         self._scores = score
+
+        self.tflags = tflags
 
         if len(self._scores) not in (1, 4):
             err_msg = ("Expected 1 or 4 values for the score and got %s" %
@@ -52,7 +59,21 @@ class BaseRule(object):
         """Adjust the score for this rule taking into consideration
         the advanced scoring, if there are 4 scores provided.
         """
-        if len(self._scores) != 4:
+        if self.tflags:
+            if not ruleset.conf["use_network"] and "net" in self.tflags:
+                self.score = 0
+                return
+            if ruleset.conf["autolearn"] and "noautolearn" in self.tflags:
+                self.score = 0
+                return
+            if not ruleset.conf["training"] and "learn" in self.tflags:
+                self.score = 0
+                return
+            if not ruleset.conf["user_config"] and "userconf" in self.tflags:
+                self.score = 0
+                return
+
+        if len(self._scores) != 4 or self.score == 0:
             # Nothing to do
             return
         flags = ruleset.conf["use_bayes"], ruleset.conf["use_network"]
@@ -98,6 +119,14 @@ class BaseRule(object):
             pass
         try:
             kwargs["priority"] = data["priority"].strip()
+        except KeyError:
+            pass
+        try:
+            if data["tflags"]:
+                kwargs["tflags"] = []
+            for flag in data["tflags"]:
+                kwargs["tflags"].append(flag.strip())
+
         except KeyError:
             pass
         return kwargs

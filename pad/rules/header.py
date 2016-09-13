@@ -185,9 +185,9 @@ class _MultiplePatternHeaderRule(HeaderRule):
     _headers = None
 
     def __init__(self, name, pattern, score=None, desc=None, priority=0):
-        super(_MultiplePatternHeaderRule, self).__init__(
-            name, score=score, desc=desc, priority=priority
-        )
+        super(_MultiplePatternHeaderRule, self).__init__(name, score=score,
+                                                         desc=desc,
+                                                         priority=priority)
         self._pattern = pattern
 
     def match(self, msg):
