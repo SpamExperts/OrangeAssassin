@@ -1,5 +1,5 @@
 language: python
-sudo: required
+sudo: false
 os:
 - linux
 python:
@@ -9,7 +9,6 @@ python:
 - pypy
 - pypy3
 install:
-- sudo apt-get update && sudo apt-get install language-pack-fr
 - pip install -r requirements/base.txt
 - if [[ $TRAVIS_PYTHON_VERSION == 2.* ]]; then pip install -r requirements/python2.txt; fi
 - if [[ $TRAVIS_PYTHON_VERSION == 3.* ]]; then pip install -r requirements/python3.txt; fi
