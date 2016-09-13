@@ -23,7 +23,6 @@ CONFIG = """
 full   CHECK_TEST_EXIST  /test/
 describe CHECK_TEST_EXIST This text is in english
 lang fr describe CHECK_TEST_EXIST This text is in french
-
 """
 
 class TestReport(tests.util.TestBase):
