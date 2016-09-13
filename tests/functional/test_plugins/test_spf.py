@@ -271,13 +271,29 @@ Received-SPF: fail (example.org: domain of test@example.org) identity=helo"""
 		result = self.check_pad(email)
 		self.check_report(result, 2, ['SPF_HELO_PASS', 'SPF_NONE'])
 
-	def test_spf_pass_other_identity(self):
+	def test_spf_pass_mailfrom_identity(self):
 
 		email="""Received-SPF: pass (example.com: domain of test@example.com) identity=mailfrom"""
 
 		self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG)
 		result = self.check_pad(email)
 		self.check_report(result, 1, ['SPF_PASS'])
+
+	def test_spf_pass_mfrom_identity(self):
+
+		email="""Received-SPF: pass (example.com: domain of test@example.com) identity=mfrom"""
+
+		self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG)
+		result = self.check_pad(email)
+		self.check_report(result, 1, ['SPF_PASS'])
+
+	def test_spf_pass_none_identity(self):
+
+		email="""Received-SPF: pass (example.com: domain of test@example.com) identity=None"""
+
+		self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG)
+		result = self.check_pad(email)
+		self.check_report(result, 0, [])
 
 	def test_spf_pass_invalid_identity(self):
 
