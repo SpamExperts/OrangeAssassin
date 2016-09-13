@@ -77,51 +77,19 @@ class Razor2Plugin(pad.plugins.base.BasePlugin):
         self.ctxt.log.debug(proc.returncode)
         return not proc.returncode
 
-    def plugin_report(self, msg):
-        """Report the message to razor server as spam."""
-
+    def launch_subprocess(self, msg, name):
         if not self["razor_config"]:
-            args = ["razor-report"]
+            args = [name]
         else:
             conf_arg = "-conf=" + self["razor_config"]
-            args = ["razor-report", conf_arg]
+            args = [name, conf_arg]
 
         try:
             proc = subprocess.Popen(args, stderr=subprocess.PIPE,
                                     stdin=subprocess.PIPE,
                                     stdout=subprocess.PIPE)
         except OSError:
-            self.ctxt.log.warning("Unable to run razor-report")
-            return
-
-        my_timer = threading.Timer(self["razor_timeout"], kill_process,
-                                       [proc, self.ctxt.log])
-        my_timer.start()
-        try:
-            proc.communicate(input=str.encode(msg.raw_msg))
-            return proc.returncode
-        except (IOError, OSError):
-            self.ctxt.log.warning("Unable to communicate to razor-report")
-        finally:
-            my_timer.cancel()
-
-        return False
-
-    def plugin_revoke(self, msg):
-        """Report the message to razor server as ham."""
-
-        if not self["razor_config"]:
-            args = ["razor-revoke"]
-        else:
-            conf_arg = "-conf=" + self["razor_config"]
-            args = ["razor-revoke", conf_arg]
-
-        try:
-            proc = subprocess.Popen(args, stderr=subprocess.PIPE,
-                                    stdin=subprocess.PIPE,
-                                    stdout=subprocess.PIPE)
-        except OSError:
-            self.ctxt.log.warning("Unable to run razor-revoke")
+            self.ctxt.log.warning("Unable to run " + name)
             return
 
         my_timer = threading.Timer(self["razor_timeout"], kill_process,
@@ -131,8 +99,18 @@ class Razor2Plugin(pad.plugins.base.BasePlugin):
             proc.communicate(input=str.encode(msg.raw_msg))
             return proc.returncode
         except (IOError, OSError):
-            self.ctxt.log.warning("Unable to communicate to razor-revoke")
+            self.ctxt.log.warning("Unable to communicate to " + name)
         finally:
             my_timer.cancel()
 
         return False
+
+    def plugin_report(self, msg):
+        """Report the message to razor server as spam."""
+
+        self.launch_subprocess(msg, "razor-report")
+
+    def plugin_revoke(self, msg):
+        """Report the message to razor server as ham."""
+
+        self.launch_subprocess(msg, "razor-revoke")

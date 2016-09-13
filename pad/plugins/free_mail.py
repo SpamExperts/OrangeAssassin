@@ -114,7 +114,8 @@ class FreeMail(pad.plugins.base.BasePlugin):
         elif not option:
             option = 'replyto'
         if self.get_global('freemail_skip_bulk_envfrom'):
-            header_emails = self.get_global('email_re').findall(msg.msg['EnvelopeFrom'] or '')
+            header_emails = []
+            header_emails.append(msg.sender_address)
             for email in header_emails:
                 if SKIP_REPLYTO_FROM.search(email):
                     self.ctxt.log.warn("FreeMail::Plugin check_freemail_replyto"
@@ -186,10 +187,9 @@ class FreeMail(pad.plugins.base.BasePlugin):
         else:
             check_re = None
 
-        for header in all_from_headers:
-            if msg.msg.get(header, None):
-                header_emails = header_emails + self.get_global('email_re').findall(msg.msg[header])
+        header_emails = msg.get_all_from_headers_addr()
         header_emails = sorted(set(header_emails))
+
         if not header_emails:
             self.ctxt.log.debug("FreeMail::Plugin check_freemail_from"
                                 " no emails found in from headers: %s",
@@ -298,7 +298,7 @@ class FreeMail(pad.plugins.base.BasePlugin):
         body_emails = self.get_global('body_emails')
         freemail_body_emails = []
         if (len(body_emails) >= self.get_global("freemail_max_body_emails") and
-                not self.get_global("freemail_skip_when_over_max")):
+                self.get_global("freemail_skip_when_over_max")):
             self.ctxt.log.debug("FreeMail::Plugin check_freemail_body "
                                 "too many unique emails found in body")
             return False

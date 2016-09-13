@@ -57,12 +57,13 @@ class TestBase(unittest.TestCase):
             conf.write(config)
 
     def check_pad(self, message, message_only=False, report_only=True,
-                  extra_args=None, debug=False):
+                  extra_args=None, debug=False, env=""):
         """Run the match script and return the result.
 
         :param message: Pipe this message to the script
         :param report_only: If set to True then only return the
          report only. Otherwise return the message and report.
+        :param my_env: Used for setting environment variables to subprocess
         :return: The result of the script.
         """
         if debug:
@@ -73,8 +74,14 @@ class TestBase(unittest.TestCase):
                     "--siteconfigpath", self.test_conf]
         if extra_args is not None:
             args.extend(extra_args)
-        proc = subprocess.Popen(args, stdin=subprocess.PIPE,
-                                stdout=subprocess.PIPE)
+
+        if env:
+            proc = subprocess.Popen(args, stdin=subprocess.PIPE,
+                                    stdout=subprocess.PIPE, env=env)
+        else:
+            proc = subprocess.Popen(args, stdin=subprocess.PIPE,
+                                    stdout=subprocess.PIPE)
+
         stdout, stderr = proc.communicate(message.encode("utf8"))
         result = stdout.decode("utf8")
         if report_only:

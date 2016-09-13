@@ -469,7 +469,7 @@ Reply-To: test@example.com"""
         """If there is more than one email in body (free or not free) the
         FREEMAIL_BODY rule should match if freemail_skip_when_over_max_option
         is disabled (set to zero)"""
-        opt = """freemail_max_body_emails 1
+        opt = """\nfreemail_max_body_emails 1
         \nfreemail_skip_when_over_max 0"""
 
         lists = """freemail_domains example.com"""
@@ -503,7 +503,7 @@ Received: from example.com (example.com [5.79.73.204])
         """CHECK_FREEMAIL_REPLY and CHECK_FREEMAIL_REPLY_TO should match if
         a bulk email address (noreply@example.com) is present on Received header
         in envelope-from option and freemail_skip_bulk_envfrom option is disabled"""
-        opt = """freemail_skip_bulk_envfrom 0"""
+        opt = """\nfreemail_skip_bulk_envfrom 0"""
 
         lists = """freemail_domains example.com"""
 

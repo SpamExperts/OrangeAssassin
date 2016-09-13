@@ -166,3 +166,53 @@ They will be evaluated in the next order::
     This configuration is optional and any rule that doesn't have it will get
     the priority 0.
 
+.. _lang-rule-options:
+
+Lang option (Locali[sz]ation)
+===============
+
+The lang option can be used to provide text in a specific language.
+A line starting with the text lang xx will only be interpreted if the user is
+in that locale, allowing test descriptions and templates to be set for that
+language.
+
+Rule option that enables using localized translations for rule descriptions
+and reports:
+
+The locales string should specify either both the language and country,
+e.g. lang pt_BR, or just the language, e.g. lang de.
+
+    lang nl describe <RULE IDENTIFIER> <translated text>
+    lang nl report <translated text>
+
+Example configuration::
+
+    report ==== Start report ====
+    report _REPORT_
+
+    body        LOOK_FOR_TEST /test/
+    describe    LOOK_FOR_TEST Look for the test string in the body.
+    lang en describe    LOOK_FOR_TEST Description in en.
+    lang en report      Look for the test string in the body.
+
+And the result for a message that matches::
+
+    $ ./scripts/match.py -t -C /root/myconf/ --sitepath /root/myconf/ < /root/test.eml
+    Subject: Do you think this is Spam?
+
+    This is a test.
+
+
+    ==== Start report ====
+
+    Look for the test string in the body.
+    * 1.0 LOOK_FOR_TEST BODY: Description in en.
+
+
+For more details on the report see the report section of the documentation.
+
+.. note::
+
+    lang nl describe <RULE IDENTIFIER> <translated text>
+    If the language specified as a second parameter correspond with locales,
+    description for RULE IDENTIFIER will be overwritten.

@@ -92,6 +92,7 @@ class TestEvalRules(TestFreeMailBase):
     def test_freemail_replyto_skip_bulk_envfrom(self):
         self.global_data['freemail_skip_bulk_envfrom'] = True
         self.mock_msg.msg["EnvelopeFrom"] = "postmaster@example.com"
+        self.mock_msg.sender_address = "postmaster@example.com"
         result = self.plugin.check_freemail_replyto(self.mock_msg)
         self.assertFalse(result)
 
@@ -158,17 +159,23 @@ class TestEvalRules(TestFreeMailBase):
 
     def test_freemail_from_with_email(self):
         self.mock_msg.msg["From"] = "test2@freemail.example.com"
+        self.mock_msg.get_all_from_headers_addr.return_value = [
+            "test2@freemail.example.com"]
         result = self.plugin.check_freemail_from(self.mock_msg)
         self.assertTrue(result)
 
     def test_freemail_from_with_re(self):
         self.mock_msg.msg["EnvelopeFrom"] = "envelop<test11@freemail.example.com>"
+        self.mock_msg.get_all_from_headers_addr.return_value = [
+            "test11@freemail.example.com"]
         result = self.plugin.check_freemail_from(self.mock_msg, regex=r"^.*\d@")
         self.assertTrue(result)
 
     def test_freemail_from_with_re_no_email(self):
         self.mock_msg.msg["EnvelopeFrom"] = "envelop<test11@test.example.com>"
         self.mock_msg.msg["Envelope-Sender"] = "mail@test2.example.org"
+        self.mock_msg.get_all_from_headers_addr.return_value = [
+            "test11@test.example.com", "mail@test2.example.org"]
         result = self.plugin.check_freemail_from(self.mock_msg, regex=r"^.*\d@")
         self.assertFalse(result)
 
@@ -310,7 +317,7 @@ class TestParseBody(TestFreeMailBase):
                                            "body2@example.com",
                                            "body3@example.com"]
         self.global_data["freemail_max_body_emails"] = 2
-        self.global_data["freemail_skip_when_over_max"] = False
+        self.global_data["freemail_skip_when_over_max"] = True
         result = self.plugin._parse_body()
         self.assertFalse(result)
 

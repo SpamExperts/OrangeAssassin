@@ -250,6 +250,18 @@ class Message(pad.context.MessageContext):
                     values.append(addr)
         return values
 
+    def get_all_from_headers_addr(self):
+        all_from_headers = ['From', 'Envelope-Sender',
+                            'Resent-Sender', 'X-Envelope-From',
+                            'EnvelopeFrom', 'Resent-From']
+        sender_addr = self.sender_address
+        for header in all_from_headers:
+            if header == 'EnvelopeFrom' and sender_addr:
+                yield sender_addr
+            else:
+                for addr in self.get_all_addr_header(header):
+                    yield addr
+
     @_memoize("name_headers")
     def get_name_header(self, header_name):
         """Get a list of the first names from this header."""
