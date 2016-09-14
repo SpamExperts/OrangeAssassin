@@ -237,7 +237,6 @@ class TestFunctionalFreeMail(tests.util.TestBase):
         self.check_report(result, 2, ['CHECK_FREEMAIL_HEADER_CUSTOM',
             'CHECK_FREEMAIL_HEADER_CUSTOM_REGEX'])
 
-
     # Test check_freemail_from() eval rule for all from headers
 
     def test_check_freemail_from_match_on_resent_from_header(self):
@@ -374,9 +373,9 @@ Reply-To: test@example.com"""
 
     def test_custom_freemail_max_body_freemails(self):
         """Same test case like above but with custom freemail_max_body_freemails"""
-        opt = """freemail_max_body_freemails 1"""
+        lists = """freemail_domains example.com\n"""
 
-        lists = """freemail_domains example.com"""
+        opt = """freemail_max_body_freemails 1"""
 
         email = """From: sender@example.net
         \nBody contains test@example.com"""
@@ -387,25 +386,38 @@ Reply-To: test@example.com"""
 
     def test_zero_freemail_max_body_freemails(self):
         """Same test case like above but with freemail_max_body_freemails equal to zero"""
-        opt = """freemail_max_body_freemails 0"""
+        lists = """freemail_domains example.com\n"""
 
-        lists = """freemail_domains example.com"""
+        opt = """freemail_max_body_freemails 0"""
 
         email = """From: sender@example.net
         \nBody contains test@example.com"""
 
         self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG + lists + opt)
         result = self.check_pad(email)
-        self.check_report(result, 0, [])
+        self.check_report(result, 1, ['CHECK_FREEMAIL_BODY'])
 
     def test_negative_freemail_max_body_freemails(self):
         """Same test case like above but with freemail_max_body_freemails is negative"""
-        opt = """freemail_max_body_freemails -1"""
+        lists = """freemail_domains example.com\n"""
 
-        lists = """freemail_domains example.com"""
+        opt = """freemail_max_body_freemails -1"""
 
         email = """From: sender@example.net
         \nBody contains test@example.com"""
+
+        self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG + lists + opt)
+        result = self.check_pad(email)
+        self.check_report(result, 1, ['CHECK_FREEMAIL_BODY'])
+
+    def test_empty_freemail_max_body_freemails(self):
+        """Same test case like above but with freemail_max_body_freemails empty"""
+        lists = """freemail_domains example.com\n"""
+
+        opt = """freemail_max_body_freemails"""
+
+        email = """From: sender@example.net
+        \nBody contains test@example.com test2@example.com test3@example.com"""
 
         self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG + lists + opt)
         result = self.check_pad(email)
@@ -428,9 +440,9 @@ Reply-To: test@example.com"""
 
     def test_custom_freemail_max_body_emails(self):
         """Same test case like above but with custom freemail_max_body_emails"""
-        opt = """freemail_max_body_emails 1"""
+        lists = """freemail_domains example.com\n"""
 
-        lists = """freemail_domains example.com"""
+        opt = """freemail_max_body_emails 1"""
 
         email = """From: sender@example.net
         \nBody contains test@example.com"""
@@ -441,25 +453,39 @@ Reply-To: test@example.com"""
 
     def test_zero_freemail_max_body_emails(self):
         """Same test case like above but with freemail_max_body_emails equal to zero"""
-        opt = """freemail_max_body_emails 0"""
+        lists = """freemail_domains example.com\n"""
 
-        lists = """freemail_domains example.com"""
+        opt = """freemail_max_body_emails 0"""
 
         email = """From: sender@example.net
         \nBody contains test@example.com"""
 
         self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG + lists + opt)
         result = self.check_pad(email)
-        self.check_report(result, 0, [])
+        self.check_report(result, 1, ['CHECK_FREEMAIL_BODY'])
 
     def test_negative_freemail_max_body_emails(self):
         """Same test case like above but with freemail_max_body_emails equal is negative"""
-        opt = """freemail_max_body_emails -1"""
-
         lists = """freemail_domains example.com"""
+
+        opt = """freemail_max_body_emails -1"""
 
         email = """From: sender@example.net
         \nBody contains test@example.com"""
+
+        self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG + lists + opt)
+        result = self.check_pad(email)
+        self.check_report(result, 1, ['CHECK_FREEMAIL_BODY'])
+
+    def test_empty_freemail_max_body_emails(self):
+        """Same test case like above but with freemail_max_body_freemails empty"""
+        lists = """freemail_domains example.com\n"""
+
+        opt = """freemail_max_body_emails"""
+
+        email = """From: sender@example.net
+        \nBody contains test@example.net test2@example.com
+        test3@example.net test4@example.net test5@example.net"""
 
         self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG + lists + opt)
         result = self.check_pad(email)
@@ -469,10 +495,10 @@ Reply-To: test@example.com"""
         """If there is more than one email in body (free or not free) the
         FREEMAIL_BODY rule should match if freemail_skip_when_over_max_option
         is disabled (set to zero)"""
-        opt = """\nfreemail_max_body_emails 1
-        \nfreemail_skip_when_over_max 0"""
+        lists = """freemail_domains example.com\n"""
 
-        lists = """freemail_domains example.com"""
+        opt = """freemail_max_body_emails 1
+        freemail_skip_when_over_max 0"""
 
         email = """From: sender@example.net
         \nBody contains test@example.com"""
@@ -503,9 +529,9 @@ Received: from example.com (example.com [5.79.73.204])
         """CHECK_FREEMAIL_REPLY and CHECK_FREEMAIL_REPLY_TO should match if
         a bulk email address (noreply@example.com) is present on Received header
         in envelope-from option and freemail_skip_bulk_envfrom option is disabled"""
-        opt = """\nfreemail_skip_bulk_envfrom 0"""
+        lists = """freemail_domains example.com\n"""
 
-        lists = """freemail_domains example.com"""
+        opt = """freemail_skip_bulk_envfrom 0"""
 
         email = """From: sender@example.com
 Reply-To: test@example.com
@@ -518,10 +544,11 @@ Received: from example.com (example.com [5.79.73.204])
         self.check_report(result, 4, ['CHECK_FREEMAIL_FROM', 'CHECK_FREEMAIL_HEADER',
             'CHECK_FREEMAIL_REPLY', 'CHECK_FREEMAIL_REPLY_TO'])
 
-
     # Tests for freemail_add_describe_email option
-    @unittest.skip("Test will fail because _REPORT_ don't have expected format")
+
     def test_freemail_add_describe_email_option_enabled(self):
+        """If freemail_add_describe_email option is enabled the report should
+        contain the matched email address"""
         pre_config = """loadplugin Mail::SpamAssassin::Plugin::FreeMail
                         report _REPORT_
                     """
@@ -540,8 +567,9 @@ Received: from example.com (example.com [5.79.73.204])
         result = self.check_pad(email)
         self.assertEqual(result , expected_result)
 
-    @unittest.skip("Test will fail because _REPORT_ don't have expected format")
     def test_freemail_add_describe_email_option_disabled(self):
+        """If freemail_add_describe_email option is disabled the report should
+        not contain the matched email address"""
         pre_config = """loadplugin Mail::SpamAssassin::Plugin::FreeMail
                         report _REPORT_
                     """
@@ -558,8 +586,6 @@ Received: from example.com (example.com [5.79.73.204])
         self.setup_conf(config=CONFIG, pre_config=pre_config + lists + opt)
         result = self.check_pad(email)
         self.assertEqual(result , expected_result)
-
-    # TODO Tests for empty values config lines
 
 
 def suite():

@@ -46,7 +46,6 @@ class TestLocaleReport(tests.util.TestBase):
     def test_default_locale_rule_description(self):
         """If locale is set to en_US the default rule description should be displayed"""
         my_env = os.environ.copy()
-        my_env["LANG"] = ""
         my_env["LC_MESSAGES"] = "en_US.utf8"
 
         self.setup_conf(pre_config=PRE_CONFIG, config=CONFIG)
@@ -56,7 +55,6 @@ class TestLocaleReport(tests.util.TestBase):
     def test_custom_locale_rule_description(self):
         """If locale is set to en_GB the corresponding rule description should be displayed"""
         my_env = os.environ.copy()
-        my_env["LANG"] = ""
         my_env["LC_MESSAGES"] = "en_GB.utf8"
 
         self.setup_conf(pre_config=PRE_CONFIG, config=CONFIG)
@@ -67,7 +65,6 @@ class TestLocaleReport(tests.util.TestBase):
         """If locale is set to en-GB and two descriptions are used for this language,
         the las corresponding description should be displayed."""
         my_env = os.environ.copy()
-        my_env["LANG"] = ""
         my_env["LC_MESSAGES"] = "en_GB.utf8"
 
         second_description = "\nlang en_GB describe CHECK_TEST_EXIST Last description"
@@ -80,7 +77,6 @@ class TestLocaleReport(tests.util.TestBase):
         """If locale is set to en_US only the default report description
         should be displayed"""
         my_env = os.environ.copy()
-        my_env["LANG"] = ""
         my_env["LC_MESSAGES"] = "en_US.utf8"
 
         report_description = """\nreport This text is in US english
@@ -94,7 +90,6 @@ class TestLocaleReport(tests.util.TestBase):
         """If locale is set to en_GB the default report description + the en_GB
         report description should be displayed"""
         my_env = os.environ.copy()
-        my_env["LANG"] = ""
         my_env["LC_MESSAGES"] = "en_GB.utf8"
 
         report_description = """\nreport This text is in US english
@@ -108,7 +103,6 @@ class TestLocaleReport(tests.util.TestBase):
         """If locale is set to en_GB the default report description + all the en_GB
         report descriptions should be displayed"""
         my_env = os.environ.copy()
-        my_env["LANG"] = ""
         my_env["LC_MESSAGES"] = "en_GB.utf8"
 
         report_description = """\nreport This text is in US english
