@@ -216,3 +216,52 @@ For more details on the report see the report section of the documentation.
     lang nl describe <RULE IDENTIFIER> <translated text>
     If the language specified as a second parameter correspond with locales,
     description for RULE IDENTIFIER will be overwritten.
+
+.. _tflags-rule-options:
+
+Tflags option
+=============
+
+Used to set flags on a test. These flags are used in the score-determination
+back end system for details of the test's behaviour.
+
+    tflags <TEST_NAME> <net|nice|learn|userconf|noautolearn>
+
+net
+    The test is a network test, and will not be run in the mass checking system
+    or if -L is used, therefore its score should not be modified.
+nice
+    The test is intended to compensate for common false positives, and should
+    be assigned a negative score.
+userconf
+    The test requires user configuration before it can be used.
+learn
+    The test requires training before it can be used.
+noautolearn
+    The test will explicitly be ignored when calculating the score for
+    learning systems.
+
+Example configuration::
+
+    report ==== Start report ====
+    report _REPORT_
+
+    body        LOOK_FOR_TEST /test/
+    tflags      LOOK_FOR_TEST nice
+
+And the result for a message that matches::
+
+    $ ./scripts/match.py -t -C /root/myconf/ --sitepath /root/myconf/ < /root/test.eml
+    Subject: Do you think this is Spam?
+
+    This is a test.
+
+
+    ==== Start report ====
+
+    * -1.0 LOOK_FOR_TEST BODY
+
+.. note::
+
+    This configuration is optional and any rule that doesn't have it will
+    get the default value False.
