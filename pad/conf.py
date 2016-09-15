@@ -74,7 +74,8 @@ class Conf(object):
     def set_int_option(self, global_key, value):
         """Parse and set a integer option."""
         try:
-            self.set_global(global_key, int(value))
+            if value:
+                self.set_global(global_key, int(value))
         except ValueError:
             raise pad.errors.PluginError("Invalid value for %s: %s" %
                                          (global_key, value))

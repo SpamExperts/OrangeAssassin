@@ -29,6 +29,7 @@ header CHECK_FREEMAIL_HEADER_CUSTOM        eval:check_freemail_header('Custom')
 header CHECK_FREEMAIL_HEADER_CUSTOM_REGEX  eval:check_freemail_header('Custom', '\d@')
 
 util_rb_tld com
+util_rb_tld net
 """
 
 class TestFunctionalFreeMail(tests.util.TestBase):
@@ -396,7 +397,7 @@ Reply-To: test@example.com"""
 
         self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG + lists + opt)
         result = self.check_pad(email)
-        self.check_report(result, 1, ['CHECK_FREEMAIL_BODY'])
+        self.check_report(result, 0, [])
 
     def test_negative_freemail_max_body_freemails(self):
         """Same test case like above but with freemail_max_body_freemails is negative"""
@@ -409,7 +410,7 @@ Reply-To: test@example.com"""
 
         self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG + lists + opt)
         result = self.check_pad(email)
-        self.check_report(result, 1, ['CHECK_FREEMAIL_BODY'])
+        self.check_report(result, 0, [])
 
     def test_empty_freemail_max_body_freemails(self):
         """Same test case like above but with freemail_max_body_freemails empty"""
@@ -463,7 +464,7 @@ Reply-To: test@example.com"""
 
         self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG + lists + opt)
         result = self.check_pad(email)
-        self.check_report(result, 1, ['CHECK_FREEMAIL_BODY'])
+        self.check_report(result, 0, [])
 
     def test_negative_freemail_max_body_emails(self):
         """Same test case like above but with freemail_max_body_emails equal is negative"""
@@ -476,7 +477,7 @@ Reply-To: test@example.com"""
 
         self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG + lists + opt)
         result = self.check_pad(email)
-        self.check_report(result, 1, ['CHECK_FREEMAIL_BODY'])
+        self.check_report(result, 0, [])
 
     def test_empty_freemail_max_body_emails(self):
         """Same test case like above but with freemail_max_body_freemails empty"""

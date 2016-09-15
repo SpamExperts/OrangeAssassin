@@ -323,7 +323,7 @@ class FreeMail(pad.plugins.base.BasePlugin):
             if self._is_freemail(email):
                 freemail_count += 1
                 freemail_body_emails.append(email)
-            if freemail_count == self.get_global("freemail_max_body_freemails"):
+            if freemail_count >= self.get_global("freemail_max_body_freemails"):
                 self.ctxt.log.debug("FreeMail::Plugin check_freemail_body "
                                     "too many unique free emails found in body")
                 return False
