@@ -49,6 +49,7 @@ class SpfPlugin(pad.plugins.base.BasePlugin):
     }
 
     def parsed_metadata(self, msg):
+        # print("PARSED METADATA")
         if self.get_global("ignore_received_spf_header"):
             # The plugin will ignore the spf headers and will perform
             # SPF check by itself by querying the dns
@@ -62,6 +63,7 @@ class SpfPlugin(pad.plugins.base.BasePlugin):
             # have been added by an internal relay
             result = self._check_spf_header(
                 msg, self.get_global("use_newest_received_spf_header"))
+            print(result)
             self.set_local(msg, 'spf_result', result)
 
     def check_for_spf_pass(self, msg, target=None):
@@ -126,13 +128,29 @@ class SpfPlugin(pad.plugins.base.BasePlugin):
         """
         authres_header = msg.msg["authentication-results"]
         index = 0 if newest_header else -1
+
+        decoded_header = msg.get_decoded_header("received-spf")
+
+        for line in decoded_header:
+            if "identity=helo" in line:
+                pass
+            elif "identity=mailfrom" in line:
+                pass
+            elif "identity=mfrom" in line:
+                pass
+            else:
+                if "identity=" in line:
+                    decoded_header.remove(line)
+
         try:
-            received_spf_header = msg.get_decoded_header("received-spf")[index]
+            # received_spf_header = msg.get_decoded_header("received-spf")[index]
+            received_spf_header = decoded_header[index]
         except IndexError:
             received_spf_header = ''
 
         result = ''
         if received_spf_header:
+            print("....... " + received_spf_header)
             self.ctxt.log.debug(
                 "PLUGIN::SPF: found a Received-SPF header added by an internal"
                 " host"
@@ -147,6 +165,7 @@ class SpfPlugin(pad.plugins.base.BasePlugin):
                     identity = 'helo_'
                 result = identity + result
         elif authres_header:
+            print("ELSE")
             self.ctxt.log.debug("PLUGIN::SPF: %s",
                                 "found an Authentication-Results header "
                                 "added by an internal host")

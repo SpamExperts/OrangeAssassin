@@ -234,9 +234,17 @@ class RuleSet(object):
 
     def get_matched_report(self, msg):
         """Get a report of rules that matched this message."""
-        report = "\r\n".join(str(self.get_rule(name))
-                             for name, result in msg.rules_checked.items()
-                             if result)
+        report = []
+        for name, result in msg.rules_checked.items():
+            if not result:
+                continue
+            rule = self.get_rule(name)
+            report.append(
+                "* %s %s %s%s" %
+                (rule.score, rule.name, rule._rule_type, msg.rules_descriptions[name])
+            )
+
+        report = "\r\n".join(report)
         return "\r\n%s" % report
 
     def get_summary_report(self, msg):
@@ -320,6 +328,11 @@ class RuleSet(object):
         try:
             for name, rule in self.checked.items():
                 result = rule.match(msg)
+                if isinstance(result, str):
+                    msg.rules_descriptions[name] = result
+                    result = True
+                elif result:
+                    msg.rules_descriptions[name] = rule.description
                 self.ctxt.log.debug("Checked rule %s: %s", rule, result)
                 msg.rules_checked[name] = result
                 if result:
