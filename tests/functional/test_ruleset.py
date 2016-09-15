@@ -47,6 +47,7 @@ class TestLocaleReport(tests.util.TestBase):
         """If locale is set to en_US the default rule description should be displayed"""
         my_env = os.environ.copy()
         my_env["LC_MESSAGES"] = "en_US.utf8"
+        my_env["LC_ALL"] = ""
 
         self.setup_conf(pre_config=PRE_CONFIG, config=CONFIG)
         result = self.check_pad(message="Subject: test\n\nTest message.", env=my_env)
@@ -56,6 +57,7 @@ class TestLocaleReport(tests.util.TestBase):
         """If locale is set to en_GB the corresponding rule description should be displayed"""
         my_env = os.environ.copy()
         my_env["LC_MESSAGES"] = "en_GB.utf8"
+        my_env["LC_ALL"] = ""
 
         self.setup_conf(pre_config=PRE_CONFIG, config=CONFIG)
         result = self.check_pad(message="Subject: test\n\nTest message.", env=my_env)
@@ -66,6 +68,7 @@ class TestLocaleReport(tests.util.TestBase):
         the las corresponding description should be displayed."""
         my_env = os.environ.copy()
         my_env["LC_MESSAGES"] = "en_GB.utf8"
+        my_env["LC_ALL"] = ""
 
         second_description = "\nlang en_GB describe CHECK_TEST_EXIST Last description"
 
@@ -78,6 +81,7 @@ class TestLocaleReport(tests.util.TestBase):
         should be displayed"""
         my_env = os.environ.copy()
         my_env["LC_MESSAGES"] = "en_US.utf8"
+        my_env["LC_ALL"] = ""
 
         report_description = """\nreport This text is in US english
         \nlang en_GB report This text is in GB english"""
@@ -91,6 +95,7 @@ class TestLocaleReport(tests.util.TestBase):
         report description should be displayed"""
         my_env = os.environ.copy()
         my_env["LC_MESSAGES"] = "en_GB.utf8"
+        my_env["LC_ALL"] = ""
 
         report_description = """\nreport This text is in US english
         \nlang en_GB report This text is in GB english"""
@@ -104,6 +109,7 @@ class TestLocaleReport(tests.util.TestBase):
         report descriptions should be displayed"""
         my_env = os.environ.copy()
         my_env["LC_MESSAGES"] = "en_GB.utf8"
+        my_env["LC_ALL"] = ""
 
         report_description = """\nreport This text is in US english
         \nlang en_GB report This text is in GB english
