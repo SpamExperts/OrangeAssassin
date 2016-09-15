@@ -23,6 +23,7 @@ from future.utils import PY3
 import pad
 import pad.context
 from pad.received_parser import ReceivedParser
+from pad.rules.ruleset import RuleSet
 
 URL_RE = re.compile(r"""
 (
@@ -139,6 +140,7 @@ class Message(pad.context.MessageContext):
         self.score = 0
         self.rules_checked = dict()
         self.interpolate_data = dict()
+        self.rules_descriptions = dict()
         self.plugin_tags = dict()
         # Data
         self.sender_address = ""

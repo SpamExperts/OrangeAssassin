@@ -136,7 +136,8 @@ class FreeMail(pad.plugins.base.BasePlugin):
                 from_email != reply_to):
             self.ctxt.log.warn("FreeMail::Plugin check_freemail_replyto"
                                " HIT! From and Reply-To are different freemails")
-            return True
+            result = "From and Reply-To are different freemails"
+            return result
         if option == 'replyto' and not reply_to_frm:
             self.ctxt.log.warn("FreeMail::Plugin check_freemail_replyto"
                                " Reply-To is not freemail, skipping check")
@@ -161,7 +162,10 @@ class FreeMail(pad.plugins.base.BasePlugin):
                 self.ctxt.log.warn("FreeMail::Plugin check_freemail_replyto"
                                    " HIT! %s and %s are different freemails",
                                    check, email)
-                return True
+                _check = "(" + check.replace("@", "[at]") + ")"
+                _email = "(" + email.replace("@", "[at]") + ")"
+                result = _check + " and " + _email + " are different freemails"
+                return result
         return False
 
     def check_freemail_from(self, msg, regex=None, target=None):
@@ -202,10 +206,14 @@ class FreeMail(pad.plugins.base.BasePlugin):
                 elif check_re and check_re.search(email):
                     self.ctxt.log.debug("FreeMail::Plugin check_freemail_from"
                                         " HIT! %s is freemail and matches regex", email)
-                    return True
+                    _email = "(" + email.replace("@", "[at]") + ")"
+                    result = "Sender address is freemail and matches regex" + "\n\t" + _email
+                    return result
                 self.ctxt.log.debug("FreeMail::Plugin check_freemail_from"
                                     " HIT! %s is freemail", email)
-                return True
+                _email = "(" + email.replace("@", "[at]") + ")"
+                result = "Sender address is freemail" + "\n\t" + _email
+                return result
         return False
 
     def check_freemail_header(self, msg, header, regex=None, target=None):
@@ -246,10 +254,14 @@ class FreeMail(pad.plugins.base.BasePlugin):
                 elif check_re and check_re.search(email):
                     self.ctxt.log.debug("FreeMail::Plugin check_freemail_header"
                                         " HIT! %s is freemail and matches regex", email)
-                    return True
+                    _email = "(" + email.replace("@", "[at]") + ")"
+                    result = "Header " + header + " is freemail and matches regex" + "\n\t" + _email
+                    return result
                 self.ctxt.log.debug("FreeMail::Plugin check_freemail_header"
                                     " HIT! %s is freemail", email)
-                return True
+                _email = "(" + email.replace("@", "[at]") + ")"
+                result = "Header " + header + " is freemail" + "\n\t" + _email
+                return result
         return False
 
     def check_freemail_body(self, msg, regex=None, target=None):
@@ -280,13 +292,17 @@ class FreeMail(pad.plugins.base.BasePlugin):
                 if check_re.search(email):
                     self.ctxt.log.debug("FreeMail::Plugin check_freemail_body"
                                         " HIT! %s is freemail and matches regex", email)
-                    return True
+                    _email = "(" + email.replace("@", "[at]") + ")"
+                    result = "Address from body is freemail and matches regex" + "\n\t" + _email
+                    return result
         else:
             if len(self.get_global("freemail_body_emails")):
                 emails = " ,".join(self.get_global("freemail_body_emails"))
                 self.ctxt.log.debug("FreeMail::Plugin check_freemail_body"
                                     " HIT! body has freemails: %s", emails)
-                return True
+                _emails = "(" + emails.replace("@", "[at]") + ")"
+                result = "Body has freemails" + "\n\t" + _emails
+                return result
         return False
 
     def _parse_body(self):

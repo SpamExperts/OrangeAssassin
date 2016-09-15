@@ -3,6 +3,7 @@
 from __future__ import absolute_import
 import unittest
 import tests.util
+import re
 
 # Load FreeMail plugin and report SCORE and matching RULES
 PRE_CONFIG = """loadplugin Mail::SpamAssassin::Plugin::FreeMail
@@ -555,37 +556,55 @@ Received: from example.com (example.com [5.79.73.204])
 
         lists = """freemail_domains example.com"""
 
-        email = """From: sender@example.com"""
+        email = """From: sender@example.com
+        \ntest@example.com"""
 
-        expected_result = """*  1.0 CHECK_FREEMAIL_FROM Sender address is freemail
-*      (sender[at]example.com)
-*  1.0 CHECK_FREEMAIL_HEADER Header From is freemail
-*      (sender[at]example.com)
-"""
 
         self.setup_conf(config=CONFIG, pre_config=pre_config + lists)
         result = self.check_pad(email)
-        self.assertEqual(result , expected_result)
+
+        # Replace multiple whitespaces and tabs with a single whitespace
+        result = re.sub('[ \t]+', ' ', result)
+
+        # Expected matching rules
+        rule1 = """* 1.0 CHECK_FREEMAIL_BODY Body has freemails\n (test[at]example.com)"""
+        rule2 = """* 1.0 CHECK_FREEMAIL_HEADER Header From is freemail\n (sender[at]example.com)"""
+        rule3 = """* 1.0 CHECK_FREEMAIL_FROM Sender address is freemail\n (sender[at]example.com)"""
+        rule4 = """* 1.0 CHECK_FREEMAIL_REPLY (sender[at]example.com) and (test[at]example.com) are different freemails"""
+
+        # Check if expected rules are present in report
+        self.assertTrue((rule1 in result) and (rule2 in result) and (rule3 in result) and (rule4 in result))
 
     def test_freemail_add_describe_email_option_disabled(self):
         """If freemail_add_describe_email option is disabled the report should
         not contain the matched email address"""
         pre_config = """loadplugin Mail::SpamAssassin::Plugin::FreeMail
-                        report _REPORT_
-                    """
+        \nreport _REPORT_\n"""
+
+        lists = """freemail_domains example.com\n"""
 
         opt = """freemail_add_describe_email 0"""
 
-        lists = """freemail_domains example.com"""
+        email = """From: sender@example.com
+        \ntest@example.com"""
 
-        email = """From: sender@example.com"""
-
-        expected_result = """*  1.0 CHECK_FREEMAIL_HEADER Header From is freemail
-*  1.0 CHECK_FREEMAIL_FROM Sender address is freemail"""
+        # Expected matching rules
+        rule1 = """* 1.0 CHECK_FREEMAIL_REPLY Different freemails in reply header and body"""
+        rule2 = """* 1.0 CHECK_FREEMAIL_FROM Sender address is freemail"""
+        rule3 = """* 1.0 CHECK_FREEMAIL_HEADER Header From is freemail"""
+        rule4 = """* 1.0 CHECK_FREEMAIL_BODY Body has freemails"""
 
         self.setup_conf(config=CONFIG, pre_config=pre_config + lists + opt)
         result = self.check_pad(email)
-        self.assertEqual(result , expected_result)
+
+        # Replace multiple whitespaces and tabs with a single whitespace
+        result = re.sub('[ \t]+', ' ', result)
+
+        # Check if expected rules are present in report
+        self.assertTrue((rule1 in result) and (rule2 in result) and (rule3 in result) and (rule4 in result))
+
+        # Make sure that no email address is present in report ([at] not in report)
+        self.assertTrue('[at]' not in result)
 
 
 def suite():
