@@ -2,6 +2,7 @@
 
 from builtins import dict
 from builtins import object
+from builtins import str
 
 import re
 import socket
