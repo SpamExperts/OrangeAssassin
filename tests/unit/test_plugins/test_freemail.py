@@ -137,8 +137,10 @@ class TestEvalRules(TestFreeMailBase):
         self.global_data['freemail_body_emails'] = ["test@freemail.example.com"]
         self.mock_msg.msg["Reply-To"] = "test@freemail2.example.com"
         self.mock_msg.msg["From"] = "test2@paidomain.com"
+        self.global_data["freemail_add_describe_email"] = 0
+        expected_result = "Different freemails in reply header and body"
         result = self.plugin.check_freemail_replyto(self.mock_msg)
-        self.assertTrue(result)
+        self.assertEqual(result, expected_result)
 
     def test_freemail_replyto_with_parse_body_true_false(self):
         patch("pad.plugins.free_mail.FreeMail._parse_body", return_value=True).start()
@@ -161,15 +163,19 @@ class TestEvalRules(TestFreeMailBase):
         self.mock_msg.msg["From"] = "test2@freemail.example.com"
         self.mock_msg.get_all_from_headers_addr.return_value = [
             "test2@freemail.example.com"]
+        self.global_data["freemail_add_describe_email"] = 0
+        expected_result = "Sender address is freemail"
         result = self.plugin.check_freemail_from(self.mock_msg)
-        self.assertTrue(result)
+        self.assertEqual(result, expected_result)
 
     def test_freemail_from_with_re(self):
         self.mock_msg.msg["EnvelopeFrom"] = "envelop<test11@freemail.example.com>"
         self.mock_msg.get_all_from_headers_addr.return_value = [
             "test11@freemail.example.com"]
+        self.global_data["freemail_add_describe_email"] = 0
+        expected_result = "Sender address is freemail and matches regex"
         result = self.plugin.check_freemail_from(self.mock_msg, regex=r"^.*\d@")
-        self.assertTrue(result)
+        self.assertEqual(result, expected_result)
 
     def test_freemail_from_with_re_no_email(self):
         self.mock_msg.msg["EnvelopeFrom"] = "envelop<test11@test.example.com>"
@@ -199,15 +205,19 @@ class TestEvalRules(TestFreeMailBase):
 
     def test_freemail_header_good_header_freemail(self):
         self.mock_msg.msg["Subject"] = "test@freemail.example.com"
+        expected_result = result = "Header " + "Subject" + " is freemail"
+        self.global_data["freemail_add_describe_email"] = 0
         result = self.plugin.check_freemail_header(self.mock_msg, header='Subject')
-        self.assertTrue(result)
+        self.assertEqual(result, expected_result)
 
     def test_freemail_header_good_header_freemail_and_regex(self):
         self.mock_msg.msg["Subject"] = "test10@freemail.example.com"
+        expected_result = result = "Header " + "Subject" + " is freemail and matches regex"
+        self.global_data["freemail_add_describe_email"] = 0
         result = self.plugin.check_freemail_header(self.mock_msg,
                                                    header='Subject',
                                                    regex='^.*\d@')
-        self.assertTrue(result)
+        self.assertEqual(result, expected_result)
 
     def test_freemail_header_good_header_freemail_and_regex_no(self):
         self.mock_msg.msg["Subject"] = "test@freemail.example.com"
@@ -237,6 +247,7 @@ class TestEvalRules(TestFreeMailBase):
         result = self.plugin.check_freemail_body(self.mock_msg)
         self.assertFalse(result)
 
+#~~~~~~~~~~~~~~~~~~~~~~
     def test_freemail_body_parsed(self):
         patch("pad.plugins.free_mail.FreeMail._parse_body", return_value=True).start()
         self.global_data["body_emails"] = ["body@example.com",
@@ -244,8 +255,10 @@ class TestEvalRules(TestFreeMailBase):
                                            "body2@freemail2.example.com"]
         self.global_data["freemail_body_emails"] = ["body@freemail.example.com",
                                                     "body2@freemail2.example.com"]
+        self.global_data["freemail_add_describe_email"] = 0
+        expected_result = "Body has freemails"
         result = self.plugin.check_freemail_body(self.mock_msg)
-        self.assertTrue(result)
+        self.assertEqual(result, expected_result)
 
     def test_freemail_body_parsed_regex(self):
         patch("pad.plugins.free_mail.FreeMail._parse_body", return_value=True).start()
@@ -254,8 +267,10 @@ class TestEvalRules(TestFreeMailBase):
                                            "body2@freemail2.example.com"]
         self.global_data["freemail_body_emails"] = ["body@freemail.example.com",
                                                     "body2@freemail2.example.com"]
+        self.global_data["freemail_add_describe_email"] = 0
+        expected_result = "Address from body is freemail and matches regex"
         result = self.plugin.check_freemail_body(self.mock_msg, regex=r"^.*\d@")
-        self.assertTrue(result)
+        self.assertEqual(result, expected_result)
 
 
 class TestIsFreemail(TestFreeMailBase):
