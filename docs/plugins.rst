@@ -41,6 +41,7 @@ Available plugins
     pad.plugins.wlbl_eval
     pad.plugins.razor2
     pad.plugins.spam_cop
+    pad.plugins.free_mail
 
 
 Plugin reference
