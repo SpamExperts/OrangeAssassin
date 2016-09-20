@@ -13,6 +13,8 @@ from __future__ import absolute_import
 from builtins import dict
 from builtins import object
 
+from datetime import timedelta
+
 import re
 import os
 import warnings
@@ -234,9 +236,35 @@ class PADParser(object):
                 self.results[name][rtype] = value
 
         else:
+            if rtype == "spf_timeout":
+                value = self._handle_spf_timeout(value)
             if not self.ctxt.hook_parse_config(rtype, value):
                 self.ctxt.err("%s:%s Ignoring unknown configuration line: %s",
                               filename, line_no, line)
+
+    def _handle_spf_timeout(self, value):
+        unit = value[-1:]
+        value = value[:-1]
+        try:
+            value = float(value)
+        except ValueError:
+            value = ""
+
+        if value:
+            if unit == "m":
+                time_unit = timedelta(minutes=value)
+            elif unit == "h":
+                time_unit = timedelta(hours=value)
+            elif unit == "d":
+                time_unit = timedelta(days=value)
+            elif unit == "w":
+                time_unit = timedelta(weeks=value)
+            else:
+                time_unit = timedelta(seconds=value)
+
+            value = time_unit.total_seconds()
+
+        return value
 
     def _handle_include(self, value, line, line_no, _depth=0):
         """Handles the 'include' keyword."""

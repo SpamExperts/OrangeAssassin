@@ -155,7 +155,6 @@ class SpfPlugin(pad.plugins.base.BasePlugin):
                     elif identity == 'helo':
                         if self.spf_check_helo:
                             continue
-                        identity = 'helo'
                         self.spf_check_helo = True
                     else:
                         continue
@@ -191,6 +190,7 @@ class SpfPlugin(pad.plugins.base.BasePlugin):
                 else:
                     spf_identity = "check_spf_%s" % result
                 self.check_result[spf_identity] = 1
+
         if msg.get_decoded_header("received"):
             if not received_spf_headers:
                 self.received_headers(msg, '')

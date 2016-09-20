@@ -138,7 +138,7 @@ Plugin :mod:`razor2`
     :show-inheritance:
 
 Plugin :mod:`free_mail`
-------------------------
+-----------------------
 .. automodule:: pad.plugins.free_mail
     :members:
     :undoc-members:
