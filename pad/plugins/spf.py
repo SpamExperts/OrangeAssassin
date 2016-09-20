@@ -147,7 +147,7 @@ class SpfPlugin(pad.plugins.base.BasePlugin):
                     result = ''
                     identity = ''
                 if identity:
-                    if identity in ('mfom', 'mailfrom', 'None'):
+                    if identity in ('mfrom', 'mailfrom', 'None'):
                         if self.spf_check:
                             continue
                         identity = ''
@@ -191,21 +191,22 @@ class SpfPlugin(pad.plugins.base.BasePlugin):
                 else:
                     spf_identity = "check_spf_%s" % result
                 self.check_result[spf_identity] = 1
-        else:
-            self.received_headers(msg, '')
+        if msg.get_decoded_header("received"):
+            if not received_spf_headers:
+                self.received_headers(msg, '')
             if msg.sender_address:
                 self.received_headers(msg, msg.sender_address)
 
     def received_headers(self, msg, sender):
-        if msg.trusted_relays:
-            return
         timeout = self.get_global('spf_timeout')
-        mx, ip = msg.hostname_with_ip[0]
+        mx = msg.external_relays[0]['rdns']
+        ip = msg.external_relays[0]['ip']
+
         spf_result = self._query_spf(timeout, ip, mx, sender)
         if self.spf_check_helo:
             spf_identity = "check_spf_%s" % spf_result
             self.check_result[spf_identity] = 1
-        elif re.match(".+\..+", mx):
+        elif re.match(".*\..*", mx):
             spf_identity = "check_spf_helo_%s" % spf_result
             self.spf_check_helo = True
             self.check_result[spf_identity] = 1
