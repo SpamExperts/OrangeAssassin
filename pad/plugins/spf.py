@@ -5,6 +5,7 @@ from __future__ import absolute_import
 import re
 import spf
 import pad.plugins.base
+import pad.message
 
 RECEIVED_RE = re.compile(r"""
     ^(pass|neutral|(?:soft)?fail|none|
@@ -20,6 +21,8 @@ AUTHRES_RE = re.compile(r"""
 
 
 class SpfPlugin(pad.plugins.base.BasePlugin):
+    spf_check = False
+    spf_check_helo = False
     eval_rules = (
         "check_for_spf_pass",
         "check_for_spf_neutral",
@@ -41,72 +44,85 @@ class SpfPlugin(pad.plugins.base.BasePlugin):
     options = {
         "whitelist_from_spf": ("append", []),
         "def_whitelist_from_spf": ("append", []),
-        "spf_timeout": ("int", 5),
+        "spf_timeout": ("float", 5),
         "do_not_use_mail_spf": ("bool", False),
         "do_not_use_mail_spf_query": ("bool", False),
         "ignore_received_spf_header": ("bool", False),
         "use_newest_received_spf_header": ("bool", False)
     }
+    check_result = {
+        "check_spf_pass": 0,
+        "check_spf_neutral": 0,
+        "check_spf_none": 0,
+        "check_spf_fail": 0,
+        "check_spf_softfail": 0,
+        "check_spf_permerror": 0,
+        "check_spf_temperror": 0,
+        "check_spf_helo_pass": 0,
+        "check_spf_helo_neutral": 0,
+        "check_spf_helo_none": 0,
+        "check_spf_helo_fail": 0,
+        "check_spf_helo_softfail": 0,
+        "check_spf_helo_permerror": 0,
+        "check_spf_helo_temperror": 0,
+        "check_spf_whitelist_from": 0,
+        "check_def_spf_whitelist_from": 0
+    }
 
     def parsed_metadata(self, msg):
-        # print("PARSED METADATA")
         if self.get_global("ignore_received_spf_header"):
             # The plugin will ignore the spf headers and will perform
             # SPF check by itself by querying the dns
-            timeout = self.get_global('spf_timeout')
-            mx, ip = msg.hostname_with_ip[0]
-            spf_result = self._query_spf(timeout, ip, mx, msg.sender_address)
-            self.set_local(msg, 'spf_result', spf_result)
+            self.received_headers(msg, '')
+            if msg.sender_address:
+                self.received_headers(msg, msg.sender_address)
         else:
-            # The plugin will try to use the SPF results found in any
-            # Received-SPF headers it finds in the message that could only
-            # have been added by an internal relay
-            result = self._check_spf_header(
-                msg, self.get_global("use_newest_received_spf_header"))
-            print(result)
-            self.set_local(msg, 'spf_result', result)
+            # # The plugin will try to use the SPF results found in any
+            # # Received-SPF headers it finds in the message that could only
+            # # have been added by an internal relay
+            self.check_spf_header(msg)
 
     def check_for_spf_pass(self, msg, target=None):
-        return self.get_local(msg, "spf_result") == "pass"
+        return self.check_result["check_spf_pass"] == 1
 
     def check_for_spf_neutral(self, msg, target=None):
-        return self.get_local(msg, "spf_result") == "neutral"
+        return self.check_result["check_spf_neutral"] == 1
 
     def check_for_spf_none(self, msg, target=None):
-        return self.get_local(msg, "spf_result") == "none"
+        return self.check_result["check_spf_none"] == 1
 
     def check_for_spf_fail(self, msg, target=None):
-        return self.get_local(msg, "spf_result") == "fail"
+        return self.check_result["check_spf_fail"] == 1
 
     def check_for_spf_softfail(self, msg, target=None):
-        return self.get_local(msg, "spf_result") == "softfail"
+        return self.check_result["check_spf_softfail"] == 1
 
     def check_for_spf_permerror(self, msg, target=None):
-        return self.get_local(msg, "spf_result") == "permerror"
+        return self.check_result["check_spf_permerror"] == 1
 
     def check_for_spf_temperror(self, msg, target=None):
-        return self.get_local(msg, "spf_result") == "temperror"
+        return self.check_result["check_spf_temperror"] == 1
 
     def check_for_spf_helo_pass(self, msg, target=None):
-        return self.get_local(msg, "spf_result") == "helo_pass"
+        return self.check_result["check_spf_helo_pass"] == 1
 
     def check_for_spf_helo_neutral(self, msg, target=None):
-        return self.get_local(msg, "spf_result") == "helo_neutral"
+        return self.check_result["check_spf_helo_neutral"] == 1
 
     def check_for_spf_helo_none(self, msg, target=None):
-        return self.get_local(msg, "spf_result") == "helo_none"
+        return self.check_result["check_spf_helo_none"] == 1
 
     def check_for_spf_helo_fail(self, msg, target=None):
-        return self.get_local(msg, "spf_result") == "helo_fail"
+        return self.check_result["check_spf_helo_fail"] == 1
 
     def check_for_spf_helo_softfail(self, msg, target=None):
-        return self.get_local(msg, "spf_result") == "helo_softfail"
+        return self.check_result["check_spf_helo_softfail"] == 1
 
     def check_for_spf_helo_permerror(self, msg, target=None):
-        return self.get_local(msg, "spf_result") == "helo_permerror"
+        return self.check_result["check_spf_helo_permerror"] == 1
 
     def check_for_spf_helo_temperror(self, msg, target=None):
-        return self.get_local(msg, "spf_result") == "helo_temperror"
+        return self.check_result["check_spf_helo_temperror"] == 1
 
     def check_for_spf_whitelist_from(self, msg, target=None):
         if msg.sender_address in self.get_global("whitelist_from_spf"):
@@ -116,56 +132,45 @@ class SpfPlugin(pad.plugins.base.BasePlugin):
     def check_for_def_spf_whitelist_from(self, msg, target=None):
         pass
 
-    def _check_spf_header(self, msg, newest_header):
-        """By default the plugin will attempt to use the oldest(bottom most)
-        received-spf header
-
-        If this option is true the plugin will attempt to sue the
-        newest(top most) received-spf header
-
-        :return: 'pass', 'permerror', 'fail', 'temperror', 'softfail', 'none',
-          'neutral'
-        """
+    def check_spf_header(self, msg):
         authres_header = msg.msg["authentication-results"]
-        index = 0 if newest_header else -1
-
-        decoded_header = msg.get_decoded_header("received-spf")
-
-        for line in decoded_header:
-            if "identity=helo" in line:
-                pass
-            elif "identity=mailfrom" in line:
-                pass
-            elif "identity=mfrom" in line:
-                pass
-            else:
-                if "identity=" in line:
-                    decoded_header.remove(line)
-
-        try:
-            # received_spf_header = msg.get_decoded_header("received-spf")[index]
-            received_spf_header = decoded_header[index]
-        except IndexError:
-            received_spf_header = ''
-
-        result = ''
-        if received_spf_header:
-            print("....... " + received_spf_header)
-            self.ctxt.log.debug(
-                "PLUGIN::SPF: found a Received-SPF header added by an internal"
-                " host"
-            )
-            match = RECEIVED_RE.match(received_spf_header)
-            if match:
-                result = match.group(1)
-                identity = str(match.group(2))
-                if identity in ('mfrom', 'mailfrom', 'None'):
+        received_spf_headers = msg.get_decoded_header("received-spf")
+        if not self["use_newest_received_spf_header"]:
+            received_spf_headers.reverse()
+        if received_spf_headers:
+            for spf_header in received_spf_headers:
+                match = RECEIVED_RE.match(spf_header)
+                if match:
+                    result = match.group(1)
+                    identity = str(match.group(2))
+                else:
+                    result = ''
                     identity = ''
-                elif identity == 'helo':
-                    identity = 'helo_'
-                result = identity + result
+                if identity:
+                    if identity in ('mfom', 'mailfrom', 'None'):
+                        if self.spf_check:
+                            continue
+                        identity = ''
+                        self.spf_check = True
+                    elif identity == 'helo':
+                        if self.spf_check_helo:
+                            continue
+                        identity = 'helo'
+                        self.spf_check_helo = True
+                    else:
+                        continue
+                elif self.spf_check:
+                    continue
+
+                if identity:
+                    spf_identity = "check_spf_%s_%s" % (identity, result)
+                else:
+                    spf_identity = "check_spf_%s" % result
+                self.check_result[spf_identity] = 1
+            if self.spf_check and self.spf_check_helo:
+                return
+
         elif authres_header:
-            print("ELSE")
             self.ctxt.log.debug("PLUGIN::SPF: %s",
                                 "found an Authentication-Results header "
                                 "added by an internal host")
@@ -180,14 +185,39 @@ class SpfPlugin(pad.plugins.base.BasePlugin):
                 if identity in ('mfrom', 'mailfrom', 'None'):
                     identity = ''
                 elif identity == 'helo':
-                    identity = 'helo_'
-                result = identity + result
-        return result
+                    identity = 'helo'
+                if identity:
+                    spf_identity = "check_spf_%s_%s" % (identity, result)
+                else:
+                    spf_identity = "check_spf_%s" % result
+                self.check_result[spf_identity] = 1
+        else:
+            self.received_headers(msg, '')
+            if msg.sender_address:
+                self.received_headers(msg, msg.sender_address)
+
+    def received_headers(self, msg, sender):
+        if msg.trusted_relays:
+            return
+        timeout = self.get_global('spf_timeout')
+        mx, ip = msg.hostname_with_ip[0]
+        spf_result = self._query_spf(timeout, ip, mx, sender)
+        if self.spf_check_helo:
+            spf_identity = "check_spf_%s" % spf_result
+            self.check_result[spf_identity] = 1
+        elif re.match(".+\..+", mx):
+            spf_identity = "check_spf_helo_%s" % spf_result
+            self.spf_check_helo = True
+            self.check_result[spf_identity] = 1
+        else:
+            self.spf_check_helo = True
 
     def _query_spf(self, timeout, ip, mx, sender_address):
         self.ctxt.log.debug("SPF::Plugin %s",
                             "Querying the dns server(%s, %s, %s)..."
                             % (ip, mx, sender_address))
+
         result, comment = spf.check2(i=ip, s=sender_address,
                                      h=mx, timeout=timeout)
         return result
+
