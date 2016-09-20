@@ -42,8 +42,8 @@ class SpfPlugin(pad.plugins.base.BasePlugin):
         "check_for_def_spf_whitelist_from"
     )
     options = {
-        "whitelist_from_spf": ("append", []),
-        "def_whitelist_from_spf": ("append", []),
+        "whitelist_from_spf": ("append_split", []),
+        "def_whitelist_from_spf": ("append_split", []),
         "spf_timeout": ("float", 5),
         "do_not_use_mail_spf": ("bool", False),
         "do_not_use_mail_spf_query": ("bool", False),
@@ -125,12 +125,37 @@ class SpfPlugin(pad.plugins.base.BasePlugin):
         return self.check_result["check_spf_helo_temperror"] == 1
 
     def check_for_spf_whitelist_from(self, msg, target=None):
-        if msg.sender_address in self.get_global("whitelist_from_spf"):
-            return True
+        parsed_list = self.parse_list("whitelist_from_spf")
+        if self["whitelist_from_spf"]:
+            if not self.check_for_spf_pass(msg):
+                return False
+        for regex in parsed_list:
+            if re.match(regex, msg.sender_address):
+                return True
         return False
 
     def check_for_def_spf_whitelist_from(self, msg, target=None):
-        pass
+        parsed_list = self.parse_list("def_whitelist_from_spf")
+        if self["def_whitelist_from_spf"]:
+            if not self.check_for_spf_pass(msg):
+                return False
+        for regex in parsed_list:
+            if re.match(regex, msg.sender_address):
+                return True
+        return False
+
+    def parse_list(self, list_name):
+        parsed_list = []
+        characters = ["?", "@", ".", "*@"]
+        for addr in self[list_name]:
+            if len([e for e in characters if e in addr]):
+                address = re.escape(addr).replace(r"\*", ".*").replace(r"\?",
+                                                                       ".?")
+                if "@" in address:
+                    parsed_list.append(address)
+                else:
+                    parsed_list.append(".*@" + address)
+        return parsed_list
 
     def check_spf_header(self, msg):
         authres_header = msg.msg["authentication-results"]
@@ -161,6 +186,8 @@ class SpfPlugin(pad.plugins.base.BasePlugin):
                 elif self.spf_check:
                     continue
 
+                if result == "error":
+                    result = "temperror"
                 if identity:
                     spf_identity = "check_spf_%s_%s" % (identity, result)
                 else:
@@ -203,6 +230,8 @@ class SpfPlugin(pad.plugins.base.BasePlugin):
         ip = msg.external_relays[0]['ip']
 
         spf_result = self._query_spf(timeout, ip, mx, sender)
+        if spf_result == "error":
+            spf_result = "temperror"
         if self.spf_check_helo:
             spf_identity = "check_spf_%s" % spf_result
             self.check_result[spf_identity] = 1
@@ -221,4 +250,7 @@ class SpfPlugin(pad.plugins.base.BasePlugin):
         result, comment = spf.check2(i=ip, s=sender_address,
                                      h=mx, timeout=timeout)
         return result
+
+
+
 
