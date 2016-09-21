@@ -222,7 +222,10 @@ class SpfPlugin(pad.plugins.base.BasePlugin):
             if not received_spf_headers:
                 self.received_headers(msg, '')
             if msg.sender_address:
-                self.received_headers(msg, msg.sender_address)
+                if self.spf_check_helo:
+                    self.received_headers(msg, msg.sender_address)
+                else:
+                    self.received_headers(msg, '')
 
     def received_headers(self, msg, sender):
         timeout = self.get_global('spf_timeout')
