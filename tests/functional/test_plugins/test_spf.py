@@ -623,7 +623,7 @@ Received: from google.com ([2a00:1450:4017:804::200e]) by test.com
 
 		self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG)
 		result = self.check_pad(email)
-		self.check_report(result, 2, ['SPF_FAIL', 'SPF_HELO_TEMPERROR'])
+		self.check_report(result, 2, ['SPF_FAIL', 'SPF_HELO_NONE'])
 
 	def test_spf_with_invalid_ip_in_first_receive(self):
 		#should ignore the invalid ip and check the next receive

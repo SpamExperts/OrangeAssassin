@@ -225,7 +225,7 @@ class SpfPlugin(pad.plugins.base.BasePlugin):
                 self.received_headers(msg, msg.sender_address)
 
     def received_headers(self, msg, sender):
-        timeout = self.get_global('spf_timeout')
+        timeout = self['spf_timeout']
         mx = msg.external_relays[0]['rdns']
         ip = msg.external_relays[0]['ip']
 
@@ -248,7 +248,7 @@ class SpfPlugin(pad.plugins.base.BasePlugin):
                             % (ip, mx, sender_address))
 
         result, comment = spf.check2(i=ip, s=sender_address,
-                                     h=mx, timeout=timeout)
+                                     h=mx, timeout=timeout, querytime=timeout)
         return result
 
 

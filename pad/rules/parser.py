@@ -243,14 +243,18 @@ class PADParser(object):
                               filename, line_no, line)
 
     def _handle_spf_timeout(self, value):
-        unit = value[-1:]
-        value = value[:-1]
+        unit = ""
         try:
             value = float(value)
         except ValueError:
-            value = ""
+            unit = value[-1:]
+            value = value[:-1]
+            try:
+                value = float(value)
+            except ValueError:
+                value = ""
 
-        if value:
+        if value and unit:
             if unit == "m":
                 time_unit = timedelta(minutes=value)
             elif unit == "h":
