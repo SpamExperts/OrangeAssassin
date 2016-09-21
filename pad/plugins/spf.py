@@ -73,9 +73,10 @@ class SpfPlugin(pad.plugins.base.BasePlugin):
         if self.get_global("ignore_received_spf_header"):
             # The plugin will ignore the spf headers and will perform
             # SPF check by itself by querying the dns
-            self.received_headers(msg, '')
-            if msg.sender_address:
-                self.received_headers(msg, msg.sender_address)
+            if msg.get_decoded_header("received"):
+                self.received_headers(msg, '')
+                if msg.sender_address:
+                    self.received_headers(msg, msg.sender_address)
         else:
             # # The plugin will try to use the SPF results found in any
             # # Received-SPF headers it finds in the message that could only
@@ -125,18 +126,14 @@ class SpfPlugin(pad.plugins.base.BasePlugin):
         return self.check_result["check_spf_helo_temperror"] == 1
 
     def check_for_spf_whitelist_from(self, msg, target=None):
-        parsed_list = self.parse_list("whitelist_from_spf")
-        if self["whitelist_from_spf"]:
-            if not self.check_for_spf_pass(msg):
-                return False
-        for regex in parsed_list:
-            if re.match(regex, msg.sender_address):
-                return True
-        return False
+        return self.check_spf_whitelist(msg, "whitelist_from_spf")
 
     def check_for_def_spf_whitelist_from(self, msg, target=None):
-        parsed_list = self.parse_list("def_whitelist_from_spf")
-        if self["def_whitelist_from_spf"]:
+        return self.check_spf_whitelist(msg, "def_whitelist_from_spf")
+
+    def check_spf_whitelist(self, msg, list_name):
+        parsed_list = self.parse_list(list_name)
+        if self[list_name]:
             if not self.check_for_spf_pass(msg):
                 return False
         for regex in parsed_list:
@@ -165,12 +162,18 @@ class SpfPlugin(pad.plugins.base.BasePlugin):
         if received_spf_headers:
             for spf_header in received_spf_headers:
                 match = RECEIVED_RE.match(spf_header)
-                if match:
-                    result = match.group(1)
-                    identity = str(match.group(2))
-                else:
-                    result = ''
+                if not match:
+                    self.ctxt.log.debug("PLUGIN::SPF: invalid Received_SPF "
+                                        "header")
+                    continue
+                result = match.group(1)
+                if match.group() == result:
                     identity = ''
+                elif match.group(2) != 'None':
+                    identity = match.group(2)
+                else:
+                    # Received-SPF: fail (example.org: domain of test@example.org) identity=None
+                    continue
                 if identity:
                     if identity in ('mfrom', 'mailfrom', 'None'):
                         if self.spf_check:
@@ -186,12 +189,12 @@ class SpfPlugin(pad.plugins.base.BasePlugin):
                 elif self.spf_check:
                     continue
 
-                if result == "error":
-                    result = "temperror"
+                result.replace("error", "temperror")
                 if identity:
                     spf_identity = "check_spf_%s_%s" % (identity, result)
                 else:
                     spf_identity = "check_spf_%s" % result
+                    self.spf_check = True
                 self.check_result[spf_identity] = 1
             if self.spf_check and self.spf_check_helo:
                 return
