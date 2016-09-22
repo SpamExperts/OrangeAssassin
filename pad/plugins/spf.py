@@ -254,7 +254,7 @@ class SpfPlugin(pad.plugins.base.BasePlugin):
         self.ctxt.log.debug("SPF::Plugin %s",
                             "Querying the dns server(%s, %s, %s)..."
                             % (ip, mx, sender_address))
-
+        print(timeout)
         result, comment = spf.check2(i=ip, s=sender_address,
                                      h=mx, timeout=timeout, querytime=timeout)
         return result
