@@ -119,8 +119,10 @@ class Conf(object):
                 time_unit = timedelta(days=value)
             elif unit == "w":
                 time_unit = timedelta(weeks=value)
-            else:
+            elif unit == "s":
                 time_unit = timedelta(seconds=value)
+            else:
+                return
 
             value = time_unit.total_seconds()
 
