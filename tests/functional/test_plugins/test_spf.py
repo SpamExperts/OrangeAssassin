@@ -499,18 +499,6 @@ Received:from example.net (example.com [1.2.3.4]) by example.com
 		result = self.check_pad(email)
 		self.check_report(result, 2, ['SPF_PASS', 'SPF_HELO_FAIL'])
 
-	def test_spf_with_no_receive_spf_header_with_null_spf_timeout_method(self):
-
-		lists="""ignore_received_spf_header 1
-				 spf_timeout 0"""
-
-		email="""Received: from example.com ([2a00:1450:4017:804::200e]) by test.com
-	(envelope-from <test@google.com>)"""
-
-		self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG + lists)
-		result = self.check_pad(email)
-		self.check_report(result, 0, [])
-
 	def test_spf_with_no_receive_spf_header_with_float_spf_timeout_method(self):
 
 		lists="""ignore_received_spf_header 0
