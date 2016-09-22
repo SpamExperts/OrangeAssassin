@@ -95,18 +95,21 @@ class Conf(object):
         """Parse and set a timevalue option."""
         unit = ""
         try:
-            value = float(value)
+            if value:
+                value = float(value)
         except ValueError:
             unit = value[-1:]
             value = value[:-1]
             try:
-                value = float(value)
+                if value:
+                    value = float(value)
             except ValueError:
                 raise pad.errors.PluginError("Invalid value for %s: %s" %
                                              (global_key, value))
-        if value < 0:
-            raise pad.errors.PluginError("Negative value for %s: %s" %
-                                         (global_key, value))
+        if not isinstance(value, float) or value < 0:
+            return
+            # raise pad.errors.PluginError("Negative value for %s: %s" %
+            #                              (global_key, value))
         if unit:
             if unit == "m":
                 time_unit = timedelta(minutes=value)

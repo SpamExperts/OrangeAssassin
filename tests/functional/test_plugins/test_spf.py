@@ -679,7 +679,8 @@ Received: from google.com ([2a00:1450:4017:804::200e]) by test.com
 
 		self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG + lists)
 		result = self.check_pad(email)
-		self.check_report(result, 2, ['SPF_PASS', 'SPF_HELO_FAIL'])
+		self.check_report(result, 3, ['SPF_PASS', 'SPF_HELO_FAIL',
+									  'CHECK_FOR_SPF_WHITELIST'])
 
 	def test_whitelist_from_spf_with_regex(self):
 		

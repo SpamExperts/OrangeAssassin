@@ -44,7 +44,7 @@ class SpfPlugin(pad.plugins.base.BasePlugin):
     options = {
         "whitelist_from_spf": ("append_split", []),
         "def_whitelist_from_spf": ("append_split", []),
-        "spf_timeout": ("timevalue", "5s"),
+        "spf_timeout": ("timevalue", 5),
         "do_not_use_mail_spf": ("bool", False),
         "do_not_use_mail_spf_query": ("bool", False),
         "ignore_received_spf_header": ("bool", False),
