@@ -232,6 +232,8 @@ class SpfPlugin(pad.plugins.base.BasePlugin):
 
     def received_headers(self, msg, sender):
         timeout = self['spf_timeout']
+        if not msg.external_relays:
+            return
         mx = msg.external_relays[0]['rdns']
         ip = msg.external_relays[0]['ip']
 

@@ -83,7 +83,7 @@ class Conf(object):
     def set_float_option(self, global_key, value):
         """Parse and set a float option."""
         try:
-            if value or value == 0:
+            if (value or value == 0) and value > 0:
                 self.set_global(global_key, float(value))
         except ValueError:
             raise pad.errors.PluginError("Invalid value for %s: %s" %
