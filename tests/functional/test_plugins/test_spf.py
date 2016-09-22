@@ -267,7 +267,7 @@ Received-SPF: none (example.org: domain of test@example.org)
 Received-SPF: softfail (example.org: domain of test@example.org) 
 Received-SPF: fail (example.org: domain of test@example.org) identity=helo"""
 
-		self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG)
+		self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG + lists)
 		result = self.check_pad(email)
 		self.check_report(result, 2, ['SPF_HELO_PASS', 'SPF_NONE'])
 
