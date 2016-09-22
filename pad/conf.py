@@ -2,6 +2,8 @@
 
 import pad.errors
 
+from datetime import timedelta
+
 
 class Conf(object):
     """Parses and stores values for options in the global
@@ -83,11 +85,43 @@ class Conf(object):
     def set_float_option(self, global_key, value):
         """Parse and set a float option."""
         try:
-            if (value or value == 0) and value > 0:
+            if value:
                 self.set_global(global_key, float(value))
         except ValueError:
             raise pad.errors.PluginError("Invalid value for %s: %s" %
                                          (global_key, value))
+
+    def set_timevalue_option(self, global_key, value):
+        """Parse and set a timevalue option."""
+        unit = ""
+        try:
+            value = float(value)
+        except ValueError:
+            unit = value[-1:]
+            value = value[:-1]
+            try:
+                value = float(value)
+            except ValueError:
+                raise pad.errors.PluginError("Invalid value for %s: %s" %
+                                             (global_key, value))
+        if value < 0:
+            raise pad.errors.PluginError("Negative value for %s: %s" %
+                                         (global_key, value))
+        if unit:
+            if unit == "m":
+                time_unit = timedelta(minutes=value)
+            elif unit == "h":
+                time_unit = timedelta(hours=value)
+            elif unit == "d":
+                time_unit = timedelta(days=value)
+            elif unit == "w":
+                time_unit = timedelta(weeks=value)
+            else:
+                time_unit = timedelta(seconds=value)
+
+            value = time_unit.total_seconds()
+
+        self.set_global(global_key, value)
 
     def set_bool_option(self, global_key, value):
         """Parse and set a bool option."""

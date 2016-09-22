@@ -44,7 +44,7 @@ class SpfPlugin(pad.plugins.base.BasePlugin):
     options = {
         "whitelist_from_spf": ("append_split", []),
         "def_whitelist_from_spf": ("append_split", []),
-        "spf_timeout": ("float", 5),
+        "spf_timeout": ("timevalue", "5s"),
         "do_not_use_mail_spf": ("bool", False),
         "do_not_use_mail_spf_query": ("bool", False),
         "ignore_received_spf_header": ("bool", False),
@@ -231,7 +231,7 @@ class SpfPlugin(pad.plugins.base.BasePlugin):
                     self.received_headers(msg, '')
 
     def received_headers(self, msg, sender):
-        timeout = self['spf_timeout']
+        timeout = self.get_global("spf_timeout")
         if not msg.external_relays:
             return
         mx = msg.external_relays[0]['rdns']

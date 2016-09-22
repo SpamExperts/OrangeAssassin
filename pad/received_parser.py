@@ -481,7 +481,7 @@ class ReceivedParser(object):
                 private_ips.append(clean_ip)
             if not IP_PRIVATE.search(clean_ip):
                 ip = clean_ip
-                break
+                # break
         if no_ips != 0 and count == no_ips:
             ip = private_ips[0]
         return ip
