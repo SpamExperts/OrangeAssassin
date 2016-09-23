@@ -160,68 +160,11 @@ class SpfPlugin(pad.plugins.base.BasePlugin):
         if not self["use_newest_received_spf_header"]:
             received_spf_headers.reverse()
         if received_spf_headers:
-            for spf_header in received_spf_headers:
-                match = RECEIVED_RE.match(spf_header)
-                if not match:
-                    self.ctxt.log.debug("PLUGIN::SPF: invalid Received_SPF "
-                                        "header")
-                    continue
-                result = match.group(1)
-                if match.group() == result:
-                    identity = ''
-                elif match.group(2) != 'None':
-                    identity = match.group(2)
-                else:
-                    # Received-SPF: fail (example.org: domain of test@example.org) identity=None
-                    continue
-                if identity:
-                    if identity in ('mfrom', 'mailfrom', 'None'):
-                        if self.spf_check:
-                            continue
-                        identity = ''
-                        self.spf_check = True
-                    elif identity == 'helo':
-                        if self.spf_check_helo:
-                            continue
-                        self.spf_check_helo = True
-                    else:
-                        continue
-                elif self.spf_check:
-                    continue
+            self.check_spf_received_header(received_spf_headers)
+        elif authres_header: #
+            self.check_authres_header(authres_header)
 
-                result.replace("error", "temperror")
-                if identity:
-                    spf_identity = "check_spf_%s_%s" % (identity, result)
-                else:
-                    spf_identity = "check_spf_%s" % result
-                    self.spf_check = True
-                self.check_result[spf_identity] = 1
-            if self.spf_check and self.spf_check_helo:
-                return
-
-        elif authres_header:
-            self.ctxt.log.debug("PLUGIN::SPF: %s",
-                                "found an Authentication-Results header "
-                                "added by an internal host")
-            extract_spf = AUTHRES_SPF.match(authres_header)
-            match = None
-            if extract_spf:
-                match = AUTHRES_RE.match(extract_spf.group(1))
-            if match:
-                result = 'fail' if match.group(
-                    1) == 'hardfail' else match.group(1)
-                identity = str(match.group(2))
-                if identity in ('mfrom', 'mailfrom', 'None'):
-                    identity = ''
-                elif identity == 'helo':
-                    identity = 'helo'
-                if identity:
-                    spf_identity = "check_spf_%s_%s" % (identity, result)
-                else:
-                    spf_identity = "check_spf_%s" % result
-                self.check_result[spf_identity] = 1
-
-        if msg.get_decoded_header("received"):
+        if msg.msg["received"]:
             if not received_spf_headers:
                 self.received_headers(msg, '')
             if msg.sender_address:
@@ -229,6 +172,68 @@ class SpfPlugin(pad.plugins.base.BasePlugin):
                     self.received_headers(msg, msg.sender_address)
                 else:
                     self.received_headers(msg, '')
+
+    def check_spf_received_header(self, received_spf_headers):
+        for spf_header in received_spf_headers:
+            match = RECEIVED_RE.match(spf_header)
+            if not match:
+                self.ctxt.log.debug("PLUGIN::SPF: invalid Received_SPF "
+                                    "header")
+                continue
+            result = match.group(1)
+            if match.group() == result:
+                identity = ''
+            elif match.group(2) != 'None':
+                identity = match.group(2)
+            else:
+                continue #
+            if identity:
+                if identity in ('mfrom', 'mailfrom', 'None'):
+                    if self.spf_check:
+                        continue
+                    identity = ''
+                    self.spf_check = True
+                elif identity == 'helo':
+                    if self.spf_check_helo:
+                        continue
+                    self.spf_check_helo = True
+                else:
+                    continue
+            elif self.spf_check:
+                continue
+
+            result.replace("error", "temperror")
+            if identity:
+                spf_identity = "check_spf_%s_%s" % (identity, result)
+            else:
+                spf_identity = "check_spf_%s" % result
+                self.spf_check = True
+            self.check_result[spf_identity] = 1
+        if self.spf_check and self.spf_check_helo:
+            return
+
+    def check_authres_header(self, authres_header):
+        self.ctxt.log.debug("PLUGIN::SPF: %s",
+                            "found an Authentication-Results header "
+                            "added by an internal host")
+
+        extract_spf = AUTHRES_SPF.match(authres_header)
+        match = None
+        if extract_spf:
+            match = AUTHRES_RE.match(extract_spf.group(1))
+        if match:
+            result = 'fail' if match.group(
+                1) == 'hardfail' else match.group(1)
+            identity = str(match.group(2))
+            if identity in ('mfrom', 'mailfrom', 'None'):
+                identity = ''
+            elif identity == 'helo':
+                identity = 'helo'
+            if identity:
+                spf_identity = "check_spf_%s_%s" % (identity, result)
+            else:
+                spf_identity = "check_spf_%s" % result
+            self.check_result[spf_identity] = 1
 
     def received_headers(self, msg, sender):
         timeout = self.get_global("spf_timeout")
@@ -254,7 +259,6 @@ class SpfPlugin(pad.plugins.base.BasePlugin):
         self.ctxt.log.debug("SPF::Plugin %s",
                             "Querying the dns server(%s, %s, %s)..."
                             % (ip, mx, sender_address))
-        print(timeout)
         result, comment = spf.check2(i=ip, s=sender_address,
                                      h=mx, timeout=timeout, querytime=timeout)
         return result
