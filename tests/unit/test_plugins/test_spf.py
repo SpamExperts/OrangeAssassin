@@ -11,327 +11,361 @@ except ImportError:
 import pad.plugins.spf
 
 
-class TestSpf(unittest.TestCase):
+class TestParsed(unittest.TestCase):
     def setUp(self):
         unittest.TestCase.setUp(self)
-        self.hostname_with_ip = []
-        self.local_data = {}
-        self.global_data = {
-            "spf_timeout": 10
-        }
-        self.mock_ctxt = MagicMock()
-        self.mock_msg = MagicMock(hostname_with_ip=self.hostname_with_ip,
-                                  msg={})
-        self.plugin = pad.plugins.spf.SpfPlugin(self.mock_ctxt)
-        self.plugin.set_local = lambda m, k, v: self.local_data.__setitem__(k,
-                                                                            v)
-        self.plugin.get_local = lambda m, k: self.local_data.__getitem__(k)
-        self.plugin.set_global = self.global_data.__setitem__
-        self.plugin.get_global = self.global_data.__getitem__
-        self.mock_ruleset = MagicMock()
+        self.options = {}
+        self.global_data = {}
+        self.msg_data = {}
+
+        self.mock_ctxt = MagicMock(**{
+            "get_plugin_data.side_effect": lambda p, k: self.global_data[k],
+            "set_plugin_data.side_effect": lambda p, k,
+                                                  v: self.global_data.
+                                   setdefault(k, v)}
+                                   )
+        self.mock_msg = MagicMock(**{
+            "get_plugin_data.side_effect": lambda p, k: self.msg_data[k],
+            "set_plugin_data.side_effect": lambda p, k,
+                                                  v: self.msg_data.
+                                  setdefault(k, v),
+        })
+        self.mock_rcvd_headers = patch("pad.plugins.spf."
+                                       "SpfPlugin.received_headers").start()
+        self.mock_check_spf = patch("pad.plugins.spf."
+                                       "SpfPlugin.check_spf_header").start()
+
+        self.plug = pad.plugins.spf.SpfPlugin(self.mock_ctxt)
 
     def tearDown(self):
         unittest.TestCase.tearDown(self)
         patch.stopall()
 
-    def test_parsed_metadata_with_headers(self):
-        self.plugin._query_spf = Mock()
-        self.hostname_with_ip.append(("example.com", "127.0.0.1"))
+    def test_parsed_metadata_ignore_received(self):
         self.global_data["ignore_received_spf_header"] = True
-        self.plugin.parsed_metadata(self.mock_msg)
-        self.plugin._query_spf.assert_called_with(
-            10, "127.0.0.1", "example.com", self.mock_msg.sender_address
-        )
+        self.mock_msg.get_decoded_header.return_value = ["lala"]
+        self.mock_msg.sender_address = "user@example.com"
+        self.plug.parsed_metadata(self.mock_msg)
+        calls = [
+            call(self.mock_msg, ''),
+            call(self.mock_msg, "user@example.com")
+        ]
+        self.mock_rcvd_headers.assert_has_calls(calls)
 
-    def test_parsed_metadata_with_query(self):
-        self.plugin._check_spf_header = Mock()
+    def test_parsed_metadata_ignore_received_no_sender_address(self):
+        self.global_data["ignore_received_spf_header"] = True
+        self.mock_msg.get_decoded_header.return_value = ["lala"]
+        self.mock_msg.sender_address = ""
+        self.plug.parsed_metadata(self.mock_msg)
+        self.mock_rcvd_headers.assert_called_with(self.mock_msg, '')
+
+    def test_parsed_metadata_spf_header(self):
         self.global_data["ignore_received_spf_header"] = False
-        self.global_data["use_newest_received_spf_header"] = False
-        self.plugin.parsed_metadata(self.mock_msg)
-        self.plugin._check_spf_header.assert_called_with(
-            self.mock_msg, self.global_data["use_newest_received_spf_header"]
-        )
+        self.plug.parsed_metadata(self.mock_msg)
+        self.mock_check_spf.assert_called_with(self.mock_msg)
 
-    def test_check_for_spf_pass_true(self):
-        self.plugin.set_local(self.mock_msg, "spf_result", "pass")
-        self.assertTrue(self.plugin.check_for_spf_pass(self.mock_msg))
+    def test_parse_list(self):
+        list_name = "whitelist_form_spf"
+        self.global_data["whitelist_form_spf"] = ["*spamexperts.com", "*@g?ogle.com"]
+        result = self.plug.parse_list(list_name)
+        self.assertEqual(result, ['.*@.*spamexperts\\.com', '.*\\@g.?ogle\\.com'])
 
-    def test_check_for_spf_pass_false(self):
-        self.plugin.set_local(self.mock_msg, "spf_result", "")
-        self.assertFalse(self.plugin.check_for_spf_pass(self.mock_msg))
 
-    def test_check_for_spf_neutral_true(self):
-        self.plugin.set_local(self.mock_msg, "spf_result", "neutral")
-        self.assertTrue(self.plugin.check_for_spf_neutral(self.mock_msg))
+class TestCheckSPF(unittest.TestCase):
+    def setUp(self):
+        unittest.TestCase.setUp(self)
+        self.options = {}
+        self.global_data = {}
+        self.msg_data = {}
 
-    def test_check_for_spf_neutral_false(self):
-        self.plugin.set_local(self.mock_msg, "spf_result", "")
-        self.assertFalse(self.plugin.check_for_spf_neutral(self.mock_msg))
+        self.mock_ctxt = MagicMock(**{
+            "get_plugin_data.side_effect": lambda p, k: self.global_data[k],
+            "set_plugin_data.side_effect": lambda p, k,
+                                                  v: self.global_data.
+                                   setdefault(k, v)}
+                                   )
+        self.mock_msg = MagicMock(**{
+            "get_plugin_data.side_effect": lambda p, k: self.msg_data[k],
+            "set_plugin_data.side_effect": lambda p, k,
+                                                  v: self.msg_data.
+                                  setdefault(k, v),
+        })
 
-    def test_check_for_spf_none_true(self):
-        self.plugin.set_local(self.mock_msg, "spf_result", "none")
-        self.assertTrue(self.plugin.check_for_spf_none(self.mock_msg))
+        self.mock_check_whitelist = patch("pad.plugins.spf.SpfPlugin."
+                                          "check_spf_whitelist").start()
+        #
+        self.mock_check_spf_received_header = patch(
+            "pad.plugins.spf.SpfPlugin.check_spf_received_header").start()
+        self.mock_check_authres_header = patch(
+            "pad.plugins.spf.SpfPlugin.check_authres_header").start()
+        self.mock_received_header = patch(
+            "pad.plugins.spf.SpfPlugin.received_headers").start()
 
-    def test_check_for_spf_none_false(self):
-        self.plugin.set_local(self.mock_msg, "spf_result", "")
-        self.assertFalse(self.plugin.check_for_spf_none(self.mock_msg))
+        self.plug = pad.plugins.spf.SpfPlugin(self.mock_ctxt)
 
-    def test_check_for_spf_fail_true(self):
-        self.plugin.set_local(self.mock_msg, "spf_result", "fail")
-        self.assertTrue(self.plugin.check_for_spf_fail(self.mock_msg))
+    def tearDown(self):
+        unittest.TestCase.tearDown(self)
+        patch.stopall()
 
-    def test_check_for_spf_fail_false(self):
-        self.plugin.set_local(self.mock_msg, "spf_result", "")
-        self.assertFalse(self.plugin.check_for_spf_fail(self.mock_msg))
+    def test_check_for_spf_pass(self):
+        self.plug.check_result["check_spf_pass"] = 1
+        result = self.plug.check_for_spf_pass(self.mock_msg)
+        self.assertTrue(result)
 
-    def test_check_for_spf_softfail_true(self):
-        self.plugin.set_local(self.mock_msg, "spf_result", "softfail")
-        self.assertTrue(self.plugin.check_for_spf_softfail(self.mock_msg))
+    def test_check_for_spf_helo_pass(self):
+        self.plug.check_result["check_spf_helo_pass"] = 1
+        result = self.plug.check_for_spf_helo_pass(self.mock_msg)
+        self.assertTrue(result)
 
-    def test_check_for_spf_softfail_false(self):
-        self.plugin.set_local(self.mock_msg, "spf_result", "")
-        self.assertFalse(self.plugin.check_for_spf_softfail(self.mock_msg))
+    def test_check_for_spf_neutral(self):
+        self.plug.check_result["check_spf_neutral"] = 1
+        result = self.plug.check_for_spf_neutral(self.mock_msg)
+        self.assertTrue(result)
 
-    def test_check_for_spf_permerror_true(self):
-        self.plugin.set_local(self.mock_msg, "spf_result", "permerror")
-        self.assertTrue(self.plugin.check_for_spf_permerror(self.mock_msg))
+    def test_check_for_spf_helo_neutral(self):
+        self.plug.check_result["check_spf_helo_neutral"] = 1
+        result = self.plug.check_for_spf_helo_neutral(self.mock_msg)
+        self.assertTrue(result)
 
-    def test_check_for_spf_permerror_false(self):
-        self.plugin.set_local(self.mock_msg, "spf_result", "")
-        self.assertFalse(self.plugin.check_for_spf_permerror(self.mock_msg))
+    def test_check_for_spf_none(self):
+        self.plug.check_result["check_spf_none"] = 1
+        result = self.plug.check_for_spf_none(self.mock_msg)
+        self.assertTrue(result)
 
-    def test_check_for_spf_temperror_true(self):
-        self.plugin.set_local(self.mock_msg, "spf_result", "temperror")
-        self.assertTrue(self.plugin.check_for_spf_temperror(self.mock_msg))
+    def test_check_for_spf_helo_none(self):
+        self.plug.check_result["check_spf_helo_none"] = 1
+        result = self.plug.check_for_spf_helo_none(self.mock_msg)
+        self.assertTrue(result)
 
-    def test_check_for_spf_temperror_false(self):
-        self.plugin.set_local(self.mock_msg, "spf_result", "")
-        self.assertFalse(self.plugin.check_for_spf_temperror(self.mock_msg))
+    def test_check_for_spf_fail(self):
+        self.plug.check_result["check_spf_fail"] = 1
+        result = self.plug.check_for_spf_fail(self.mock_msg)
+        self.assertTrue(result)
 
-    def test_check_for_spf_helo_pass_true(self):
-        self.plugin.set_local(self.mock_msg, "spf_result", "helo_pass")
-        self.assertTrue(self.plugin.check_for_spf_helo_pass(self.mock_msg))
+    def test_check_for_spf_helo_fail(self):
+        self.plug.check_result["check_spf_helo_fail"] = 1
+        result = self.plug.check_for_spf_helo_fail(self.mock_msg)
+        self.assertTrue(result)
 
-    def test_check_for_spf_helo_pass_false(self):
-        self.plugin.set_local(self.mock_msg, "spf_result", "")
-        self.assertFalse(self.plugin.check_for_spf_helo_pass(self.mock_msg))
+    def test_check_for_spf_softfail(self):
+        self.plug.check_result["check_spf_softfail"] = 1
+        result = self.plug.check_for_spf_softfail(self.mock_msg)
+        self.assertTrue(result)
 
-    def test_check_for_spf_helo_neutral_true(self):
-        self.plugin.set_local(self.mock_msg, "spf_result", "helo_neutral")
-        self.assertTrue(self.plugin.check_for_spf_helo_neutral(self.mock_msg))
+    def test_check_for_spf_helo_softfail(self):
+        self.plug.check_result["check_spf_helo_softfail"] = 1
+        result = self.plug.check_for_spf_helo_softfail(self.mock_msg)
+        self.assertTrue(result)
 
-    def test_check_for_spf_helo_neutral_false(self):
-        self.plugin.set_local(self.mock_msg, "spf_result", "")
-        self.assertFalse(self.plugin.check_for_spf_helo_neutral(self.mock_msg))
+    def test_check_for_spf_permerror(self):
+        self.plug.check_result["check_spf_permerror"] = 1
+        result = self.plug.check_for_spf_permerror(self.mock_msg)
+        self.assertTrue(result)
 
-    def test_check_for_spf_helo_none_true(self):
-        self.plugin.set_local(self.mock_msg, "spf_result", "helo_none")
-        self.assertTrue(self.plugin.check_for_spf_helo_none(self.mock_msg))
+    def test_check_for_spf_helo_permerror(self):
+        self.plug.check_result["check_spf_helo_permerror"] = 1
+        result = self.plug.check_for_spf_helo_permerror(self.mock_msg)
+        self.assertTrue(result)
 
-    def test_check_for_spf_helo_none_false(self):
-        self.plugin.set_local(self.mock_msg, "spf_result", "")
-        self.assertFalse(self.plugin.check_for_spf_helo_none(self.mock_msg))
+    def test_check_for_spf_temperror(self):
+        self.plug.check_result["check_spf_temperror"] = 1
+        result = self.plug.check_for_spf_temperror(self.mock_msg)
+        self.assertTrue(result)
 
-    def test_check_for_spf_helo_fail_true(self):
-        self.plugin.set_local(self.mock_msg, "spf_result", "helo_fail")
-        self.assertTrue(self.plugin.check_for_spf_helo_fail(self.mock_msg))
+    def test_check_for_spf_helo_temperror(self):
+        self.plug.check_result["check_spf_helo_temperror"] = 1
+        result = self.plug.check_for_spf_helo_temperror(self.mock_msg)
+        self.assertTrue(result)
 
-    def test_check_for_spf_helo_fail_false(self):
-        self.plugin.set_local(self.mock_msg, "spf_result", "")
-        self.assertFalse(self.plugin.check_for_spf_helo_fail(self.mock_msg))
+    def test_check_for_spf_whitelist(self):
+        self.mock_check_whitelist.return_value = True
+        result = self.plug.check_for_spf_whitelist_from(self.mock_msg)
+        self.assertTrue(result)
 
-    def test_check_for_spf_helo_softfail_true(self):
-        self.plugin.set_local(self.mock_msg, "spf_result", "helo_softfail")
-        self.assertTrue(self.plugin.check_for_spf_helo_softfail(self.mock_msg))
+    def test_check_for_def_spf_whitelist(self):
+        self.mock_check_whitelist.return_value = True
+        result = self.plug.check_for_def_spf_whitelist_from(self.mock_msg)
+        self.assertTrue(result)
 
-    def test_check_for_spf_helo_softfail_false(self):
-        self.plugin.set_local(self.mock_msg, "spf_result", "")
-        self.assertFalse(self.plugin.check_for_spf_helo_softfail(self.mock_msg))
+    def test_check_spf_header_received_sender(self):
+        self.mock_msg["authentication-results"] = []
+        self.mock_msg["received"] = ["heade1"]
+        self.global_data["use_newest_received_spf_header"] = 0
+        self.plug.check_spf_header(self.mock_msg)
+        self.mock_check_spf_received_header.assert_called_with(
+            self.mock_msg.get_decoded_header())
+        self.mock_received_header.assert_called_with(self.mock_msg, '')
 
-    def test_check_for_spf_helo_permerror_true(self):
-        self.plugin.set_local(self.mock_msg, "spf_result", "helo_permerror")
-        self.assertTrue(self.plugin.check_for_spf_helo_permerror(self.mock_msg))
+    # def test_check_spf_header_authres_header(self):
+    #     self.mock_msg["authentication-results"] = ["header"]
+    #     self.mock_msg["received"] = []
+    #     self.global_data["use_newest_received_spf_header"] = 0
+    #     self.mock_msg.get_decoded_header.return_value = []
+    #     self.plug.check_spf_header(self.mock_msg)
+    #     self.mock_check_authres_header.assert_called_with(
+    #         self.mock_msg["authentication-results"])
 
-    def test_check_for_spf_helo_permerror_false(self):
-        self.plugin.set_local(self.mock_msg, "spf_result", "")
-        self.assertFalse(
-            self.plugin.check_for_spf_helo_permerror(self.mock_msg))
+    def test_check_spf_header_no_spfheaders(self):
+        self.mock_msg["authentication-results"] = []
+        self.mock_msg["received"] = ["header"]
+        self.mock_msg.get_decoded_header.return_value = []
+        self.plug.check_spf_header(self.mock_msg)
+        self.mock_received_header.assert_called_with(self.mock_msg, '')
 
-    def test_check_for_spf_helo_temperror_true(self):
-        self.plugin.set_local(self.mock_msg, "spf_result", "helo_temperror")
-        self.assertTrue(self.plugin.check_for_spf_helo_temperror(self.mock_msg))
-
-    def test_check_for_spf_helo_temperror_false(self):
-        self.plugin.set_local(self.mock_msg, "spf_result", "")
-        self.assertFalse(
-            self.plugin.check_for_spf_helo_temperror(self.mock_msg))
 
     def test_query_spf(self):
-        mockspf_check = patch("pad.plugins.spf.spf.check2", return_value=(
-        'pass', 'sender SPF authorized')).start()
-        self.plugin._query_spf(10, "127.0.0.1", "example.com",
-                               self.mock_msg.sender_address)
-        mockspf_check.assert_called_with(i="127.0.0.1",
-                                         s=self.mock_msg.sender_address,
-                                         h="example.com", timeout=10)
+        result = self.plug._query_spf(timeout=3, ip='2a00:1450:4017:804::200e',
+                                      mx='example.com',
+                                      sender_address='test@google.com')
+        self.assertEqual(result, "pass")
 
-    def test_check_spf_header_no_headers(self):
-        self.global_data["use_newest_received_spf_header"] = False
-        received_spf = ""
-        authres = ""
 
-        self.mock_msg.get_decoded_header.return_value = [received_spf]
-        self.mock_msg.msg["authentication-results"] = authres
+class TestCheckWhitelist(unittest.TestCase):
+    def setUp(self):
+        unittest.TestCase.setUp(self)
+        self.options = {}
+        self.global_data = {}
+        self.msg_data = {}
 
-        result = self.plugin._check_spf_header(self.mock_msg, self.global_data[
-            "use_newest_received_spf_header"])
-        self.assertEqual(result, '')
+        self.mock_ctxt = MagicMock(**{
+            "get_plugin_data.side_effect": lambda p, k: self.global_data[k],
+            "set_plugin_data.side_effect": lambda p, k,
+                                                  v: self.global_data.
+                                   setdefault(k, v)}
+                                   )
+        self.mock_msg = MagicMock(**{
+            "get_plugin_data.side_effect": lambda p, k: self.msg_data[k],
+            "set_plugin_data.side_effect": lambda p, k,
+                                                  v: self.msg_data.
+                                  setdefault(k, v),
+        })
 
-    def test_check_spf_header_only_receivedspf(self):
-        self.global_data["use_newest_received_spf_header"] = False
-        received_spf = """pass (mybox.example.org: domain of
-        myname@example.com designates 192.0.2.1 as permitted sender)
-        receiver=mybox.example.org; client-ip=192.0.2.1;
-        envelope-from=<myname@example.com>; helo=foo.example.com;"""
-        authres = ""
+        self.mock_parse_list = patch("pad.plugins.spf.SpfPlugin."
+                                          "parse_list").start()
+        self.mock_check_for_spf_pass = patch("pad.plugins.spf.SpfPlugin."
+                                     "check_for_spf_pass").start()
 
-        self.mock_msg.get_decoded_header.return_value = [received_spf]
-        self.mock_msg.msg["authentication-results"] = authres
+        self.plug = pad.plugins.spf.SpfPlugin(self.mock_ctxt)
 
-        result = self.plugin._check_spf_header(self.mock_msg, self.global_data[
-            "use_newest_received_spf_header"])
-        self.assertEqual(result, 'pass')
+    def tearDown(self):
+        unittest.TestCase.tearDown(self)
+        patch.stopall()
 
-    def test_check_spf_header_only_authres(self):
-        self.global_data["use_newest_received_spf_header"] = False
-        received_spf = ""
-        authres = """example.com;
-           spf=pass (example.com: domain of test@example.com designates
-           192.0.2.1 as permitted sender) smtp.mailfrom=test@example.com;
-           dkim=pass header.i=@example.com;
-           dmarc=pass (p=NONE dis=NONE) header.from=example.com"""
+    def test_check_spf_whitelist_no_spf_pass(self):
+        self.global_data["whitelist_from_spf"] = ["*spamexperts.com"]
+        self.mock_parse_list.return_value = ['.*@.*spamexperts\\.com']
+        self.mock_msg.sender_address = "user@spamexperts.com"
+        self.mock_check_for_spf_pass.return_value = False
+        result = self.plug.check_spf_whitelist(self.mock_msg,
+                                             "whitelist_from_spf")
+        self.assertFalse(result)
 
-        self.mock_msg.get_decoded_header.return_value = [received_spf]
-        self.mock_msg.msg["authentication-results"] = authres
+    def test_check_spf_whitelist_False(self):
+        self.global_data["whitelist_from_spf"] = ["*spamexperts.com"]
+        self.mock_parse_list.return_value = ['.*@.*spamexperts\\.com']
+        self.mock_msg.sender_address = "user@example.com"
+        self.mock_check_for_spf_pass.return_value = True
+        result = self.plug.check_spf_whitelist(self.mock_msg,
+                                               "whitelist_from_spf")
+        self.assertFalse(result)
 
-        result = self.plugin._check_spf_header(self.mock_msg, self.global_data[
-            "use_newest_received_spf_header"])
-        self.assertEqual(result, 'pass')
+    def test_check_spf_whitelist(self):
+        self.global_data["whitelist_from_spf"] = ["*spamexperts.com"]
+        self.mock_parse_list.return_value = ['.*@.*spamexperts\\.com']
+        self.mock_msg.sender_address = "user@spamexperts.com"
+        self.mock_check_for_spf_pass.return_value = True
+        result = self.plug.check_spf_whitelist(self.mock_msg,
+                                               "whitelist_from_spf")
+        self.assertTrue(result)
 
-    def test_check_spf_header_authres_and_received(self):
-        self.global_data["use_newest_received_spf_header"] = False
-        received_spf = """pass (mybox.example.org: domain of
-        myname@example.com designates 192.0.2.1 as permitted sender)
-        receiver=mybox.example.org; client-ip=192.0.2.1;
-        envelope-from=<myname@example.com>; helo=foo.example.com;"""
-        authres = """example.com;
-           spf=pass (example.com: domain of test@example.com designates
-           192.0.2.1 as permitted sender) smtp.mailfrom=test@example.com;
-           dkim=pass header.i=@example.com;
-           dmarc=pass (p=NONE dis=NONE) header.from=example.com"""
 
-        self.mock_msg.get_decoded_header.return_value = [received_spf]
-        self.mock_msg.msg["authentication-results"] = authres
+class TestReceivedHeaders(unittest.TestCase):
+    def setUp(self):
+        unittest.TestCase.setUp(self)
+        self.options = {}
+        self.global_data = {}
+        self.msg_data = {}
 
-        result = self.plugin._check_spf_header(self.mock_msg, self.global_data[
-            "use_newest_received_spf_header"])
-        self.assertEqual(result, 'pass')
+        self.mock_ctxt = MagicMock(**{
+            "get_plugin_data.side_effect": lambda p, k: self.global_data[k],
+            "set_plugin_data.side_effect": lambda p, k,
+                                                  v: self.global_data.
+                                   setdefault(k, v)}
+                                   )
+        self.mock_msg = MagicMock(**{
+            "get_plugin_data.side_effect": lambda p, k: self.msg_data[k],
+            "set_plugin_data.side_effect": lambda p, k,
+                                                  v: self.msg_data.
+                                  setdefault(k, v),
+        })
 
-    def test_check_spf_header_received_helo_pass(self):
-        self.global_data["use_newest_received_spf_header"] = False
-        received_spf = """pass (mybox.example.org: domain of
-        myname@example.com designates 192.0.2.1 as permitted sender)
-        identity=helo; receiver=mybox.example.org; client-ip=192.0.2.1;
-        envelope-from=<myname@example.com>; helo=foo.example.com;"""
+        self.mock_query_spf = patch("pad.plugins.spf.SpfPlugin."
+                                     "_query_spf").start()
 
-        authres = ""
+        self.plug = pad.plugins.spf.SpfPlugin(self.mock_ctxt)
 
-        self.mock_msg.get_decoded_header.return_value = [received_spf]
-        self.mock_msg.msg["authentication-results"] = authres
+    def tearDown(self):
+        unittest.TestCase.tearDown(self)
+        patch.stopall()
 
-        result = self.plugin._check_spf_header(self.mock_msg, self.global_data[
-            "use_newest_received_spf_header"])
-        self.assertEqual(result, 'helo_pass')
+    # def test_received_headers(self):
+    #     self.spf_timeout = 4
+    #     self.mock_msg.external_relays[0]["rdns"] = 'example.com'
+    #     self.mock_msg.external_relays[0]["ip"] = '2a00:1450:4017:804::200e'
+    #     self.mock_query_spf.return_value = "error"
+    #     self.plug.received_headers(self.mock_msg, "user@example.com")
 
-    def test_check_spf_header_authres_helo_pass(self):
-        self.global_data["use_newest_received_spf_header"] = False
-        received_spf = ""
-        authres = """example.com;
-           spf=pass (example.com: domain of test@example.com designates
-           192.0.2.1 as permitted sender) smtp.helo=test@example.com;
-           dkim=pass header.i=@example.com;
-           dmarc=pass (p=NONE dis=NONE) header.from=example.com"""
+    def test_received_headers_return(self):
+        self.spf_timeout = 4
+        self.mock_msg.external_relays = []
+        self.plug.received_headers(self.mock_msg, "user@example.com")
 
-        self.mock_msg.get_decoded_header.return_value = [received_spf]
-        self.mock_msg.msg["authentication-results"] = authres
 
-        result = self.plugin._check_spf_header(self.mock_msg, self.global_data[
-            "use_newest_received_spf_header"])
-        self.assertEqual(result, 'helo_pass')
+class TestCheckHeaders(unittest.TestCase):
+    def setUp(self):
+        unittest.TestCase.setUp(self)
+        self.options = {}
+        self.global_data = {}
+        self.msg_data = {}
 
-    def test_check_spf_header_received_mailfrom_pass(self):
-        self.global_data["use_newest_received_spf_header"] = False
-        received_spf = """pass (mybox.example.org: domain of
-        myname@example.com designates 192.0.2.1 as permitted sender)
-        identity=mailfrom; receiver=mybox.example.org; client-ip=192.0.2.1;
-        envelope-from=<myname@example.com>; helo=foo.example.com;"""
-        authres = ""
+        self.mock_ctxt = MagicMock(**{
+            "get_plugin_data.side_effect": lambda p, k: self.global_data[k],
+            "set_plugin_data.side_effect": lambda p, k,
+                                                  v: self.global_data.
+                                   setdefault(k, v)}
+                                   )
+        self.mock_msg = MagicMock(**{
+            "get_plugin_data.side_effect": lambda p, k: self.msg_data[k],
+            "set_plugin_data.side_effect": lambda p, k,
+                                                  v: self.msg_data.
+                                  setdefault(k, v),
+        })
 
-        self.mock_msg.get_decoded_header.return_value = [received_spf]
-        self.mock_msg.msg["authentication-results"] = authres
+        self.mock_query_spf = patch("pad.plugins.spf.SpfPlugin."
+                                    "_query_spf").start()
 
-        result = self.plugin._check_spf_header(self.mock_msg, self.global_data[
-            "use_newest_received_spf_header"])
-        self.assertEqual(result, 'pass')
+        self.plug = pad.plugins.spf.SpfPlugin(self.mock_ctxt)
 
-    def test_check_spf_header_many_received(self):
-        self.global_data["use_newest_received_spf_header"] = False
-        received_spf1 = """pass (mybox.example.org: domain of
-        myname@example.com designates 192.0.2.1 as permitted sender)
-        identity=mailfrom; receiver=mybox.example.org; client-ip=192.0.2.1;
-        envelope-from=<myname@example.com>; helo=foo.example.com;"""
+    def tearDown(self):
+        unittest.TestCase.tearDown(self)
+        patch.stopall()
 
-        received_spf2 = """fail (mybox.example.org: domain of
-        myname@example.com designates 192.0.2.1 as permitted sender)
-        identity=mailfrom; receiver=mybox.example.org; client-ip=192.0.2.1;
-        envelope-from=<myname@example.com>; helo=foo.example.com;"""
+    def test_check_spf_received_header_no_valid_header(self):
+        self.plug.check_spf_received_header(received_spf_headers=["header"])
 
-        authres = """example.com;
-           spf=pass (example.com: domain of test@example.com designates
-           192.0.2.1 as permitted sender) smtp.helo=test@example.com;
-           dkim=pass header.i=@example.com;
-           dmarc=pass (p=NONE dis=NONE) header.from=example.com"""
+    def test_check_spf_received_header(self):
+        self.global_data["spf_check"] = True
+        received_spf_headers = ['softfail (example.com: domain of test@example.com)']
+        self.plug.check_spf_received_header(received_spf_headers)
 
-        self.mock_msg.get_decoded_header.return_value = [received_spf1,
-                                                         received_spf2]
-        self.mock_msg.msg["authentication-results"] = authres
+    def test_check_spf_received_header_identity(self):
+        self.spf_check = True
+        received_spf_headers = [
+            'softfail (example.com: domain of test@example.com) identity=helo']
+        self.plug.check_spf_received_header(received_spf_headers)
 
-        result = self.plugin._check_spf_header(self.mock_msg, self.global_data[
-            "use_newest_received_spf_header"])
-        self.assertEqual(result, 'fail')
-
-    def test_check_spf_header_many_received_newest(self):
-        self.global_data["use_newest_received_spf_header"] = True
-        received_spf1 = """pass (mybox.example.org: domain of
-        myname@example.com designates 192.0.2.1 as permitted sender)
-        identity=mailfrom; receiver=mybox.example.org; client-ip=192.0.2.1;
-        envelope-from=<myname@example.com>; helo=foo.example.com;"""
-
-        received_spf2 = """fail (mybox.example.org: domain of
-        myname@example.com designates 192.0.2.1 as permitted sender)
-        identity=mailfrom; receiver=mybox.example.org; client-ip=192.0.2.1;
-        envelope-from=<myname@example.com>; helo=foo.example.com;"""
-
-        authres = """example.com;
-           spf=pass (example.com: domain of test@example.com designates
-           192.0.2.1 as permitted sender) smtp.helo=test@example.com;
-           dkim=pass header.i=@example.com;
-           dmarc=pass (p=NONE dis=NONE) header.from=example.com"""
-
-        self.mock_msg.get_decoded_header.return_value = [received_spf1,
-                                                         received_spf2]
-        self.mock_msg.msg["authentication-results"] = authres
-
-        result = self.plugin._check_spf_header(self.mock_msg, self.global_data[
-            "use_newest_received_spf_header"])
-        self.assertEqual(result, 'pass')
+    def test_check_spf_received_header_identity_none(self):
+        self.spf_check = True
+        received_spf_headers = [
+            'softfail (example.com: domain of test@example.com) identity=None']
+        self.plug.check_spf_received_header(received_spf_headers)
