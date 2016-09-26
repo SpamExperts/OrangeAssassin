@@ -1,7 +1,7 @@
 """ SPF Plugin."""
 
 from __future__ import absolute_import
-
+from builtins import str
 import re
 import spf
 import pad.plugins.base
@@ -161,7 +161,7 @@ class SpfPlugin(pad.plugins.base.BasePlugin):
             received_spf_headers.reverse()
         if received_spf_headers:
             self.check_spf_received_header(received_spf_headers)
-        elif authres_header: #
+        elif authres_header:
             self.check_authres_header(authres_header)
 
         if msg.msg["received"]:
@@ -186,7 +186,7 @@ class SpfPlugin(pad.plugins.base.BasePlugin):
             elif match.group(2) != 'None':
                 identity = match.group(2)
             else:
-                continue #
+                continue
             if identity:
                 if identity in ('mfrom', 'mailfrom', 'None'):
                     if self.spf_check:
@@ -259,7 +259,7 @@ class SpfPlugin(pad.plugins.base.BasePlugin):
         self.ctxt.log.debug("SPF::Plugin %s",
                             "Querying the dns server(%s, %s, %s)..."
                             % (ip, mx, sender_address))
-        result, comment = spf.check2(i=ip, s=sender_address,
+        result, comment = spf.check2(i=str(ip), s=sender_address,
                                      h=mx, timeout=timeout, querytime=timeout)
         return result
 
