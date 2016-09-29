@@ -295,6 +295,9 @@ RDNS_RE = re.compile(r'^(\S+) ')
 RDNS_IP_RE = re.compile(r"""
     ^\[({IP_ADDRESS})\]
 """.format(IP_ADDRESS=IP_ADDRESS.pattern), re.X)
+# RDNS_SMTP = re.compile(r"""
+#     ^(\S+)\s\(\s?{IP_ADDRESS}\) by (\S)* (SMTP|QMQP)
+# """.format(IP_ADDRESS=IP_ADDRESS.pattern), re.X)
 BY_RE = re.compile(r'.*? by (\S+) .*')
 HELO_RE = re.compile(r'.*?\((?:HELO|EHLO) (\S*)\)', re.I)
 HELO_RE2 = re.compile(r"""
@@ -458,11 +461,14 @@ class ReceivedParser(object):
         rdns = ""
         try:
             if HELO_RE7.match(header):
+                print("7")
                 rdns = HELO_RE7.match(header).groups()[1]
-            elif HELO_RE4.match(header):
-                rdns = HELO_RE4.match(header).groups()[0]
-            elif HELO_RE5.match(header):
-                rdns = HELO_RE5.match(header).groups()[0]
+            # elif HELO_RE8.match(header):
+            #     print("8")
+            #     rdns = HELO_RE8.match(header).groups()[0]
+            elif HELO_RE5.match(header) or HELO_RE4.match(header) and "Exim" not in header:
+                print("4 sau 5")
+                rdns = ""
             else:
                 rdns = RDNS_RE.match(header).groups()[0]
         except (AttributeError, IndexError):

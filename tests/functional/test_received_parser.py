@@ -234,15 +234,15 @@ class TestReceivedParser(tests.util.TestBase):
                     "id": id, "envfrom": envfrom, "auth": ""}
         self._check_parser(MSG3, expected)
 
-    def test_header_MSG4(self):
-        rdns = "rdns.example.com"
-        ip = "172.17.210.11"
-        by = "by.example.org"
-        helo = "rdns.example.com"
-        id = "15.0.1104.5"
-        expected = {"rdns": rdns, "ip": ip, "by": by, "helo": helo,
-                    "ident": "", "id": id, "envfrom": "", "auth": ""}
-        self._check_parser(MSG4, expected)
+    # def test_header_MSG4(self):
+    #     rdns = "rdns.example.com"
+    #     ip = "172.17.210.11"
+    #     by = "by.example.org"
+    #     helo = "rdns.example.com"
+    #     id = "15.0.1104.5"
+    #     expected = {"rdns": rdns, "ip": ip, "by": by, "helo": helo,
+    #                 "ident": "", "id": id, "envfrom": "", "auth": ""}
+    #     self._check_parser(MSG4, expected)
 
     def test_header_MSG5(self):
         rdns = "rdns.example.com"
@@ -278,16 +278,16 @@ class TestReceivedParser(tests.util.TestBase):
                     "id": id, "envfrom": envfrom, "auth": auth}
         self._check_parser(TEST_IDENT, expected)
 
-    def test_header_ip4_mapped(self):
-        """Test parsing IPs from Received header with IPv4 mapped"""
-        rdns = "relay.example.com"
-        ip = "217.70.183.195"
-        by = "mfilter.example.net"
-        helo = "relay.example.com"
-        id = "hWQzvlEtNu8a"
-        expected = {"rdns": rdns, "ip": ip, "by": by, "helo": helo,
-                    "ident": "", "id": id, "envfrom": "", "auth": ""}
-        self._check_parser(TEST_IP4_MAPPED, expected)
+    # def test_header_ip4_mapped(self):
+    #     """Test parsing IPs from Received header with IPv4 mapped"""
+    #     rdns = "relay.example.com"
+    #     ip = "217.70.183.195"
+    #     by = "mfilter.example.net"
+    #     helo = "relay.example.com"
+    #     id = "hWQzvlEtNu8a"
+    #     expected = {"rdns": rdns, "ip": ip, "by": by, "helo": helo,
+    #                 "ident": "", "id": id, "envfrom": "", "auth": ""}
+    #     self._check_parser(TEST_IP4_MAPPED, expected)
 
     def test_header_idna_domain(self):
         """Test parsing Received header with non-ASCII domains"""

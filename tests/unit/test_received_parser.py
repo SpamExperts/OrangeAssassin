@@ -472,6 +472,20 @@ class TestReceivedParser(unittest.TestCase):
         parsed_data = pad.received_parser.ReceivedParser(header).received
         self.assertEqual(parsed_data, expected)
 
+    def test_received_564_v2(self):
+        header = ["from rdns.example.com ([217.70.183.195]) by "
+            "by.example.org with esmtps (TLSv1.2:DHE-RSA-AES256-SHA:256) (Exim 4.85) id 1aVFVG-0000me-LC for user@example.org; "
+            "Mon, 15 Feb 2016 10:31:35 +0100"]
+        expected = [{
+            "rdns": "rdns.example.com", "ip": "217.70.183.195",
+            "by": "by.example.org",
+            "helo": "rdns.example.com",
+            "ident": "", "id": "1aVFVG-0000me-LC", "envfrom": "",
+            "auth": ""}]
+        parsed_data = pad.received_parser.ReceivedParser(header).received
+        self.assertEqual(parsed_data, expected)
+
+
     def test_received_564(self):
         header = ["from boggle.ihug.co.nz [203.109.252.209] by "
                   "grunt6.ihug.co.nz with esmtp (Exim 3.35 #1 (Debian)) id 18SWRe-0006X6-00; Sun, 29 Dec "
