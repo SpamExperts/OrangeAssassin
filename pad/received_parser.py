@@ -459,12 +459,16 @@ class ReceivedParser(object):
         try:
             if HELO_RE7.match(header):
                 rdns = HELO_RE7.match(header).groups()[1]
-            elif HELO_RE5.match(header) or HELO_RE4.match(header):
-                rdns = ""
+            elif HELO_RE4.match(header):
+                rdns = HELO_RE4.match(header).groups()[0]
+            elif HELO_RE5.match(header):
+                rdns = HELO_RE5.match(header).groups()[0]
             else:
                 rdns = RDNS_RE.match(header).groups()[0]
         except (AttributeError, IndexError):
             pass
+        if "@" in rdns:
+            rdns = ""
         if '(Postfix)' in header:
             if UNKNOWN_RE_RDNS.match(header):
                 rdns = UNKNOWN_RE_RDNS.match(header).groups()[1]
@@ -524,31 +528,23 @@ class ReceivedParser(object):
         helo = ""
         try:
             if HELO_RE2.match(header):
-                print("2")
                 helo = HELO_RE2.match(header).groups()[0]
                 if helo == 'unknown':
                     helo = ""
             if HELO_RE7.match(header):
-                print("7")
                 helo = HELO_RE7.match(header).groups()[0]
             if HELO_RE.match(header):
-                print("re")
                 helo = HELO_RE.match(header).groups()[0]
             elif HELO_RE3.match(header):
-                print("3")
                 helo = HELO_RE3.match(header).groups()[0]
                 helo = helo.strip("[ ]();\n")
             elif HELO_RE4.match(header):
-                print("4")
                 helo = HELO_RE4.match(header).groups()[0]
             elif HELO_RE5.match(header):
-                print("5")
                 helo = HELO_RE5.match(header).groups()[0]
             elif HELO_RE6.match(header):
-                print("6")
                 helo = HELO_RE6.match(header).groups()[0]
             elif HELO_RE8.match(header):
-                print("8")
                 helo = HELO_RE8.match(header).groups()[0]
         except (AttributeError, IndexError):
             pass
@@ -563,7 +559,11 @@ class ReceivedParser(object):
         """
         ident = ""
         try:
-            ident = IDENT_RE.match(header).groups()[0]
+            if IDENT_RE.match(header):
+                ident = IDENT_RE.match(header).groups()[0]
+            elif HELO_RE7.match(header):
+                if "@" in HELO_RE7.match(header).groups()[1]:
+                    ident = HELO_RE7.match(header).groups()[1].strip("@")
         except (AttributeError, IndexError):
             pass
         return ident

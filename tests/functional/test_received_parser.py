@@ -68,15 +68,15 @@ MSG4 = """Received: from rdns.example.com (172.17.210.11) by by.example.org
  (172.17.210.2) with Microsoft SMTP Server (TLS) id 15.0.1104.5 via Mailbox
  Transport; Tue, 23 Feb 2016 19:12:22 +0100"""
 
-MSG5 = """Received: from rdns.example.com
- (helo.example.com [236.44.62.230])
+MSG5 = """Received: from helo.example.com
+ (rdns.example.com [236.44.62.230])
  (authenticated bits=0)
  by by.example.org (8.12.10/8.12.9) with ESMTP id
  o6PCS1im002238
  for <user@example.com>; Mon, 01 Feb 2016 03:45:37 -0600 (EST)"""
 
-MSG6 = """Received: from mx6-05.smtp.antispamcloud.com
- (mx6-05.smtp.antispamcloud.com. [95.211.2.196]) by mx.google.com with ESMTPSA id
+MSG6 = """Received: from mx6-05.smtp.antispamcloud.com.
+ (mx6-05.smtp.antispamcloud.com [95.211.2.196]) by mx.google.com with ESMTPSA id
  ld8si17897891wjc.77.2016.03.07.00.56.45 for <backendteam@gapps.spamexperts.com>
  (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128)"""
 
