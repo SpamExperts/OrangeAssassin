@@ -302,7 +302,7 @@ HELO_RE2 = re.compile(r"""
 """.format(IP_ADDRESS=IP_ADDRESS.pattern), re.X)
 HELO_RE3 = re.compile(r'.*?helo=(\S+)\)', re.I)
 HELO_RE4 = re.compile(r"""
-    ^(\S+)\s\(\[{IP_ADDRESS}\]\)
+    ^\(?(\S+)\s\(?\s?\[{IP_ADDRESS}\]\)
 """.format(IP_ADDRESS=IP_ADDRESS.pattern), re.X)
 HELO_RE5 = re.compile(r"""
     ^(\S+)\s\(\s?{IP_ADDRESS}\)
@@ -314,7 +314,7 @@ HELO_RE7 = re.compile(r"""
     ^(\S+)\s\((\S+)\s?\[{IP_ADDRESS}\].*\)
 """.format(IP_ADDRESS=IP_ADDRESS.pattern), re.X)
 HELO_RE8 = re.compile(r"""
-    ^(\S+)\s\[{IP_ADDRESS}\]
+    ^\(?(\S+)\s\[\s?{IP_ADDRESS}\]
 """.format(IP_ADDRESS=IP_ADDRESS.pattern), re.X)
 IDENT_RE = re.compile(r'.*ident=(\S+)\)')
 ID_RE = re.compile(r'.*id (\S+)')
@@ -524,23 +524,31 @@ class ReceivedParser(object):
         helo = ""
         try:
             if HELO_RE2.match(header):
+                print("2")
                 helo = HELO_RE2.match(header).groups()[0]
                 if helo == 'unknown':
                     helo = ""
             if HELO_RE7.match(header):
+                print("7")
                 helo = HELO_RE7.match(header).groups()[0]
             if HELO_RE.match(header):
+                print("re")
                 helo = HELO_RE.match(header).groups()[0]
             elif HELO_RE3.match(header):
+                print("3")
                 helo = HELO_RE3.match(header).groups()[0]
                 helo = helo.strip("[ ]();\n")
             elif HELO_RE4.match(header):
+                print("4")
                 helo = HELO_RE4.match(header).groups()[0]
             elif HELO_RE5.match(header):
+                print("5")
                 helo = HELO_RE5.match(header).groups()[0]
             elif HELO_RE6.match(header):
+                print("6")
                 helo = HELO_RE6.match(header).groups()[0]
             elif HELO_RE8.match(header):
+                print("8")
                 helo = HELO_RE8.match(header).groups()[0]
         except (AttributeError, IndexError):
             pass

@@ -634,6 +634,72 @@ class TestReceivedParser(unittest.TestCase):
         parsed_data = pad.received_parser.ReceivedParser(header).received
         self.assertEqual(parsed_data, expected)
 
+    def test_received_738(self):
+        header = ["from postfix3-2.free.fr (HELO machine.domain.com) (foobar@213.228.0.169) by "
+                  "totor.bouissou.net with SMTP; 14 Nov 2003 08:05:50 -0000"]
+        expected = [{
+            "rdns": "postfix3-2.free.fr", "ip": "213.228.0.169",
+            "by": "totor.bouissou.net",
+            "helo": "machine.domain.com",
+            "ident": "", "id": "", "envfrom": "", # in SA "ident": "foobar"
+            "auth": ""}]
+        parsed_data = pad.received_parser.ReceivedParser(header).received
+        self.assertEqual(parsed_data, expected)
+
+    def test_received_757(self):
+        header = ["from unknown (HELO terpsichore.farfalle.com) (jdavid@[216.254.40.70]) (envelope-sender <jdavid@farfalle.com>) by "
+            "mail13.speakeasy.net (qmail-ldap-1.03) with SMTP for <jm@jmason.org>; 12 Feb 2003 18:23:19 -0000"]
+        expected = [{
+            "rdns": "", "ip": "216.254.40.70",
+            "by": "mail13.speakeasy.net",
+            "helo": "terpsichore.farfalle.com",
+            "ident": "", "id": "", "envfrom": "jdavid@farfalle.com", # ub SA "ident": "jdavid"
+            "auth": ""}]
+        parsed_data = pad.received_parser.ReceivedParser(header).received
+        self.assertEqual(parsed_data, expected)
+
+    def test_received_761(self):
+        header = ["from 211.245.85.228  (EHLO ) (211.245.85.228) by mta232.mail.scd.yahoo.com with SMTP; Sun, 25 Jan 2004 00:24:37 -0800"]
+        expected = [{
+            "rdns": "211.245.85.228", "ip": "211.245.85.228",
+            "by": "mta232.mail.scd.yahoo.com",
+            "helo": "", "ident": "", "id": "", "envfrom": "",
+            "auth": ""}]
+        parsed_data = pad.received_parser.ReceivedParser(header).received
+        self.assertEqual(parsed_data, expected)
+
+    def test_received_795(self):
+        header = ["from [193.220.176.134] by web40310.mail.yahoo.com via HTTP"]
+        expected = [{
+            "rdns": "", "ip": "193.220.176.134",
+            "by": "web40310.mail.yahoo.com",
+            "helo": "", "ident": "", "id": "", "envfrom": "",
+            "auth": ""}]
+        parsed_data = pad.received_parser.ReceivedParser(header).received
+        self.assertEqual(parsed_data, expected)
+
+    def test_received_801(self):
+        header = ["from 192.168.5.158 ( [192.168.5.158]) as user jason@localhost by mail.reusch.net with HTTP; Mon, 8 Jul 2002 23:24:56 -0400"]
+        expected = [{
+            "rdns": "", "ip": "192.168.5.158",
+            "by": "mail.reusch.net",
+            "helo": "192.168.5.158", "ident": "", "id": "", "envfrom": "",
+            "auth": "HTTP"}]
+        parsed_data = pad.received_parser.ReceivedParser(header).received
+        self.assertEqual(parsed_data, expected)
+
+    def test_received_807(self):
+        header = ["from (64.52.135.194 [64.52.135.194]) by "
+                    "mail.unearthed.com with ESMTP id BQB0hUH2 Thu, 20 Feb 2003 16:13:20 -0700 (PST)"]
+        expected = [{
+            "rdns": "", "ip": "64.52.135.194",
+            "by": "mail.unearthed.com",
+            "helo": "64.52.135.194", "ident": "", "id": "BQB0hUH2",
+            "envfrom": "", "auth": ""}]
+        parsed_data = pad.received_parser.ReceivedParser(header).received
+        self.assertEqual(parsed_data, expected)
+
+
 def suite():
     """Gather all the tests from this package in a test suite."""
     test_suite = unittest.TestSuite()
