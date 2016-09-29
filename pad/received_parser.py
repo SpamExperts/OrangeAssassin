@@ -298,14 +298,23 @@ RDNS_IP_RE = re.compile(r"""
 BY_RE = re.compile(r'.*? by (\S+) .*')
 HELO_RE = re.compile(r'.*?\((?:HELO|EHLO) (\S*)\)', re.I)
 HELO_RE2 = re.compile(r"""
-    .*?\((\S+)\s\[{IP_ADDRESS}\]
+    .*?\((\S+)\s\[{IP_ADDRESS}\]\)
 """.format(IP_ADDRESS=IP_ADDRESS.pattern), re.X)
 HELO_RE3 = re.compile(r'.*?helo=(\S+)\)', re.I)
 HELO_RE4 = re.compile(r"""
     ^(\S+)\s\(\[{IP_ADDRESS}\]\)
 """.format(IP_ADDRESS=IP_ADDRESS.pattern), re.X)
 HELO_RE5 = re.compile(r"""
-    ^(\S+)\s\({IP_ADDRESS}\)
+    ^(\S+)\s\(\s?{IP_ADDRESS}\)
+""".format(IP_ADDRESS=IP_ADDRESS.pattern), re.X)
+HELO_RE6 = re.compile(r"""
+    ^(\S+)\s\(\[{IP_ADDRESS}\]\s\[{IP_ADDRESS}\]\)
+""".format(IP_ADDRESS=IP_ADDRESS.pattern), re.X)
+HELO_RE7 = re.compile(r"""
+    ^(\S+)\s\((\S+)\s?\[{IP_ADDRESS}\].*\)
+""".format(IP_ADDRESS=IP_ADDRESS.pattern), re.X)
+HELO_RE8 = re.compile(r"""
+    ^(\S+)\s\[{IP_ADDRESS}\]
 """.format(IP_ADDRESS=IP_ADDRESS.pattern), re.X)
 IDENT_RE = re.compile(r'.*ident=(\S+)\)')
 ID_RE = re.compile(r'.*id (\S+)')
@@ -448,7 +457,12 @@ class ReceivedParser(object):
         """
         rdns = ""
         try:
-            rdns = RDNS_RE.match(header).groups()[0]
+            if HELO_RE7.match(header):
+                rdns = HELO_RE7.match(header).groups()[1]
+            elif HELO_RE5.match(header) or HELO_RE4.match(header):
+                rdns = ""
+            else:
+                rdns = RDNS_RE.match(header).groups()[0]
         except (AttributeError, IndexError):
             pass
         if '(Postfix)' in header:
@@ -456,7 +470,7 @@ class ReceivedParser(object):
                 rdns = UNKNOWN_RE_RDNS.match(header).groups()[1]
         if RDNS_IP_RE.match(rdns):
             rdns = ""
-        if rdns == 'unknown' or rdns == 'UnknownHost':
+        if 'unknown' in rdns or rdns == 'UnknownHost':
             rdns = ""
         return rdns
 
@@ -468,10 +482,10 @@ class ReceivedParser(object):
         :return: ip address if is found if not it returns an empty string
         """
         ip = ""
-        ips = IP_ADDRESS.findall(header)
+        ips = IP_ADDRESS.findall(header.split(" by ")[0])
         no_ips = len(ips)
-        count = 0
         private_ips = list()
+        count = 0
         for item in ips:
             clean_ip = item.strip("[ ]();\n")
             clean_ip = clean_ip.lower().replace('ipv6:','')
@@ -513,6 +527,8 @@ class ReceivedParser(object):
                 helo = HELO_RE2.match(header).groups()[0]
                 if helo == 'unknown':
                     helo = ""
+            if HELO_RE7.match(header):
+                helo = HELO_RE7.match(header).groups()[0]
             if HELO_RE.match(header):
                 helo = HELO_RE.match(header).groups()[0]
             elif HELO_RE3.match(header):
@@ -522,6 +538,10 @@ class ReceivedParser(object):
                 helo = HELO_RE4.match(header).groups()[0]
             elif HELO_RE5.match(header):
                 helo = HELO_RE5.match(header).groups()[0]
+            elif HELO_RE6.match(header):
+                helo = HELO_RE6.match(header).groups()[0]
+            elif HELO_RE8.match(header):
+                helo = HELO_RE8.match(header).groups()[0]
         except (AttributeError, IndexError):
             pass
         return helo
@@ -550,6 +570,7 @@ class ReceivedParser(object):
         id = ""
         try:
             id = ID_RE.match(header).groups()[0]
+            id = id.strip("<>")
         except (AttributeError, IndexError):
             pass
         return id
