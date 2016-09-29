@@ -200,17 +200,6 @@ class TestReceivedParser(unittest.TestCase):
         result = pad.received_parser.ReceivedParser.get_rdns(header)
         self.assertEqual(result, expected)
 
-    def test_get_rdns_from_ip(self):
-        header = (
-            "[10.254.253.199] (helo=inside-relay.example.com) by "
-            "fierwall.example.com with esmtpsa "
-            "(TLSv1.2:DHE-RSA-AES256-SHA:256) (Exim 4.85) "
-            "(envelope-from <username@example.org>) "
-            "id 1aaP1E-0002Y1-0k for john@example.com")
-        expected = ""
-        result = pad.received_parser.ReceivedParser.get_rdns(header)
-        self.assertEqual(result, expected)
-
     def test_get_ip_inside_from(self):
         header = (
             "[10.254.253.199] (helo=inside-relay.example.com) by "
@@ -333,7 +322,7 @@ class TestReceivedParser(unittest.TestCase):
             "by server.example.org with esmtps (TLSv1:DHE-RSA-AES256-SHA:256) "
             "(Exim 4.85) (envelope-from <user@example.org>) "
             "id 1aNgjg-00006s-19 for john@example.com")
-        expected = ""
+        expected = "server1.example.com"
         result = pad.received_parser.ReceivedParser.get_helo(header)
         self.assertEqual(result, expected)
 
@@ -472,6 +461,178 @@ class TestReceivedParser(unittest.TestCase):
             header).received
         self.assertEqual(parsed_data, expected)
 
+    def test_received_547(self):
+        header = ["from sc8-sf-list1-b.sourceforge.net ([10.3.1.13] "
+                  "helo=sc8-sf-list1.sourceforge.net) by sc8-sf-list2.sourceforge.net with esmtp (Exim 3.31-VA-mm2 #1 (Debian)) id 18t301-0007Bh-00; Wed, 12 Mar 2003 01:58:13 -0800"]
+        expected = [{
+            "rdns": "sc8-sf-list1-b.sourceforge.net", "ip": "10.3.1.13",
+            "by": "sc8-sf-list2.sourceforge.net", "helo": "sc8-sf-list1.sourceforge.net",
+            "ident": "", "id": "18t301-0007Bh-00", "envfrom": "",
+            "auth": ""}]
+        parsed_data = pad.received_parser.ReceivedParser(header).received
+        self.assertEqual(parsed_data, expected)
+
+    def test_received_564(self):
+        header = ["from boggle.ihug.co.nz [203.109.252.209] by "
+                  "grunt6.ihug.co.nz with esmtp (Exim 3.35 #1 (Debian)) id 18SWRe-0006X6-00; Sun, 29 Dec "
+                  "2002 18:57:06 +1300"]
+        expected = [{
+            "rdns": "boggle.ihug.co.nz", "ip": "203.109.252.209",
+            "by": "grunt6.ihug.co.nz",
+            "helo": "boggle.ihug.co.nz",
+            "ident": "", "id": "18SWRe-0006X6-00", "envfrom": "",
+            "auth": ""}]
+        parsed_data = pad.received_parser.ReceivedParser(header).received
+        self.assertEqual(parsed_data, expected)
+
+    def test_received_596(self):
+        header = ["from localhost (unknown [127.0.0.1]) by cabbage.jmason.org (Postfix) with ESMTP id A96E18BD97 for <jm@localhost>; Thu, 13 Mar 2003 15:23:15 -0500 (EST)"]
+        expected = [{
+            "rdns": "", "ip": "127.0.0.1",
+            "by": "cabbage.jmason.org",
+            "helo": "localhost",
+            "ident": "", "id": "A96E18BD97", "envfrom": "",
+            "auth": ""}]
+        parsed_data = pad.received_parser.ReceivedParser(header).received
+        self.assertEqual(parsed_data, expected)
+
+    def test_received_606(self):
+        header = ["from 207.8.214.3 (unknown[211.94.164.65]) by "
+                  "puzzle.pobox.com (Postfix) with SMTP id 9029AFB732 Sat,  "
+                  "8 Nov 2003 17:57:46 -0500 (EST) (Pobox.com version: "
+                  "reported in bug 2745)"]
+        expected = [{
+            "rdns": "", "ip": "211.94.164.65",
+            "by": "puzzle.pobox.com",
+            "helo": "207.8.214.3",
+            "ident": "", "id": "9029AFB732", "envfrom": "",
+            "auth": ""}]
+        parsed_data = pad.received_parser.ReceivedParser(header).received
+        self.assertEqual(parsed_data, expected)
+
+    def test_received_619(self):
+        header = ["from DPLAPTOP ( 72.242.176.162) by mail.puryear-it.com (Scalix SMTP Relay 10.0.1.3) via ESMTP; Fri, 23 Jun 2006 16:39:47 -0500 (CDT)"]
+        expected = [{
+            "rdns": "", "ip": "72.242.176.162",
+            "by": "mail.puryear-it.com",
+            "helo": "DPLAPTOP",
+            "ident": "", "id": "", "envfrom": "",
+            "auth": ""}]
+        parsed_data = pad.received_parser.ReceivedParser(header).received
+        self.assertEqual(parsed_data, expected)
+
+    def test_received_651(self):
+        header = ["from mail1.insuranceiq.com (host66.insuranceiq.com [65.217.159.66] (may be forged)) by dogma.slashnull.org (8.11.6/8.11.6) with ESMTP id h2F0c2x31856 for <jm@jmason.org>; Sat, 15 Mar 2003 00:38:03 GMT"]
+        expected = [{
+            "rdns": "host66.insuranceiq.com", "ip": "65.217.159.66",
+            "by": "dogma.slashnull.org",
+            "helo": "mail1.insuranceiq.com",
+            "ident": "", "id": "h2F0c2x31856", "envfrom": "",
+            "auth": ""}]
+        parsed_data = pad.received_parser.ReceivedParser(header).received
+        self.assertEqual(parsed_data, expected)
+
+    def test_received_669(self):
+        header = ["from ns.elcanto.co.kr (66.161.246.58 [66.161.246.58]) by mail.ssccbelen.edu.pe with SMTP (Microsoft Exchange Internet Mail Service Version 5.5.1960.3) id G69TW478; Thu, 13 Mar 2003 14:01:10 -0500"]
+        expected = [{
+            "rdns": "66.161.246.58", "ip": "66.161.246.58",
+            "by": "mail.ssccbelen.edu.pe",
+            "helo": "ns.elcanto.co.kr",
+            "ident": "", "id": "G69TW478", "envfrom": "",
+            "auth": ""}]
+        parsed_data = pad.received_parser.ReceivedParser(header).received
+        self.assertEqual(parsed_data, expected)
+
+    def test_received_677(self):
+        header = ["from mail2.detr.gsi.gov.uk ([51.64.35.18] helo=ahvfw.dtlr.gsi.gov.uk) by mail4.gsi.gov.uk with smtp id 190K1R-0000me-00 for spamassassin-talk-admin@lists.sourceforge.net; Tue, 01 Apr 2003 12:33:46 +0100"]
+        expected = [{
+            "rdns": "mail2.detr.gsi.gov.uk", "ip": "51.64.35.18",
+            "by": "mail4.gsi.gov.uk",
+            "helo": "ahvfw.dtlr.gsi.gov.uk",
+            "ident": "", "id": "190K1R-0000me-00", "envfrom": "",
+            "auth": ""}]
+        parsed_data = pad.received_parser.ReceivedParser(header).received
+        self.assertEqual(parsed_data, expected)
+
+    def test_received_683(self):
+        header = ["from 12-211-5-69.client.attbi.com (<unknown.domain>[12.211.5.69]) by rwcrmhc53.attbi.com (rwcrmhc53) with SMTP id <2002112823351305300akl1ue>; Thu, 28 Nov 2002 23:35:13 +0000"]
+        expected = [{
+            "rdns": "", "ip": "12.211.5.69",
+            "by": "rwcrmhc53.attbi.com",
+            "helo": "12-211-5-69.client.attbi.com",
+            "ident": "", "id": "2002112823351305300akl1ue", "envfrom": "",
+            "auth": ""}]
+        parsed_data = pad.received_parser.ReceivedParser(header).received
+        self.assertEqual(parsed_data, expected)
+
+    def test_received_689(self):
+        header = ["from attbi.com (h000502e08144.ne.client2.attbi.com ["
+                  "24.128.27.103]) by rwcrmhc53.attbi.com (rwcrmhc53) with SMTP id <20030222193438053008f7tee>; Sat, 22 Feb 2003 19:34:39 +0000"]
+        expected = [{
+            "rdns": "h000502e08144.ne.client2.attbi.com", "ip": "24.128.27.103",
+            "by": "rwcrmhc53.attbi.com",
+            "helo": "attbi.com",
+            "ident": "", "id": "20030222193438053008f7tee", "envfrom": "",
+            "auth": ""}]
+        parsed_data = pad.received_parser.ReceivedParser(header).received
+        self.assertEqual(parsed_data, expected)
+
+    def test_received_697(self):
+        header = ["from 4wtgRl (kgbxn@[211.244.147.115]) by dogma.slashnull.org (8.11.6/8.11.6) with SMTP id h8BBsUJ18848; Thu, 11 Sep 2003 12:54:31 +0100"]
+        expected = [{
+            "rdns": "", "ip": "211.244.147.115",
+            "by": "dogma.slashnull.org",
+            "helo": "4wtgRl",
+            "ident": "kgbxn", "id": "h8BBsUJ18848", "envfrom": "",
+            "auth": ""}]
+        parsed_data = pad.received_parser.ReceivedParser(header).received
+        self.assertEqual(parsed_data, expected)
+
+    def test_received_706(self):
+        header = ["from 213.123.174.21 by lw11fd.law11.hotmail.msn.com with "
+                  "HTTP; Wed, 24 Jul 2002 16:36:44 GMT"]
+        expected = [{
+            "rdns": "", "ip": "213.123.174.21",
+            "by": "lw11fd.law11.hotmail.msn.com",
+            "helo": "",
+            "ident": "", "id": "", "envfrom": "",
+            "auth": ""}]
+        parsed_data = pad.received_parser.ReceivedParser(header).received
+        self.assertEqual(parsed_data, expected)
+
+    def test_received_713(self):
+        header = ["from x71-x56-x24-5.webspeed.dk (HELO niels) (69.96.3.15) by la.mx.develooper.com (qpsmtpd/0.27-dev) with SMTP; Fri, 02 Jan 2004 19:26:52 -0800"]
+        expected = [{
+            "rdns": "x71-x56-x24-5.webspeed.dk", "ip": "69.96.3.15",
+            "by": "la.mx.develooper.com",
+            "helo": "niels",
+            "ident": "", "id": "", "envfrom": "",
+            "auth": ""}]
+        parsed_data = pad.received_parser.ReceivedParser(header).received
+        self.assertEqual(parsed_data, expected)
+
+    def test_received_720(self):
+        header = ["from dslb-082-083-045-064.pools.arcor-ip.net (EHLO homepc) [82.83.45.64] by mail.gmx.net (mp010) with SMTP; 03 Feb 2007 13:13:47 +0100"]
+        expected = [{
+            "rdns": "dslb-082-083-045-064.pools.arcor-ip.net", "ip": "82.83.45.64",
+            "by": "mail.gmx.net",
+            "helo": "homepc",
+            "ident": "", "id": "", "envfrom": "",
+            "auth": "GMX (SMTP / mail.gmx.net)"}]
+        parsed_data = pad.received_parser.ReceivedParser(header).received
+        self.assertEqual(parsed_data, expected)
+
+    def test_received_729(self):
+        header = ["from imo-m01.mx.aol.com ([64.12.136.4]) by "
+                  "eagle.glenraven.com via smtpd (for [198.85.87.98]) with SMTP; Wed, 08 Oct 2003 16:25:37 -0400"]
+        expected = [{
+            "rdns": "", "ip": "64.12.136.4",
+            "by": "eagle.glenraven.com",
+            "helo": "imo-m01.mx.aol.com",
+            "ident": "", "id": "", "envfrom": "",
+            "auth": ""}]
+        parsed_data = pad.received_parser.ReceivedParser(header).received
+        self.assertEqual(parsed_data, expected)
 
 def suite():
     """Gather all the tests from this package in a test suite."""
