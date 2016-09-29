@@ -239,7 +239,7 @@ class SpfPlugin(pad.plugins.base.BasePlugin):
         timeout = self.get_global("spf_timeout")
         if not msg.external_relays:
             return
-        mx = msg.external_relays[0]['rdns']
+        mx = msg.external_relays[0]['helo']
         ip = msg.external_relays[0]['ip']
 
         spf_result = self._query_spf(timeout, ip, mx, sender)

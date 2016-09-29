@@ -302,7 +302,7 @@ HELO_RE2 = re.compile(r"""
 """.format(IP_ADDRESS=IP_ADDRESS.pattern), re.X)
 HELO_RE3 = re.compile(r'.*?helo=(\S+)\)', re.I)
 HELO_RE4 = re.compile(r"""
-    ^(\S+)\s\(\[{IP_ADDRESS}\]\)
+    ^(\S+)\s\(\s?\[{IP_ADDRESS}\]\)
 """.format(IP_ADDRESS=IP_ADDRESS.pattern), re.X)
 HELO_RE5 = re.compile(r"""
     ^(\S+)\s\(\s?{IP_ADDRESS}\)
@@ -459,12 +459,16 @@ class ReceivedParser(object):
         try:
             if HELO_RE7.match(header):
                 rdns = HELO_RE7.match(header).groups()[1]
-            elif HELO_RE5.match(header) or HELO_RE4.match(header):
-                rdns = ""
+            elif HELO_RE4.match(header):
+                rdns = HELO_RE4.match(header).groups()[0]
+            elif HELO_RE5.match(header):
+                rdns = HELO_RE5.match(header).groups()[0]
             else:
                 rdns = RDNS_RE.match(header).groups()[0]
         except (AttributeError, IndexError):
             pass
+        if "@" in rdns:
+            rdns = ""
         if '(Postfix)' in header:
             if UNKNOWN_RE_RDNS.match(header):
                 rdns = UNKNOWN_RE_RDNS.match(header).groups()[1]
@@ -555,7 +559,11 @@ class ReceivedParser(object):
         """
         ident = ""
         try:
-            ident = IDENT_RE.match(header).groups()[0]
+            if IDENT_RE.match(header):
+                ident = IDENT_RE.match(header).groups()[0]
+            elif HELO_RE7.match(header):
+                if "@" in HELO_RE7.match(header).groups()[1]:
+                    ident = HELO_RE7.match(header).groups()[1].strip("@")
         except (AttributeError, IndexError):
             pass
         return ident
