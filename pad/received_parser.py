@@ -463,9 +463,6 @@ class ReceivedParser(object):
             if HELO_RE7.match(header):
                 print("7")
                 rdns = HELO_RE7.match(header).groups()[1]
-            # elif HELO_RE8.match(header):
-            #     print("8")
-            #     rdns = HELO_RE8.match(header).groups()[0]
             elif HELO_RE5.match(header) or HELO_RE4.match(header) and "Exim" not in header:
                 print("4 sau 5")
                 rdns = ""
