@@ -292,6 +292,10 @@ SMTPSVC_RE = re.compile(r"""
 ENVFROM_RE = re.compile(r"""
 .*?(?:return-path:?\s|envelope-(?:sender|from)[\s=])(\S+)\b""", re.X)
 RDNS_RE = re.compile(r'^(\S+) ')
+RDNS_RE2 = re.compile(r"^(\S+)\(")
+HEADER_RE = re.compile(r"""
+    ^({IP_ADDRESS})\sby
+""".format(IP_ADDRESS=IP_ADDRESS.pattern), re.X)
 RDNS_IP_RE = re.compile(r"""
     ^\[({IP_ADDRESS})\]
 """.format(IP_ADDRESS=IP_ADDRESS.pattern), re.X)
@@ -300,6 +304,7 @@ RDNS_SMTP = re.compile(r"""
 """.format(IP_ADDRESS=IP_ADDRESS.pattern), re.X)
 BY_RE = re.compile(r'.*? by (\S+) .*')
 HELO_RE = re.compile(r'.*?\((?:HELO|EHLO) (\S*)\)', re.I)
+HELO_RE10 = re.compile(r'.*\(.* (HELO|EHLO) (\S+)\)', re.I)
 HELO_RE2 = re.compile(r"""
     .*?\((\S+)\s\[{IP_ADDRESS}\]\)
 """.format(IP_ADDRESS=IP_ADDRESS.pattern), re.X)
@@ -320,6 +325,7 @@ HELO_RE8 = re.compile(r"""
     ^\(?(\S+)\s\[\s?{IP_ADDRESS}\]
 """.format(IP_ADDRESS=IP_ADDRESS.pattern), re.X)
 IDENT_RE = re.compile(r'.*ident=(\S+)\)')
+IDENT_RE2 = re.compile(r'.*\((\S+)@')
 ID_RE = re.compile(r'.*id (\S+)')
 AUTH_RE = re.compile(r"""
 .*?\swith\s((?:ES|L|UTF8S|UTF8L)MTPS?A|ASMTP|HTTPU?)(?:\s|;|$)""", re.X | re.I)
@@ -327,6 +333,8 @@ AUTH_VC_RE = re.compile(r'.*? \(version=([^ ]+) cipher=([^\)]+)\)')
 AUTH_RE2 = re.compile(r'.*? \(authenticated as (\S+)\)')
 AUTH_RE3 = re.compile(r"""
 \)\s\(Authenticated\ssender:\s\S+\)\sby\s\S+\s\(Postfix\)\swith\s""", re.X)
+AUTH_RE4 = re.compile(r'.* by (mail\.gmx\.(net|com)) \([^\)]+\) with ((ESMTP|SMTP))')
+AUTH_RE5 = re.compile(r'.* by .* \(CommuniGate Pro (HTTP|SMTP)')
 
 ORIGINATING_IP_HEADER_RE = r"^X-ORIGINATING-IP: ({}).*"
 
@@ -469,6 +477,10 @@ class ReceivedParser(object):
                     rdns = RDNS_SMTP.match(header).groups()[0]
                 else:
                     rdns = ""
+            elif HEADER_RE.match(header):
+                rdns = ""
+            elif RDNS_RE2.match(header):
+                rdns = RDNS_RE2.match(header).groups()[0]
             else:
                 rdns = RDNS_RE.match(header).groups()[0]
         except (AttributeError, IndexError):
@@ -552,6 +564,8 @@ class ReceivedParser(object):
                 helo = HELO_RE6.match(header).groups()[0]
             elif HELO_RE8.match(header):
                 helo = HELO_RE8.match(header).groups()[0]
+            elif HELO_RE10.match(header):
+                helo = HELO_RE10.match(header).groups()[1].strip("[]")
         except (AttributeError, IndexError):
             pass
         return helo
@@ -567,9 +581,8 @@ class ReceivedParser(object):
         try:
             if IDENT_RE.match(header):
                 ident = IDENT_RE.match(header).groups()[0]
-            elif HELO_RE7.match(header):
-                if "@" in HELO_RE7.match(header).groups()[1]:
-                    ident = HELO_RE7.match(header).groups()[1].strip("@")
+            elif IDENT_RE2.match(header):
+                ident = IDENT_RE2.match(header).groups()[0  ]
         except (AttributeError, IndexError):
             pass
         return ident
@@ -617,6 +630,11 @@ class ReceivedParser(object):
             auth = "CriticalPath"
         elif 'authenticated' in header:
             auth = "Sendmail"
+        elif AUTH_RE4.search(header):
+            re_auth = AUTH_RE4.search(header).groups()
+            auth = "GMX (%s / %s)" % (re_auth[3], re_auth[0])
+        elif AUTH_RE5.search(header):
+            auth = "Communigate"
         return auth
 
     def _parse_message(self):
