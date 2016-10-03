@@ -292,9 +292,9 @@ SMTPSVC_RE = re.compile(r"""
 ENVFROM_RE = re.compile(r"""
 .*?(?:return-path:?\s|envelope-(?:sender|from)[\s=])(\S+)\b""", re.X)
 RDNS_RE = re.compile(r'^(\S+) ')
-RDNS_RE2 = re.compile(r"^(\S+)\(")
+RDNS_RE2 = re.compile(r'^(\S+)\(')
 HEADER_RE = re.compile(r"""
-    ^({IP_ADDRESS})\sby
+    ^\(?\[?({IP_ADDRESS})\]?\)?\sby
 """.format(IP_ADDRESS=IP_ADDRESS.pattern), re.X)
 RDNS_IP_RE = re.compile(r"""
     ^\[({IP_ADDRESS})\]
@@ -330,6 +330,9 @@ HELO_RE7 = re.compile(r"""
 HELO_RE8 = re.compile(r"""
     ^\(?(\S+)\s\[\s?{IP_ADDRESS}\]
 """.format(IP_ADDRESS=IP_ADDRESS.pattern), re.X)
+HELO_RE9 = re.compile(r"""
+    ^\(?(\S+)\s\(?\s?\[{IP_ADDRESS}\] \s?(\S+)\)
+""".format(IP_ADDRESS=IP_ADDRESS.pattern), re.X)
 IDENT_RE = re.compile(r'.*ident=(\S+)\)')
 IDENT_RE2 = re.compile(r'.*\((\S+)@')
 ID_RE = re.compile(r'.*id (\S+)')
@@ -340,7 +343,8 @@ AUTH_RE2 = re.compile(r'.*? \(authenticated as (\S+)\)')
 AUTH_RE3 = re.compile(r"""
 \)\s\(Authenticated\ssender:\s\S+\)\sby\s\S+\s\(Postfix\)\swith\s""", re.X)
 AUTH_RE4 = re.compile(r'.* by (mail\.gmx\.(net|com)) \([^\)]+\) with ((ESMTP|SMTP))')
-AUTH_RE5 = re.compile(r'.* by .* \(CommuniGate Pro (HTTP|SMTP)')
+AUTH_RE5 = re.compile(r'.* \(account .* by .* \(CommuniGate Pro ('
+                      r'HTTP|SMTP)')
 
 ORIGINATING_IP_HEADER_RE = r"^X-ORIGINATING-IP: ({}).*"
 
@@ -475,23 +479,25 @@ class ReceivedParser(object):
         rdns = ""
         try:
             if HELO_RE7.match(header):
-                print("7")
                 rdns = HELO_RE7.match(header).groups()[1]
-            elif HELO_RE5.match(header) or HELO_RE4.match(header) and "Exim" not in header:
-                print("4 sau 5")
+            elif HELO_RE5.match(header):
+                if "(Scalix SMTP Relay" in header:
+                    rdns = ""
+                else:
+                    rdns = HELO_RE5.match(header).groups()[0]
+            elif HELO_RE4.match(header) and "Exim" not in header:
                 if RDNS_SMTP.match(header):
-                    print("SMTP")
                     rdns = RDNS_SMTP.match(header).groups()[0]
                 else:
                     rdns = ""
             elif HEADER_RE.match(header):
-                print("8")
                 rdns = ""
             elif RDNS_RE2.match(header):
                 rdns = RDNS_RE2.match(header).groups()[0]
+            elif RDNS_RE3.match(header):
+                rdns = RDNS_RE3.match(header).groups()[0]
             else:
                 if RDNS_RE1.match(header) or RDNS_RE3.match(header):
-                    print("re1")
                     rdns = ""
                 else:
                     rdns = RDNS_RE.match(header).groups()[0]
@@ -506,6 +512,7 @@ class ReceivedParser(object):
             rdns = ""
         if 'unknown' in rdns or rdns == 'UnknownHost':
             rdns = ""
+        rdns = rdns.strip("[]")
         return rdns
 
     @staticmethod
@@ -579,6 +586,8 @@ class ReceivedParser(object):
                 helo = HELO_RE6.match(header).groups()[0]
             elif HELO_RE8.match(header):
                 helo = HELO_RE8.match(header).groups()[0]
+            elif HELO_RE9.match(header):
+                helo = HELO_RE9.match(header).groups()[0]
             elif HELO_RE10.match(header):
                 helo = HELO_RE10.match(header).groups()[1].strip("[]")
         except (AttributeError, IndexError):
