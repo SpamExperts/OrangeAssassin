@@ -1,4 +1,4 @@
-"""Functional tests tflags option"""
+"""Functional tests for tflags option"""
 
 from __future__ import absolute_import
 import unittest
@@ -17,7 +17,6 @@ class TestFunctionalTflags(tests.util.TestBase):
     """Class containing functional tests for tflags option"""
 
     def test_tflags_nice_option_with_default_score(self):
-
         my_conf="""tflags LOOK_FOR_TEST nice"""
 
         email = """This is a test"""
@@ -27,13 +26,12 @@ class TestFunctionalTflags(tests.util.TestBase):
         self.check_report(result, -1, ['LOOK_FOR_TEST'])
 
     def test_tflags_nice_option_with_custom_score(self):
-
         my_conf="""tflags LOOK_FOR_TEST nice
         \nscore LOOK_FOR_TEST 5"""
 
         email = """This is a test"""
 
-        self.setup_conf(config=CONFIG + my_conf, pre_config=PRE_CONFIG )
+        self.setup_conf(config=CONFIG + my_conf, pre_config=PRE_CONFIG)
         result = self.check_pad(email)
         self.check_report(result, 5, ['LOOK_FOR_TEST'])
 
@@ -44,7 +42,7 @@ class TestFunctionalTflags(tests.util.TestBase):
 
         email = """This is a test"""
 
-        self.setup_conf(config=CONFIG + opt + my_conf, pre_config=PRE_CONFIG )
+        self.setup_conf(config=CONFIG + opt + my_conf, pre_config=PRE_CONFIG)
         result = self.check_pad(email)
         self.check_report(result, 0, [])
 
@@ -55,9 +53,31 @@ class TestFunctionalTflags(tests.util.TestBase):
 
         email = """This is a test"""
 
-        self.setup_conf(config=CONFIG + opt + my_conf, pre_config=PRE_CONFIG )
+        self.setup_conf(config=CONFIG + opt + my_conf, pre_config=PRE_CONFIG)
         result = self.check_pad(email)
         self.check_report(result, 1, ['LOOK_FOR_TEST'])
+
+    def test_tflgs_net_option_enabled_and_nice_option_enabled(self):
+        opt = """use_network 1\n"""
+
+        my_conf="""tflags LOOK_FOR_TEST net nice"""
+
+        email = """This is a test"""
+
+        self.setup_conf(config=CONFIG + opt + my_conf, pre_config=PRE_CONFIG)
+        result = self.check_pad(email)
+        self.check_report(result, -1, ['LOOK_FOR_TEST'])
+
+    def test_tflgs_net_option_disabled_and_nice_option_enabled(self):
+        opt = """use_network 0\n"""
+
+        my_conf="""tflags LOOK_FOR_TEST net nice"""
+
+        email = """This is a test"""
+
+        self.setup_conf(config=CONFIG + opt + my_conf, pre_config=PRE_CONFIG)
+        result = self.check_pad(email)
+        self.check_report(result, 0, [])
 
 
 
