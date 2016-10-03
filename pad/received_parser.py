@@ -302,6 +302,12 @@ RDNS_IP_RE = re.compile(r"""
 RDNS_SMTP = re.compile(r"""
     ^(\S+)\s\(\s?{IP_ADDRESS}\)\sby.*\({IP_ADDRESS}\)\swith.*(ESMTP|SMTP)
 """.format(IP_ADDRESS=IP_ADDRESS.pattern), re.X)
+RDNS_SMTP1 = re.compile(r"""
+    ^(\S+)\s\(\s?\[{IP_ADDRESS}\]\)\sby.*(\S+)\swith.*(esmtp|smtp|ESMTP|SMTP)
+""".format(IP_ADDRESS=IP_ADDRESS.pattern), re.X)
+RDNS_RE4 = re.compile(r"""
+    ^((\S+)\s\(\[{IP_ADDRESS})(?:[.:]\d+)?\]\).*?\sby\s(\S+)
+""".format(IP_ADDRESS=IP_ADDRESS.pattern), re.X)
 RDNS_RE1 = re.compile(r"""
     ^\(\[({IP_ADDRESS})\]\)\sby\s(\S+)
 """.format(IP_ADDRESS=IP_ADDRESS.pattern), re.X)
@@ -477,6 +483,8 @@ class ReceivedParser(object):
             if HELO_RE7.match(header):
                 print("7")
                 rdns = HELO_RE7.match(header).groups()[1]
+                if rdns == "softdnserr":
+                    rdns = ""
             elif HELO_RE5.match(header) or HELO_RE4.match(header) and "Exim" not in header:
                 print("4 sau 5")
                 if RDNS_SMTP.match(header):
@@ -488,12 +496,20 @@ class ReceivedParser(object):
                 print("8")
                 rdns = ""
             elif RDNS_RE2.match(header):
+                print("9")
                 rdns = RDNS_RE2.match(header).groups()[0]
+            elif RDNS_SMTP1.match(header) and "Exim" not in header:
+                print("12")
+                rdns = ""
             else:
                 if RDNS_RE1.match(header) or RDNS_RE3.match(header):
                     print("re1")
                     rdns = ""
+                elif RDNS_RE4.match(header) and "Exim" not in header:
+                    print("14")
+                    rdns = ""
                 else:
+                    print("10")
                     rdns = RDNS_RE.match(header).groups()[0]
         except (AttributeError, IndexError):
             pass
@@ -579,6 +595,9 @@ class ReceivedParser(object):
                 helo = HELO_RE6.match(header).groups()[0]
             elif HELO_RE8.match(header):
                 helo = HELO_RE8.match(header).groups()[0]
+            elif RDNS_RE4.match(header):
+                print(RDNS_RE4.match(header).groups())
+                helo = RDNS_RE4.match(header).groups()[1]
             elif HELO_RE10.match(header):
                 helo = HELO_RE10.match(header).groups()[1].strip("[]")
         except (AttributeError, IndexError):
