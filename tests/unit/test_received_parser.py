@@ -613,40 +613,40 @@ class TestReceivedParser(unittest.TestCase):
         parsed_data = pad.received_parser.ReceivedParser(header).received
         self.assertEqual(parsed_data, expected)
 
-    # def test_received_720(self):
-    #     header = ["from dslb-082-083-045-064.pools.arcor-ip.net (EHLO homepc) [82.83.45.64] by mail.gmx.net (mp010) with SMTP; 03 Feb 2007 13:13:47 +0100"]
-    #     expected = [{
-    #         "rdns": "dslb-082-083-045-064.pools.arcor-ip.net", "ip": "82.83.45.64",
-    #         "by": "mail.gmx.net",
-    #         "helo": "homepc",
-    #         "ident": "", "id": "", "envfrom": "",
-    #         "auth": "GMX (SMTP / mail.gmx.net)"}]
-    #     parsed_data = pad.received_parser.ReceivedParser(header).received
-    #     self.assertEqual(parsed_data, expected)
+    def test_received_720(self):
+        header = ["from dslb-082-083-045-064.pools.arcor-ip.net (EHLO homepc) [82.83.45.64] by mail.gmx.net (mp010) with SMTP; 03 Feb 2007 13:13:47 +0100"]
+        expected = [{
+            "rdns": "dslb-082-083-045-064.pools.arcor-ip.net", "ip": "82.83.45.64",
+            "by": "mail.gmx.net",
+            "helo": "homepc",
+            "ident": "", "id": "", "envfrom": "",
+            "auth": "GMX (SMTP / mail.gmx.net)"}]
+        parsed_data = pad.received_parser.ReceivedParser(header).received
+        self.assertEqual(parsed_data, expected)
 
-    # def test_received_729(self):
-    #     header = ["from imo-m01.mx.aol.com ([64.12.136.4]) by "
-    #               "eagle.glenraven.com via smtpd (for [198.85.87.98]) with SMTP; Wed, 08 Oct 2003 16:25:37 -0400"]
-    #     expected = [{
-    #         "rdns": "", "ip": "64.12.136.4",
-    #         "by": "eagle.glenraven.com",
-    #         "helo": "imo-m01.mx.aol.com",
-    #         "ident": "", "id": "", "envfrom": "",
-    #         "auth": ""}]
-    #     parsed_data = pad.received_parser.ReceivedParser(header).received
-    #     self.assertEqual(parsed_data, expected)
+    def test_received_729(self):
+        header = ["from imo-m01.mx.aol.com ([64.12.136.4]) by "
+                  "eagle.glenraven.com via smtpd (for [198.85.87.98]) with SMTP; Wed, 08 Oct 2003 16:25:37 -0400"]
+        expected = [{
+            "rdns": "", "ip": "64.12.136.4",
+            "by": "eagle.glenraven.com",
+            "helo": "imo-m01.mx.aol.com",
+            "ident": "", "id": "", "envfrom": "",
+            "auth": ""}]
+        parsed_data = pad.received_parser.ReceivedParser(header).received
+        self.assertEqual(parsed_data, expected)
 
-    # def test_received_706(self):
-    #     header = ["from 213.123.174.21 by lw11fd.law11.hotmail.msn.com with "
-    #               "HTTP; Wed, 24 Jul 2002 16:36:44 GMT"]
-    #     expected = [{
-    #         "rdns": "", "ip": "213.123.174.21",
-    #         "by": "lw11fd.law11.hotmail.msn.com",
-    #         "helo": "",
-    #         "ident": "", "id": "", "envfrom": "",
-    #         "auth": ""}]
-    #     parsed_data = pad.received_parser.ReceivedParser(header).received
-    #     self.assertEqual(parsed_data, expected)
+    def test_received_706(self):
+        header = ["from 213.123.174.21 by lw11fd.law11.hotmail.msn.com with "
+                  "HTTP; Wed, 24 Jul 2002 16:36:44 GMT"]
+        expected = [{
+            "rdns": "", "ip": "213.123.174.21",
+            "by": "lw11fd.law11.hotmail.msn.com",
+            "helo": "",
+            "ident": "", "id": "", "envfrom": "",
+            "auth": "HTTP"}]
+        parsed_data = pad.received_parser.ReceivedParser(header).received
+        self.assertEqual(parsed_data, expected)
 
     def test_received_907(self):
         header = ["from [129.24.215.125] by ws1-7.us4.outblaze.com "
@@ -668,7 +668,8 @@ class TestReceivedParser(unittest.TestCase):
             "rdns": "postfix3-2.free.fr", "ip": "213.228.0.169",
             "by": "totor.bouissou.net",
             "helo": "machine.domain.com",
-            "ident": "", "id": "", "envfrom": "", # in SA "ident": "foobar"
+            "ident": "foobar", "id": "", "envfrom": "", # in SA "ident":
+            # "foobar"
             "auth": ""}]
         parsed_data = pad.received_parser.ReceivedParser(header).received
         self.assertEqual(parsed_data, expected)
@@ -680,7 +681,7 @@ class TestReceivedParser(unittest.TestCase):
             "rdns": "", "ip": "216.254.40.70",
             "by": "mail13.speakeasy.net",
             "helo": "terpsichore.farfalle.com",
-            "ident": "", "id": "", "envfrom": "jdavid@farfalle.com", # ub SA "ident": "jdavid"
+            "ident": "jdavid", "id": "", "envfrom": "jdavid@farfalle.com",
             "auth": ""}]
         parsed_data = pad.received_parser.ReceivedParser(header).received
         self.assertEqual(parsed_data, expected)
@@ -726,6 +727,156 @@ class TestReceivedParser(unittest.TestCase):
         parsed_data = pad.received_parser.ReceivedParser(header).received
         self.assertEqual(parsed_data, expected)
 
+    def test_received_913(self):
+        header = ["from [129.24.215.125] by ws1-7.us4.outblaze.com with http "
+                  "for _bushisevil_@mail.com; Thu, 13 Feb 2003 15:59:28 -0500"]
+        expected = [{
+            "rdns": "", "ip": "129.24.215.125",
+            "by": "ws1-7.us4.outblaze.com",
+            "helo": "",
+            "ident": "", "id": "", "envfrom": "",
+            "auth": "http"}]
+        parsed_data = pad.received_parser.ReceivedParser(header).received
+        self.assertEqual(parsed_data, expected)
+
+    def test_received_921(self):
+        header = ["from snake.corp.yahoo.com(216.145.52.229) by x.x.org via smap (V1.3"
+                  " id xma093673; Wed, 26 Mar 03 20:43:24 -0600"]
+        expected = [{
+            "rdns": "snake.corp.yahoo.com", "ip": "216.145.52.229",
+            "by": "x.x.org",
+            "helo": "",
+            "ident": "", "id": "xma093673", "envfrom": "",
+            "auth": ""}]
+        parsed_data = pad.received_parser.ReceivedParser(header).received
+        self.assertEqual(parsed_data, expected)
+
+    def test_received_928(self):
+        header = ["from smtp.greyware.com(208.14.208.51, HELO smtp.sff.net) by x.x.org via smap (V1.3)"
+                  " id xma002908; Fri, 27 Feb 04 14:16:56 -0800"]
+        expected = [{
+            "rdns": "smtp.greyware.com", "ip": "208.14.208.51",
+            "by": "x.x.org",
+            "helo": "smtp.sff.net",
+            "ident": "", "id": "xma002908", "envfrom": "",
+            "auth": ""}]
+        parsed_data = pad.received_parser.ReceivedParser(header).received
+        self.assertEqual(parsed_data, expected)
+
+    def test_received_935(self):
+        header = ["from [192.168.0.71] by web01-nyc.clicvu.com (Post.Office MTA"
+                  " v3.5.3 release 223 ID# 0-64039U1000L100S0V35) with SMTP id com for"
+                  " <x@x.org>; Tue, 25 Mar 2003 11:42:04 -0500"]
+        expected = [{
+            "rdns": "", "ip": "192.168.0.71",
+            "by": "web01-nyc.clicvu.com",
+            "helo": "",
+            "ident": "", "id": "com", "envfrom": "",
+            "auth": ""}]
+        parsed_data = pad.received_parser.ReceivedParser(header).received
+        self.assertEqual(parsed_data, expected)
+
+    def test_received_942(self):
+        header = ["from [127.0.0.1] by euphoria (ArGoSoft Mail Server"
+                  " Freeware, Version 1.8 (1.8.2.5)); Sat, 8 Feb 2003 09:45:32 +0200"]
+        expected = [{
+            "rdns": "", "ip": "127.0.0.1",
+            "by": "euphoria",
+            "helo": "",
+            "ident": "", "id": "", "envfrom": "",
+            "auth": ""}]
+        parsed_data = pad.received_parser.ReceivedParser(header).received
+        self.assertEqual(parsed_data, expected)
+
+    def test_received_948(self):
+        header = ["from 157.54.8.23 by inet-vrs-05.redmond.corp.microsoft.com "
+                  "(InterScan E-Mail VirusWall NT); Thu, 06 Mar 2003 12:02:35 "
+                  "-0800 Received: from 10.165.130.62 by CNNIMAIL12.CNN.COM "
+                  "(SMTPL release 1.0d) with TCP; Fri, 1 Sep 2006 20:28:14 -0400"]
+        expected = [{
+            "rdns": "", "ip": "157.54.8.23",
+            "by": "inet-vrs-05.redmond.corp.microsoft.com",
+            "helo": "",
+            "ident": "", "id": "", "envfrom": "",
+            "auth": ""}]
+        parsed_data = pad.received_parser.ReceivedParser(header).received
+        self.assertEqual(parsed_data, expected)
+
+    def test_received_961(self):
+        header = ["from spike (spike.ig.co.uk [193.32.60.32]) by mail.ig.co.uk"
+                  " with SMTP id h27CrCD03362 for <asrg@ietf.org>; Fri, "
+                  "7 Mar 2003 12:53:12 GMT"]
+        expected = [{
+            "rdns": "spike.ig.co.uk", "ip": "193.32.60.32",
+            "by": "mail.ig.co.uk",
+            "helo": "spike",
+            "ident": "", "id": "h27CrCD03362", "envfrom": "",
+            "auth": ""}]
+        parsed_data = pad.received_parser.ReceivedParser(header).received
+        self.assertEqual(parsed_data, expected)
+
+    def test_received_968(self):
+        header = ["from customer254-217.iplannetworks.net (HELO AGAMENON) "
+                  "(baldusi@200.69.254.217 with plain) by smtp.mail.vip.sc5.yahoo.com"
+                  " with SMTP; 11 Mar 2003 21:03:28 -0000"]
+        expected = [{
+            "rdns": "customer254-217.iplannetworks.net", "ip": "200.69.254.217",
+            "by": "smtp.mail.vip.sc5.yahoo.com",
+            "helo": "AGAMENON",
+            "ident": "baldusi", "id": "", "envfrom": "",
+            "auth": ""}]
+        parsed_data = pad.received_parser.ReceivedParser(header).received
+        self.assertEqual(parsed_data, expected)
+
+    def test_received_978(self):
+        header = ["from [192.168.1.104] (account nazgul HELO [192.168.1.104]) "
+                  "by somewhere.com (CommuniGate Pro SMTP 3.5.7) with ESMTP-TLS "
+                  "id 2088434; Fri, 07 Mar 2003 13:05:06 -0500"]
+        expected = [{
+            "rdns": "", "ip": "192.168.1.104",
+            "by": "somewhere.com",
+            "helo": "192.168.1.104",
+            "ident": "", "id": "2088434", "envfrom": "",
+            "auth": "Communigate"}]
+        parsed_data = pad.received_parser.ReceivedParser(header).received
+        self.assertEqual(parsed_data, expected)
+
+    # def test_received_985(self):
+    #     header = ["from host.example.com ([192.0.2.1] verified)"
+    #               " by mail.example.net (CommuniGate Pro SMTP 5.1.13)"
+    #               " with ESMTP id 9786656 for user@example.net; Thu, 27 Mar 2008 15:08:17 +0600"]
+    #     expected = [{
+    #         "rdns": "host.example.com", "ip": "192.0.2.1",
+    #         "by": "mail.example.net",
+    #         "helo": "host.example.com",
+    #         "ident": "", "id": "9786656", "envfrom": "",
+    #         "auth": ""}]
+    #     parsed_data = pad.received_parser.ReceivedParser(header).received
+    #     self.assertEqual(parsed_data, expected)
+    #
+    # def test_received_993(self):
+    #     header = ["from ([10.0.0.6]) by mail0.ciphertrust.com with ESMTP ; Thu,"
+    #               " 13 Mar 2003 06:26:21 -0500 (EST)"]
+    #     expected = [{
+    #         "rdns": "", "ip": "10.0.0.6",
+    #         "by": "mail0.ciphertrust.com",
+    #         "helo": "",
+    #         "ident": "", "id": "", "envfrom": "",
+    #         "auth": ""}]
+    #     parsed_data = pad.received_parser.ReceivedParser(header).received
+    #     self.assertEqual(parsed_data, expected)
+    #
+    # def test_received_999(self):
+    #     header = ["from ironport.com (10.1.1.5) by a50.ironport.com with ESMTP; "
+    #               "01 Apr 2003 12:00:51 -0800"]
+    #     expected = [{
+    #         "rdns": "ironport.com", "ip": "10.1.1.5",
+    #         "by": "a50.ironport.com",
+    #         "helo": "ironport.com",
+    #         "ident": "", "id": "", "envfrom": "",
+    #         "auth": ""}]
+    #     parsed_data = pad.received_parser.ReceivedParser(header).received
+    #     self.assertEqual(parsed_data, expected)
     def test_received_812(self):
         header = ["from [65.167.180.251] by relent.cedata.com (MessageWall 1.1.0) with SMTP; 20 Feb 2003 23:57:15 -0000"]
         expected = [{
