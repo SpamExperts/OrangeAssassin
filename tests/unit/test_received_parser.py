@@ -841,71 +841,40 @@ class TestReceivedParser(unittest.TestCase):
         parsed_data = pad.received_parser.ReceivedParser(header).received
         self.assertEqual(parsed_data, expected)
 
-    # def test_received_985(self):
-    #     header = ["from host.example.com ([192.0.2.1] verified)"
-    #               " by mail.example.net (CommuniGate Pro SMTP 5.1.13)"
-    #               " with ESMTP id 9786656 for user@example.net; Thu, 27 Mar 2008 15:08:17 +0600"]
-    #     expected = [{
-    #         "rdns": "host.example.com", "ip": "192.0.2.1",
-    #         "by": "mail.example.net",
-    #         "helo": "host.example.com",
-    #         "ident": "", "id": "9786656", "envfrom": "",
-    #         "auth": ""}]
-    #     parsed_data = pad.received_parser.ReceivedParser(header).received
-    #     self.assertEqual(parsed_data, expected)
-    #
-    # def test_received_993(self):
-    #     header = ["from ([10.0.0.6]) by mail0.ciphertrust.com with ESMTP ; Thu,"
-    #               " 13 Mar 2003 06:26:21 -0500 (EST)"]
-    #     expected = [{
-    #         "rdns": "", "ip": "10.0.0.6",
-    #         "by": "mail0.ciphertrust.com",
-    #         "helo": "",
-    #         "ident": "", "id": "", "envfrom": "",
-    #         "auth": ""}]
-    #     parsed_data = pad.received_parser.ReceivedParser(header).received
-    #     self.assertEqual(parsed_data, expected)
-    #
-    # def test_received_999(self):
-    #     header = ["from ironport.com (10.1.1.5) by a50.ironport.com with ESMTP; "
-    #               "01 Apr 2003 12:00:51 -0800"]
-    #     expected = [{
-    #         "rdns": "ironport.com", "ip": "10.1.1.5",
-    #         "by": "a50.ironport.com",
-    #         "helo": "ironport.com",
-    #         "ident": "", "id": "", "envfrom": "",
-    #         "auth": ""}]
-    #     parsed_data = pad.received_parser.ReceivedParser(header).received
-    #     self.assertEqual(parsed_data, expected)
-    def test_received_812(self):
-        header = ["from [65.167.180.251] by relent.cedata.com (MessageWall 1.1.0) with SMTP; 20 Feb 2003 23:57:15 -0000"]
+    def test_received_985(self):
+        header = ["from host.example.com ([192.0.2.1] verified)"
+                  " by mail.example.net (CommuniGate Pro SMTP 5.1.13)"
+                  " with ESMTP id 9786656 for user@example.net; Thu, 27 Mar 2008 15:08:17 +0600"]
         expected = [{
-            "rdns": "", "ip": "65.167.180.251",
-            "by": "relent.cedata.com",
-            "helo": "", "ident": "", "id": "",
-            "envfrom": "", "auth": ""}]
+            "rdns": "host.example.com", "ip": "192.0.2.1",
+            "by": "mail.example.net",
+            "helo": "host.example.com",
+            "ident": "", "id": "9786656", "envfrom": "",
+            "auth": ""}]
         parsed_data = pad.received_parser.ReceivedParser(header).received
         self.assertEqual(parsed_data, expected)
 
-    def test_received_817(self):
-        header = ["from  ([172.16.1.78]) by email2.codeworksonline.com with Microsoft SMTPSVC(5.0.2195.6713); Wed, 6 Sep 2006 21:14:29 -0400"]
+    def test_received_993(self):
+        header = ["from ([10.0.0.6]) by mail0.ciphertrust.com with ESMTP ; Thu,"
+                  " 13 Mar 2003 06:26:21 -0500 (EST)"]
         expected = [{
-            "rdns": "", "ip": "172.16.1.78",
-            "by": "email2.codeworksonline.com",
-            "helo": "", "ident": "", "id": "",
-            "envfrom": "", "auth": ""}]
+            "rdns": "", "ip": "10.0.0.6",
+            "by": "mail0.ciphertrust.com",
+            "helo": "",
+            "ident": "", "id": "", "envfrom": "",
+            "auth": ""}]
         parsed_data = pad.received_parser.ReceivedParser(header).received
         self.assertEqual(parsed_data, expected)
 
-    def test_received_824(self):
-        header = [
-            "from acecomms [202.83.84.95] by mailscan.acenet.net.au [202.83.84.27] "
-            "with SMTP (MDaemon.PRO.v5.0.6.R) for <spamassassin-talk@lists.sourceforge.net>; Fri, 21 Feb 2003 09:32:27 +1000"]
+    def test_received_999(self):
+        header = ["from ironport.com (10.1.1.5) by a50.ironport.com with ESMTP; "
+                  "01 Apr 2003 12:00:51 -0800"]
         expected = [{
-            "rdns": "", "ip": "202.83.84.95",
-            "by": "202.83.84.27",
-            "helo": "acecomms", "ident": "", "id": "",
-            "envfrom": "", "auth": ""}]
+            "rdns": "ironport.com", "ip": "10.1.1.5",
+            "by": "a50.ironport.com",
+            "helo": "ironport.com",
+            "ident": "", "id": "", "envfrom": "",
+            "auth": ""}]
         parsed_data = pad.received_parser.ReceivedParser(header).received
         self.assertEqual(parsed_data, expected)
 
