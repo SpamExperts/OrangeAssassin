@@ -488,8 +488,6 @@ class ReceivedParser(object):
                 rdns = HELO_RE7.match(header).groups()[1]
                 if rdns == "softdnserr":
                     rdns = ""
-            elif HELO_RE5.match(header) or HELO_RE4.match(header) and "Exim" not in header:
-                print("4 sau 5")
             elif HELO_RE5.match(header):
                 if "(Scalix SMTP Relay" in header:
                     rdns = ""
@@ -497,28 +495,21 @@ class ReceivedParser(object):
                     rdns = HELO_RE5.match(header).groups()[0]
             elif HELO_RE4.match(header) and "Exim" not in header:
                 if RDNS_SMTP.match(header):
-                    print("SMTP")
                     rdns = RDNS_SMTP.match(header).groups()[0]
                 else:
                     rdns = ""
             elif HEADER_RE.match(header):
-                print("8")
                 rdns = ""
             elif RDNS_RE2.match(header):
-                print("9")
                 rdns = RDNS_RE2.match(header).groups()[0]
             elif RDNS_SMTP1.match(header) and "Exim" not in header:
-                print("12")
                 rdns = ""
             else:
                 if RDNS_RE1.match(header) or RDNS_RE3.match(header):
-                    print("re1")
                     rdns = ""
                 elif RDNS_RE4.match(header) and "Exim" not in header:
-                    print("14")
                     rdns = ""
                 else:
-                    print("10")
                     rdns = RDNS_RE.match(header).groups()[0]
         except (AttributeError, IndexError):
             pass
@@ -608,7 +599,6 @@ class ReceivedParser(object):
             elif HELO_RE9.match(header):
                 helo = HELO_RE9.match(header).groups()[0]
             elif RDNS_RE4.match(header):
-                print(RDNS_RE4.match(header).groups())
                 helo = RDNS_RE4.match(header).groups()[1]
             elif HELO_RE10.match(header):
                 helo = HELO_RE10.match(header).groups()[1].strip("[]")
