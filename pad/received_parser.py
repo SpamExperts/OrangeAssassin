@@ -298,6 +298,12 @@ RDNS_IP_RE = re.compile(r"""
 RDNS_SMTP = re.compile(r"""
     ^(\S+)\s\(\s?{IP_ADDRESS}\)\sby.*\({IP_ADDRESS}\)\swith.*(ESMTP|SMTP)
 """.format(IP_ADDRESS=IP_ADDRESS.pattern), re.X)
+RDNS_RE1 = re.compile(r"""
+    ^\(\[({IP_ADDRESS})\]\)\sby\s(\S+)
+""".format(IP_ADDRESS=IP_ADDRESS.pattern), re.X)
+RDNS_RE2 = re.compile(r"""
+    ^(\S+)\s\[({IP_ADDRESS})\]\sby\s(\S+)\s\[({IP_ADDRESS})]
+""".format(IP_ADDRESS=IP_ADDRESS.pattern), re.X)
 BY_RE = re.compile(r'.*? by (\S+) .*')
 HELO_RE = re.compile(r'.*?\((?:HELO|EHLO) (\S*)\)', re.I)
 HELO_RE2 = re.compile(r"""
@@ -470,7 +476,11 @@ class ReceivedParser(object):
                 else:
                     rdns = ""
             else:
-                rdns = RDNS_RE.match(header).groups()[0]
+                if RDNS_RE1.match(header) or RDNS_RE2.match(header):
+                    print("re1")
+                    rdns = ""
+                else:
+                    rdns = RDNS_RE.match(header).groups()[0]
         except (AttributeError, IndexError):
             pass
         if "@" in rdns:
@@ -519,7 +529,10 @@ class ReceivedParser(object):
         """
         by = ""
         try:
-            by = BY_RE.match(header).groups()[0]
+            if RDNS_RE2.match(header):
+                by = RDNS_RE2.match(header).groups()[3]
+            else:
+                by = BY_RE.match(header).groups()[0]
         except (AttributeError, IndexError):
             pass
         return by
