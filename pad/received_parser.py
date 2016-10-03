@@ -305,7 +305,7 @@ RDNS_SMTP = re.compile(r"""
 RDNS_RE1 = re.compile(r"""
     ^\(\[({IP_ADDRESS})\]\)\sby\s(\S+)
 """.format(IP_ADDRESS=IP_ADDRESS.pattern), re.X)
-RDNS_RE2 = re.compile(r"""
+RDNS_RE3 = re.compile(r"""
     ^(\S+)\s\[({IP_ADDRESS})\]\sby\s(\S+)\s\[({IP_ADDRESS})]
 """.format(IP_ADDRESS=IP_ADDRESS.pattern), re.X)
 BY_RE = re.compile(r'.*? by (\S+) .*')
@@ -480,15 +480,17 @@ class ReceivedParser(object):
             elif HELO_RE5.match(header) or HELO_RE4.match(header) and "Exim" not in header:
                 print("4 sau 5")
                 if RDNS_SMTP.match(header):
+                    print("SMTP")
                     rdns = RDNS_SMTP.match(header).groups()[0]
                 else:
                     rdns = ""
             elif HEADER_RE.match(header):
+                print("8")
                 rdns = ""
             elif RDNS_RE2.match(header):
                 rdns = RDNS_RE2.match(header).groups()[0]
             else:
-                if RDNS_RE1.match(header) or RDNS_RE2.match(header):
+                if RDNS_RE1.match(header) or RDNS_RE3.match(header):
                     print("re1")
                     rdns = ""
                 else:
@@ -541,8 +543,8 @@ class ReceivedParser(object):
         """
         by = ""
         try:
-            if RDNS_RE2.match(header):
-                by = RDNS_RE2.match(header).groups()[3]
+            if RDNS_RE3.match(header):
+                by = RDNS_RE3.match(header).groups()[3]
             else:
                 by = BY_RE.match(header).groups()[0]
         except (AttributeError, IndexError):
