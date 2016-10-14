@@ -1,8 +1,9 @@
+"""FreeMail Plugin
+
+The FreeMail plugin checks the headers for indication that the sender's
+domain is that of a site offering free email services.
 """
-FreeMail Plugin
-The FreeMail plugin checks the headers for indication
-that sender's domain is that of a site offering free email services.
-"""
+
 from builtins import str
 
 import re
@@ -54,15 +55,16 @@ class FreeMail(pad.plugins.base.BasePlugin):
     }
 
     def check_start(self, msg):
-        """Verify if the domains are valid and
-        separate wildcard domains from the rest"""
-        domain_re = Regex(r'^[a-z0-9.*?-]+$')
+        """Verify that the domains are valid and separate wildcard
+        domains from the rest."""
+        domain_re = re.compile(r'^[a-z0-9.*?-]+$')
         freemail_domains = self.get_global('freemail_domains')
-        freemail_temp_wc = list()
-        for index, domain in enumerate(freemail_domains):
+        freemail_temp_wc = []
+        for domain in freemail_domains[:]:
             if not domain_re.search(domain):
                 freemail_domains.remove(domain)
-                self.ctxt.log.warn("FreeMail::Plugin Invalid freemail domain: %s", domain)
+                self.ctxt.log.warn(
+                    "FreeMail::Plugin Invalid freemail domain: %s", domain)
             if '*' in domain:
                 temp = domain.replace('.', '\.')
                 temp = temp.replace('?', '.')
@@ -87,17 +89,17 @@ class FreeMail(pad.plugins.base.BasePlugin):
               {tld}   # ends with valid tld
               )
               (?!(?:[a-z0-9-]|\.[a-z0-9]))		# make sure domain ends here
-        """.format(tld=tlds_re), re.X|re.I)
+        """.format(tld=tlds_re), re.X | re.I)
         self.set_global('email_re', email_re)
         self.set_global('body_emails', set())
         self.set_global("check_if_parsed", False)
 
     def extract_metadata(self, msg, payload, text, part):
-        """Parse all emails from text/plain and text/html parts
-        """
+        """Parse all emails from text/plain and text/html parts."""
         if part.get_content_type() in ("text/plain", "text/html"):
-            body_emails = self.get_global('body_emails')
-            for email in self.get_global('email_re').findall(part.get_payload()):
+            get_global = self.get_global
+            body_emails = get_global('body_emails')
+            for email in get_global('email_re').findall(part.get_payload()):
                 body_emails.add(email)
             self.set_global('body_emails', body_emails)
 
@@ -109,65 +111,70 @@ class FreeMail(pad.plugins.base.BasePlugin):
             - reply     as above, but if no Reply-To header is found,
                         compares From: and body
         """
+        get_global = self.get_global
         if option and option not in ('replyto', 'reply'):
-            self.ctxt.log.warn("FreeMail::Plugin check_freemail_replyto"
-                               " invalid option: %s", option)
+            self.ctxt.log.warn("FreeMail::Plugin check_freemail_replyto "
+                               "invalid option: %s", option)
             return False
         elif not option:
             option = 'replyto'
-        if self.get_global('freemail_skip_bulk_envfrom'):
+        if get_global('freemail_skip_bulk_envfrom'):
             header_emails = []
             header_emails.append(msg.sender_address)
             for email in header_emails:
                 if SKIP_REPLYTO_FROM.search(email):
-                    self.ctxt.log.warn("FreeMail::Plugin check_freemail_replyto"
-                                       " envelope sender looks bulk skipping "
-                                       "check: %s", email)
+                    self.ctxt.log.warn(
+                        "FreeMail::Plugin check_freemail_replyto "
+                        "envelope sender looks bulk skipping check: %s",
+                        email)
                     return False
         try:
-            from_email = self.get_global('email_re').search(msg.msg['From']).group()
+            from_email = get_global(
+                'email_re').search(msg.msg['From']).group()
         except (AttributeError, TypeError, KeyError):
             from_email = ''
         try:
-            reply_to = self.get_global('email_re').search(msg.msg['Reply-To']).group()
+            reply_to = get_global(
+                'email_re').search(msg.msg['Reply-To']).group()
         except (AttributeError, TypeError, KeyError):
             reply_to = ''
         from_email_frm = self._is_freemail(from_email)
         reply_to_frm = self._is_freemail(reply_to)
         if (from_email_frm and reply_to_frm and
                 from_email != reply_to):
-            self.ctxt.log.warn("FreeMail::Plugin check_freemail_replyto"
-                               " HIT! From and Reply-To are different freemails")
+            self.ctxt.log.warn(
+                "FreeMail::Plugin check_freemail_replyto "
+                "HIT! From and Reply-To are different freemails")
             result = "From and Reply-To are different freemails"
             return str(result)
         if option == 'replyto' and not reply_to_frm:
-            self.ctxt.log.warn("FreeMail::Plugin check_freemail_replyto"
-                               " Reply-To is not freemail, skipping check")
+            self.ctxt.log.warn("FreeMail::Plugin check_freemail_replyto "
+                               "Reply-To is not freemail, skipping check")
             return False
         elif option == 'reply':
             if reply_to and not reply_to_frm:
-                self.ctxt.log.warn("FreeMail::Plugin check_freemail_replyto"
-                                   " Reply-To is defined but is not freemail, "
+                self.ctxt.log.warn("FreeMail::Plugin check_freemail_replyto "
+                                   "Reply-To is defined but is not freemail, "
                                    "skipping check")
                 return False
             elif not from_email_frm:
-                self.ctxt.log.warn("FreeMail::Plugin check_freemail_replyto"
-                                   " No Reply-To and From is not freemail, "
+                self.ctxt.log.warn("FreeMail::Plugin check_freemail_replyto "
+                                   "No Reply-To and From is not freemail, "
                                    "skipping check")
                 return False
         if not self._parse_body():
             return False
         reply = reply_to if reply_to_frm else from_email
         check = reply_to if option == 'replyto' else reply
-        for email in self.get_global("freemail_body_emails"):
+        for email in get_global("freemail_body_emails"):
             if email != check:
-                self.ctxt.log.warn("FreeMail::Plugin check_freemail_replyto"
-                                   " HIT! %s and %s are different freemails",
+                self.ctxt.log.warn("FreeMail::Plugin check_freemail_replyto "
+                                   "HIT! %s and %s are different freemails",
                                    check, email)
                 result = "Different freemails in reply header and body"
                 if self["freemail_add_describe_email"]:
                     _check = check.replace("@", "[at]") + " "
-                    _email = "(" +  _check + email.replace("@", "[at]") + ")"
+                    _email = "(" + _check + email.replace("@", "[at]") + ")"
                     result = result + "\n\t" + _email
                 return str(result)
         return False
@@ -208,8 +215,9 @@ class FreeMail(pad.plugins.base.BasePlugin):
                 if check_re and not check_re.search(email):
                     return False
                 elif check_re and check_re.search(email):
-                    self.ctxt.log.debug("FreeMail::Plugin check_freemail_from"
-                                        " HIT! %s is freemail and matches regex", email)
+                    self.ctxt.log.debug(
+                        "FreeMail::Plugin check_freemail_from"
+                        " HIT! %s is freemail and matches regex", email)
                     result = "Sender address is freemail and matches regex"
                     if self["freemail_add_describe_email"]:
                         _email = "(" + email.replace("@", "[at]") + ")"
@@ -260,9 +268,11 @@ class FreeMail(pad.plugins.base.BasePlugin):
                 if check_re and not check_re.search(email):
                     return False
                 elif check_re and check_re.search(email):
-                    self.ctxt.log.debug("FreeMail::Plugin check_freemail_header"
-                                        " HIT! %s is freemail and matches regex", email)
-                    result = "Header " + header + " is freemail and matches regex"
+                    self.ctxt.log.debug(
+                        "FreeMail::Plugin check_freemail_header"
+                        " HIT! %s is freemail and matches regex", email)
+                    result = ("Header " + header +
+                              " is freemail and matches regex")
                     if self["freemail_add_describe_email"]:
                         _email = "(" + email.replace("@", "[at]") + ")"
                         result = result + "\n\t" + _email
@@ -302,8 +312,9 @@ class FreeMail(pad.plugins.base.BasePlugin):
         if check_re:
             for email in self.get_global("freemail_body_emails"):
                 if check_re.search(email):
-                    self.ctxt.log.debug("FreeMail::Plugin check_freemail_body"
-                                        " HIT! %s is freemail and matches regex", email)
+                    self.ctxt.log.debug(
+                        "FreeMail::Plugin check_freemail_body"
+                        " HIT! %s is freemail and matches regex", email)
                     result = "Address from body is freemail and matches regex"
                     if self["freemail_add_describe_email"]:
                         _email = "(" + email.replace("@", "[at]") + ")"
@@ -325,12 +336,13 @@ class FreeMail(pad.plugins.base.BasePlugin):
         """Parse all the emails from body and check
         if all conditions are accepted
         """
-        if self.get_global("check_if_parsed"):
+        get_global = self.get_global
+        if get_global("check_if_parsed"):
             return True
-        body_emails = self.get_global('body_emails')
+        body_emails = get_global('body_emails')
         freemail_body_emails = []
-        if (len(body_emails) >= self.get_global("freemail_max_body_emails") and
-                self.get_global("freemail_skip_when_over_max")):
+        if (len(body_emails) >= get_global("freemail_max_body_emails") and
+                get_global("freemail_skip_when_over_max")):
             self.ctxt.log.debug("FreeMail::Plugin check_freemail_body "
                                 "too many unique emails found in body")
             return False
@@ -339,9 +351,10 @@ class FreeMail(pad.plugins.base.BasePlugin):
             if self._is_freemail(email):
                 freemail_count += 1
                 freemail_body_emails.append(email)
-            if freemail_count >= self.get_global("freemail_max_body_freemails"):
-                self.ctxt.log.debug("FreeMail::Plugin check_freemail_body "
-                                    "too many unique free emails found in body")
+            if freemail_count >= get_global("freemail_max_body_freemails"):
+                self.ctxt.log.debug(
+                    "FreeMail::Plugin check_freemail_body "
+                    "too many unique free emails found in body")
                 return False
         self.set_global("freemail_body_emails", freemail_body_emails)
         self.set_global("check_if_parsed", True)
@@ -362,13 +375,17 @@ class FreeMail(pad.plugins.base.BasePlugin):
         freemail_domains = self.get_global('freemail_domains')
 
         if email in freemail_whitelist:
-            self.ctxt.log.warn("FreeMail::Plugin whitelisted email: %s", email)
+            self.ctxt.log.warn(
+                "FreeMail::Plugin whitelisted email: %s", email)
             return False
         if email_domain in freemail_whitelist:
-            self.ctxt.log.warn("FreeMail::Plugin whitelisted domain: %s", email_domain)
+            self.ctxt.log.warn(
+                "FreeMail::Plugin whitelisted domain: %s", email_domain)
             return False
         if EMAIL_WHITELIST.search(email):
-            self.ctxt.log.warn("FreeMail::Plugin whitelisted domain, default: %s", email_domain)
+            self.ctxt.log.warn(
+                "FreeMail::Plugin whitelisted domain, default: %s",
+                email_domain)
             return False
         if (email_domain in freemail_domains or
                 (freemail_re and freemail_re.search(email))):
