@@ -11,8 +11,9 @@ It extracts the following metadata:
 """
 
 import re
+from pad.regex import Regex
 
-LOCALHOST = re.compile(r"""
+LOCALHOST = Regex(r"""
 (?:
               # as a string
               localhost(?:\.localdomain)?
@@ -84,7 +85,7 @@ LOCALHOST = re.compile(r"""
             )
 """, re.I | re.X)
 
-IP_PRIVATE = re.compile(r"""
+IP_PRIVATE = Regex(r"""
 ^(?:
   (?:   # IPv4 addresses
     10|                    # 10.0.0.0/8      Private Use (5735, 1918)
@@ -168,7 +169,7 @@ IP_PRIVATE = re.compile(r"""
 )
 """, re.X | re.I)
 
-IP_ADDRESS = re.compile(r"""
+IP_ADDRESS = Regex(r"""
             (?:
               \b(?<!:)    # ensure no "::" IPv4 marker before this one
               # plain IPv4, as above
@@ -251,105 +252,105 @@ IP_ADDRESS = re.compile(r"""
               (?![a-f0-9:])
             )""", re.X)
 
-IPFRE = re.compile(r"[\[ \(]{1}[a-fA-F\d\.\:]{7,}?[\] \n;\)]{1}")
+IPFRE = Regex(r"[\[ \(]{1}[a-fA-F\d\.\:]{7,}?[\] \n;\)]{1}")
 
-FETCHMAIL = re.compile(r"""
+FETCHMAIL = Regex(r"""
 .*?\s(\S+)\s(?:\[({IP_ADDRESS})\]\s)?
 by\s(\S+)\swith
 \s\S+\s\(fetchmail""".format(IP_ADDRESS=IP_ADDRESS.pattern), re.X)
 
-LOCALHOST_RE = re.compile(r"""
+LOCALHOST_RE = Regex(r"""
 ^\S+\s\([^\s\@]+\@{LOCALHOST}\)\sby\s\S+\s\(
 """.format(LOCALHOST=LOCALHOST.pattern), re.X | re.I)
 
-UNKNOWN_RE_RDNS = re.compile(r"""
+UNKNOWN_RE_RDNS = Regex(r"""
 ^(\S+)\s\((unknown)\s\[({IP_ADDRESS})\]\)\s\(
 """.format(IP_ADDRESS=IP_ADDRESS.pattern), re.X)
 
 # ================ check_for_skip regex ==================
-WITH_LOCAL_RE = re.compile(r'\bwith local(?:-\S+)? ', re.I)
-BSMTP_RE = re.compile(r'^\S+ by \S+ with BSMTP', re.I)
-CONTENT_TECH_RE = re.compile(r"""
+WITH_LOCAL_RE = Regex(r'\bwith local(?:-\S+)? ', re.I)
+BSMTP_RE = Regex(r'^\S+ by \S+ with BSMTP', re.I)
+CONTENT_TECH_RE = Regex(r"""
 ^\S+\s\(\S+\)\sby\s\S+\s\(Content\sTechnologies\s""", re.X | re.I)
-AVG_SMTP_RE = re.compile(r'^127\.0\.0\.1 \(AVG SMTP \S+ \[\S+\]\)')
-QMAIL_RE = re.compile(r'^\S+\@\S+ by \S+ by uid \S+ ')
-FROM_RE = re.compile(r'^\S+\@\S+ by \S+ ')
-UNKNOWN_RE = re.compile(r'^Unknown\/Local \(')
-AUTH_SKIP_RE = re.compile(r'^\(AUTH: \S+\) by \S+ with ')
-LOCAL_SKIP_RE = re.compile(r"""
+AVG_SMTP_RE = Regex(r'^127\.0\.0\.1 \(AVG SMTP \S+ \[\S+\]\)')
+QMAIL_RE = Regex(r'^\S+\@\S+ by \S+ by uid \S+ ')
+FROM_RE = Regex(r'^\S+\@\S+ by \S+ ')
+UNKNOWN_RE = Regex(r'^Unknown\/Local \(')
+AUTH_SKIP_RE = Regex(r'^\(AUTH: \S+\) by \S+ with ')
+LOCAL_SKIP_RE = Regex(r"""
 ^localhost\s\(localhost\s\[\[UNIX:\slocalhost\]\]\)\sby\s""", re.X)
-AMAZON_RE = re.compile(r"""
+AMAZON_RE = Regex(r"""
 ^\S+\.amazon\.com\sby
 \s\S+\.amazon\.com\swith\sESMTP\s\(peer\scrosscheck:\s""", re.X)
-NOVELL_RE = re.compile(r'^[^\.]+ by \S+ with Novell_GroupWise')
-NO_NAME_RE = re.compile(r'^no\.name\.available by \S+ via smtpd \(for ')
-SMTPSVC_RE = re.compile(r"""
+NOVELL_RE = Regex(r'^[^\.]+ by \S+ with Novell_GroupWise')
+NO_NAME_RE = Regex(r'^no\.name\.available by \S+ via smtpd \(for ')
+SMTPSVC_RE = Regex(r"""
 ^mail\spickup\sservice\sby\s(\S+)\swith\sMicrosoft\sSMTPSVC$""", re.X)
 
 # ========================================================
 
 # ================ function regex ====================
-ENVFROM_RE = re.compile(r"""
+ENVFROM_RE = Regex(r"""
 .*?(?:return-path:?\s|envelope-(?:sender|from)[\s=])(\S+)\b""", re.X)
-RDNS_RE = re.compile(r'^(\S+) ')
-RDNS_RE2 = re.compile(r'^(\S+)\(')
-HEADER_RE = re.compile(r"""
+RDNS_RE = Regex(r'^(\S+) ')
+RDNS_RE2 = Regex(r'^(\S+)\(')
+HEADER_RE = Regex(r"""
     ^\(?\[?({IP_ADDRESS})\]?\)?\sby
 """.format(IP_ADDRESS=IP_ADDRESS.pattern), re.X)
-RDNS_IP_RE = re.compile(r"""
+RDNS_IP_RE = Regex(r"""
     ^\[({IP_ADDRESS})\]
 """.format(IP_ADDRESS=IP_ADDRESS.pattern), re.X)
-RDNS_SMTP = re.compile(r"""
+RDNS_SMTP = Regex(r"""
     ^(\S+)\s\(\s?{IP_ADDRESS}\)\sby.*\({IP_ADDRESS}\)\swith.*(ESMTP|SMTP)
 """.format(IP_ADDRESS=IP_ADDRESS.pattern), re.X)
-RDNS_SMTP1 = re.compile(r"""
+RDNS_SMTP1 = Regex(r"""
     ^(\S+)\s\(\s?\[{IP_ADDRESS}\]\)\sby.*(\S+)\swith.*(esmtp|smtp|ESMTP|SMTP)
 """.format(IP_ADDRESS=IP_ADDRESS.pattern), re.X)
-RDNS_RE4 = re.compile(r"""
+RDNS_RE4 = Regex(r"""
     ^((\S+)\s\(\[{IP_ADDRESS})(?:[.:]\d+)?\]\).*?\sby\s(\S+)
 """.format(IP_ADDRESS=IP_ADDRESS.pattern), re.X)
-RDNS_RE1 = re.compile(r"""
+RDNS_RE1 = Regex(r"""
     ^\(\[({IP_ADDRESS})\]\)\sby\s(\S+)
 """.format(IP_ADDRESS=IP_ADDRESS.pattern), re.X)
-RDNS_RE3 = re.compile(r"""
+RDNS_RE3 = Regex(r"""
     ^(\S+)\s\[({IP_ADDRESS})\]\sby\s(\S+)\s\[({IP_ADDRESS})]
 """.format(IP_ADDRESS=IP_ADDRESS.pattern), re.X)
-BY_RE = re.compile(r'.*? by (\S+) .*')
-HELO_RE = re.compile(r'.*?\((?:HELO|EHLO) (\S*)\)', re.I)
-HELO_RE10 = re.compile(r'.*\(.* (HELO|EHLO) (\S+)\)', re.I)
-HELO_RE2 = re.compile(r"""
+BY_RE = Regex(r'.*? by (\S+) .*')
+HELO_RE = Regex(r'.*?\((?:HELO|EHLO) (\S*)\)', re.I)
+HELO_RE10 = Regex(r'.*\(.* (HELO|EHLO) (\S+)\)', re.I)
+HELO_RE2 = Regex(r"""
     .*?\((\S+)\s\[{IP_ADDRESS}\]\)
 """.format(IP_ADDRESS=IP_ADDRESS.pattern), re.X)
-HELO_RE3 = re.compile(r'.*?helo=(\S+)\)', re.I)
-HELO_RE4 = re.compile(r"""
+HELO_RE3 = Regex(r'.*?helo=(\S+)\)', re.I)
+HELO_RE4 = Regex(r"""
     ^\(?(\S+)\s\(?\s?\[{IP_ADDRESS}\]\)
 """.format(IP_ADDRESS=IP_ADDRESS.pattern), re.X)
-HELO_RE5 = re.compile(r"""
+HELO_RE5 = Regex(r"""
     ^(\S+)\s\(\s?{IP_ADDRESS}\)
 """.format(IP_ADDRESS=IP_ADDRESS.pattern), re.X)
-HELO_RE6 = re.compile(r"""
+HELO_RE6 = Regex(r"""
     ^(\S+)\s\(\[{IP_ADDRESS}\]\s\[{IP_ADDRESS}\]\)
 """.format(IP_ADDRESS=IP_ADDRESS.pattern), re.X)
-HELO_RE7 = re.compile(r"""
+HELO_RE7 = Regex(r"""
     ^(\S+)\s\((\S+)\s?\[{IP_ADDRESS}\].*\)
 """.format(IP_ADDRESS=IP_ADDRESS.pattern), re.X)
-HELO_RE8 = re.compile(r"""
+HELO_RE8 = Regex(r"""
     ^\(?(\S+)\s\[\s?{IP_ADDRESS}\]
 """.format(IP_ADDRESS=IP_ADDRESS.pattern), re.X)
-HELO_RE9 = re.compile(r"""
+HELO_RE9 = Regex(r"""
     ^\(?(\S+)\s\(?\s?\[{IP_ADDRESS}\] \s?(\S+)\)
 """.format(IP_ADDRESS=IP_ADDRESS.pattern), re.X)
-IDENT_RE = re.compile(r'.*ident=(\S+)\)')
-IDENT_RE2 = re.compile(r'.*\((\S+)@')
-ID_RE = re.compile(r'.*id (\S+)')
-AUTH_RE = re.compile(r"""
+IDENT_RE = Regex(r'.*ident=(\S+)\)')
+IDENT_RE2 = Regex(r'.*\((\S+)@')
+ID_RE = Regex(r'.*id (\S+)')
+AUTH_RE = Regex(r"""
 .*?\swith\s((?:ES|L|UTF8S|UTF8L)MTPS?A|ASMTP|HTTPU?)(?:\s|;|$)""", re.X | re.I)
-AUTH_VC_RE = re.compile(r'.*? \(version=([^ ]+) cipher=([^\)]+)\)')
-AUTH_RE2 = re.compile(r'.*? \(authenticated as (\S+)\)')
-AUTH_RE3 = re.compile(r"""
+AUTH_VC_RE = Regex(r'.*? \(version=([^ ]+) cipher=([^\)]+)\)')
+AUTH_RE2 = Regex(r'.*? \(authenticated as (\S+)\)')
+AUTH_RE3 = Regex(r"""
 \)\s\(Authenticated\ssender:\s\S+\)\sby\s\S+\s\(Postfix\)\swith\s""", re.X)
-AUTH_RE4 = re.compile(r'.* by (mail\.gmx\.(net|com)) \([^\)]+\) with ((ESMTP|SMTP))')
-AUTH_RE5 = re.compile(r'.* \(account .* by .* \(CommuniGate Pro ('
+AUTH_RE4 = Regex(r'.* by (mail\.gmx\.(net|com)) \([^\)]+\) with ((ESMTP|SMTP))')
+AUTH_RE5 = Regex(r'.* \(account .* by .* \(CommuniGate Pro ('
                       r'HTTP|SMTP)')
 
 ORIGINATING_IP_HEADER_RE = r"^X-ORIGINATING-IP: ({}).*"

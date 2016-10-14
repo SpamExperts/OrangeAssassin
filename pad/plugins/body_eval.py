@@ -8,10 +8,12 @@ import collections
 
 import pad.plugins.base
 
-SPACE_COUNT = re.compile(r"\s")
-SPLIT_WORDS = re.compile(r"\s+")
-REMOVE_OTHER = re.compile(r"[^\w]")
-STOCK_RE = re.compile(r"""
+from pad.regex import Regex
+
+SPACE_COUNT = Regex(r"\s")
+SPLIT_WORDS = Regex(r"\s+")
+REMOVE_OTHER = Regex(r"[^\w]")
+STOCK_RE = Regex(r"""
     ^trad(?:e|ing)date|
     company(?:name)?|
     s\w?(?:t\w?o\w?c\w?k|y\w?m(?:\w?b\w?o\w?l)?)|

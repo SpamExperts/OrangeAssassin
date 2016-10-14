@@ -11,7 +11,9 @@ from builtins import str
 import pad.rules.eval_
 import pad.plugins.base
 
-ACCREDITOR_RE = re.compile(r"[@.]a--([a-z0-9]{3,})\.", re.I)
+from pad.regex import Regex
+
+ACCREDITOR_RE = Regex(r"[@.]a--([a-z0-9]{3,})\.", re.I)
 
 
 class DNSEval(pad.plugins.base.BasePlugin):
@@ -78,7 +80,7 @@ class DNSEval(pad.plugins.base.BasePlugin):
 
         if subtest is not None:
             try:
-                subtest = re.compile(subtest)
+                subtest = Regex(subtest)
             except re.error as e:
                 self.ctxt.err("Invalid regex %s: %s", subtest, e)
                 return False
@@ -149,7 +151,7 @@ class DNSEval(pad.plugins.base.BasePlugin):
 
         if subtest is not None:
             try:
-                subtest = re.compile(subtest)
+                subtest = Regex(subtest)
             except re.error as e:
                 self.ctxt.err("Invalid regex %s: %s", subtest, e)
                 return False

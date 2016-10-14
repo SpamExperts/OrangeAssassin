@@ -33,6 +33,8 @@ import pad.rules.eval_
 import pad.rules.header
 import pad.rules.ruleset
 
+from pad.regex import Regex
+
 # Simple protection against recursion with "include".
 MAX_RECURSION = 10
 
@@ -87,7 +89,7 @@ RULES = {
     "eval": pad.rules.eval_.EvalRule,
 }
 
-_COMMENT_P = re.compile(r"((?<=[^\\])#.*)")
+_COMMENT_P = Regex(r"((?<=[^\\])#.*)")
 
 
 class PADParser(object):
@@ -96,9 +98,10 @@ class PADParser(object):
     Note that this is not thread-safe.
     """
 
-    def __init__(self, paranoid=False, ignore_unknown=True):
+    def __init__(self, paranoid=False, ignore_unknown=True, lazy_mode=True):
         self.ctxt = pad.context.GlobalContext(paranoid=paranoid,
-                                              ignore_unknown=ignore_unknown)
+                                              ignore_unknown=ignore_unknown,
+                                              lazy_mode=lazy_mode)
         # XXX This could be a default OrderedDict
         self.results = collections.OrderedDict()
         self.ruleset = pad.rules.ruleset.RuleSet(self.ctxt)

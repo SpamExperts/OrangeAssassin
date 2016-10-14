@@ -5,8 +5,10 @@ import re
 import pad.errors
 import pad.plugins.base
 
+from pad.regex import Regex
+
 # This splits value in the corresponding tags
-SPLIT_TAGS = re.compile(r"(<[^<>]+>)")
+SPLIT_TAGS = Regex(r"(<[^<>]+>)")
 
 
 class ReplaceTags(pad.plugins.base.BasePlugin):

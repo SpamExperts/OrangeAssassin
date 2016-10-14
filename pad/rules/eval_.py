@@ -5,8 +5,10 @@ import re
 import pad.errors
 import pad.rules.base
 
+from pad.regex import Regex
+
 # Used to extract the eval rule data
-_EVAL_RULE_P = re.compile(r"""
+_EVAL_RULE_P = Regex(r"""
     ([_a-zA-Z]\w*)     # First matching group for the eval rule name
     \((.*)\)           # Greedy matching group for the eval rule args
 """, re.VERBOSE)

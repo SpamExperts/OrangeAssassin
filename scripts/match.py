@@ -68,6 +68,9 @@ def parse_arguments(args):
                        help="Revoke the message as spam ", default=False)
     parser.add_argument("-D", "--debug", action="store_true",
                         help="Enable debugging output", default=False)
+    parser.add_argument("-dl", "--deactivate-lazy", dest="lazy_mode",
+                        action="store_true", default=False,
+                        help="Deactivate lazy loading of rules/regex")
     parser.add_argument("-v", "--version", action="version",
                         version=pad.__version__)
     parser.add_argument("-C", "--configpath", action="store",
@@ -95,6 +98,8 @@ def parse_arguments(args):
 
 def main():
     options = parse_arguments(sys.argv[1:])
+    import pdb;pdb.set_trace()
+    pad.config.LAZY_MODE = not options.lazy_mode
     logger = pad.config.setup_logging("pad-logger", debug=options.debug)
     config_files = pad.config.get_config_files(options.configpath,
                                                options.sitepath,

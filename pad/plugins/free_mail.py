@@ -8,8 +8,9 @@ from builtins import str
 import re
 import pad.plugins.base
 
+from pad.regex import Regex
 
-EMAIL_WHITELIST = re.compile(r"""
+EMAIL_WHITELIST = Regex(r"""
   ^(?:
       abuse|support|sales|info|helpdesk|contact|kontakt
     | (?:post|host|domain)master
@@ -20,7 +21,7 @@ EMAIL_WHITELIST = re.compile(r"""
     | .+=.+=.+				# gmail forward
   )\@
 """, re.X | re.I)
-SKIP_REPLYTO_FROM = re.compile(r"""
+SKIP_REPLYTO_FROM = Regex(r"""
   (?:
       ^(?:post|host|domain)master
     | ^double-bounce
@@ -55,7 +56,7 @@ class FreeMail(pad.plugins.base.BasePlugin):
     def check_start(self, msg):
         """Verify if the domains are valid and
         separate wildcard domains from the rest"""
-        domain_re = re.compile(r'^[a-z0-9.*?-]+$')
+        domain_re = Regex(r'^[a-z0-9.*?-]+$')
         freemail_domains = self.get_global('freemail_domains')
         freemail_temp_wc = list()
         for index, domain in enumerate(freemail_domains):
@@ -69,13 +70,13 @@ class FreeMail(pad.plugins.base.BasePlugin):
                 freemail_temp_wc.append(temp)
         if freemail_temp_wc:
             wild_doms = r'\@(?:{0})$'.format('|'.join(freemail_temp_wc))
-            self.set_global('freemail_domains_re', re.compile(wild_doms))
+            self.set_global('freemail_domains_re', Regex(wild_doms))
         self.set_global('freemail_domains', freemail_domains)
         valid_tlds = (self.get_global('util_rb_tld') +
                       self.get_global('util_rb_2tld') +
                       self.get_global('util_rb_3tld'))
         tlds_re = r'(?:{0})'.format("|".join(valid_tlds))
-        email_re = re.compile(r"""
+        email_re = Regex(r"""
               (?=.{{0,64}}\@)				# limit userpart to 64 chars (and speed up searching?)
               (?<![a-z0-9!#\$%&'*+\/=?^_`{{|}}~-])	# start boundary
               (						# capture email
@@ -186,7 +187,7 @@ class FreeMail(pad.plugins.base.BasePlugin):
         header_emails = []
         if regex:
             try:
-                check_re = re.compile(regex)
+                check_re = Regex(regex)
             except re.error:
                 self.ctxt.log.warn("FreeMail::Plugin check_freemail_from"
                                    " regex error")

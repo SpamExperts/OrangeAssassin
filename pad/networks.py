@@ -4,8 +4,9 @@ import ipaddress
 
 from builtins import str
 from builtins import object
+from pad.regex import Regex
 
-_NETWORK_RE = re.compile(r"""
+_NETWORK_RE = Regex(r"""
 ^(?P<exclude>!?)
     \[?
         (?P<ip>

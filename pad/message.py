@@ -22,10 +22,12 @@ from future.utils import PY3
 
 import pad
 import pad.context
+
 from pad.received_parser import ReceivedParser
 from pad.rules.ruleset import RuleSet
+from pad.regex import Regex
 
-URL_RE = re.compile(r"""
+URL_RE = Regex(r"""
 (
     \b                      # the preceding character must not be alphanumeric
     (?:
@@ -41,7 +43,7 @@ URL_RE = re.compile(r"""
 )
 """, re.VERBOSE)
 
-IPFRE = re.compile(r"[\[ \(]{1}[a-fA-F\d\.\:]{7,}?[\] \n;\)]{1}")
+IPFRE = Regex(r"[\[ \(]{1}[a-fA-F\d\.\:]{7,}?[\] \n;\)]{1}")
 
 STRICT_CHARSETS = frozenset(("quopri-codec", "quopri", "quoted-printable",
                              "quotedprintable"))
@@ -101,6 +103,9 @@ class _memoize(object):
         """
         @functools.wraps(func)
         def wrapped_func(fself, name):
+            from pad.config import LAZY_MODE
+            if LAZY_MODE:
+                return func(fself, name)
             cache = getattr(fself, self._cache_name)
             result = cache.get(name)
             if result is None:
@@ -447,7 +452,6 @@ class Message(pad.context.MessageContext):
         self.received_headers = received_obj.received
         self._parse_relays(self.received_headers)
         self._parse_sender()
-
 
         try:
             self._create_plugin_tags(self.received_headers[0])

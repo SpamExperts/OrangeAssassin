@@ -29,6 +29,7 @@ SITE_RULES_PATHS = (
     '/etc/spamassassin',
 )
 
+LAZY_MODE = True
 
 def setup_logging(log_name, debug=False, filepath=None, sentry_dsn=None,
                   file_lvl="INFO", sentry_lvl="WARN"):

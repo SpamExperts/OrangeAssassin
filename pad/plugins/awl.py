@@ -31,9 +31,11 @@ from sqlalchemy.ext.declarative.api import declarative_base
 
 import pad.plugins.base
 
+from pad.regex import Regex
+
 Base = declarative_base()
 
-IPV4SUFFIXRE = re.compile("(\.0){1,3}$")
+IPV4SUFFIXRE = Regex("(\.0){1,3}$")
 
 
 class AWL(Base):

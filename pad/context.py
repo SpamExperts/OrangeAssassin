@@ -26,9 +26,10 @@ import pad.networks
 import pad.rules.base
 import pad.plugins.base
 import pad.dns_interface
+import pad.regex
 
 
-DSN_SERVER_RE = re.compile(r"""
+DSN_SERVER_RE = pad.regex.Regex(r"""
 ^\[?
     ([0-9.]+|           # IPv4
      [0-9a-f:]+)        # IPv6
@@ -114,10 +115,11 @@ class GlobalContext(_Context):
 
     """
 
-    def __init__(self, paranoid=False, ignore_unknown=True):
+    def __init__(self, paranoid=False, ignore_unknown=True, lazy_mode=True):
         super(GlobalContext, self).__init__()
         self.plugins = dict()
         self.paranoid = paranoid
+        self.lazy_mode = lazy_mode
         self.ignore_unknown = ignore_unknown
         self.eval_rules = dict()
         self.cmds = dict()

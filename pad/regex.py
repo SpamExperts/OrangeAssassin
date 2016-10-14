@@ -106,7 +106,47 @@ def perl2re(pattern, match_op="=~"):
     try:
         if match_op == "=~":
             return MatchPattern(re.compile(pattern, flags))
-        elif match_op == "!~":
-            return NotMatchPattern(re.compile(pattern, flags))
+        elif match_op == "!~": return NotMatchPattern(re.compile(pattern, flags))
     except re.error as e:
         raise pad.errors.InvalidRegex("Invalid regex %r: %s" % (pattern, e))
+
+
+class Regex(object):
+    """Customised regex class to work in lazy mode"""
+    compiled = None
+
+    def __init__(self, pattern, flags=0):
+        self.pattern = pattern
+        self.flags = flags
+
+    def compile(self):
+        from pad.config import LAZY_MODE
+        if LAZY_MODE:
+            return re.compile(self.pattern, self.flags)
+        elif not self.compiled:
+            self.compiled = re.compile(self.pattern, self.flags)
+        return self.compiled
+
+    def search(self, string):
+        return self.compile().search(string)
+
+    def match(self, string):
+        return self.compile().match(string)
+
+    def fullmatch(self, string):
+        return self.compile().fullmatch(string)
+
+    def sub(self, repl, string, count=0):
+        return self.compile().sub(repl, string, count)
+
+    def subn(self, repl, string, count=0):
+        return self.compile().sub(repl, string, count)
+
+    def split(self, string, maxsplit=0):
+        return self.compile().split(string, maxsplit)
+
+    def findall(self, string):
+        return self.compile().findall(string)
+
+    def finditer(self, string):
+        return self.compile().finditer(string)

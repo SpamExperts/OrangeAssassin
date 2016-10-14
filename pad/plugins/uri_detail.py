@@ -17,7 +17,7 @@ import pad.regex
 import pad.rules.uri
 import pad.plugins.base
 
-URI_DRREG = re.compile(
+URI_DRREG = pad.regex.Regex(
         r"(?P<key>\w*)\s+(?P<op>[\=\!\~]{1,2})\s+(?P<regex>/.*?/)")
 
 

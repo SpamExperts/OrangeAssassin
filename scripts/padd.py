@@ -74,6 +74,9 @@ def main():
     parser.add_argument("-r", "--pidfile", default="/var/run/padd.pid")
     parser.add_argument("--log-file", dest="log_file",
                         default="/var/log/padd.log")
+    parser.add_argument("-dl", "--deactivate-lazy", dest="lazy_mode",
+                        action="store_true", default=False,
+                        help="Deactivate lazy loading of rules/regex")
     # parser.add_argument("-4", "--ipv4-only", "--ipv4", default=False,
     #                     action="store_true", help="Use IPv4 where applicable, "
     #                                               "disables IPv6")
@@ -83,6 +86,7 @@ def main():
     parser.add_argument("-v", "--version", action="version",
                         version=pad.__version__)
     args = parser.parse_args()
+    pad.config.LAZY_MODE = not args.lazy_mode
     logger = pad.config.setup_logging("pad-logger", debug=args.debug,
                                       filepath=args.log_file)
     if args.action:

@@ -16,10 +16,11 @@ from operator import itemgetter
 
 import pad
 import pad.errors
+import pad.regex
 
-_TAG_RE = re.compile(r"(_([A-Z_]*?)_)")
+_TAG_RE = pad.regex.Regex(r"(_([A-Z_]*?)_)")
 
-_DNS_OPTIONS_RE = re.compile(r"""
+_DNS_OPTIONS_RE = pad.regex.Regex(r"""
 [
 (?P<edns>(no)?edns0?=\d*)?,?
 (?P<rotate>(no)?rotate)?,?

@@ -22,21 +22,14 @@ _SUBRULE_P = re.compile(r"([_a-zA-Z]\w*)(?=\W|$)")
 
 class MetaRule(pad.rules.base.BaseRule):
     """These rules are boolean or arithmetic combinations of other rules."""
+    _location = {}
 
     def __init__(self, name, rule, score=None, desc=None, priority=0,
                  tflags=None):
         """Convert the rule into Python executable code."""
         super(MetaRule, self).__init__(name, score=score, desc=desc,
                                        priority=priority, tflags=tflags)
-        self.subrules = set(_SUBRULE_P.findall(rule))
-        rule = _SUBRULE_P.sub(r"\1(msg)", rule)
-        for operator, repl in CONVERT:
-            rule = rule.replace(operator, repl)
-        self.rule = "match = lambda msg: %s" % rule
-        self._location = dict()
-        # XXX we should check for potentially unsafe code or run it in
-        # XXX RestrictedPython.
-        self._code_obj = compile(self.rule, "<meta>", "exec")
+        self.rule = rule
 
     def postparsing(self, ruleset, _depth=0):
         """Get the referenced sub-rules of this meta-rule and add execute the
@@ -49,8 +42,18 @@ class MetaRule(pad.rules.base.BaseRule):
         if "match" in self._location:
             # The rule has already been processed.
             return
+
+        subrules = set(_SUBRULE_P.findall(self.rule))
+        rule = _SUBRULE_P.sub(r"\1(msg)", self.rule)
+        for operator, repl in CONVERT:
+            rule = rule.replace(operator, repl)
+        self.rule = "match = lambda msg: %s" % rule
+        # XXX we should check for potentially unsafe code or run it in
+        # XXX RestrictedPython.
+        _code_obj = compile(self.rule, "<meta>", "exec")
+
         pad.rules.base.BaseRule.postparsing(self, ruleset)
-        for subrule_name in self.subrules:
+        for subrule_name in subrules:
             try:
                 subrule = ruleset.get_rule(subrule_name)
                 # Call any postparsing for this subrule to ensure that the rule
@@ -62,7 +65,7 @@ class MetaRule(pad.rules.base.BaseRule):
                                                         "referenced %r" %
                                              subrule_name)
             self._location[subrule_name] = subrule.match
-        exec(self._code_obj, self._location)
+        exec(_code_obj, self._location)
         assert "match" in self._location
 
     def match(self, msg):

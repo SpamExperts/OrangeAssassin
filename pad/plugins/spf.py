@@ -7,13 +7,15 @@ import spf
 import pad.plugins.base
 import pad.message
 
-RECEIVED_RE = re.compile(r"""
+from pad.regex import Regex
+
+RECEIVED_RE = Regex(r"""
     ^(pass|neutral|(?:soft)?fail|none|
     permerror|temperror)
     \b(?:.*\bidentity=(\S+?);?\b)?
 """, re.I | re.S | re.X | re.M)
-AUTHRES_SPF = re.compile(r'.*;\s*spf\s*=\s*([^;]*)', re.I | re.S | re.X | re.M)
-AUTHRES_RE = re.compile(r"""
+AUTHRES_SPF = Regex(r'.*;\s*spf\s*=\s*([^;]*)', re.I | re.S | re.X | re.M)
+AUTHRES_RE = Regex(r"""
     ^(pass|neutral|(?:hard|soft)?fail|none|
     permerror|temperror)(?:[^;]*?
     \bsmtp\.(\S+)\s*=[^;]+)?
