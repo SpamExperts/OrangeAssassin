@@ -98,7 +98,6 @@ def parse_arguments(args):
 
 def main():
     options = parse_arguments(sys.argv[1:])
-    import pdb;pdb.set_trace()
     pad.config.LAZY_MODE = not options.lazy_mode
     logger = pad.config.setup_logging("pad-logger", debug=options.debug)
     config_files = pad.config.get_config_files(options.configpath,

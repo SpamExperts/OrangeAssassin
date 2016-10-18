@@ -4,8 +4,8 @@ pyzor==1.0.0
 Pillow==3.2.0
 pygeoip==0.3.2
 langdetect==1.0.6
-sqlalchemy==1.0.12
 PyPDF2==1.25.1
-mysqlclient==1.3.7
+PyMySQL==0.7.9
+mysqlclient==1.3.9
 pyspf==2.0.12t # rq.filter: ==2.0.12t
 spoon==1.0.1

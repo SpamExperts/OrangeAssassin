@@ -12,8 +12,25 @@ except ImportError:
     create_engine = None
     sessionmaker = None
 
+from collections import defaultdict
+
 import pad.conf
 
+
+def dbi_to_mysql(dsn, user, password):
+    conection_dates = defaultdict(int)
+    dummy, driver, connection = dsn.split(":", 2)
+    if driver.lower() == "mysql":
+        driver = "mysql"
+        db_name, hostname = connection.split(":", 1)
+        conection_dates["driver"] = driver
+        conection_dates["hostname"] = hostname
+        conection_dates["db_name"] = db_name
+        if not user or not password:
+            return conection_dates
+        conection_dates["user"] = user
+        conection_dates["password"] = password
+        return conection_dates
 
 def dbi_to_alchemy(dsn, user, password):
     """Convert perl DBI setting to SQLAlchemy settings."""
@@ -97,18 +114,25 @@ class BasePlugin(pad.conf.Conf, object):
         set.
         """
         connect_string = None
+        self["engine"] = None
         if self.dsn_name:
             dsn = self[self.dsn_name + "_dsn"]
             if dsn.upper().startswith("DBI"):
                 # Convert from SA format.
                 user = self[self.dsn_name + "_sql_username"]
                 password = self[self.dsn_name + "_sql_password"]
+                if not create_engine:
+                    self["engine"] = dbi_to_mysql(dsn, user, password)
+                    return
                 connect_string = dbi_to_alchemy(dsn, user, password)
             elif dsn:
                 # The connect string is already in the correct format
                 connect_string = dsn
         if connect_string is not None:
             self["engine"] = create_engine(connect_string)
+
+    def get_engine(self):
+        return self["engine"]
 
     def get_session(self):
         """Open a new SQLAlchemy session."""

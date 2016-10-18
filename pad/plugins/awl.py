@@ -22,12 +22,20 @@ import email
 import getpass
 import ipaddress
 
-from sqlalchemy import Column
-from sqlalchemy.types import Float
-from sqlalchemy.types import String
-from sqlalchemy.types import Integer
-from sqlalchemy.sql.schema import PrimaryKeyConstraint
-from sqlalchemy.ext.declarative.api import declarative_base
+from collections import defaultdict
+import pymysql
+
+try:
+    from sqlalchemy import Column
+    from sqlalchemy.types import Float
+    from sqlalchemy.types import String
+    from sqlalchemy.types import Integer
+    from sqlalchemy.sql.schema import PrimaryKeyConstraint
+    from sqlalchemy.ext.declarative.api import declarative_base
+    has_sqlalchemy = True
+except:
+    has_sqlalchemy = False
+    # import pymysql
 
 import pad.plugins.base
 
@@ -37,27 +45,44 @@ Base = declarative_base()
 
 IPV4SUFFIXRE = Regex("(\.0){1,3}$")
 
+AWL_TABLE = (
+    "CREATE TABLE `awl` IF NOT EXISTS `%s` (",
+    "  `username` varchar(255) NOT NULL, DEFAULT '',",
+    "  `email` varchar(255) NOT NULL DEFAULT '',",
+    "  `ip` varchar(40) NOT NULL DEFAULT '',",
+    "  `count` int(11) NOT NULL DEFAULT '0',",
+    "  `totscore` float NOT NULL DEFAULT '0',",
+    "  `signedby` varchar(255) NOT NULL DEFAULT '',",
+    "  PRIMARY KEY (`username`, `email`, `signedby`, `ip`)",
+    ") ENGINE=MyISAM ",
+    " DEFAULT CHARSET=latin1",
+    "COMMENT='Used by SpamAssassin "
+    "for the auto-whitelist functionality'"
+)
 
-class AWL(Base):
-    """Schema for the awl table"""
+if has_sqlalchemy:
+    class AWL(Base):
+        """Schema for the awl table"""
 
-    __tablename__ = 'awl'
+        __tablename__ = 'awl'
 
-    username = Column("username", String(255))
-    email = Column("email", String(200))
-    ip = Column("ip", String(40))
-    count = Column("count", Integer)
-    totscore = Column("totscore", Float)
-    signedby = Column("signedby", String(255))
+        username = Column("username", String(255))
+        email = Column("email", String(200))
+        ip = Column("ip", String(40))
+        count = Column("count", Integer)
+        totscore = Column("totscore", Float)
+        signedby = Column("signedby", String(255))
 
-    __table_args__ = (
-        PrimaryKeyConstraint("username", "email", "signedby", "ip"),)
+        __table_args__ = (
+            PrimaryKeyConstraint("username", "email", "signedby", "ip"),)
 
 
 class AutoWhiteListPlugin(pad.plugins.base.BasePlugin):
     """Reimplementation of the awl spamassassin plugin"""
 
     dsn_name = "user_awl"
+    has_mysql = False
+    engine = None
 
     eval_rules = ("check_from_in_auto_whitelist",)
 
@@ -113,6 +138,46 @@ class AutoWhiteListPlugin(pad.plugins.base.BasePlugin):
         return IPV4SUFFIXRE.sub("", str(network))
 
     def get_entry(self, address, ip, signed_by):
+        self.engine = self.get_engine()
+        if isinstance(self.engine, defaultdict) and not has_sqlalchemy:
+            return self.get_mysql_entry(address, ip, signed_by)
+        else:
+            return self.get_entry_sqlalch(address, ip, signed_by)
+
+
+    def get_mysql_entry(self, address, ip, signed_by):
+        conn = pymysql.connect(host=self.engine["hostname"], port=3306, user=self.engine["user"],
+                               passwd=self.engine["password"], db=self.engine["db_name"],
+                               unix_socket="/var/run/mysqld/mysqld.sock")
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM awl WHERE username=%s AND email=%s AND "
+                       "signedby=%s AND ip=%s",
+                       (self.ctxt.username, address, signed_by, ip))
+        try:
+            result = cursor.fetchall()
+            if result:
+                result = result[0]
+        except pymysql.DatabaseError:
+            result = cursor.execute(
+                "SELECT * FROM awl WHERE username=%s AND email=%s AND "
+                "signedby=%s AND ip=%s",
+                (self.ctxt.username, address, signed_by, "none"))
+
+            if result:
+                result = cursor.execute(
+                    "UPDATE awl SET ip=%s", (ip))
+                conn.commit()
+        if not result:
+            result = cursor.execute(
+                "INSERT INTO awl VALUES (%s, %s, %s, %s, %s, %s) ",
+                (self.ctxt.username, address, ip, 0, 0, signed_by))
+            conn.commit()
+
+        cursor.close()
+        conn.close()
+        return result
+
+    def get_entry_sqlalch(self, address, ip, signed_by):
         session = self.get_session()
         result = session.query(AWL).filter(
                 AWL.username == self.ctxt.username,
@@ -141,34 +206,22 @@ class AutoWhiteListPlugin(pad.plugins.base.BasePlugin):
             result.ip = ip
         return result
 
-    def check_from_in_auto_whitelist(self, msg, target=None):
-        score = msg.score
-        factor = self["auto_whitelist_factor"]
-        origin_ip = self.get_local(msg, "originip")
-        if origin_ip:
-            awl_key_ip = self.ip_to_awl_key(origin_ip)
-        else:
-            awl_key_ip = "none"
-        addr = self.get_local(msg, "from")
-        signed_by = self.get_local(msg, "signedby")
-
-        entry = self.get_entry(addr, awl_key_ip, signed_by)
-
+    def plugin_tags(self, msg, origin_ip, addr, signed_by, score, factor, entry):
         try:
             mean = entry.totscore / entry.count
+
+            log_msg = ("auto-whitelist: AWL active, pre-score: %s, "
+                       "mean: %s, IP: %s, address: %s %s")
+            self.ctxt.log.debug(log_msg,
+                                msg.score,
+                                "%.3f" % mean if mean else "undef",
+                                origin_ip if origin_ip else "undef",
+                                addr,
+                                "signed by %s" % signed_by if signed_by
+                                else "(not signed)")
         except ZeroDivisionError:
             mean = None
 
-        log_msg = ("auto-whitelist: AWL active, pre-score: %s, "
-                   "mean: %s, IP: %s, address: %s %s")
-
-        self.ctxt.log.debug(log_msg,
-                            msg.score,
-                            "%.3f" % mean if mean else "undef",
-                            origin_ip if origin_ip else "undef",
-                            addr,
-                            "signed by %s" % signed_by if signed_by
-                            else "(not signed)")
 
         if mean:
             delta = mean - score
@@ -187,6 +240,83 @@ class AutoWhiteListPlugin(pad.plugins.base.BasePlugin):
         session.merge(entry)
         session.commit()
         session.close()
+
+    def plugin_tags_mysql(self, msg, origin_ip, addr, signed_by, score, factor):
+        try:
+            raise pymysql.Error
+            conn = pymysql.connect(host=self.engine["hostname"], port=3306,
+                                   user=self.engine["user"],
+                                   passwd=self.engine["password"],
+                                   db=self.engine["db_name"],
+                                   unix_socket="/var/run/mysqld/mysqld.sock")
+
+            cursor = conn.cursor()
+            cursor.execute("SELECT totscore, count FROM awl")
+            entry_totscore, entry_count = cursor.fetchall()[0]
+
+        except pymysql.Error:
+            self.ctxt.log.error("DB connection failed")
+            return
+
+        try:
+            mean = entry_totscore / entry_count
+            log_msg = ("auto-whitelist: AWL active, pre-score: %s, "
+                       "mean: %s, IP: %s, address: %s %s")
+
+            self.ctxt.log.debug(log_msg,
+                            msg.score,
+                            "%.3f" % mean if mean else "undef",
+                            origin_ip if origin_ip else "undef",
+                            addr,
+                            "signed by %s" % signed_by if signed_by
+                            else "(not signed)")
+        except ZeroDivisionError:
+            mean = None
+
+
+        if mean:
+            delta = mean - score
+            delta *= factor
+            msg.plugin_tags["AWL"] = "%2.1f" % delta
+            msg.plugin_tags["AWLMEAN"] = "%2.1f" % mean
+            msg.plugin_tags["AWLCOUNT"] = "%2.1f" % entry_count
+            msg.plugin_tags["AWLPRESCORE"] = "%2.1f" % msg.score
+
+            msg.score += delta
+
+        entry_count += 1
+        entry_totscore += score
+
+        try:
+            result = cursor.execute(
+                "UPDATE awl SET count=%s, totscore=%s",
+                (entry_count, entry_totscore))
+        except pymysql.Error:
+            return False
+
+        conn.commit()
+        cursor.close()
+        conn.close()
+
+    def check_from_in_auto_whitelist(self, msg, target=None):
+        score = msg.score
+        factor = self["auto_whitelist_factor"]
+        origin_ip = self.get_local(msg, "originip")
+        if origin_ip:
+            awl_key_ip = self.ip_to_awl_key(origin_ip)
+        else:
+            awl_key_ip = "none"
+        addr = self.get_local(msg, "from")
+        signed_by = self.get_local(msg, "signedby")
+
+        entry = self.get_entry(addr, awl_key_ip, signed_by)
+
+        if self.has_mysql:
+            self.plugin_tags_mysql(msg, origin_ip, addr, signed_by, score,
+                                   factor)
+        else:
+            self.plugin_tags(msg, origin_ip, addr, signed_by, score,
+                             factor, entry)
 
         self.ctxt.log.debug("auto-whitelist: post auto-whitelist score %.3f",
                             msg.score)
