@@ -12,6 +12,7 @@ except ImportError:
     from mock import patch, Mock, call
 
 import pad.message
+import pad.config
 
 HTML_TEXT = """<html><head><title>Email spam</title></head><body>
 <p><b>Email spam</b>, also known as <b>junk email</b>
@@ -70,6 +71,7 @@ class TestParseMessage(unittest.TestCase):
     """Unit test for Message._parse_message."""
     def setUp(self):
         unittest.TestCase.setUp(self)
+        pad.config.LAZY_MODE = False
         self.parts = []
         self.headers = []
         self.mime_headers = []
