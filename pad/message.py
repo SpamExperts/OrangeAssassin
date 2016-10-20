@@ -213,12 +213,19 @@ class Message(pad.context.MessageContext):
         # parsed together with the message.
         return self.raw_headers.get(header_name, list())
 
+    def get_headers(self, header_name):
+        """Get a list of headers which were added by plugins"""
+        return self.headers.get(header_name, list())
+
     @_memoize("headers")
     def get_decoded_header(self, header_name):
         """Get a list of decoded headers with this name."""
         values = list()
         for value in self.get_raw_header(header_name):
             values.append(self._decode_header(value))
+
+        for value in self.get_headers(header_name):
+            values.append(value)
         return values
 
     def get_untrusted_ips(self):
