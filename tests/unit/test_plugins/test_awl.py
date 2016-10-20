@@ -68,7 +68,7 @@ class TestAWLBase(unittest.TestCase):
             "ident": "", "id": "", "envfrom": "",
             "auth": ""}]
         result = self.plugin._get_origin_ip(self.mock_msg)
-        expected = ipaddress.ip_address("8.8.8.8")
+        expected = ipaddress.ip_address(u"8.8.8.8")
         self.assertEqual(result, expected)
 
     def test_get_origin_ip_no_relays(self):
@@ -90,7 +90,7 @@ class TestAWLBase(unittest.TestCase):
             "ident": "", "id": "", "envfrom": "",
             "auth": ""}]
         result = self.plugin._get_origin_ip(self.mock_msg)
-        expected = ipaddress.ip_address("9.9.9.9")
+        expected = ipaddress.ip_address(u"9.9.9.9")
         self.assertEqual(result, expected)
 
     def test_get_signed_by(self):
