@@ -123,8 +123,8 @@ class BasePlugin(pad.conf.Conf, object):
                 password = self[self.dsn_name + "_sql_password"]
                 if not create_engine:
                     self["engine"] = dbi_to_mysql(dsn, user, password)
-                    return
-                connect_string = dbi_to_alchemy(dsn, user, password)
+                else:
+                    connect_string = dbi_to_alchemy(dsn, user, password)
             elif dsn:
                 # The connect string is already in the correct format
                 connect_string = dsn

@@ -23,7 +23,6 @@ import getpass
 import ipaddress
 
 from collections import defaultdict
-import pymysql
 
 try:
     from sqlalchemy import Column
@@ -35,7 +34,8 @@ try:
     has_sqlalchemy = True
 except:
     has_sqlalchemy = False
-    # import pymysql
+    import pymysql
+    UNIX_SOCKET = "/var/run/mysqld/mysqld.sock"
 
 import pad.plugins.base
 
@@ -142,13 +142,13 @@ class AutoWhiteListPlugin(pad.plugins.base.BasePlugin):
         if isinstance(self.engine, defaultdict) and not has_sqlalchemy:
             return self.get_mysql_entry(address, ip, signed_by)
         else:
-            return self.get_entry_sqlalch(address, ip, signed_by)
+            return self.get_sqlalch_entry(address, ip, signed_by)
 
 
     def get_mysql_entry(self, address, ip, signed_by):
         conn = pymysql.connect(host=self.engine["hostname"], port=3306, user=self.engine["user"],
                                passwd=self.engine["password"], db=self.engine["db_name"],
-                               unix_socket="/var/run/mysqld/mysqld.sock")
+                               unix_socket=UNIX_SOCKET)
         cursor = conn.cursor()
         cursor.execute("SELECT * FROM awl WHERE username=%s AND email=%s AND "
                        "signedby=%s AND ip=%s",
@@ -177,7 +177,7 @@ class AutoWhiteListPlugin(pad.plugins.base.BasePlugin):
         conn.close()
         return result
 
-    def get_entry_sqlalch(self, address, ip, signed_by):
+    def get_sqlalch_entry(self, address, ip, signed_by):
         session = self.get_session()
         result = session.query(AWL).filter(
                 AWL.username == self.ctxt.username,
@@ -248,7 +248,7 @@ class AutoWhiteListPlugin(pad.plugins.base.BasePlugin):
                                    user=self.engine["user"],
                                    passwd=self.engine["password"],
                                    db=self.engine["db_name"],
-                                   unix_socket="/var/run/mysqld/mysqld.sock")
+                                   unix_socket=UNIX_SOCKET)
 
             cursor = conn.cursor()
             cursor.execute("SELECT totscore, count FROM awl")
