@@ -206,7 +206,7 @@ class AutoWhiteListPlugin(pad.plugins.base.BasePlugin):
             result.ip = ip
         return result
 
-    def plugin_tags(self, msg, origin_ip, addr, signed_by, score, factor, entry):
+    def plugin_tags_sqlalch(self, msg, origin_ip, addr, signed_by, score, factor, entry):
         try:
             mean = entry.totscore / entry.count
 
@@ -243,7 +243,6 @@ class AutoWhiteListPlugin(pad.plugins.base.BasePlugin):
 
     def plugin_tags_mysql(self, msg, origin_ip, addr, signed_by, score, factor):
         try:
-            raise pymysql.Error
             conn = pymysql.connect(host=self.engine["hostname"], port=3306,
                                    user=self.engine["user"],
                                    passwd=self.engine["password"],
@@ -315,7 +314,7 @@ class AutoWhiteListPlugin(pad.plugins.base.BasePlugin):
             self.plugin_tags_mysql(msg, origin_ip, addr, signed_by, score,
                                    factor)
         else:
-            self.plugin_tags(msg, origin_ip, addr, signed_by, score,
+            self.plugin_tags_sqlalch(msg, origin_ip, addr, signed_by, score,
                              factor, entry)
 
         self.ctxt.log.debug("auto-whitelist: post auto-whitelist score %.3f",
