@@ -213,6 +213,22 @@ class TestRuleSet(unittest.TestCase):
         result = ruleset.get_report(mock_msg)
         self.assertEqual(result, "\n(no report template found)\n")
 
+    def test_get_unsafe_report(self):
+        mock_int = patch("pad.rules.ruleset.RuleSet._interpolate").start()
+        mock_msg = MagicMock()
+        ruleset = pad.rules.ruleset.RuleSet(self.mock_ctxt)
+        ruleset.conf["unsafe_report"].append("Some report")
+
+        result = ruleset.get_unsafe_report(mock_msg)
+        self.assertEqual(result, mock_int("Some report", mock_msg) + "\n")
+
+    def test_get_unsafe_report_no_report(self):
+        mock_msg = MagicMock()
+        ruleset = pad.rules.ruleset.RuleSet(self.mock_ctxt)
+
+        result = ruleset.get_unsafe_report(mock_msg)
+        self.assertEqual(result, "\n(no report template found)\n")
+
     def test_add_header_rule_all(self):
         line = "all Test my value"
         ruleset = pad.rules.ruleset.RuleSet(self.mock_ctxt)
