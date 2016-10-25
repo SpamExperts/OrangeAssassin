@@ -417,8 +417,10 @@ class TestRuleSet(unittest.TestCase):
         self.assertEqual(newmsg['To'], "alex@example.com")
 
     def test_get_bounce_message_attach(self):
+        patch("pad.rules.ruleset.RuleSet.get_report",
+              return_value="Test report. \n").start()
         patch("pad.rules.ruleset.RuleSet.get_unsafe_report",
-              return_value="Test report.").start()
+              return_value="Test unsafe report.").start()
         text = ("Subject: Test\n"
                 "From: alex@example.com\n"
                 "To: chirila@example.com\n\n"
@@ -431,7 +433,7 @@ class TestRuleSet(unittest.TestCase):
 
         parts = list(newmsg.walk())
         self.assertEqual(parts[1].get_payload(decode=True),
-                         b"Test report.")
+                         b"Test report. \nTest unsafe report.")
         self.assertEqual(parts[2].get_payload(decode=True), text.encode("utf8"))
 
 

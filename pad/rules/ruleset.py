@@ -228,7 +228,9 @@ class RuleSet(object):
         if self.conf["report_safe"] == 2:
             attach_type = ("text", "plain")
 
-        newmsg.attach(email.mime.text.MIMEText(self.get_unsafe_report(msg)))
+        report_message = self.get_report(msg) + self.get_unsafe_report(msg)
+
+        newmsg.attach(email.mime.text.MIMEText(report_message))
         original_attachment = email.mime.base.MIMEBase(
                 *attach_type, x_spam_type="original"
         )
