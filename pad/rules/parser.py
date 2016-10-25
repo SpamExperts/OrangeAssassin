@@ -60,6 +60,7 @@ KNOWN_2_RTYPE = frozenset(
 KNOWN_1_RTYPE = frozenset(
         (
             "report",  # Add some text to the report template
+            "unsafe_report", # Add some text to the unsafe report template
             "add_header",  # Adds a header to the message
             "remove_header",  # Remove header from message
             "include",  # Include another file in the current one
