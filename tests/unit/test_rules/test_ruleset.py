@@ -17,6 +17,7 @@ class TestRuleSet(unittest.TestCase):
         unittest.TestCase.setUp(self)
         self.mock_ctxt = Mock(plugins={}, conf={
             "report": [],
+            "unsafe_report": [],
             "add_header": [],
             "remove_header": [],
             "required_score": 5,
@@ -400,7 +401,7 @@ class TestRuleSet(unittest.TestCase):
         self.assertEqual(newmsg['To'], "alex@example.com")
 
     def test_get_bounce_message_attach(self):
-        patch("pad.rules.ruleset.RuleSet.get_report",
+        patch("pad.rules.ruleset.RuleSet.get_unsafe_report",
               return_value="Test report.").start()
         text = ("Subject: Test\n"
                 "From: alex@example.com\n"
