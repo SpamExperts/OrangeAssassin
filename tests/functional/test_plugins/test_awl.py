@@ -131,7 +131,7 @@ class TestFunctionalAWLPluginWithMySql(tests.util.TestBase):
         self.c.close()
         self.db.close()
 
-    # @unittest.skip("Need to change travis.yml in order to install mysql")
+    @unittest.skip("Need to change travis.yml in order to install mysql")
     def test_check_awl_basic_rule(self):
         self.setup_conf(config=AWL_URI_RULESET %
                         "raw =~ /www(w|ww|www|www\.)?/" + CONF_MYSQL,
@@ -139,7 +139,7 @@ class TestFunctionalAWLPluginWithMySql(tests.util.TestBase):
         result = self.check_pad(MSG_MULTIPART)
         self.check_report(result, 1.0, ["TEST"])
 
-    # @unittest.skip("Need to change travis.yml in order to install mysql")
+    @unittest.skip("Need to change travis.yml in order to install mysql")
     def test_check_existing_msg_rule(self):
         self.c.execute("INSERT INTO awl "
                        "(username, email, ip, count, totscore, signedby) "
@@ -153,7 +153,7 @@ class TestFunctionalAWLPluginWithMySql(tests.util.TestBase):
         result = self.check_pad(MSG_MULTIPART)
         self.check_report(result, 2.2, ["TEST"])
 
-    # @unittest.skip("Need to change travis.yml in order to install mysql")
+    @unittest.skip("Need to change travis.yml in order to install mysql")
     def test_check_ip_rule(self):
         self.c.execute("INSERT INTO awl "
                        "(username, email, ip, count, totscore, signedby) "
