@@ -140,6 +140,7 @@ class AutoWhiteListPlugin(pad.plugins.base.BasePlugin):
     def get_entry(self, address, ip, signed_by):
         self.engine = self.get_engine()
         if isinstance(self.engine, defaultdict) and not has_sqlalchemy:
+            self.has_mysql = True
             return self.get_mysql_entry(address, ip, signed_by)
         else:
             return self.get_sqlalch_entry(address, ip, signed_by)
