@@ -31,17 +31,17 @@ try:
     from sqlalchemy.types import Integer
     from sqlalchemy.sql.schema import PrimaryKeyConstraint
     from sqlalchemy.ext.declarative.api import declarative_base
+
+    Base = declarative_base()
     has_sqlalchemy = True
 except:
     has_sqlalchemy = False
     import pymysql
-    UNIX_SOCKET = "/var/run/mysqld/mysqld.sock"
 
 import pad.plugins.base
 
 from pad.regex import Regex
 
-Base = declarative_base()
 
 IPV4SUFFIXRE = Regex("(\.0){1,3}$")
 
@@ -146,9 +146,11 @@ class AutoWhiteListPlugin(pad.plugins.base.BasePlugin):
 
 
     def get_mysql_entry(self, address, ip, signed_by):
-        conn = pymysql.connect(host=self.engine["hostname"], port=3306, user=self.engine["user"],
-                               passwd=self.engine["password"], db=self.engine["db_name"],
-                               unix_socket=UNIX_SOCKET)
+        conn = pymysql.connect(host=self.engine["hostname"], port=3306,
+                               user=self.engine["user"],
+                               passwd=self.engine["password"],
+                               db=self.engine["db_name"],
+                               )
         cursor = conn.cursor()
         cursor.execute("SELECT * FROM awl WHERE username=%s AND email=%s AND "
                        "signedby=%s AND ip=%s",
@@ -206,7 +208,8 @@ class AutoWhiteListPlugin(pad.plugins.base.BasePlugin):
             result.ip = ip
         return result
 
-    def plugin_tags_sqlalch(self, msg, origin_ip, addr, signed_by, score, factor, entry):
+    def plugin_tags_sqlalch(self, msg, origin_ip, addr, signed_by, score,
+                            factor, entry):
         try:
             mean = entry.totscore / entry.count
 
@@ -247,7 +250,7 @@ class AutoWhiteListPlugin(pad.plugins.base.BasePlugin):
                                    user=self.engine["user"],
                                    passwd=self.engine["password"],
                                    db=self.engine["db_name"],
-                                   unix_socket=UNIX_SOCKET)
+                                   )
 
             cursor = conn.cursor()
             cursor.execute("SELECT totscore, count FROM awl")

@@ -25,6 +25,13 @@ Example usage
 
     loadplugin      pad.plugins.awl.AutoWhiteListPlugin
 
+    user_awl_sql_username username
+    user_awl_sql_password password
+    user_awl_sql_table tablename
+    user_awl_dsn DBI:databasetype:databasename:hostname:port
+
+    body    CheckAWL     eval:check_from_in_auto_whitelist()
+
 Usage
 =====
 
