@@ -192,6 +192,8 @@ class PADConf(Conf):
     options = {
         "report": ("append", []),
         "clear_report_template": ("clear", ["report"]),
+        "unsafe_report": ("append", []),
+        "clear_unsafe_report": ("clear", ["unsafe_report"]),
         "report_contact": ("str", ""),
         "report_safe": ("int", 1),
         "add_header": ("append", []),

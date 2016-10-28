@@ -138,6 +138,11 @@ class RuleSet(object):
             return "\n(no report template found)\n"
         return self._interpolate(self.conf["report"], msg) + "\n"
 
+    def get_unsafe_report(self, msg):
+        if not self.conf["unsafe_report"]:
+            return "\n(no report template found)\n"
+        return self._interpolate(self.conf["unsafe_report"], msg) + "\n"
+
     def _add_header_rule(self, value, remove=False):
         """Add rule to add a header for the corresponding.
 
@@ -223,7 +228,9 @@ class RuleSet(object):
         if self.conf["report_safe"] == 2:
             attach_type = ("text", "plain")
 
-        newmsg.attach(email.mime.text.MIMEText(self.get_report(msg)))
+        report_message = self.get_report(msg) + self.get_unsafe_report(msg)
+
+        newmsg.attach(email.mime.text.MIMEText(report_message))
         original_attachment = email.mime.base.MIMEBase(
                 *attach_type, x_spam_type="original"
         )
@@ -296,6 +303,10 @@ class RuleSet(object):
         self.conf["report"] = "\n".join(
             self._convert_tags(value)
             for value in self.conf["report"]
+        )
+        self.conf["unsafe_report"] = "\n".join(
+            self._convert_tags(value)
+            for value in self.conf["unsafe_report"]
         )
         for value in self.conf["add_header"]:
             self._add_header_rule(value, False)
