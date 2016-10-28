@@ -21,6 +21,8 @@ install:
 - gunzip GeoIP.dat.gz
 - wget http://geolite.maxmind.com/download/geoip/database/GeoIPv6.dat.gz
 - gunzip GeoIPv6.dat.gz
+before_script:
+  - mysql -u root -e 'create database spampad;'
 script:
 - py.test tests/unit/ --cov pad --cov scripts --cov-report term-missing
 - py.test tests/functional/
