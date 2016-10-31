@@ -28,6 +28,7 @@ lang en_GB describe CHECK_TEST_EXIST This description is in GB english
 
 UNSAFE_PRE_CONFIG = """
 report Normal report
+report Normal report appended
 unsafe_report Unsafe report
 unsafe_report Unsafe report appended
 """
@@ -161,32 +162,38 @@ class TestLocaleReport(tests.util.TestBase):
                          "This second text is in GB english")
 
 
-class TestUnsafeReportTemplate(tests.util.TestBase):
+class TestReportTemplate(tests.util.TestBase):
 
-    def test_unsfe_report_template_enabled(self):
+    def test_report_template_enabled(self):
         self.setup_conf(pre_config=UNSAFE_PRE_CONFIG, config=CONFIG)
         result = self.check_pad(message=SPAM_EMAIL,
                                 report_only=False, message_only=True)
 
+        print(result)
+
         self.assertTrue("Normal report" in result)
+        self.assertTrue("Normal report appended" in result)
         self.assertTrue("Unsafe report" in result)
         self.assertTrue("Unsafe report appended" in result)
 
-    def test_unsfe_report_template_disabled(self):
+    def test_report_template_disabled(self):
         self.setup_conf(pre_config=UNSAFE_PRE_CONFIG, config=CONFIG)
         result = self.check_pad(message="Test email",
                                 report_only=False, message_only=True)
 
         self.assertTrue("Normal report" not in result)
+        self.assertTrue("Normal report appended" not in result)
         self.assertTrue("Unsafe report" not in result)
         self.assertTrue("Unsafe report appended" not in result)
 
-    def test_clear_unsafe_report_template(self):
+    def test_clear_report_template(self):
         self.setup_conf(pre_config=UNSAFE_PRE_CONFIG +
-                        "\n clear_unsafe_report_template", config=CONFIG)
+                        "\n clear_unsafe_report_template" +
+                        "\n clear_report_template", config=CONFIG)
         result = self.check_pad(message=SPAM_EMAIL, report_only=False,
                                 message_only=True)
 
-        self.assertTrue("Normal report" in result)
+        self.assertTrue("Normal report" not in result)
+        self.assertTrue("Normal report appended" not in result)
         self.assertTrue("Unsafe report" not in result)
         self.assertTrue("Unsafe report appended" not in result)
