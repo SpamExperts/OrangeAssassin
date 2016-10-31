@@ -73,7 +73,7 @@ class TestFunctionalAWLPlugin(tests.util.TestBase):
             self.db = sqlite3.connect("spampad.db")
         else:
             self.db = pymysql.connect(host='localhost', port=3306,
-                                      user='username',
+                                      user='root',
                                       db='spampad')
         self.c = self.db.cursor()
         self.c.execute(SCHEMA)
@@ -86,7 +86,6 @@ class TestFunctionalAWLPlugin(tests.util.TestBase):
         self.c.close()
         self.db.close()
 
-    # @unittest.skip("Need to change travis.yml in order to install mysql")
     def test_check_awl_basic_rule(self):
         self.setup_conf(config=AWL_URI_RULESET %
                         "raw =~ /www(w|ww|www|www\.)?/" + CONF_MYSQL,
@@ -94,7 +93,6 @@ class TestFunctionalAWLPlugin(tests.util.TestBase):
         result = self.check_pad(MSG_MULTIPART)
         self.check_report(result, 1.0, ["TEST"])
 
-    # @unittest.skip("Need to change travis.yml in order to install mysql")
     def test_check_existing_msg_rule(self):
         self.c.execute("INSERT INTO awl "
                        "(username, email, ip, count, totscore, signedby) "
@@ -108,7 +106,6 @@ class TestFunctionalAWLPlugin(tests.util.TestBase):
         result = self.check_pad(MSG_MULTIPART)
         self.check_report(result, 2.2, ["TEST"])
 
-    # @unittest.skip("Need to change travis.yml in order to install mysql")
     def test_check_ip_rule(self):
         self.c.execute("INSERT INTO awl "
                        "(username, email, ip, count, totscore, signedby) "
