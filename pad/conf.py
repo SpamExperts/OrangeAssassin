@@ -162,8 +162,7 @@ class Conf(object):
         """
         real_keys = self.options[key][1]
         for real_key in real_keys:
-            default = self.options[real_key][1]
-            self.set_global(real_key, default)
+            self.set_global(real_key, [])
 
     def inhibit_further_callbacks(self):
         """Tells the plugin handler to inhibit calling into other plugins in
@@ -193,7 +192,7 @@ class PADConf(Conf):
         "report": ("append", []),
         "clear_report_template": ("clear", ["report"]),
         "unsafe_report": ("append", []),
-        "clear_unsafe_report": ("clear", ["unsafe_report"]),
+        "clear_unsafe_report_template": ("clear", ["unsafe_report"]),
         "report_contact": ("str", ""),
         "report_safe": ("int", 1),
         "add_header": ("append", []),
