@@ -169,8 +169,6 @@ class TestReportTemplate(tests.util.TestBase):
         result = self.check_pad(message=SPAM_EMAIL,
                                 report_only=False, message_only=True)
 
-        print(result)
-
         self.assertTrue("Normal report" in result)
         self.assertTrue("Normal report appended" in result)
         self.assertTrue("Unsafe report" in result)
