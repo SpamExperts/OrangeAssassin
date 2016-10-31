@@ -37,6 +37,7 @@ To run the project's tests you will need to first:
 
 #. Create a python virtualenv and activate it *(Recommended only)*
 #. Clone the repository from GitHub.
+#. Install sqlalchemy or pymysql package.
 #. Install the base dependencies from `requirements/base.txt` with pip
 #. Install the the dependencies for the python version you are using from the
    `requirements` folder
@@ -77,6 +78,7 @@ An example for Python3 would be:
     source ~/pad-env/bin/activate
     git clone https://github.com/SpamExperts/SpamPAD
     cd SpamPAD
+    pip install sqlalchemy || pip install pymysql
     pip install -r requirements/base.txt
     pip install -r requirements/python3.txt
     pip install -r requirements/tests.txt
