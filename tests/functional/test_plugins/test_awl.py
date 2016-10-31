@@ -123,7 +123,7 @@ else:
           super(TestFunctionalAWLPluginWithMySql, self).setUp()
 
           self.db = pymysql.connect(host='localhost', port=3306,
-                                    user='user',
+                                    user='root',
                                     db='spampad')
           self.c = self.db.cursor()
           self.c.execute(SCHEMA)
