@@ -218,7 +218,7 @@ class TestDBItoAlchemy(unittest.TestCase):
 
     def test_mysql(self):
         """Test converting MySQL DBI to Alchemy"""
-        expected = "mysql://testuser:password@localhost/spamassassin"
+        expected = "mysql+pymysql://testuser:password@localhost/spamassassin"
         dsn = "DBI:mysql:spamassassin:localhost"
         user = "testuser"
         password = "password"
@@ -227,7 +227,7 @@ class TestDBItoAlchemy(unittest.TestCase):
 
     def test_mysql_port(self):
         """Test converting MySQL DBI to Alchemy with custom port specified"""
-        expected = "mysql://testuser:password@localhost:3306/spamassassin"
+        expected = "mysql+pymysql://testuser:password@localhost:3306/spamassassin"
         dsn = "DBI:mysql:spamassassin:localhost:3306"
         user = "testuser"
         password = "password"
