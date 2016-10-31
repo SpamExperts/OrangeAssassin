@@ -36,7 +36,7 @@ def dbi_to_alchemy(dsn, user, password):
     """Convert perl DBI setting to SQLAlchemy settings."""
     dummy, driver, connection = dsn.split(":", 2)
     if driver.lower() == "mysql":
-        driver = "mysql"
+        driver = "mysql+pymysql"
         db_name, hostname = connection.split(":", 1)
     elif driver.lower() == "pg":
         driver = "postgresql"

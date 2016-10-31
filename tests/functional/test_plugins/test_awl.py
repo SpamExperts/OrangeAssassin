@@ -3,8 +3,6 @@ from __future__ import absolute_import
 
 import os
 import getpass
-import pymysql
-import sqlite3
 import unittest
 import tests.util
 
@@ -20,12 +18,12 @@ CREATE TABLE IF NOT EXISTS `awl` (
 );
 """
 
-CONF_MYSQL = "user_awl_dsn DBI:mysql:spampad:127.0.0.1:3306"
+CONF_MYSQL = "user_awl_dsn DBI:mysql:spampad:127.0.0.1"
 CONF_SQLALCH = "user_awl_dsn sqlite:///spampad.db"
 
 AWL_URI_RULESET = """
 uri_detail TEST %s
-describe TEST	Suspicious URL received
+describe TEST Suspicious URL received
 score TEST 1.000
 header AWL eval:check_from_in_auto_whitelist()
 """
@@ -59,110 +57,117 @@ Content-Transfer-Encoding: quoted-printable
 --001a11c39d507b0142052155ffb1--
 """
 
+try:
+  import pymysql
+  use_sqlalchemy = False
+except:
+  import sqlite3
+  use_sqlalchemy = True
 
-class TestFunctionalAWLPluginWithSqlAlchemy(tests.util.TestBase):
+if use_sqlalchemy:
+  class TestFunctionalAWLPluginWithSqlAlchemy(tests.util.TestBase):
 
-    def setUp(self):
-        super(TestFunctionalAWLPluginWithSqlAlchemy, self).setUp()
-        self.db = sqlite3.connect("spampad.db")
-        self.c = self.db.cursor()
-        self.c.execute(SCHEMA)
-        self.db.commit()
+      def setUp(self):
+          super(TestFunctionalAWLPluginWithSqlAlchemy, self).setUp()
+          self.db = sqlite3.connect("spampad.db")
+          self.c = self.db.cursor()
+          self.c.execute(SCHEMA)
+          self.db.commit()
 
-    def tearDown(self):
-        super(TestFunctionalAWLPluginWithSqlAlchemy, self).tearDown()
-        if os.path.exists("spampad.db"):
-            os.remove("spampad.db")
+      def tearDown(self):
+          super(TestFunctionalAWLPluginWithSqlAlchemy, self).tearDown()
+          if os.path.exists("spampad.db"):
+              os.remove("spampad.db")
 
-        self.c.close()
-        self.db.close()
+          self.c.close()
+          self.db.close()
 
-    def test_check_awl_basic_rule(self):
-        self.setup_conf(config=AWL_URI_RULESET %
-                        "raw =~ /www(w|ww|www|www\.)?/" + CONF_SQLALCH,
-                        pre_config=PRE_CONFIG)
-        result = self.check_pad(MSG_MULTIPART)
-        self.check_report(result, 1.0, ["TEST"])
+      def test_check_awl_basic_rule(self):
+          self.setup_conf(config=AWL_URI_RULESET %
+                          "raw =~ /www(w|ww|www|www\.)?/" + CONF_SQLALCH,
+                          pre_config=PRE_CONFIG)
+          result = self.check_pad(MSG_MULTIPART)
+          self.check_report(result, 1.0, ["TEST"])
 
-    def test_check_existing_msg_rule(self):
-        self.c.execute("INSERT INTO awl "
-                       "(username, email, ip, count, totscore, signedby) "
-                       "VALUES "
-                       "(?, 'test@example.com', 'none', 3, 10, '')",
-                       (getpass.getuser(),))
+      def test_check_existing_msg_rule(self):
+          self.c.execute("INSERT INTO awl "
+                         "(username, email, ip, count, totscore, signedby) "
+                         "VALUES "
+                         "(?, 'test@example.com', 'none', 3, 10, '')",
+                         (getpass.getuser(),))
 
-        self.db.commit()
-        self.setup_conf(config=AWL_URI_RULESET %
-                        "raw =~ /www(w|ww|www|www\.)?/" + CONF_SQLALCH,
-                        pre_config=PRE_CONFIG)
-        result = self.check_pad(MSG_MULTIPART)
-        self.check_report(result, 2.2, ["TEST"])
+          self.db.commit()
+          self.setup_conf(config=AWL_URI_RULESET %
+                          "raw =~ /www(w|ww|www|www\.)?/" + CONF_SQLALCH,
+                          pre_config=PRE_CONFIG)
+          result = self.check_pad(MSG_MULTIPART)
+          self.check_report(result, 2.2, ["TEST"])
 
-    def test_check_ip_rule(self):
-        self.c.execute("INSERT INTO awl "
-                       "(username, email, ip, count, totscore, signedby) "
-                       "VALUES "
-                       "(?, 'test@example.com', '8.8.8.8', 3, 10, '')",
-                       (getpass.getuser(),))
-        self.db.commit()
-        self.setup_conf(config=AWL_URI_RULESET %
-                        "raw =~ /www(w|ww|www|www\.)?/" + CONF_SQLALCH,
-                        pre_config=PRE_CONFIG)
-        result = self.check_pad(MSG_MULTIPART)
-        self.check_report(result, 1.0, ["TEST"])
+      def test_check_ip_rule(self):
+          self.c.execute("INSERT INTO awl "
+                         "(username, email, ip, count, totscore, signedby) "
+                         "VALUES "
+                         "(?, 'test@example.com', '8.8.8.8', 3, 10, '')",
+                         (getpass.getuser(),))
+          self.db.commit()
+          self.setup_conf(config=AWL_URI_RULESET %
+                          "raw =~ /www(w|ww|www|www\.)?/" + CONF_SQLALCH,
+                          pre_config=PRE_CONFIG)
+          result = self.check_pad(MSG_MULTIPART)
+          self.check_report(result, 1.0, ["TEST"])
 
+else:
+  class TestFunctionalAWLPluginWithMySql(tests.util.TestBase):
 
-class TestFunctionalAWLPluginWithMySql(tests.util.TestBase):
+      def setUp(self):
+          super(TestFunctionalAWLPluginWithMySql, self).setUp()
 
-    def setUp(self):
-        super(TestFunctionalAWLPluginWithMySql, self).setUp()
+          self.db = pymysql.connect(host='localhost', port=3306,
+                                    user='user',
+                                    db='spampad')
+          self.c = self.db.cursor()
+          self.c.execute(SCHEMA)
+          self.db.commit()
 
-        self.db = pymysql.connect(host='localhost', port=3306,
-                                  user='root',
-                                  db='spampad')
-        self.c = self.db.cursor()
-        self.c.execute(SCHEMA)
-        self.db.commit()
+      def tearDown(self):
+          super(TestFunctionalAWLPluginWithMySql, self).tearDown()
+          self.c.execute("DROP TABLE IF EXISTS `awl`;")
+          self.db.commit()
+          self.c.close()
+          self.db.close()
 
-    def tearDown(self):
-        super(TestFunctionalAWLPluginWithMySql, self).tearDown()
-        self.c.execute("DROP TABLE IF EXISTS `awl`;")
-        self.db.commit()
-        self.c.close()
-        self.db.close()
+      # @unittest.skip("Need to change travis.yml in order to install mysql")
+      def test_check_awl_basic_rule(self):
+          self.setup_conf(config=AWL_URI_RULESET %
+                          "raw =~ /www(w|ww|www|www\.)?/" + CONF_MYSQL,
+                          pre_config=PRE_CONFIG)
+          result = self.check_pad(MSG_MULTIPART)
+          self.check_report(result, 1.0, ["TEST"])
 
-    # @unittest.skip("Need to change travis.yml in order to install mysql")
-    def test_check_awl_basic_rule(self):
-        self.setup_conf(config=AWL_URI_RULESET %
-                        "raw =~ /www(w|ww|www|www\.)?/" + CONF_MYSQL,
-                        pre_config=PRE_CONFIG)
-        result = self.check_pad(MSG_MULTIPART)
-        self.check_report(result, 1.0, ["TEST"])
+      # @unittest.skip("Need to change travis.yml in order to install mysql")
+      def test_check_existing_msg_rule(self):
+          self.c.execute("INSERT INTO awl "
+                         "(username, email, ip, count, totscore, signedby) "
+                         "VALUES "
+                         "('%s', 'test@example.com', 'none', 3, 10, '');" %
+                         (getpass.getuser()))
+          self.db.commit()
+          self.setup_conf(config=AWL_URI_RULESET %
+                          "raw =~ /www(w|ww|www|www\.)?/" + CONF_MYSQL,
+                          pre_config=PRE_CONFIG)
+          result = self.check_pad(MSG_MULTIPART)
+          self.check_report(result, 2.2, ["TEST"])
 
-    # @unittest.skip("Need to change travis.yml in order to install mysql")
-    def test_check_existing_msg_rule(self):
-        self.c.execute("INSERT INTO awl "
-                       "(username, email, ip, count, totscore, signedby) "
-                       "VALUES "
-                       "('%s', 'test@example.com', 'none', 3, 10, '');" %
-                       (getpass.getuser()))
-        self.db.commit()
-        self.setup_conf(config=AWL_URI_RULESET %
-                        "raw =~ /www(w|ww|www|www\.)?/" + CONF_MYSQL,
-                        pre_config=PRE_CONFIG)
-        result = self.check_pad(MSG_MULTIPART)
-        self.check_report(result, 2.2, ["TEST"])
-
-    # @unittest.skip("Need to change travis.yml in order to install mysql")
-    def test_check_ip_rule(self):
-        self.c.execute("INSERT INTO awl "
-                       "(username, email, ip, count, totscore, signedby) "
-                       "VALUES "
-                       "('%s', 'test@example.com', '8.8.8.8', 3, 10, '');" %
-                       (getpass.getuser()))
-        self.db.commit()
-        self.setup_conf(config=AWL_URI_RULESET %
-                        "raw =~ /www(w|ww|www|www\.)?/" + CONF_MYSQL,
-                        pre_config=PRE_CONFIG)
-        result = self.check_pad(MSG_MULTIPART)
-        self.check_report(result, 1.0, ["TEST"])
+      # @unittest.skip("Need to change travis.yml in order to install mysql")
+      def test_check_ip_rule(self):
+          self.c.execute("INSERT INTO awl "
+                         "(username, email, ip, count, totscore, signedby) "
+                         "VALUES "
+                         "('%s', 'test@example.com', '8.8.8.8', 3, 10, '');" %
+                         (getpass.getuser()))
+          self.db.commit()
+          self.setup_conf(config=AWL_URI_RULESET %
+                          "raw =~ /www(w|ww|www|www\.)?/" + CONF_MYSQL,
+                          pre_config=PRE_CONFIG)
+          result = self.check_pad(MSG_MULTIPART)
+          self.check_report(result, 1.0, ["TEST"])
