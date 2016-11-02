@@ -43,9 +43,9 @@ class _PatternMimeHeaderRule(MimeHeaderRule):
     """
 
     def __init__(self, name, pattern=None, header_name=None, score=None,
-                 desc=None, priority=0):
+                 desc=None, priority=0, tflags=None):
         super(_PatternMimeHeaderRule, self).__init__(name, score=score,
-                                                     desc=desc)
+                                                     desc=desc, tflags=tflags)
         self._header_name = header_name
         self._pattern = pattern
 
@@ -116,9 +116,10 @@ class HeaderRule(pad.rules.base.BaseRule):
 class _ExistsHeaderRule(HeaderRule):
     """Simple check if header exists."""
 
-    def __init__(self, name, header_name, score=None, desc=None, priority=0):
+    def __init__(self, name, header_name, score=None, desc=None, priority=0,
+                 tflags=None):
         super(_ExistsHeaderRule, self).__init__(name, score=score, desc=desc,
-                                                priority=priority)
+                                                priority=priority, tflags=tflags)
         self._header_name = header_name
 
     def match(self, msg):
@@ -131,9 +132,10 @@ class _PatternHeaderRule(HeaderRule):
     """
 
     def __init__(self, name, pattern=None, header_name=None, score=None,
-                 desc=None, priority=0):
+                 desc=None, priority=0, tflags=None):
         super(_PatternHeaderRule, self).__init__(name, score=score, desc=desc,
-                                                 priority=priority)
+                                                 priority=priority,
+                                                 tflags=tflags)
         self._header_name = header_name
         self._pattern = pattern
 
@@ -184,10 +186,12 @@ class _MultiplePatternHeaderRule(HeaderRule):
     """Does a simple pattern check against multiple decoded headers."""
     _headers = None
 
-    def __init__(self, name, pattern, score=None, desc=None, priority=0):
+    def __init__(self, name, pattern, score=None, desc=None, priority=0,
+                 tflags=None):
         super(_MultiplePatternHeaderRule, self).__init__(name, score=score,
                                                          desc=desc,
-                                                         priority=priority)
+                                                         priority=priority,
+                                                         tflags=tflags)
         self._pattern = pattern
 
     def match(self, msg):
@@ -217,9 +221,11 @@ class _AllHeaderRule(HeaderRule):
     name IS included in the search, and headers are decoded.
     """
 
-    def __init__(self, name, pattern, score=None, desc=None, priority=0):
+    def __init__(self, name, pattern, score=None, desc=None, priority=0,
+                 tflags=None):
         super(_AllHeaderRule, self).__init__(name, score=score, desc=desc,
-                                             priority=priority)
+                                             priority=priority,
+                                             tflags=tflags)
         self._pattern = pattern
 
     def match(self, msg):
