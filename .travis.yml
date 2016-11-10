@@ -34,7 +34,7 @@ script:
 - py.test tests/functional/
 - py.test tests/profiling/
 after_script:
-- cat .profile_results/*report.tx
+- cat .profile_results/*report.txt
 - pep8 --show-source pad
 after_success:
 - coveralls
