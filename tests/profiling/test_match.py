@@ -1,14 +1,16 @@
-from __future__ import print_function
-
 from __future__ import absolute_import, print_function
+
 import os
 import unittest
+import platform
 
 import tests.util
 
 GTUBE = "XJS*C4JDBQADN1.NSBN3*2IDNEN*GTUBE-STANDARD-ANTI-UBE-TEST-EMAIL*C.34X"
+IS_PYPY = "pypy" in platform.python_implementation().lower()
 
 
+@unittest.skipIf(IS_PYPY, "Psutil doesn't work on PyPy")
 class MemoryTest(tests.util.TestBase):
     ptype = "memory"
     limits = {
@@ -46,25 +48,31 @@ class MemoryTest(tests.util.TestBase):
         self.profile_pad(name, sname, msg, ptype=self.ptype, **limits)
 
 
+@unittest.skipIf(IS_PYPY, "Psutil doesn't work on PyPy")
 class MemoryUSSTest(MemoryTest):
     ptype = "memory-uss"
 
 
+@unittest.skipIf(IS_PYPY, "Psutil doesn't work on PyPy")
 class MemoryPSSTest(MemoryTest):
     ptype = "memory-pss"
 
 
+@unittest.skipIf(IS_PYPY, "Psutil doesn't work on PyPy")
 class CPUTest(MemoryTest):
     ptype = "cpu"
 
 
+@unittest.skipIf(IS_PYPY, "Psutil doesn't work on PyPy")
 class IOWriteTest(MemoryTest):
     ptype = "io-write"
 
 
+@unittest.skipIf(IS_PYPY, "Psutil doesn't work on PyPy")
 class IOReadTest(MemoryTest):
     ptype = "io-read"
 
 
+@unittest.skipIf(IS_PYPY, "Psutil doesn't work on PyPy")
 class IOCountTest(MemoryTest):
     ptype = "io-count"
