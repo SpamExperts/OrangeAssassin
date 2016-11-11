@@ -60,8 +60,6 @@ class _Context(object):
             del odict["plugin_data"]["RelayCountryPlugin"]["ipv4"]
             del odict["plugin_data"]["RelayCountryPlugin"]["ipv6"]
         odict["plugins_to_import"] = []
-        import pdb
-        pdb.set_trace()
         for plugin_name, plugin in odict["plugins"].copy().items():
             if plugin.path_to_plugin is None:
                 continue

@@ -40,19 +40,7 @@ class RelayCountryPlugin(pad.plugins.base.BasePlugin):
 
     def __getstate__(self):
         odict = self.__dict__.copy()  # copy the dict since we change it
-        # if "RelayCountryPlugin" in odict["plugin_data"]:
-        #     del odict["plugin_data"]["RelayCountryPlugin"]["ipv4"]
-        #     del odict["plugin_data"]["RelayCountryPlugin"]["ipv6"]
-        # import pdb
-        # pdb.set_trace()
         return odict
-
-    # def __setstate__(self, d):
-    #     self.__dict__.update(d)
-    #     reader_ipv4 = self.load_database()
-    #     reader_ipv6 = self.load_database("-ipv6")
-    #     self["ipv4"] = reader_ipv4
-    #     self["ipv6"] = reader_ipv6
 
     def finish_parsing_end(self, ruleset):
         super(RelayCountryPlugin, self).finish_parsing_end(ruleset)

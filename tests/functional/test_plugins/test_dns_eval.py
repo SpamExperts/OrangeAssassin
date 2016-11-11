@@ -240,7 +240,6 @@ class TestDNSEval(tests.util.TestBase):
         """Check rbl with test dns"""
         self.add("fakecheck.net.", "127.0.0.2")
         self.add("34.216.184.93.example.com.", "127.0.0.1")
-        #import pdb;pdb.set_trace()
         self.setup_conf(CONFIG_DNS_TEST_CUSTOM_AVAILABLE, PRE_CONFIG)
         result = self.check_pad(MSG, debug=True)
         self.check_report(result, 1.0, ["IP_IN_LIST"])
