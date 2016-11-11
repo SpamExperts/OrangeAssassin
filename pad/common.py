@@ -14,6 +14,7 @@ def can_compile():
     if int(major) >= 3 and int(minor) < 5:
         logger.warning("Compiler is not available on 3.4 or lower.")
         return False
+    # There's not going to be a Python 2.8 so this is safe.
     if int(major) <= 2 and (int(minor) < 7 or int(patch) < 11):
         logger.warning("Compiler is not available on 2.7.10 or lower.")
         return False
