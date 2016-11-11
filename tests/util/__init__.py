@@ -23,6 +23,7 @@ GTUBE = "XJS*C4JDBQADN1.NSBN3*2IDNEN*GTUBE-STANDARD-ANTI-UBE-TEST-EMAIL*C.34X"
 
 class TestBase(unittest.TestCase):
     match_script = "scripts/match.py"
+    compile_script = "scripts/compile.py"
     # Uncomment this to test under SA
     # match_script = "spamassassin"
     test_conf = os.path.abspath("tests/test_match_conf/")
@@ -66,22 +67,42 @@ class TestBase(unittest.TestCase):
         :param my_env: Used for setting environment variables to subprocess
         :return: The result of the script.
         """
+
         if debug:
             args = [self.match_script, "-D", "-t", "-C", self.test_conf,
                     "--siteconfigpath", self.test_conf]
         else:
             args = [self.match_script, "-t", "-C", self.test_conf,
                     "--siteconfigpath", self.test_conf]
+
+        if os.environ.get("USE_PICKLES") == "1":
+            compile_args = [self.compile_script, "-t", "-C", self.test_conf,
+                    "--siteconfigpath", self.test_conf]
+            args.append("-se")
+
         if extra_args is not None:
             args.extend(extra_args)
 
         if env:
+            if os.environ.get("USE_PICKLES") == "1":
+                proc_compile = subprocess.Popen(compile_args,
+                                                stdin=subprocess.PIPE,
+                                                stdout=subprocess.PIPE, env=env)
+                stdout, stderr = proc_compile.communicate()
+                if stderr or proc_compile.returncode:
+                    self.fail(stderr)
             proc = subprocess.Popen(args, stdin=subprocess.PIPE,
                                     stdout=subprocess.PIPE, env=env)
         else:
+            if os.environ.get("USE_PICKLES") == "1":
+                proc_compile = subprocess.Popen(compile_args,
+                                                stdin=subprocess.PIPE,
+                                                stdout=subprocess.PIPE)
+                stdout, stderr = proc_compile.communicate()
+                if stderr or proc_compile.returncode:
+                    self.fail(stderr)
             proc = subprocess.Popen(args, stdin=subprocess.PIPE,
                                     stdout=subprocess.PIPE)
-
         stdout, stderr = proc.communicate(message.encode("utf8"))
         result = stdout.decode("utf8")
         if report_only:
@@ -128,4 +149,5 @@ class TestBase(unittest.TestCase):
         """
         self.setup_conf(config, SYMBOLS_PRE_CONFIG)
         result = self.check_pad(message)
+        # print(result)
         self.check_report(result, score, symbols)

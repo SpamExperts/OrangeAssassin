@@ -48,10 +48,9 @@ class TestImageInfo(tests.util.TestBase):
 
     def test_image_name(self):
         """Check message for image name"""
-        cwd = os.path.join(os.getcwd(), "pad", "plugins", "image_info.py")
         self.setup_conf(CONFIG_NAMED,
-                        pre_config="loadplugin ImageInfoPlugin {0}\n"
-                        "report _SCORE_".format(cwd))
+                        pre_config="loadplugin pad.plugins.image_info.ImageInfoPlugin\n"
+                        "report _SCORE_")
         msg = new_email(
             {1: new_image(1, 1, "gif", "image001.gif")})
         result = self.check_pad(msg.as_string())
@@ -59,10 +58,9 @@ class TestImageInfo(tests.util.TestBase):
 
     def test_image_size(self):
         """Check message for image size"""
-        cwd = os.path.join(os.getcwd(), "pad", "plugins", "image_info.py")
         self.setup_conf(CONFIG_SIZED,
-                        pre_config="loadplugin ImageInfoPlugin {0}\n"
-                        "report _SCORE_".format(cwd))
+                        pre_config="loadplugin pad.plugins.image_info.ImageInfoPlugin\n"
+                        "report _SCORE_")
         msg = new_email(
             {1: new_image(127, 264, "gif", "image001.gif")})
         result = self.check_pad(msg.as_string())
@@ -70,10 +68,9 @@ class TestImageInfo(tests.util.TestBase):
 
     def test_image_count(self):
         """Check message for images count"""
-        cwd = os.path.join(os.getcwd(), "pad", "plugins", "image_info.py")
         self.setup_conf(CONFIG_COUNT,
-                        pre_config="loadplugin ImageInfoPlugin {0}\n"
-                        "report _SCORE_".format(cwd))
+                        pre_config="loadplugin pad.plugins.image_info.ImageInfoPlugin\n"
+                        "report _SCORE_")
         msg = new_email(
             {1: new_image(127, 264, "gif", "image001.gif"),
              2: new_image(127, 264, "png", "image002.png")})
@@ -82,10 +79,9 @@ class TestImageInfo(tests.util.TestBase):
 
     def test_image_pixel_coverage(self):
         """Check message for image pixel coverage"""
-        cwd = os.path.join(os.getcwd(), "pad", "plugins", "image_info.py")
         self.setup_conf(CONFIG_COVERAGE,
-                        pre_config="loadplugin ImageInfoPlugin {0}\n"
-                        "report _SCORE_".format(cwd))
+                        pre_config="loadplugin pad.plugins.image_info.ImageInfoPlugin\n"
+                        "report _SCORE_")
         msg = new_email(
             {1: new_image(200, 200, "gif", "image001.gif")})
         result = self.check_pad(msg.as_string())
@@ -93,10 +89,9 @@ class TestImageInfo(tests.util.TestBase):
 
     def test_image_range(self):
         """Check message for image with size in range"""
-        cwd = os.path.join(os.getcwd(), "pad", "plugins", "image_info.py")
         self.setup_conf(CONFIG_RANGE,
-                        pre_config="loadplugin ImageInfoPlugin {0}\n"
-                        "report _SCORE_".format(cwd))
+                        pre_config="loadplugin pad.plugins.image_info.ImageInfoPlugin\n"
+                        "report _SCORE_")
         msg = new_email(
             {1: new_image(320, 220, "gif", "image001.gif")})
         result = self.check_pad(msg.as_string())
@@ -104,10 +99,9 @@ class TestImageInfo(tests.util.TestBase):
 
     def test_image_text_ratio(self):
         """Check message for ration between text and images"""
-        cwd = os.path.join(os.getcwd(), "pad", "plugins", "image_info.py")
         self.setup_conf(CONFIG_IMG_RATIO,
-                        pre_config="loadplugin ImageInfoPlugin {0}\n"
-                        "report _SCORE_".format(cwd))
+                        pre_config="loadplugin pad.plugins.image_info.ImageInfoPlugin\n"
+                        "report _SCORE_")
         msg = new_email(
             {1: new_image(127, 264, "gif", "image001.gif")})
         result = self.check_pad(msg.as_string())
@@ -115,10 +109,9 @@ class TestImageInfo(tests.util.TestBase):
 
     def test_image_count_fail(self):
         """Fail for images count"""
-        cwd = os.path.join(os.getcwd(), "pad", "plugins", "image_info.py")
         self.setup_conf(CONFIG_COUNT,
-                        pre_config="loadplugin ImageInfoPlugin {0}\n"
-                        "report _SCORE_".format(cwd))
+                        pre_config="loadplugin pad.plugins.image_info.ImageInfoPlugin\n"
+                        "report _SCORE_")
         msg = new_email(
             {1: new_image(127, 264, "jpg", "image001.jpg"),
              2: new_image(127, 264, "jpg", "image002.jpg")})
@@ -127,10 +120,9 @@ class TestImageInfo(tests.util.TestBase):
 
     def test_image_size_fail(self):
         """Fail for image size"""
-        cwd = os.path.join(os.getcwd(), "pad", "plugins", "image_info.py")
         self.setup_conf(CONFIG_SIZED,
-                        pre_config="loadplugin ImageInfoPlugin {0}\n"
-                        "report _SCORE_".format(cwd))
+                        pre_config="loadplugin pad.plugins.image_info.ImageInfoPlugin\n"
+                        "report _SCORE_")
         msg = new_email(
             {1: new_image(127, 222, "gif", "image001.gif")})
         result = self.check_pad(msg.as_string())
@@ -138,10 +130,9 @@ class TestImageInfo(tests.util.TestBase):
 
     def test_pixel_coverage_fail(self):
         """Fail for image pixel coverage"""
-        cwd = os.path.join(os.getcwd(), "pad", "plugins", "image_info.py")
         self.setup_conf(CONFIG_COVERAGE,
-                        pre_config="loadplugin ImageInfoPlugin {0}\n"
-                        "report _SCORE_".format(cwd))
+                        pre_config="loadplugin pad.plugins.image_info.ImageInfoPlugin\n"
+                        "report _SCORE_")
         msg = new_email(
             {1: new_image(2, 2, "gif", "image001.gif")})
         result = self.check_pad(msg.as_string())
@@ -149,10 +140,9 @@ class TestImageInfo(tests.util.TestBase):
 
     def test_image_name_fail(self):
         """Fail for image name"""
-        cwd = os.path.join(os.getcwd(), "pad", "plugins", "image_info.py")
         self.setup_conf(CONFIG_NAMED,
-                        pre_config="loadplugin ImageInfoPlugin {0}\n"
-                        "report _SCORE_".format(cwd))
+                        pre_config="loadplugin pad.plugins.image_info.ImageInfoPlugin\n"
+                        "report _SCORE_")
         msg = new_email(
             {1: new_image(1, 1, "gif", "image0011.gif")})
         result = self.check_pad(msg.as_string())
@@ -160,11 +150,10 @@ class TestImageInfo(tests.util.TestBase):
 
     def test_many_rules_match(self):
         """Check message for image name, size and count"""
-        cwd = os.path.join(os.getcwd(), "pad", "plugins", "image_info.py")
         self.setup_conf(CONFIG_NAMED + "\n" + CONFIG_SIZED +
                         "\n" + CONFIG_COUNT,
-                        pre_config="loadplugin ImageInfoPlugin {0}\n"
-                        "report _SCORE_".format(cwd))
+                        pre_config="loadplugin pad.plugins.image_info.ImageInfoPlugin\n"
+                        "report _SCORE_")
         msg = new_email(
             {1: new_image(127, 264, "gif", "image001.gif")})
         result = self.check_pad(msg.as_string())
@@ -173,11 +162,10 @@ class TestImageInfo(tests.util.TestBase):
     def test_one_of_many_match(self):
         """Check message for image name, size and coverage
         and only name is equal"""
-        cwd = os.path.join(os.getcwd(), "pad", "plugins", "image_info.py")
         self.setup_conf(CONFIG_NAMED + "\n" + CONFIG_SIZED +
                         "\n" + CONFIG_COVERAGE,
-                        pre_config="loadplugin ImageInfoPlugin {0}\n"
-                        "report _SCORE_".format(cwd))
+                        pre_config="loadplugin pad.plugins.image_info.ImageInfoPlugin\n"
+                        "report _SCORE_")
         msg = new_email(
             {1: new_image(100, 100, "gif", "image001.gif")})
         result = self.check_pad(msg.as_string())
@@ -186,11 +174,10 @@ class TestImageInfo(tests.util.TestBase):
     def test_no_matches_of_many(self):
         """Check message for image name, size and coverage
         and no matches"""
-        cwd = os.path.join(os.getcwd(), "pad", "plugins", "image_info.py")
         self.setup_conf(CONFIG_NAMED + "\n" + CONFIG_SIZED +
                         "\n" + CONFIG_COVERAGE,
-                        pre_config="loadplugin ImageInfoPlugin {0}\n"
-                        "report _SCORE_".format(cwd))
+                        pre_config="loadplugin pad.plugins.image_info.ImageInfoPlugin\n"
+                        "report _SCORE_")
         msg = new_email(
             {1: new_image(100, 100, "gif", "image002.gif")})
         result = self.check_pad(msg.as_string())
@@ -198,11 +185,10 @@ class TestImageInfo(tests.util.TestBase):
 
     def test_real_msg_with_errors(self):
         """Check real multipart message"""
-        cwd = os.path.join(os.getcwd(), "pad", "plugins", "image_info.py")
         self.setup_conf(CONFIG_NAMED + "\n" + CONFIG_SIZED +
                 "\n" + CONFIG_COVERAGE,
-                pre_config="loadplugin ImageInfoPlugin {0}\n"
-                "report _SCORE_".format(cwd))
+                pre_config="loadplugin pad.plugins.image_info.ImageInfoPlugin\n"
+                "report _SCORE_")
         with open(os.path.join(TESTDATA_DIR, "multipart.eml")) as m:
             msg = email.message_from_file(m)
             result = self.check_pad(msg.as_string())

@@ -1,29 +1,21 @@
-#! /usr/bin/env python
-
-"""Testing tool that parses PAD rule set files and runs a match against message.
-
-Prints out any matching rules.
-"""
-
+#!/usr/bin/env python
 from __future__ import print_function
 
 import os
 import sys
-import argparse
-
 import pickle
-import collections
-from operator import itemgetter
+import argparse
+import traceback
 
 import pad
 import pad.config
 import pad.errors
 import pad.message
-import pad.rules.meta
 import pad.rules.parser
 
-from future.utils import PY3
 
+SERIALIZED = False
+# f = open(os.path.join("/home/roxana/Desktop/compiled_rules"), "wb")
 class MessageList(argparse.FileType):
     def __call__(self, string):
         if os.path.isdir(string):
@@ -53,8 +45,6 @@ def get_binary_stdin():
     buf = getattr(sys.stdin, 'buffer', None)
     if buf is not None and _is_binary_reader(buf, True):
         return buf
-
-
 def parse_arguments(args):
     parser = argparse.ArgumentParser(
         description=__doc__,
@@ -64,23 +54,10 @@ def parse_arguments(args):
                         default=0)
     parser.add_argument("-P", "--paranoid", action="store_true", default=False,
                         help="Die upon user errors")
-    parser.add_argument("-se", "--serialize", action="store_true", default=False,
-                        help="Allow serialization")
     parser.add_argument("--show-unknown", action="store_true", default=False,
                         help="Show warnings about unknown parsing errors")
-    parser.add_argument("-sp", "--serializepath", action="store",
-                        help="Path to the file with serialized ruleset",
-                        default="~/.spamassassin/serialized_ruleset")
-    group = parser.add_mutually_exclusive_group()
-    group.add_argument("-r", "--report", action="store_true",
-                       help="Report the message as spam", default=False)
-    group.add_argument("-k", "--revoke", action="store_true",
-                       help="Revoke the message as spam ", default=False)
     parser.add_argument("-D", "--debug", action="store_true",
                         help="Enable debugging output", default=False)
-    parser.add_argument("-dl", "--deactivate-lazy", dest="lazy_mode",
-                        action="store_true", default=False,
-                        help="Deactivate lazy loading of rules/regex")
     parser.add_argument("-v", "--version", action="version",
                         version=pad.__version__)
     parser.add_argument("-C", "--configpath", action="store",
@@ -92,6 +69,12 @@ def parse_arguments(args):
     parser.add_argument("-p", "--prefspath", "--prefs-file",
                         default="~/.spamassassin/user_prefs",
                         help="Path to user preferences.")
+    parser.add_argument("-dl", "--deactivate-lazy", dest="lazy_mode",
+                        action="store_true", default=False,
+                        help="Deactivate lazy loading of rules/regex")
+    parser.add_argument("-sp", "--serializepath", action="store",
+                        help="Path to the file with serialized ruleset",
+                        default="~/.spamassassin/serialized_ruleset")
     parser.add_argument("-t", "--test-mode", action="store_true", default=False,
                         help="Pipe message through and add extra report to the "
                              "bottom")
@@ -105,22 +88,21 @@ def parse_arguments(args):
 
     return parser.parse_args(args)
 
-
-def call_post_parsing(ruleset):
-    """Run all post processing hooks."""
-    # ruleset.checked = collections.OrderedDict(
-    #     sorted(ruleset.checked.items(), key=itemgetter(1), reverse=False))
-    for rule_list in (ruleset.checked, ruleset.not_checked):
-        for name, rule in list(rule_list.items()):
-            try:
-                rule.postparsing(ruleset)
-            except pad.errors.InvalidRule as e:
-                ruleset.ctxt.err(e)
-                if ruleset.ctxt.paranoid:
-                    raise
-                del rule_list[name]
-    for plugin_name, plugin in ruleset.ctxt.plugins.items():
-        plugin.finish_parsing_end(ruleset)
+def serialize(ruleset, path):
+    try:
+        with open(os.path.expanduser(path), "wb") as f:
+            pickle.dump(ruleset, f, pickle.HIGHEST_PROTOCOL)
+    except FileNotFoundError:
+        print("Cannot open the file")
+    # except pickle.PickleError:
+    #     sys.exit(1)
+    # except TypeError:
+    #     with open("/tmp/something.txt", "w") as t:
+    #         t.write("something failed")
+    #     print("Cannot serialize object")
+    #     pass
+    except Exception as e:
+        traceback.print_exc(file=sys.stdout)
 
 
 def main():
@@ -134,55 +116,11 @@ def main():
     if not config_files:
         print("Config: no rules were found!", file=sys.stderr)
         sys.exit(1)
+    ruleset = pad.rules.parser.parse_pad_rules(
+        config_files, options.paranoid, not options.show_unknown
+    ).get_ruleset()
 
-    if not options.serialize:
-        try:
-            ruleset = pad.rules.parser.parse_pad_rules(
-                config_files, options.paranoid, not options.show_unknown
-            ).get_ruleset()
-        except pad.errors.MaxRecursionDepthExceeded as e:
-            print(e.recursion_list, file=sys.stderr)
-            sys.exit(1)
-        except pad.errors.ParsingError as e:
-            print(e, file=sys.stderr)
-            sys.exit(1)
-    else:
-        ruleset = None
-        print(os.path.expanduser(options.serializepath))
-        try:
-            with open(os.path.expanduser(options.serializepath), "rb") as f:
-                ruleset = pickle.load(f)
-        except EOFError:
-            print("Reading an empty file")
-
-        print(os.path.getsize(os.path.expanduser(options.serializepath)))
-
-        call_post_parsing(ruleset)
-
-    count = 0
-    for message_list in options.messages:
-        for msgf in message_list:
-            raw_msg = msgf.read()
-            if type(raw_msg) is bytes and PY3:
-                raw_msg = raw_msg.decode("utf-8", "ignore")
-            msgf.close()
-            msg = pad.message.Message(ruleset.ctxt, raw_msg)
-
-            if options.revoke:
-                ruleset.ctxt.hook_revoke(msg)
-            elif options.report:
-                ruleset.ctxt.hook_report(msg)
-            elif options.report_only:
-                ruleset.match(msg)
-                print(ruleset.get_report(msg))
-            else:
-                ruleset.match(msg)
-                print(ruleset.get_adjusted_message(msg))
-                if options.test_mode:
-                    print(ruleset.get_report(msg))
-        count += 1
-    if options.revoke or options.report:
-        print("%s message(s) examined" % count)
+    serialize(ruleset, options.serializepath)
 
 
 if __name__ == "__main__":

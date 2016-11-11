@@ -14,6 +14,16 @@ _EVAL_RULE_P = Regex(r"""
 """, re.VERBOSE)
 
 
+class EvalMethod(object):
+    def __init__(self, method, eval_args, target):
+        self.method = method
+        self.eval_args = eval_args
+        self.target = target
+
+    def __call__(self, msg):
+        return self.method(*((msg,) + self.eval_args), target=self.target)
+
+
 class EvalRule(pad.rules.base.BaseRule):
     """Evaluates a registered eval function."""
 
@@ -54,10 +64,7 @@ class EvalRule(pad.rules.base.BaseRule):
                                                     "referenced: %s" %
                                          self.eval_rule_name)
 
-        def new_method(msg):
-            return method(*((msg,) + self.eval_args), target=self.target)
-
-        self.eval_rule = new_method
+        self.eval_rule = EvalMethod(method, self.eval_args, self.target)
 
     def match(self, msg):
         try:

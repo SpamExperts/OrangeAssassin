@@ -310,10 +310,8 @@ class RuleSet(object):
         )
         for value in self.conf["add_header"]:
             self._add_header_rule(value, False)
-        del self.conf["add_header"]
         for value in self.conf["remove_header"]:
             self._add_header_rule(value, True)
-        del self.conf["remove_header"]
 
         for value in self.conf['dns_query_restriction']:
             try:

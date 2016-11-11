@@ -9,8 +9,12 @@ except ImportError:
 try:
     from sqlalchemy import create_engine
     from sqlalchemy.orm import sessionmaker
+
+    has_sqlalchemy = True
 except:
     import pymysql
+
+    has_sqlalchemy = False
 
 import pad.plugins
 from pad.plugins import awl
@@ -132,145 +136,145 @@ class TestAWLBase(unittest.TestCase):
         get_signed_by.assert_called_with(self.mock_msg)
         get_origin_ip.assert_called_with(self.mock_msg)
 
+if has_sqlalchemy:
+    class TestAWLBaseSQLAlchemy(unittest.TestCase):
 
-class TestAWLBaseSQLAlchemy(unittest.TestCase):
+        def setUp(self):
+            unittest.TestCase.setUp(self)
+            self.options = {}
+            self.global_data = {}
+            self.msg_data = {}
 
-    def setUp(self):
-        unittest.TestCase.setUp(self)
-        self.options = {}
-        self.global_data = {}
-        self.msg_data = {}
-
-        self.mock_ctxt = MagicMock(**{
-            "get_plugin_data.side_effect": lambda p, k: self.global_data[k],
-            "set_plugin_data.side_effect": lambda p, k,
-                                                  v: self.global_data.setdefault(
-                k, v),
-            "username": "test",
-        })
-        self.mock_msg = MagicMock(**{
-            "get_plugin_data.side_effect": lambda p, k: self.msg_data[k],
-            "set_plugin_data."
-            "side_effect": lambda p, k, v: self.msg_data.setdefault(k, v),
-        })
-
-        # self.mock_msg.msg = None
-        get_session = patch(
-            "pad.plugins.awl.AutoWhiteListPlugin.get_session").start()
-        engine = create_engine("sqlite://")
-        awl.Base.metadata.create_all(engine)
-        self.session = sessionmaker(bind=engine)()
-        get_session.return_value = self.session
-        self.plugin = pad.plugins.awl.AutoWhiteListPlugin(self.mock_ctxt)
-
-    def tearDown(self):
-        unittest.TestCase.tearDown(self)
-        patch.stopall()
-
-    def test_get_entry(self):
-        get_engine = patch(
-            "pad.plugins.awl.AutoWhiteListPlugin.get_engine").start()
-        hasSQLAlchemy = patch(
-            "pad.plugins.awl.has_sqlalchemy", True, create=True).start()
-        getEntrySQLAlchemy = patch(
-            "pad.plugins.awl.AutoWhiteListPlugin.get_sqlalch_entry").start()
-        address = ""
-        ip = ""
-        signed_by = ""
-        get_engine.return_value = defaultdict()
-        result = self.plugin.get_entry(address, ip, signed_by)
-        getEntrySQLAlchemy.assert_called_with(address, ip, signed_by)
-
-    def test_check_from_in_auto_whitelist_with_sqlalchemy(self):
-        self.mock_msg.score = 0
-        self.global_data["auto_whitelist_factor"] = 0
-        getLocal = patch(
-            "pad.plugins.awl.AutoWhiteListPlugin.get_local").start()
-        getLocal.return_value = ""
-        getEntry = patch(
-            "pad.plugins.awl.AutoWhiteListPlugin.get_entry").start()
-        getEntry.return_value = None
-        hasMySQL = patch(
-            "pad.plugins.awl.AutoWhiteListPlugin.has_mysql", False, create=True)
-        hasMySQL.start()
-        pluginTags = patch(
-            "pad.plugins.awl.AutoWhiteListPlugin.plugin_tags_sqlalch").start()
-        self.plugin.check_from_in_auto_whitelist(self.mock_msg)
-
-        pluginTags.assert_called_with(self.mock_msg, "", "", "", 0, 0, None)
-
-    def check_sa_db(self, username, email, ip, signedby, totscore, count):
-        result = self.session.query(awl.AWL).filter(
-            username == username,
-            signedby == signedby,
-            email == email,
-            ip == ip).first()
-        self.assertEqual(totscore, result.totscore)
-        self.assertEqual(count, result.count)
-
-    def test_eval_rule_first_seen_address(self):
-        data = {"email": "test@example.com",
+            self.mock_ctxt = MagicMock(**{
+                "get_plugin_data.side_effect": lambda p, k: self.global_data[k],
+                "set_plugin_data.side_effect": lambda p, k,
+                                                      v: self.global_data.setdefault(
+                    k, v),
                 "username": "test",
-                "signedby": "",
-                "totscore": 5,
-                "ip": "8.8",
-                "count": 1}
+            })
+            self.mock_msg = MagicMock(**{
+                "get_plugin_data.side_effect": lambda p, k: self.msg_data[k],
+                "set_plugin_data."
+                "side_effect": lambda p, k, v: self.msg_data.setdefault(k, v),
+            })
 
-        self.mock_msg.score = 5
-        self.plugin.set_local(self.mock_msg, "from", "test@example.com")
-        self.plugin.set_local(self.mock_msg, "from", "test@example.com")
-        self.plugin.set_local(self.mock_msg, "signedby", "")
+            # self.mock_msg.msg = None
+            get_session = patch(
+                "pad.plugins.awl.AutoWhiteListPlugin.get_session").start()
+            engine = create_engine("sqlite://")
+            awl.Base.metadata.create_all(engine)
+            self.session = sessionmaker(bind=engine)()
+            get_session.return_value = self.session
+            self.plugin = pad.plugins.awl.AutoWhiteListPlugin(self.mock_ctxt)
 
-        self.plugin.set_local(self.mock_msg, "originip",
-                              ipaddress.IPv4Address(u"8.8.8.8"))
+        def tearDown(self):
+            unittest.TestCase.tearDown(self)
+            patch.stopall()
 
-        hasMySQL = patch(
-            "pad.plugins.awl.AutoWhiteListPlugin.has_mysql", False, create=True)
-        hasMySQL.start()
+        def test_get_entry(self):
+            get_engine = patch(
+                "pad.plugins.awl.AutoWhiteListPlugin.get_engine").start()
+            hasSQLAlchemy = patch(
+                "pad.plugins.awl.has_sqlalchemy", True, create=True).start()
+            getEntrySQLAlchemy = patch(
+                "pad.plugins.awl.AutoWhiteListPlugin.get_sqlalch_entry").start()
+            address = ""
+            ip = ""
+            signed_by = ""
+            get_engine.return_value = defaultdict()
+            result = self.plugin.get_entry(address, ip, signed_by)
+            getEntrySQLAlchemy.assert_called_with(address, ip, signed_by)
 
-        get_eng = patch(
-            "pad.plugins.awl.AutoWhiteListPlugin.get_engine").start()
-        get_eng.return_value = create_engine("sqlite://")
+        def test_check_from_in_auto_whitelist_with_sqlalchemy(self):
+            self.mock_msg.score = 0
+            self.global_data["auto_whitelist_factor"] = 0
+            getLocal = patch(
+                "pad.plugins.awl.AutoWhiteListPlugin.get_local").start()
+            getLocal.return_value = ""
+            getEntry = patch(
+                "pad.plugins.awl.AutoWhiteListPlugin.get_entry").start()
+            getEntry.return_value = None
+            hasMySQL = patch(
+                "pad.plugins.awl.AutoWhiteListPlugin.has_mysql", False, create=True)
+            hasMySQL.start()
+            pluginTags = patch(
+                "pad.plugins.awl.AutoWhiteListPlugin.plugin_tags_sqlalch").start()
+            self.plugin.check_from_in_auto_whitelist(self.mock_msg)
 
-        hasSQLAlchemy = patch(
-            "pad.plugins.awl.has_sqlalchemy", True, create=True).start()
+            pluginTags.assert_called_with(self.mock_msg, "", "", "", 0, 0, None)
 
-        self.plugin.check_from_in_auto_whitelist(self.mock_msg,
-                                                 target="header")
+        def check_sa_db(self, username, email, ip, signedby, totscore, count):
+            result = self.session.query(awl.AWL).filter(
+                username == username,
+                signedby == signedby,
+                email == email,
+                ip == ip).first()
+            self.assertEqual(totscore, result.totscore)
+            self.assertEqual(count, result.count)
 
-        self.assertEqual(self.mock_msg.score, 5)
-        self.check_sa_db(**data)
+        def test_eval_rule_first_seen_address(self):
+            data = {"email": "test@example.com",
+                    "username": "test",
+                    "signedby": "",
+                    "totscore": 5,
+                    "ip": "8.8",
+                    "count": 1}
 
-    def test_eval_rule_existing_address(self):
-        data = {"email": "test@example.com",
-                         "username": "test",
-                         "signedby": "",
-                         "totscore": 5,
-                         "ip": "8.8",
-                         "count": 1}
-        self.session.add(awl.AWL(**data))
-        self.session.commit()
-        self.mock_msg.plugin_tags = dict()
+            self.mock_msg.score = 5
+            self.plugin.set_local(self.mock_msg, "from", "test@example.com")
+            self.plugin.set_local(self.mock_msg, "from", "test@example.com")
+            self.plugin.set_local(self.mock_msg, "signedby", "")
 
-        self.mock_msg.score = 10
-        self.plugin.set_local(self.mock_msg, "from",
-                                       "test@example.com")
-        self.plugin.set_local(self.mock_msg, "signedby", "")
-        self.plugin.set_local(self.mock_msg, "originip", ipaddress.IPv4Address(
-                                           u"8.8.8.8"))
-        hasMySQL = patch(
-            "pad.plugins.awl.AutoWhiteListPlugin.has_mysql", False, create=True)
-        hasMySQL.start()
+            self.plugin.set_local(self.mock_msg, "originip",
+                                  ipaddress.IPv4Address(u"8.8.8.8"))
 
-        get_eng = patch(
-            "pad.plugins.awl.AutoWhiteListPlugin.get_engine").start()
-        get_eng.return_value = create_engine("sqlite://")
+            hasMySQL = patch(
+                "pad.plugins.awl.AutoWhiteListPlugin.has_mysql", False, create=True)
+            hasMySQL.start()
 
-        self.plugin.check_from_in_auto_whitelist(self.mock_msg,
-                                                 target = "header")
-        data.update({"totscore": 15, "count": 2})
-        self.check_sa_db(**data)
-        self.assertEqual(self.mock_msg.score, 7.5)
+            get_eng = patch(
+                "pad.plugins.awl.AutoWhiteListPlugin.get_engine").start()
+            get_eng.return_value = create_engine("sqlite://")
+
+            hasSQLAlchemy = patch(
+                "pad.plugins.awl.has_sqlalchemy", True, create=True).start()
+
+            self.plugin.check_from_in_auto_whitelist(self.mock_msg,
+                                                     target="header")
+
+            self.assertEqual(self.mock_msg.score, 5)
+            self.check_sa_db(**data)
+
+        def test_eval_rule_existing_address(self):
+            data = {"email": "test@example.com",
+                             "username": "test",
+                             "signedby": "",
+                             "totscore": 5,
+                             "ip": "8.8",
+                             "count": 1}
+            self.session.add(awl.AWL(**data))
+            self.session.commit()
+            self.mock_msg.plugin_tags = dict()
+
+            self.mock_msg.score = 10
+            self.plugin.set_local(self.mock_msg, "from",
+                                           "test@example.com")
+            self.plugin.set_local(self.mock_msg, "signedby", "")
+            self.plugin.set_local(self.mock_msg, "originip", ipaddress.IPv4Address(
+                                               u"8.8.8.8"))
+            hasMySQL = patch(
+                "pad.plugins.awl.AutoWhiteListPlugin.has_mysql", False, create=True)
+            hasMySQL.start()
+
+            get_eng = patch(
+                "pad.plugins.awl.AutoWhiteListPlugin.get_engine").start()
+            get_eng.return_value = create_engine("sqlite://")
+
+            self.plugin.check_from_in_auto_whitelist(self.mock_msg,
+                                                     target = "header")
+            data.update({"totscore": 15, "count": 2})
+            self.check_sa_db(**data)
+            self.assertEqual(self.mock_msg.score, 7.5)
 
 
 class TestAWLBasePyMySQL(unittest.TestCase):

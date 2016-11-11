@@ -88,6 +88,7 @@ class BasePlugin(pad.conf.Conf, object):
             self.options[self.dsn_name + "_dsn"] = ("str", "")
             self.options[self.dsn_name + "_sql_username"] = ("str", "")
             self.options[self.dsn_name + "_sql_password"] = ("str", "")
+        self.path_to_plugin = None
         super(BasePlugin, self).__init__(ctxt)
 
     def finish_parsing_start(self, results):

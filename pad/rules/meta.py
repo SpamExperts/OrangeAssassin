@@ -47,10 +47,10 @@ class MetaRule(pad.rules.base.BaseRule):
         rule = _SUBRULE_P.sub(r"\1(msg)", self.rule)
         for operator, repl in CONVERT:
             rule = rule.replace(operator, repl)
-        self.rule = "match = lambda msg: %s" % rule
+        rule_match = "match = lambda msg: %s" % rule
         # XXX we should check for potentially unsafe code or run it in
         # XXX RestrictedPython.
-        _code_obj = compile(self.rule, "<meta>", "exec")
+        _code_obj = compile(rule_match, "<meta>", "exec")
 
         pad.rules.base.BaseRule.postparsing(self, ruleset)
         for subrule_name in subrules:

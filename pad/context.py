@@ -3,6 +3,8 @@
 from builtins import dict
 from builtins import object
 
+import timeit
+
 import sys
 
 try:
@@ -25,6 +27,7 @@ import pad.errors
 import pad.networks
 import pad.rules.base
 import pad.plugins.base
+import pad.plugins.pyzor
 import pad.dns_interface
 import pad.regex
 
@@ -47,6 +50,33 @@ class _Context(object):
     def __init__(self):
         self.plugin_data = collections.defaultdict(dict)
         self.log = logging.getLogger("pad-logger")
+
+    def __getstate__(self):
+        odict = self.__dict__.copy()  # copy the dict since we change it
+        del odict['log']  # remove filehandle entry
+        if "PyzorPlugin" in odict["plugin_data"]:
+            del odict["plugin_data"]["PyzorPlugin"]["client"]
+        if "RelayCountryPlugin" in odict["plugin_data"]:
+            del odict["plugin_data"]["RelayCountryPlugin"]["ipv4"]
+            del odict["plugin_data"]["RelayCountryPlugin"]["ipv6"]
+        odict["plugins_to_import"] = []
+        import pdb
+        pdb.set_trace()
+        for plugin_name, plugin in odict["plugins"].copy().items():
+            if plugin.path_to_plugin is None:
+                continue
+            del odict["plugins"][plugin_name]
+            odict["plugins_to_import"].append(plugin.path_to_plugin)
+            for rule in plugin.eval_rules:
+                del odict["eval_rules"][rule]
+        return odict
+
+    def __setstate__(self, d):
+        log = logging.getLogger("pad-logger")
+        self.__dict__.update(d)
+        self.log = log
+        for name, path in d.get("plugins_to_import", None) or ():
+            self.load_plugin(name, path)
 
     def set_plugin_data(self, plugin_name, key, value):
         """Store data for the specified plugin under the given key."""
@@ -178,6 +208,8 @@ class GlobalContext(_Context):
         self._load_cmds(plugin, class_name)
         self._load_eval_rules(plugin, class_name)
         self.log.info("Plugin %s loaded", name)
+        if path is not None:
+            plugin.path_to_plugin = (name, path)
         # Store the plugin instance in the dictionary
         self.plugins[class_name] = plugin
 

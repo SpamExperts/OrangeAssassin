@@ -10,7 +10,8 @@ distutils.core.setup(
     version=pad.__version__,
     scripts=[
         'scripts/match.py',
-        'scripts/padd.py'
+        'scripts/padd.py',
+        'scripts/compile.py'
     ],
     packages=[
         'pad',
