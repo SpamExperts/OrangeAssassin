@@ -290,15 +290,7 @@ class RuleSet(object):
         """Run all post processing hooks."""
         self.checked = collections.OrderedDict(
             sorted(self.checked.items(), key=itemgetter(1), reverse=False))
-        for rule_list in (self.checked, self.not_checked):
-            for name, rule in list(rule_list.items()):
-                try:
-                    rule.postparsing(self)
-                except pad.errors.InvalidRule as e:
-                    self.ctxt.err(e)
-                    if self.ctxt.paranoid:
-                        raise
-                    del rule_list[name]
+        self.call_postparsing()
         # Convert some of the parsed information
         self.conf["report"] = "\n".join(
             self._convert_tags(value)
@@ -333,6 +325,18 @@ class RuleSet(object):
             dns_options.update(dns_options_match.groupdict())
         self.ctxt.dns.rotate = dns_options['rotate']
         self.ctxt.dns.edns = dns_options['edns']
+
+    def call_postparsing(self):
+        """Call postparsing on ALL loaded rules."""
+        for rule_list in (self.checked, self.not_checked):
+            for name, rule in list(rule_list.items()):
+                try:
+                    rule.postparsing(self)
+                except pad.errors.InvalidRule as e:
+                    self.ctxt.err(e)
+                    if self.ctxt.paranoid:
+                        raise
+                    del rule_list[name]
 
     def match(self, msg):
         """Match the message against all the rules in this ruleset."""

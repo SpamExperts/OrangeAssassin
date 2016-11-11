@@ -51,11 +51,6 @@ class DNSInterface(object):
     def __getstate__(self):
         odict = self.__dict__.copy()  # copy the dict since we change it
         del odict['log']  # remove filehandle entry
-        odict['_resolver_options'] = {}
-        odict['_resolver_options']['port'] = odict['_resolver'].port
-        odict['_resolver_options']['rotate_nameservers'] = odict['_resolver'].rotate
-        odict['_resolver_options']['payload'] = odict['_resolver'].payload
-        odict['_resolver_options']['nameservers'] = odict['_resolver'].nameservers
         del odict['_resolver']
         return odict
 
@@ -64,11 +59,6 @@ class DNSInterface(object):
         self.__dict__.update(d)
         self.log = log
         self._resolver = dns.resolver.Resolver()
-        self._resolver.port = d['_resolver_options']['port']
-        self._resolver.rotate = d['_resolver_options']['rotate_nameservers']
-        self._resolver.payload = d['_resolver_options']['payload']
-        self._resolver.nameservers = d['_resolver_options']['nameservers']
-
 
     @property
     def port(self):

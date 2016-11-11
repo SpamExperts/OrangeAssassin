@@ -108,19 +108,9 @@ def parse_arguments(args):
 
 def call_post_parsing(ruleset):
     """Run all post processing hooks."""
-    # ruleset.checked = collections.OrderedDict(
-    #     sorted(ruleset.checked.items(), key=itemgetter(1), reverse=False))
-    for rule_list in (ruleset.checked, ruleset.not_checked):
-        for name, rule in list(rule_list.items()):
-            try:
-                rule.postparsing(ruleset)
-            except pad.errors.InvalidRule as e:
-                ruleset.ctxt.err(e)
-                if ruleset.ctxt.paranoid:
-                    raise
-                del rule_list[name]
-    for plugin_name, plugin in ruleset.ctxt.plugins.items():
-        plugin.finish_parsing_end(ruleset)
+    ruleset.ctxt.hook_parsing_end(ruleset)
+    ruleset.ctxt.log.info("%s rules loaded", len(ruleset.checked))
+    ruleset.call_postparsing()
 
 
 def main():

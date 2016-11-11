@@ -483,8 +483,7 @@ Received: from google.com ([2a00:1450:4017:804::200e]) by test.com
         lists = """trusted_networks 2a00:1450:4017:804::200e"""
 
         email = """Received: from google.com ([2a00:1450:4017:804::200e]) by
-        test.com
-    (envelope-from <test@google.com>)
+        test.com (envelope-from <test@google.com>)
 Received:from example.net (example.com [1.2.3.4]) by example.com 
     (envelope-from <envfrom@spamexperts.com>)"""
 
