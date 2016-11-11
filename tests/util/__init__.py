@@ -1,5 +1,9 @@
 """Utilities for tests."""
+from __future__ import print_function
+from __future__ import absolute_import
+
 import os
+import sys
 import shutil
 import unittest
 import subprocess
@@ -116,6 +120,58 @@ class TestBase(unittest.TestCase):
             except IndexError:
                 self.fail("Failed: %s %s" % (stdout, stderr))
         return result.strip()
+
+    def profile_pad(self, name, short_name, msg, ptype="memory",
+                    ilimit=None, elimit=None, plimit=None,
+                    inclimit=None):
+        match_args = ["--test-mode", "-C", self.test_conf,
+                      "--siteconfigpath", self.test_conf]
+        args = [
+            sys.executable, "-m",
+            "se_profile.profile",
+            "-n", name,
+            "-s", short_name,
+            "-t", ptype,
+            # "--debug"
+            # "--per-file",
+        ]
+        if ilimit:
+            args.extend([
+                "--import-limit", str(ilimit)
+            ])
+        if elimit:
+            args.extend([
+                "--end-limit", str(elimit)
+            ])
+        if plimit:
+            args.extend([
+                "--peak-limit", str(plimit)
+            ])
+        if inclimit:
+            args.extend([
+                "--increment-limit", str(inclimit)
+            ])
+
+        args.extend([
+            "-m", "scripts.match",
+            "-p", " ".join(match_args)
+        ])
+        env = os.environ.copy()
+        if "PYTHONPATH" not in env:
+            ppath = [os.getcwd()]
+        else:
+            ppath = env["PYTHONPATH"].split(os.pathsep)
+            ppath.append(os.getcwd())
+        env["PYTHONPATH"] = os.pathsep.join(ppath)
+
+        p = subprocess.Popen(args, env=env,
+                             stdout=subprocess.PIPE,
+                             stderr=subprocess.PIPE)
+        stdout, stderr = p.communicate(msg.encode("utf8"))
+        p.wait()
+        print(stdout, file=sys.__stdout__)
+        if p.returncode:
+            self.fail(stdout + b'\n' + stderr)
 
     def check_report(self, result, expected_score=None, expected_symbols=None):
         """Check the report SYMBOLS_PRE_CONFIG for score

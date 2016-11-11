@@ -32,8 +32,9 @@ before_script:
 script:
 - py.test tests/unit/ --cov pad --cov scripts --cov-report term-missing
 - py.test tests/functional/
-- env USE_PICKLES=1 py.test tests/functional/
+- py.test tests/profiling/
 after_script:
+- cat .profile_results/*report.txt
 - pep8 --show-source pad
 after_success:
 - coveralls
