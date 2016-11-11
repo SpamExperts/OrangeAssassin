@@ -93,8 +93,6 @@ class NetworkList(object):
     def configured(self):
         return self.internal.configured or self.trusted.configured
 
-
-
     def _extract_network(self, network_str):
         excluded, network, mask = _NETWORK_RE.match(network_str).groups()
         clean_value = _format_network_str(network, mask)

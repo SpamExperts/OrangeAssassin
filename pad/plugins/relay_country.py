@@ -38,10 +38,6 @@ class RelayCountryPlugin(pad.plugins.base.BasePlugin):
     options = {"geodb": ("str", "GeoIP.dat"),
                "geodb-ipv6": ("str", "GeoIPv6.dat")}
 
-    def __getstate__(self):
-        odict = self.__dict__.copy()  # copy the dict since we change it
-        return odict
-
     def finish_parsing_end(self, ruleset):
         super(RelayCountryPlugin, self).finish_parsing_end(ruleset)
         reader_ipv4 = self.load_database()
