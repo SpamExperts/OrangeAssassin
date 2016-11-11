@@ -97,6 +97,14 @@ Users can compile rules in SpamPAD in two ways:
             -sp (specify the path for the file where was done the serialization)
 
 
+    .. note::
+
+        Users can use the ability to compile rules and avoid re-parsing only
+        if they have :
+            -Python 2.7.11
+                or
+            -Python 3.5
+
 .. _configuration-options:
 
 Options
