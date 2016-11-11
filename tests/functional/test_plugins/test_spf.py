@@ -339,7 +339,7 @@ identity=helo"""
         email = """Received-SPF: fail (example.org: domain of
         test@example.org) identity=helo
 Received: from google.com ([2a00:1450:4017:804::200e]) by test.com
-	(envelope-from <test@google.com>)"""
+    (envelope-from <test@google.com>)"""
 
         self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG + lists)
         result = self.check_pad(email)
@@ -348,7 +348,7 @@ Received: from google.com ([2a00:1450:4017:804::200e]) by test.com
     def test_spf_with_no_receive_spf_header_pass_helo_and_ident(self):
         email = """Received: from google.com ([2a00:1450:4017:804::200e]) by
         test.com
-	(envelope-from <test@google.com>)"""
+    (envelope-from <test@google.com>)"""
 
         self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG)
         result = self.check_pad(email)
@@ -356,7 +356,7 @@ Received: from google.com ([2a00:1450:4017:804::200e]) by test.com
 
     def test_spf_with_no_receive_spf_header_ident_not_matching_ip(self):
         email = """Received: from google.com ([1.2.3.4]) by test.com
-	(envelope-from <test@google.com>)"""
+    (envelope-from <test@google.com>)"""
 
         self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG)
         result = self.check_pad(email)
@@ -365,7 +365,7 @@ Received: from google.com ([2a00:1450:4017:804::200e]) by test.com
     def test_spf_with_no_receive_spf_header_ident_not_matching_ip_and_fail_on_helo(
             self):
         email = """Received: from example.com ([1.2.3.4]) by test.com
-	(envelope-from <test@google.com>)"""
+    (envelope-from <test@google.com>)"""
 
         self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG)
         result = self.check_pad(email)
@@ -375,7 +375,7 @@ Received: from google.com ([2a00:1450:4017:804::200e]) by test.com
             self):
         email = """Received: from example.com ([2a00:1450:4017:804::200e])
         by test.com
-	(envelope-from <test@google.com>)"""
+    (envelope-from <test@google.com>)"""
 
         self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG)
         result = self.check_pad(email)
@@ -385,7 +385,7 @@ Received: from google.com ([2a00:1450:4017:804::200e]) by test.com
             self):
         email = """Received:from spamexperts.com ([5.79.73.204]) by
         example.com
-	(envelope-from <envfrom@google.com>)"""
+    (envelope-from <envfrom@google.com>)"""
 
         self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG)
         result = self.check_pad(email)
@@ -394,7 +394,7 @@ Received: from google.com ([2a00:1450:4017:804::200e]) by test.com
     def test_spf_with_no_receive_spf_header_with_two_ips(self):
         email = """Received:from slack.com ([167.89.125.30] [
         2a00:1450:4017:804::200e]) by example.com
-	(envelope-from <envfrom@google.com>)"""
+    (envelope-from <envfrom@google.com>)"""
 
         self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG)
         result = self.check_pad(email)
@@ -404,7 +404,7 @@ Received: from google.com ([2a00:1450:4017:804::200e]) by test.com
         lists = """ignore_received_spf_header 1"""
 
         email = """Received: from google.com ([1.2.3333.4]) by test.com
-	(envelope-from <test@google.com>)"""
+    (envelope-from <test@google.com>)"""
 
         self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG + lists)
         result = self.check_pad(email)
@@ -413,7 +413,7 @@ Received: from google.com ([2a00:1450:4017:804::200e]) by test.com
     def test_spf_with_no_receive_spf_header_invalid_helo(self):
         email = """Received: from google ([2a00:1450:4017:803::200e]) by
         test.com
-	(envelope-from <test@google.com>)"""
+    (envelope-from <test@google.com>)"""
 
         self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG)
         result = self.check_pad(email)
