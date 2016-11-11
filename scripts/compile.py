@@ -13,8 +13,9 @@ import pad.errors
 import pad.message
 import pad.rules.parser
 
-
 SERIALIZED = False
+
+
 # f = open(os.path.join("/home/roxana/Desktop/compiled_rules"), "wb")
 class MessageList(argparse.FileType):
     def __call__(self, string):
@@ -45,6 +46,8 @@ def get_binary_stdin():
     buf = getattr(sys.stdin, 'buffer', None)
     if buf is not None and _is_binary_reader(buf, True):
         return buf
+
+
 def parse_arguments(args):
     parser = argparse.ArgumentParser(
         description=__doc__,
@@ -75,8 +78,10 @@ def parse_arguments(args):
     parser.add_argument("-sp", "--serializepath", action="store",
                         help="Path to the file with serialized ruleset",
                         default="~/.spamassassin/serialized_ruleset")
-    parser.add_argument("-t", "--test-mode", action="store_true", default=False,
-                        help="Pipe message through and add extra report to the "
+    parser.add_argument("-t", "--test-mode", action="store_true",
+                        default=False,
+                        help="Pipe message through and add extra report to "
+                             "the "
                              "bottom")
     parser.add_argument("-R", "--report-only", action="store_true",
                         default=False, help="Only print the report instead of "
@@ -87,6 +92,7 @@ def parse_arguments(args):
                         default=[[get_binary_stdin()]])
 
     return parser.parse_args(args)
+
 
 def serialize(ruleset, path):
     try:
