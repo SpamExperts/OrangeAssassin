@@ -392,8 +392,8 @@ Received: from google.com ([2a00:1450:4017:804::200e]) by test.com
         self.check_report(result, 2, ['SPF_SOFTFAIL', 'SPF_HELO_PASS'])
 
     def test_spf_with_no_receive_spf_header_with_two_ips(self):
-        email = """Received:from slack.com ([167.89.125.30] [
-        2a00:1450:4017:804::200e]) by example.com
+        email = """Received:from slack.com ([167.89.125.30]
+    [2a00:1450:4017:804::200e]) by example.com
     (envelope-from <envfrom@google.com>)"""
 
         self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG)
