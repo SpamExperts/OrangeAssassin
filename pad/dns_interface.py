@@ -50,14 +50,11 @@ class DNSInterface(object):
 
     def __getstate__(self):
         odict = self.__dict__.copy()  # copy the dict since we change it
-        del odict['log']  # remove filehandle entry
         del odict['_resolver']
         return odict
 
     def __setstate__(self, d):
-        log = logging.getLogger("pad-logger")
         self.__dict__.update(d)
-        self.log = log
         self._resolver = dns.resolver.Resolver()
 
     @property

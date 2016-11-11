@@ -53,9 +53,6 @@ class _Context(object):
 
     def __getstate__(self):
         odict = self.__dict__.copy()  # copy the dict since we change it
-        del odict['log']  # remove filehandle entry
-        if "PyzorPlugin" in odict["plugin_data"]:
-            del odict["plugin_data"]["PyzorPlugin"]["client"]
         if "RelayCountryPlugin" in odict["plugin_data"]:
             del odict["plugin_data"]["RelayCountryPlugin"]["ipv4"]
             del odict["plugin_data"]["RelayCountryPlugin"]["ipv6"]
@@ -70,9 +67,7 @@ class _Context(object):
         return odict
 
     def __setstate__(self, d):
-        log = logging.getLogger("pad-logger")
         self.__dict__.update(d)
-        self.log = log
         for name, path in d.get("plugins_to_import", None) or ():
             self.load_plugin(name, path)
 
