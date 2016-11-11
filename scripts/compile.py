@@ -3,7 +3,7 @@ from __future__ import print_function
 
 import os
 import sys
-import pickle
+import dill as pickle
 import logging
 import argparse
 

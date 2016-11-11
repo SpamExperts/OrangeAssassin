@@ -11,7 +11,7 @@ import os
 import sys
 import argparse
 
-import pickle
+import dill as pickle
 import collections
 from operator import itemgetter
 
