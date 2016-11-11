@@ -99,7 +99,7 @@ def serialize(ruleset, path):
     try:
         with open(os.path.expanduser(path), "wb") as f:
             pickle.dump(ruleset, f, pickle.HIGHEST_PROTOCOL)
-    except FileNotFoundError as e:
+    except (OSError, IOError) as e:
         logger.critical("Cannot open the file: %s", e)
         sys.exit(1)
 
