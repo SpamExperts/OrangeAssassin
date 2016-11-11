@@ -4,8 +4,8 @@ from __future__ import print_function
 import os
 import sys
 import pickle
+import logging
 import argparse
-import traceback
 
 import pad
 import pad.config
@@ -16,7 +16,6 @@ import pad.rules.parser
 SERIALIZED = False
 
 
-# f = open(os.path.join("/home/roxana/Desktop/compiled_rules"), "wb")
 class MessageList(argparse.FileType):
     def __call__(self, string):
         if os.path.isdir(string):
@@ -95,32 +94,27 @@ def parse_arguments(args):
 
 
 def serialize(ruleset, path):
+    logger = logging.getLogger("pad-logger")
+    logger.info("Compiling ruleset to %s", path)
     try:
         with open(os.path.expanduser(path), "wb") as f:
             pickle.dump(ruleset, f, pickle.HIGHEST_PROTOCOL)
-    except FileNotFoundError:
-        print("Cannot open the file")
-    # except pickle.PickleError:
-    #     sys.exit(1)
-    # except TypeError:
-    #     with open("/tmp/something.txt", "w") as t:
-    #         t.write("something failed")
-    #     print("Cannot serialize object")
-    #     pass
-    except Exception as e:
-        traceback.print_exc(file=sys.stdout)
+    except FileNotFoundError as e:
+        logger.critical("Cannot open the file: %s", e)
+        sys.exit(1)
 
 
 def main():
     options = parse_arguments(sys.argv[1:])
     pad.config.LAZY_MODE = not options.lazy_mode
-    logger = pad.config.setup_logging("pad-logger", debug=options.debug)
+    logger = pad.config.setup_logging("pad-logger",
+                                      debug=options.debug)
     config_files = pad.config.get_config_files(options.configpath,
                                                options.sitepath,
                                                options.prefspath)
 
     if not config_files:
-        print("Config: no rules were found!", file=sys.stderr)
+        logger.critical("Config: no rules were found.")
         sys.exit(1)
     ruleset = pad.rules.parser.parse_pad_rules(
         config_files, options.paranoid, not options.show_unknown
