@@ -7,10 +7,7 @@ env:
     - USE_SQLALCHEMY=true
     - USE_SQLALCHEMY=false
 python:
-- '2.7'
 - '2.7.11'
-- '2.7.12'
-- '3.4'
 - '3.5'
 - pypy
 - pypy3
@@ -34,7 +31,7 @@ before_script:
 script:
 - py.test tests/unit/ --cov pad --cov scripts --cov-report term-missing
 - env USE_PICKLES=0 py.test tests/functional/
-- env USE_PICKLES=1 py.test tests/functional/
+- if [[ $TRAVIS_PYTHON_VERSION != pypy* ]]; then env USE_PICKLES=1 py.test tests/functional/; fi
 - py.test tests/profiling/
 after_script:
 - cat .profile_results/*report.txt

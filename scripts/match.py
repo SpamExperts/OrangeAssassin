@@ -12,10 +12,9 @@ import sys
 import argparse
 
 import dill as pickle
-import collections
-from operator import itemgetter
 
 import pad
+import pad.common
 import pad.config
 import pad.errors
 import pad.message
@@ -125,7 +124,13 @@ def main():
         logger.critical("Config: no rules were found.")
         sys.exit(1)
 
-    if not options.serialize:
+    serialize = options.serialize
+
+    if serialize and not pad.common.can_compile():
+        logger.error("Cannot compile in this environment")
+        serialize = False
+
+    if not serialize:
         try:
             ruleset = pad.rules.parser.parse_pad_rules(
                 config_files, options.paranoid, not options.show_unknown
