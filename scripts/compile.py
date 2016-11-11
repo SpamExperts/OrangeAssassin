@@ -3,11 +3,13 @@ from __future__ import print_function
 
 import os
 import sys
-import dill as pickle
 import logging
 import argparse
 
+import dill as pickle
+
 import pad
+import pad.common
 import pad.config
 import pad.errors
 import pad.message
@@ -112,6 +114,9 @@ def main():
     config_files = pad.config.get_config_files(options.configpath,
                                                options.sitepath,
                                                options.prefspath)
+    if not pad.common.can_compile():
+        logger.critical("Cannot compile in this environment")
+        sys.exit(1)
 
     if not config_files:
         logger.critical("Config: no rules were found.")

@@ -28,10 +28,9 @@ class TestBodyEval(tests.util.TestBase):
 
     def test_real_msg_with_errors(self):
         """Check real multipart message"""
-        cwd = os.path.join(os.getcwd(), "pad", "plugins", "body_eval.py")
         self.setup_conf(CONFIG + "\n",
-                pre_config="loadplugin BodyEval {0}\n"
-                "report _SCORE_".format(cwd))
+                pre_config="loadplugin pad.plugins.body_eval.BodyEval\n"
+                "report _SCORE_")
         with open(os.path.join(TESTDATA_DIR, "testmail.eml")) as m:
             msg = email.message_from_file(m)
             result = self.check_pad(msg.as_string())
