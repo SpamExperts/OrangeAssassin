@@ -77,33 +77,33 @@ SpamPAD accepts various types of configuration options. The current types are:
 Compiling rules
 ===============
 
+
 Users can compile rules in SpamPAD in two ways:
-    1.Re-parsing the rules:
+    
+    1. Re-parsing the rules::
+        
         $ ./scripts/match.py -t -C /root/myconf/ --sitepath /root/myconf/ < /root/test.eml
 
-    2.Avoiding re-parsing:
-        - in order to use this ability, users should:
+    2. Avoiding re-parsing, in order to use this ability, users should:
 
         2.1. Run compile.py with -sp flag to specify the path for the file where
-        will be done the serialization:
+        will be done the serialization::
 
-        $ ./scripts/compile.py -t -C /root/myconf/ --sitepath /root/myconf/ < /root/test.eml -se /serializepath
-
-            -if -sp is not specified, the default value is:
-                ~/.spamassassin/serialized_ruleset
+             $ ./scripts/compile.py -t -C /root/myconf/ --sitepath /root/myconf/ < /root/test.eml -se /serializepath
 
         2.2. Run match.py using:
-            -se (use serialization)
-            -sp (specify the path for the file where was done the serialization)
+        
+            - se (use serialization)
+            - sp (specify the path for the file where was done the serialization)
 
 
     .. note::
 
         Users can use the ability to compile rules and avoid re-parsing only
-        if they have :
-            -Python 2.7.11
-                or
-            -Python 3.5
+        if they have:
+        
+            - Python 2.7.11 or later
+            - Python 3.5 or later
 
 .. _configuration-options:
 
