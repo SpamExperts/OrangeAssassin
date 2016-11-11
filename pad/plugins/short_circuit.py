@@ -9,6 +9,44 @@ import pad.errors
 import pad.plugins.base
 
 
+class ShortCircuitRule(object):
+    """Encapsulates the rule into a short circuited rule."""
+
+    def __init__(self, rule, match_func, stype, spam_score, ham_score):
+        self.rule = rule
+        # This needs to be encapsulated here otherwise we
+        # create a infinite recursive function.
+        self.match_func = match_func
+        self.stype = stype
+        self.spam_score = spam_score
+        self.ham_score = ham_score
+
+    def __call__(self, msg):
+        """Wraps the original method to trigger an
+        exception that will stop processing if it
+        returns True.
+        """
+        result = self.match_func(msg)
+        if not result:
+            return result
+
+        # Add tags to the message
+        msg.plugin_tags["SCRULE"] = self.rule.name
+        msg.plugin_tags["SCTYPE"] = self.stype
+        msg.plugin_tags["SC"] = "%s (%s)" % (self.rule.name, self.stype)
+        # Add the score of the current rule (this will
+        # be skipped in the ruleset otherwise
+        msg.rules_checked[self.rule.name] = result
+        msg.score += self.rule.score
+
+        if self.stype == "spam":
+            msg.score += self.spam_score
+        elif self.stype == "ham":
+            msg.score += self.ham_score
+
+        raise pad.errors.StopProcessing("ShortCircuit: %s", self.rule.name)
+
+
 class ShortCircuit(pad.plugins.base.BasePlugin):
     """ShortCircuit rules to stop processing the
     message immediately if the rule is matched.
@@ -34,38 +72,9 @@ class ShortCircuit(pad.plugins.base.BasePlugin):
         it. This method will stop processing of other rules
         by raising an exception.
         """
-
-        # This needs to be encapsulated here otherwise we
-        # create a infinite recursive function.
-        match_func = rule.match
-
-        @functools.wraps(match_func)
-        def short_circuited_match(msg):
-            """Wraps the original method to trigger an
-            exception that will stop processing if it
-            returns True.
-            """
-            result = match_func(msg)
-            if not result:
-                return result
-
-            # Add tags to the message
-            msg.plugin_tags["SCRULE"] = rule.name
-            msg.plugin_tags["SCTYPE"] = stype
-            msg.plugin_tags["SC"] = "%s (%s)" % (rule.name, stype)
-            # Add the score of the current rule (this will
-            # be skipped in the ruleset otherwise
-            msg.rules_checked[rule.name] = result
-            msg.score += rule.score
-
-            if stype == "spam":
-                msg.score += self["shortcircuit_spam_score"]
-            elif stype == "ham":
-                msg.score += self["shortcircuit_ham_score"]
-
-            raise pad.errors.StopProcessing("ShortCircuit: %s", rule.name)
-
-        return short_circuited_match
+        return ShortCircuitRule(rule, rule.match, stype,
+                                self["shortcircuit_spam_score"],
+                                self["shortcircuit_ham_score"])
 
     def finish_parsing_end(self, ruleset):
         """Go through the list of rules defined in the
