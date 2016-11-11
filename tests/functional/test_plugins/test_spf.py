@@ -462,7 +462,7 @@ Received: from google.com ([2a00:1450:4017:804::200e]) by test.com
 
         email = """Received: from google.com ([2a00:1450:4017:804::200e]) by
         test.com
-	(envelope-from <test@google.com>)"""
+    (envelope-from <test@google.com>)"""
 
         self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG + lists)
         result = self.check_pad(email)
@@ -473,7 +473,7 @@ Received: from google.com ([2a00:1450:4017:804::200e]) by test.com
 
         email = """Received: from google.com ([2a00:1450:4017:804::200e]) by
         test.com
-	(envelope-from <test@google.com>)"""
+    (envelope-from <test@google.com>)"""
 
         self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG + lists)
         result = self.check_pad(email)
@@ -484,9 +484,9 @@ Received: from google.com ([2a00:1450:4017:804::200e]) by test.com
 
         email = """Received: from google.com ([2a00:1450:4017:804::200e]) by
         test.com
-	(envelope-from <test@google.com>)
+    (envelope-from <test@google.com>)
 Received:from example.net (example.com [1.2.3.4]) by example.com 
-	(envelope-from <envfrom@spamexperts.com>)"""
+    (envelope-from <envfrom@spamexperts.com>)"""
 
         self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG + lists)
         result = self.check_pad(email)
@@ -497,11 +497,11 @@ Received:from example.net (example.com [1.2.3.4]) by example.com
         # should ignore spf_timeout and take default
 
         lists = """ignore_received_spf_header 1
-				 spf_timeout a"""
+                 spf_timeout a"""
 
         email = """Received: from example.com ([2a00:1450:4017:804::200e])
         by test.com
-	(envelope-from <test@google.com>)"""
+    (envelope-from <test@google.com>)"""
 
         self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG + lists)
         result = self.check_pad(email)
@@ -512,11 +512,11 @@ Received:from example.net (example.com [1.2.3.4]) by example.com
         # should ignore spf_timeout and take default
 
         lists = """ignore_received_spf_header 1
-				 spf_timeout -2"""
+                 spf_timeout -2"""
 
         email = """Received: from example.com ([2a00:1450:4017:804::200e])
         by test.com
-	(envelope-from <test@google.com>)"""
+    (envelope-from <test@google.com>)"""
 
         self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG + lists)
         result = self.check_pad(email)
@@ -525,11 +525,11 @@ Received:from example.net (example.com [1.2.3.4]) by example.com
     def test_spf_with_no_receive_spf_header_with_float_spf_timeout_method(
             self):
         lists = """ignore_received_spf_header 0
-				 spf_timeout 0.5"""
+                 spf_timeout 0.5"""
 
         email = """Received: from example.com ([2a00:1450:4017:804::200e])
         by test.com
-	(envelope-from <test@google.com>)"""
+    (envelope-from <test@google.com>)"""
 
         self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG + lists)
         result = self.check_pad(email)
@@ -538,11 +538,11 @@ Received:from example.net (example.com [1.2.3.4]) by example.com
     def test_spf_with_no_receive_spf_header_with_empty_spf_timeout_method(
             self):
         lists = """ignore_received_spf_header 0
-				 spf_timeout"""
+                 spf_timeout"""
 
         email = """Received: from example.com ([2a00:1450:4017:804::200e])
         by test.com
-	(envelope-from <test@google.com>)"""
+    (envelope-from <test@google.com>)"""
 
         self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG + lists)
         result = self.check_pad(email)
@@ -555,9 +555,9 @@ Received:from example.net (example.com [1.2.3.4]) by example.com
         test@example.org) identity=helo
 Received-SPF: pass (example.org: domain of test@example.org) identity=helo
 Received: from example.com ([1.2.3.4]) by mx37.antispamcloud.com 
-	(envelope-from <serban@example.com>)
+    (envelope-from <serban@example.com>)
 Received: from google.com ([2a00:1450:4017:804::200e]) by test.com
-	(envelope-from <test@google.com>)"""
+    (envelope-from <test@google.com>)"""
 
         self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG + lists)
         result = self.check_pad(email)
@@ -571,9 +571,9 @@ Received: from google.com ([2a00:1450:4017:804::200e]) by test.com
         test@example.org) identity=helo
 Received-SPF: pass (example.org: domain of test@example.org) identity=helo
 Received: from example.com ([1.2.3.4]) by mx37.antispamcloud.com 
-	(envelope-from <serban@example.com>)
+    (envelope-from <serban@example.com>)
 Received: from google.com ([2a00:1450:4017:804::200e]) by test.com
-	(envelope-from <test@google.com>)"""
+    (envelope-from <test@google.com>)"""
 
         self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG + lists)
         result = self.check_pad(email)
@@ -586,9 +586,9 @@ Received: from google.com ([2a00:1450:4017:804::200e]) by test.com
         test@example.org)
 Received-SPF: pass (example.org: domain of test@example.org) 
 Received: from example.com ([1.2.3.4]) by mx37.antispamcloud.com 
-	(envelope-from <serban@example.com>)
+    (envelope-from <serban@example.com>)
 Received: from google.com ([2a00:1450:4017:804::200e]) by test.com
-	(envelope-from <test@google.com>)"""
+    (envelope-from <test@google.com>)"""
 
         self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG + lists)
         result = self.check_pad(email)
@@ -602,9 +602,9 @@ Received: from google.com ([2a00:1450:4017:804::200e]) by test.com
         test@example.org)
 Received-SPF: pass (example.org: domain of test@example.org) 
 Received: from example.com ([1.2.3.4]) by mx37.antispamcloud.com 
-	(envelope-from <serban@example.com>)
+    (envelope-from <serban@example.com>)
 Received: from google.com ([2a00:1450:4017:804::200e]) by test.com
-	(envelope-from <test@google.com>)"""
+    (envelope-from <test@google.com>)"""
 
         self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG + lists)
         result = self.check_pad(email)
@@ -614,7 +614,7 @@ Received: from google.com ([2a00:1450:4017:804::200e]) by test.com
         email = """Received: from example.com ([1.2.3.4]) by
         mx37.antispamcloud.com
 Received: from google.com ([2a00:1450:4017:804::200e]) by test.com
-	(envelope-from <test@google.com>)"""
+    (envelope-from <test@google.com>)"""
 
         self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG)
         result = self.check_pad(email)
@@ -622,9 +622,9 @@ Received: from google.com ([2a00:1450:4017:804::200e]) by test.com
 
     def test_spf_with_two_receive_header_and_no_helo_in_first(self):
         email = """Received: from ceva ([1.2.3.4]) by mx37.antispamcloud.com
-	(envelope-from <serban@example.com>)
+    (envelope-from <serban@example.com>)
 Received: from google.com ([2a00:1450:4017:804::200e]) by test.com
-	(envelope-from <test@google.com>)"""
+    (envelope-from <test@google.com>)"""
 
         self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG)
         result = self.check_pad(email)
@@ -632,7 +632,7 @@ Received: from google.com ([2a00:1450:4017:804::200e]) by test.com
 
     def test_spf_with_dot_in_receive(self):
         email = """Received: from . ([1.2.3.4]) by mx37.antispamcloud.com
-	(envelope-from <serban@example.com>)"""
+    (envelope-from <serban@example.com>)"""
 
         self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG)
         result = self.check_pad(email)
@@ -644,7 +644,7 @@ Received: from google.com ([2a00:1450:4017:804::200e]) by test.com
         email = """Received: from  example.com ([1.2.3333.4]) by
         mx37.antispamcloud.com
 Received: from google.com ([2a00:1450:4017:804::200e]) by test.com
-	(envelope-from <test@google.com>)"""
+    (envelope-from <test@google.com>)"""
 
         self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG)
         result = self.check_pad(email)
@@ -656,7 +656,7 @@ Received: from google.com ([2a00:1450:4017:804::200e]) by test.com
         email = """Received: from example ([1.2.3.4]) by
         mx37.antispamcloud.com
 Received: from google.com ([2a00:1450:4017:804::200e]) by test.com
-	(envelope-from <test@google.com>)"""
+    (envelope-from <test@google.com>)"""
 
         self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG)
         result = self.check_pad(email)
@@ -668,7 +668,7 @@ Received: from google.com ([2a00:1450:4017:804::200e]) by test.com
 
         email = """Received: from example.com ([2a00:1450:4017:804::200e])
         by test.com
-	(envelope-from <test@google.com>)"""
+    (envelope-from <test@google.com>)"""
 
         self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG + lists)
         result = self.check_pad(email)
@@ -680,7 +680,7 @@ Received: from google.com ([2a00:1450:4017:804::200e]) by test.com
 
         email = """Received: from example.com ([2a00:1450:4017:804::200e])
         by test.com
-	(envelope-from <test@google.com>)"""
+    (envelope-from <test@google.com>)"""
 
         self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG + lists)
         result = self.check_pad(email)
@@ -692,7 +692,7 @@ Received: from google.com ([2a00:1450:4017:804::200e]) by test.com
 
         email = """Received: from example.com ([2a00:1450:4017:804::200e])
         by test.com
-	(envelope-from <test@google.com>)"""
+    (envelope-from <test@google.com>)"""
 
         self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG + lists)
         result = self.check_pad(email)
@@ -704,7 +704,7 @@ Received: from google.com ([2a00:1450:4017:804::200e]) by test.com
 
         email = """Received: from example.com ([2a00:1450:4017:804::200e])
         by test.com
-	(envelope-from <test@google.com>)"""
+    (envelope-from <test@google.com>)"""
 
         self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG + lists)
         result = self.check_pad(email)
@@ -715,7 +715,7 @@ Received: from google.com ([2a00:1450:4017:804::200e]) by test.com
 
         email = """Received: from example.com ([2a00:1450:4017:804::200e])
         by test.com
-	(envelope-from <test@google.com>)"""
+    (envelope-from <test@google.com>)"""
 
         self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG + lists)
         result = self.check_pad(email)
@@ -727,7 +727,7 @@ Received: from google.com ([2a00:1450:4017:804::200e]) by test.com
 
         email = """Received: from example.com ([2a00:1450:4017:804::200e])
         by test.com
-	(envelope-from <test@google.com>)"""
+    (envelope-from <test@google.com>)"""
 
         self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG + lists)
         result = self.check_pad(email)
@@ -738,7 +738,7 @@ Received: from google.com ([2a00:1450:4017:804::200e]) by test.com
 
         email = """Received: from example.com ([2a00:1450:4017:804::200e])
         by test.com
-	(envelope-from <test@google.com>)"""
+    (envelope-from <test@google.com>)"""
 
         self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG + lists)
         result = self.check_pad(email)
@@ -749,7 +749,7 @@ Received: from google.com ([2a00:1450:4017:804::200e]) by test.com
 
         email = """Received: from example.com ([2a00:1450:4017:804::200e])
         by test.com
-	(envelope-from <test@google.com>)"""
+    (envelope-from <test@google.com>)"""
 
         self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG + lists)
         result = self.check_pad(email)
@@ -758,11 +758,11 @@ Received: from google.com ([2a00:1450:4017:804::200e]) by test.com
 
     def test_whitelist_from_spf_with_split_lists(self):
         lists = """whitelist_from_spf *google.net
-				 whitelist_from_spf *@google.com"""
+                 whitelist_from_spf *@google.com"""
 
         email = """Received: from example.com ([2a00:1450:4017:804::200e])
         by test.com
-	(envelope-from <test@google.com>)"""
+    (envelope-from <test@google.com>)"""
 
         self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG + lists)
         result = self.check_pad(email)
@@ -774,7 +774,7 @@ Received: from google.com ([2a00:1450:4017:804::200e]) by test.com
 
         email = """Received: from example.com ([2a00:1450:4017:804::200e])
         by test.com
-	(envelope-from <test@example.com>)"""
+    (envelope-from <test@example.com>)"""
 
         self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG + lists)
         result = self.check_pad(email)
@@ -784,7 +784,7 @@ Received: from google.com ([2a00:1450:4017:804::200e]) by test.com
         lists = """whitelist_from_spf *spamexperts.com"""
 
         email = """Received: from example.com ([1.2.3.4]) by test.com
-	(envelope-from <test@spamexperts.com>)"""
+    (envelope-from <test@spamexperts.com>)"""
 
         self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG + lists)
         result = self.check_pad(email)
@@ -796,7 +796,7 @@ Received: from google.com ([2a00:1450:4017:804::200e]) by test.com
         email = """Received-SPF: neutral (example.com: domain of
         test@example.com)
 Received: from example.com ([2a00:1450:4017:804::200e]) by test.com
-	(envelope-from <test@spamexperts.com>)"""
+    (envelope-from <test@spamexperts.com>)"""
 
         self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG + lists)
         result = self.check_pad(email)
@@ -807,7 +807,7 @@ Received: from example.com ([2a00:1450:4017:804::200e]) by test.com
 
         email = """Received-SPF: none (example.com: domain of test@example.com)
 Received: from example.com ([2a00:1450:4017:804::200e]) by test.com
-	(envelope-from <test@spamexperts.com>)"""
+    (envelope-from <test@spamexperts.com>)"""
 
         self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG + lists)
         result = self.check_pad(email)
@@ -818,7 +818,7 @@ Received: from example.com ([2a00:1450:4017:804::200e]) by test.com
 
         email = """Received-SPF: permerror (example.com: domain of test@example.com)
 Received: from example.com ([2a00:1450:4017:804::200e]) by test.com
-	(envelope-from <test@spamexperts.com>)"""
+    (envelope-from <test@spamexperts.com>)"""
 
         self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG + lists)
         result = self.check_pad(email)
@@ -829,7 +829,7 @@ Received: from example.com ([2a00:1450:4017:804::200e]) by test.com
 
         email = """Received-SPF: temperror (example.com: domain of test@example.com)
 Received: from example.com ([2a00:1450:4017:804::200e]) by test.com
-	(envelope-from <test@spamexperts.com>)"""
+    (envelope-from <test@spamexperts.com>)"""
 
         self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG + lists)
         result = self.check_pad(email)
@@ -840,7 +840,7 @@ Received: from example.com ([2a00:1450:4017:804::200e]) by test.com
 
         email = """Received-SPF: pass (example.com: domain of test@example.com)
 Received: from example.com ([1.2.3.4]) by test.com
-	(envelope-from <test@spamexperts.com>)"""
+    (envelope-from <test@spamexperts.com>)"""
 
         self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG + lists)
         result = self.check_pad(email)
@@ -849,11 +849,11 @@ Received: from example.com ([1.2.3.4]) by test.com
 
     def test_whitelist_from_spf_with_ignore_received_spf_header_method(self):
         lists = """whitelist_from_spf *spamexperts.com
-				 ignore_received_spf_header 1"""
+                 ignore_received_spf_header 1"""
 
         email = """Received-SPF: pass (example.com: domain of test@example.com)
 Received: from example.com ([1.2.3.4]) by test.com
-	(envelope-from <test@spamexperts.com>)"""
+    (envelope-from <test@spamexperts.com>)"""
 
         self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG + lists)
         result = self.check_pad(email)
