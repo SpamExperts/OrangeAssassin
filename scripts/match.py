@@ -122,7 +122,7 @@ def main():
                                                options.prefspath)
 
     if not config_files:
-        print("Config: no rules were found!", file=sys.stderr)
+        logger.critical("Config: no rules were found.")
         sys.exit(1)
 
     if not options.serialize:
@@ -131,22 +131,18 @@ def main():
                 config_files, options.paranoid, not options.show_unknown
             ).get_ruleset()
         except pad.errors.MaxRecursionDepthExceeded as e:
-            print(e.recursion_list, file=sys.stderr)
+            logger.critical(e.recursion_list)
             sys.exit(1)
         except pad.errors.ParsingError as e:
-            print(e, file=sys.stderr)
+            logger.critical(e)
             sys.exit(1)
     else:
-        ruleset = None
-        print(os.path.expanduser(options.serializepath))
         try:
             with open(os.path.expanduser(options.serializepath), "rb") as f:
                 ruleset = pickle.load(f)
-        except EOFError:
-            print("Reading an empty file")
-
-        print(os.path.getsize(os.path.expanduser(options.serializepath)))
-
+        except EOFError as e:
+            logger.critical("Compiled file is empty: %s", e)
+            sys.exit(1)
         call_post_parsing(ruleset)
 
     count = 0
