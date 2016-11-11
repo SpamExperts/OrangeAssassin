@@ -41,6 +41,10 @@ class TestBase(unittest.TestCase):
             os.makedirs(self.test_conf)
         except OSError:
             pass
+        try:
+            os.makedirs(os.path.expanduser("~/.spamassassin"))
+        except OSError:
+            pass
 
     def tearDown(self):
         unittest.TestCase.tearDown(self)
