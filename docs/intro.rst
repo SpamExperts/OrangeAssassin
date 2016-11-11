@@ -62,7 +62,12 @@ SpamPAD and **not** the current source code. These are more extensive
 and generally take longer to run. They also might need special setup.
 To run the full suite of functional tests::
 
-    py.test tests/functional/
+    env USE_PICKLES=0 py.test tests/functional/ (or py.test tests/functional/)
+
+
+If you want to compile rules and avoid re-parsing:
+
+    env USE_PICKLES=1 py.test tests/functional/
 
 Or you can run *all* the tests with just::
 
@@ -87,7 +92,8 @@ An example for Python3 would be:
     wget http://geolite.maxmind.com/download/geoip/database/GeoIPv6.dat.gz
     gunzip GeoIPv6.dat.gz
     python setup.py install
-    py.test
+    env USE_PICKLES=0 py.test
+    env USE_PICKLES=0 py.test
 
 
 .. note::
