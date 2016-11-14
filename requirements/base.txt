@@ -1,10 +1,10 @@
 dill==0.2.5
-future==0.15.2
-raven==5.13.0
+future==0.16.0
+raven==5.31.0
 pyzor==1.0.0
-Pillow==3.2.0
+Pillow==3.4.2
 pygeoip==0.3.2
-langdetect==1.0.6
-PyPDF2==1.25.1
+langdetect==1.0.7
+PyPDF2==1.26.0
 pyspf==2.0.12t # rq.filter: ==2.0.12t
-spoon==1.0.1
+spoon==1.0.5
