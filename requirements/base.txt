@@ -1,6 +1,6 @@
 dill==0.2.5
 future==0.16.0
-raven==5.31.0
+raven==5.32.0
 pyzor==1.0.0
 Pillow==3.4.2
 pygeoip==0.3.2
