@@ -115,7 +115,12 @@ class HeaderEval(pad.plugins.base.BasePlugin):
         return False
 
     def check_for_missing_to_header(self, msg, target=None):
-        return False
+        """Check if the To header is missing."""
+        if msg.get_raw_header("To"):
+            return False
+        if msg.get_raw_header("Apparently-To"):
+            return False
+        return True
 
     def check_for_forged_gw05_received_headers(self, msg, target=None):
         return False

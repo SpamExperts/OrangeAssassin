@@ -114,3 +114,18 @@ class TestHeaderEval(unittest.TestCase):
                                                       "3", "4")
         self.mock_msg.get_raw_header.assert_called_with("Test")
         self.assertFalse(result)
+
+    def test_check_for_missing_to_header_has_to(self):
+        self.mock_msg.get_raw_header.side_effect = [["test@example.com"]]
+        result = self.plugin.check_for_missing_to_header(self.mock_msg)
+        self.assertFalse(result)
+
+    def test_check_for_missing_to_header_has_apparently_to(self):
+        self.mock_msg.get_raw_header.side_effect = [[], ["test@example.com"]]
+        result = self.plugin.check_for_missing_to_header(self.mock_msg)
+        self.assertFalse(result)
+
+    def test_check_for_missing_to_header_match(self):
+        self.mock_msg.get_raw_header.side_effect = [[], []]
+        result = self.plugin.check_for_missing_to_header(self.mock_msg)
+        self.assertTrue(result)
