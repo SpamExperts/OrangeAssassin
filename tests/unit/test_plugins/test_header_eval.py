@@ -57,6 +57,13 @@ class TestHeaderEval(unittest.TestCase):
         result = self.plugin.check_for_fake_aol_relay_in_rcvd(self.mock_msg)
         self.assertFalse(result)
 
+    def test_check_for_fake_aol_relay_in_rcvd_not_spam3_not_aol(self):
+        header = ("by 10.28.54.13 with SMTP id d13csp1785386wma; Mon, "
+                  "28 Nov 2016 07:40:07 -0800 (PST)")
+        self.mock_msg.get_decoded_header.return_value = [header]
+        result = self.plugin.check_for_fake_aol_relay_in_rcvd(self.mock_msg)
+        self.assertFalse(result)
+
     def test_check_for_faraway_charset_in_headers_no_locale(self):
         self.mock_locale.return_value = False
         self.global_data["ok_locales"] = ""
