@@ -84,94 +84,79 @@ class HeaderEval(pad.plugins.base.BasePlugin):
     def check_for_unique_subject_id(self, msg, target=None):
         return False
 
-
     def check_illegal_chars(self, msg, target=None):
         return False
-
 
     def check_for_forged_hotmail_received_headers(self, msg, target=None):
         return False
 
-
     def check_for_no_hotmail_received_headers(self, msg, target=None):
         return False
-
 
     def check_for_msn_groups_headers(self, msg, target=None):
         return False
 
-
     def check_for_forged_eudoramail_received_headers(self, msg, target=None):
         return False
-
 
     def check_for_forged_yahoo_received_headers(self, msg, target=None):
         return False
 
-
     def check_for_forged_juno_received_headers(self, msg, target=None):
         return False
-
 
     def check_for_matching_env_and_hdr_from(self, msg, target=None):
         return False
 
-
     def sorted_recipients(self, msg, target=None):
         return False
-
 
     def similar_recipients(self, msg, target=None):
         return False
 
-
     def check_for_missing_to_header(self, msg, target=None):
         return False
-
 
     def check_for_forged_gw05_received_headers(self, msg, target=None):
         return False
 
-
     def check_for_round_the_world_received_helo(self, msg, target=None):
         return False
-
 
     def check_for_round_the_world_received_revdns(self, msg, target=None):
         return False
 
-
     def check_for_shifted_date(self, msg, target=None):
         return False
-
 
     def subject_is_all_caps(self, msg, target=None):
         return False
 
-
     def check_for_to_in_subject(self, msg, target=None):
         return False
-
 
     def check_outlook_message_id(self, msg, target=None):
         return False
 
-
     def check_messageid_not_usable(self, msg, target=None):
         return False
 
+    def check_header_count_range(self, msg, header, minr, maxr, target=None):
+        """Check if the count of the header is withing the given range.
+        The range is inclusive in both ranges.
 
-    def check_header_count_range(self, msg, target=None):
-        return False
-
+        :param header: the header name
+        :param minr: the minimum number of headers with the same name
+        :param maxr: the minimum number of headers with the same name
+        :return: True if the header count is withing the range.
+        """
+        return int(minr) <= len(msg.get_raw_header(header)) <= int(maxr)
 
     def check_unresolved_template(self, msg, target=None):
         return False
 
-
     def check_ratware_name_id(self, msg, target=None):
         return False
-
 
     def check_ratware_envelope_from(self, msg, target=None):
         return False

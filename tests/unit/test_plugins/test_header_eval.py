@@ -100,3 +100,17 @@ class TestHeaderEval(unittest.TestCase):
         self.mock_msg.get_raw_header.return_value = ["=?UTF8?B?dGVzdA==?="]
         result = self.plugin.check_for_faraway_charset_in_headers(self.mock_msg)
         self.mock_locale.assert_called_with("utf8", ["ru", "ko"])
+
+    def test_check_header_count_range_match(self):
+        self.mock_msg.get_raw_header.return_value = ["a", "b"]
+        result = self.plugin.check_header_count_range(self.mock_msg, "Test",
+                                                      "2", "3")
+        self.mock_msg.get_raw_header.assert_called_with("Test")
+        self.assertTrue(result)
+
+    def test_check_header_count_range_no_match(self):
+        self.mock_msg.get_raw_header.return_value = ["a", "b"]
+        result = self.plugin.check_header_count_range(self.mock_msg, "Test",
+                                                      "3", "4")
+        self.mock_msg.get_raw_header.assert_called_with("Test")
+        self.assertFalse(result)
