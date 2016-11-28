@@ -23,6 +23,8 @@ class TestHeaderEval(unittest.TestCase):
         self.plugin.set_global = self.global_data.__setitem__
         self.plugin.get_global = self.global_data.__getitem__
         self.mock_ruleset = MagicMock()
+        self.mock_locale = patch("pad.plugins.header_eval."
+                                 "pad.locales.charset_ok_for_locales").start()
 
     def tearDown(self):
         unittest.TestCase.tearDown(self)
@@ -54,3 +56,47 @@ class TestHeaderEval(unittest.TestCase):
         self.mock_msg.get_decoded_header.return_value = [header]
         result = self.plugin.check_for_fake_aol_relay_in_rcvd(self.mock_msg)
         self.assertFalse(result)
+
+    def test_check_for_faraway_charset_in_headers_no_locale(self):
+        self.mock_locale.return_value = False
+        self.global_data["ok_locales"] = ""
+        self.mock_msg.get_raw_header.return_value = ["=?UTF8?B?dGVzdA==?="]
+        result = self.plugin.check_for_faraway_charset_in_headers(self.mock_msg)
+        self.assertFalse(result)
+
+    def test_check_for_faraway_charset_in_headers_all_locale(self):
+        self.mock_locale.return_value = False
+        self.global_data["ok_locales"] = "all"
+        self.mock_msg.get_raw_header.return_value = ["=?UTF8?B?dGVzdA==?="]
+        result = self.plugin.check_for_faraway_charset_in_headers(self.mock_msg)
+        self.assertFalse(result)
+
+    def test_check_for_faraway_charset_in_headers_spam(self):
+        self.mock_locale.return_value = False
+        self.global_data["ok_locales"] = "ru"
+        self.mock_msg.get_raw_header.return_value = ["=?UTF8?B?dGVzdA==?="]
+        result = self.plugin.check_for_faraway_charset_in_headers(self.mock_msg)
+        self.assertTrue(result)
+
+    def test_check_for_faraway_charset_in_headers_ham(self):
+        self.mock_locale.return_value = True
+        self.global_data["ok_locales"] = "ru"
+        self.mock_msg.get_raw_header.return_value = ["=?UTF8?B?dGVzdA==?="]
+        result = self.plugin.check_for_faraway_charset_in_headers(self.mock_msg)
+        self.assertFalse(result)
+
+    def test_check_for_faraway_charset_in_headers_invalid_header(self):
+        self.mock_locale.return_value = False
+        self.global_data["ok_locales"] = "ru"
+        patch("pad.plugins.header_eval.email.header.decode_header",
+              side_effect=ValueError).start()
+        self.mock_msg.get_raw_header.return_value = ["=?UTF8?B?dGVzdA==?="]
+        result = self.plugin.check_for_faraway_charset_in_headers(self.mock_msg)
+        self.assertFalse(result)
+
+    def test_check_for_faraway_charset_in_headers_correct_call(self):
+        self.mock_locale.return_value = False
+        self.global_data["ok_locales"] = "ru ko"
+        self.mock_msg.get_raw_header.return_value = ["=?UTF8?B?dGVzdA==?="]
+        result = self.plugin.check_for_faraway_charset_in_headers(self.mock_msg)
+        self.mock_locale.assert_called_with("utf8", ["ru", "ko"])
