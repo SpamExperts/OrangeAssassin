@@ -42,8 +42,16 @@ class HeaderEval(pad.plugins.base.BasePlugin):
     )
 
     def check_for_fake_aol_relay_in_rcvd(self, msg, target=None):
+        """Check for common AOL fake received header."""
+        for recv in msg.get_decoded_header("Received"):
+            if not Regex(r" rly-[a-z][a-z]\d\d\.", re.I).search(recv):
+                continue
+            if Regex(r"\/AOL-\d+\.\d+\.\d+\)").search(recv):
+                continue
+            if Regex(r"ESMTP id (?:RELAY|MAILRELAY|MAILIN)").search(recv):
+                continue
+            return True
         return False
-
 
     def check_for_faraway_charset_in_headers(self, msg, target=None):
         return False
