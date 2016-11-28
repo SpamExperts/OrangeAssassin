@@ -4,8 +4,9 @@ from __future__ import division
 from __future__ import absolute_import
 
 import re
-import collections
+import email.header
 
+import pad.locales
 import pad.plugins.base
 
 from pad.regex import Regex
@@ -54,8 +55,31 @@ class HeaderEval(pad.plugins.base.BasePlugin):
         return False
 
     def check_for_faraway_charset_in_headers(self, msg, target=None):
-        return False
+        """Check if the Subject/From header is in a NOT ok locale.
 
+        This eval rule requires the ok_locales setting configured,
+        and not set to ALL.
+        """
+        ok_locales = self.get_global("ok_locales")
+        if not ok_locales or ok_locales.lower() == "all":
+            return False
+        ok_locales = ok_locales.split()
+
+        # XXX We should really be checking ALL headers here,
+        # XXX not just Subject and From.
+        for header_name in ("Subject", "From"):
+            for header in msg.get_raw_header(header_name):
+                try:
+                    decoded_header = email.header.decode_header(header)
+                except (ValueError, email.header.HeaderParseError):
+                    continue
+
+                for value, charset in decoded_header:
+                    if not pad.locales.charset_ok_for_locales(
+                            charset, ok_locales):
+                        return True
+
+        return False
 
     def check_for_unique_subject_id(self, msg, target=None):
         return False
