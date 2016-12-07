@@ -37,4 +37,6 @@ REIMPLEMENTED_PLUGINS = {
         "pad.plugins.free_mail.FreeMail",
     "Mail::SpamAssassin::Plugin::SpamCop":
         "pad.plugins.spam_cop.SpamCopPlugin",
+    "Mail::SpamAssassin::Plugin::RelayEval":
+        "pad.plugins.relay_eval.RelayEval",
 }
