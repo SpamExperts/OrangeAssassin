@@ -1,6 +1,6 @@
 """RelayEval Plugin
 
-Check the data parsed from ReceivedParser against different rules
+Check the data parsed from ReceivedParser against different rules.
 """
 
 import pad.plugins.base
@@ -54,22 +54,27 @@ class RelayEval(pad.plugins.base.BasePlugin):
         return False
 
     def check_for_numeric_helo(self, msg, option=None, target=None):
+        """Check all untrusted relays and verify if helo exists and if it is an
+        normal IP ADDRESS and not a PRIVATE one."""
         for relay in msg.untrusted_relays:
             if self._check_helo(relay):
                 return True
         return False
 
     def check_for_illegal_ip(self, msg, option=None, target=None):
+        """This plugin is no longer available, rules should be updated."""
         self.ctxt.log.debug("RelayEval::Plugin the 'check_for_illegal_ip' eval "
                             "rule no longer available, please update your rules")
         return False
 
     def check_all_trusted(self, msg, option=None, target=None):
+        """Verify if all relays are trusted."""
         if msg.trusted_relays and not msg.untrusted_relays:
             return True
         return False
 
     def check_no_relays(self, msg, option=None, target=None):
+        """Check if there are no relays."""
         if not msg.trusted_relays and not msg.untrusted_relays:
             return True
         return False
@@ -96,6 +101,11 @@ class RelayEval(pad.plugins.base.BasePlugin):
 
     def check_for_from_domain_in_received_headers(self, msg, domain, desired,
                                                   option=None, target=None):
+        """Verify if the sender address inside From: header appears in relays
+        Parameters:
+            - domain: the domain to search for
+            - desired: 'true' or 'false' depends on the behavior
+        """
         try:
             from_addr = msg.get_addr_header("from")[0]
         except IndexError:
@@ -108,6 +118,8 @@ class RelayEval(pad.plugins.base.BasePlugin):
         return desired != "true"
 
     def check_for_forged_received_trail(self, msg, option=None, target=None):
+        """Check if there are more than one untrusted relays and verify if
+        rdns is different than the other relay's by."""
         try:
             mismatch_from = self.get_global("mismatch_from")
         except KeyError:
@@ -119,6 +131,8 @@ class RelayEval(pad.plugins.base.BasePlugin):
         return bool(self.get_global("mismatch_from") > 1)
 
     def check_for_forged_received_ip_helo(self, msg, option=None, target=None):
+        """Verify if helo and ip are IP ADDRESSES and if they are different,
+        this means that received ip is forged"""
         try:
             mismatch_ip_helo = self.get_global("mismatch_ip_helo")
         except KeyError:
@@ -130,6 +144,8 @@ class RelayEval(pad.plugins.base.BasePlugin):
         return bool(self.get_global("mismatch_ip_helo") > 0)
 
     def helo_ip_mismatch(self, msg, option=None, target=None):
+        """Check untrusted relays and verify if helo and ip are different
+        but have the same /24 netmask"""
         for relay in msg.untrusted_relays:
             if not self._check_helo(relay):
                 continue
@@ -141,6 +157,9 @@ class RelayEval(pad.plugins.base.BasePlugin):
         return False
 
     def check_for_no_rdns_dotcom_helo(self, msg, option=None, target=None):
+        """Check untrusted relays and verify if latest relay it has helo from
+        a big email provider like lycos, hotmail, excite, caramail, cs, aol,
+        msn, yahoo, drizzle"""
         no_rdns_dotcom_helo = False
         for relay in msg.untrusted_relays:
             if IP_PRIVATE.match(relay.get("ip")):
