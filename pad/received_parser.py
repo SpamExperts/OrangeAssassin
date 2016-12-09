@@ -619,7 +619,7 @@ class ReceivedParser(object):
             if IDENT_RE.match(header):
                 ident = IDENT_RE.match(header).groups()[0]
             elif IDENT_RE2.match(header):
-                ident = IDENT_RE2.match(header).groups()[0  ]
+                ident = IDENT_RE2.match(header).groups()[0]
         except (AttributeError, IndexError):
             pass
         return ident
