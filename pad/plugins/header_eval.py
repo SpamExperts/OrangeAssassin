@@ -125,7 +125,32 @@ class HeaderEval(pad.plugins.base.BasePlugin):
         return False
 
     def check_for_msn_groups_headers(self, msg, target=None):
-        return False
+        """Check if the email's destination is a msn group"""
+        to = ''.join(msg.get_decoded_header('To'))
+        if not Regex(r"<(\S+)\@groups\.msn\.com>").search(to):
+            return False
+        listname = Regex(r"<(\S+)\@groups\.msn\.com>").match(to).groups()[0]
+        server_rgx = Regex(r"from mail pickup service by "
+                           r"((?:p\d\d\.)groups\.msn\.com)\b")
+        server = ''
+        for rcvd in msg.get_decoded_header('Received'):
+            if server_rgx.search(rcvd):
+                server = server_rgx.search(rcvd).groups()[0]
+                break
+        if not server:
+            return False
+        message_id = ''.join(msg.get_decoded_header('Message-Id'))
+        if listname == "notifications":
+            if not Regex(r"^<\S+\@{0}".format(server)).search(message_id):
+                return False
+        else:
+            msn_addr = Regex(r"^<{0}-\S+\@groups\.msn\.com>".format(listname))
+            if not msn_addr.search(message_id):
+                return False
+            msn_addr = "{0}-bounce@groups.msn.com".format(listname)
+            if msg.sender_address != msn_addr:
+                return False
+        return True
 
     def check_for_forged_eudoramail_received_headers(self, msg, target=None):
         return False

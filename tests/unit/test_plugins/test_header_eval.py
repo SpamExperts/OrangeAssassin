@@ -177,3 +177,11 @@ class TestHeaderEval(unittest.TestCase):
                                                  '0.1', '0')
         self.assertFalse(result)
 
+    def test_check_for_msn_groups_headers(self):
+        received = "from mail pickup service by p23.groups.msn.com"
+        message_id = "<testid123@p23.groups.msn.com>"
+        self.mock_msg.get_decoded_header.side_effect = [["<notifications@groups.msn.com>"],
+                                                        [received],
+                                                        [message_id]]
+        result = self.plugin.check_for_msn_groups_headers(self.mock_msg)
+        self.assertTrue(result)
