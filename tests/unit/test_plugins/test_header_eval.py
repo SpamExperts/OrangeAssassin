@@ -136,3 +136,44 @@ class TestHeaderEval(unittest.TestCase):
         self.mock_msg.get_raw_header.side_effect = [[], []]
         result = self.plugin.check_for_missing_to_header(self.mock_msg)
         self.assertTrue(result)
+
+    def test_subject_is_all_caps(self):
+        header = ("Re: THIS IS A CAPS HEADER")
+        self.mock_msg.get_decoded_header.return_value = [header]
+        result = self.plugin.subject_is_all_caps(self.mock_msg)
+        self.assertTrue(result)
+
+    def test_subject_is_all_caps_false(self):
+        header = ("Fwd: Re: this is not a caps header")
+        self.mock_msg.get_decoded_header.return_value = [header]
+        result = self.plugin.subject_is_all_caps(self.mock_msg)
+        self.assertFalse(result)
+
+    def test_illegal_chars(self):
+        self.mock_msg.get_raw_header.return_value = [u"ùTest"]
+        result = self.plugin.check_illegal_chars(self.mock_msg, "Subject",
+                                                 '0.1', '0')
+        self.assertTrue(result)
+
+    def test_illegal_chars_all(self):
+        self.mock_msg.raw_headers = {"From": [u"ùTùùesùùùùtù"],
+                                     "Subject": [u"ùTùùesùùùùtù"],
+                                     "Another": [u"Normal Text"]}
+        result = self.plugin.check_illegal_chars(self.mock_msg, "ALL", '0.1',
+                                                 '0')
+        self.assertFalse(result)
+
+    def test_illegal_chars_all_true(self):
+        self.mock_msg.raw_headers = {"From": [u"ùTùùesùùùùtù"],
+                                     "Subject": [u"ùTùùesùùùùtù"],
+                                     "Another": [u"ùùesùùù"]}
+        result = self.plugin.check_illegal_chars(self.mock_msg, "ALL", '0.1',
+                                                 '0')
+        self.assertTrue(result)
+
+    def test_illegal_chars_exempt(self):
+        self.mock_msg.get_raw_header.return_value = [u"Test\xa2"]
+        result = self.plugin.check_illegal_chars(self.mock_msg, "Subject",
+                                                 '0.1', '0')
+        self.assertFalse(result)
+

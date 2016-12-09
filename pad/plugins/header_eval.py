@@ -84,8 +84,39 @@ class HeaderEval(pad.plugins.base.BasePlugin):
     def check_for_unique_subject_id(self, msg, target=None):
         return False
 
-    def check_illegal_chars(self, msg, target=None):
-        return False
+    def check_illegal_chars(self, msg, header, ratio, count, target=None):
+        """look for 8-bit and other illegal characters that should be MIME
+        encoded, these might want to exempt languages that do not use
+        Latin-based alphabets, but only if the user wants it that way
+        """
+        try:
+            ratio = float(ratio)
+        except ValueError:
+            self.ctxt.logger.warn("HeaderEval::Plugin check_illegal_chars "
+                                  "invalid option: %s", ratio)
+            return False
+        try:
+            count = int(count)
+        except ValueError:
+            self.ctxt.logger.warn("HeaderEval::Plugin check_illegal_chars "
+                                  "invalid option: %s", count)
+            return False
+        if header == 'ALL':
+            raw_headers = msg.raw_headers
+            for hdr in ("Subject", "From"):
+                del raw_headers[hdr]
+        else:
+            raw_headers = {header: msg.get_raw_header(header)}
+        raw_str = ''.join([''.join(value) for value in raw_headers.values()])
+        clean_hdr = ''.join([i if ord(i) < 128 else '' for i in raw_str])
+        illegal = len(raw_str) - len(clean_hdr)
+        if illegal > 0 and header.lower() == "subject":
+            exempt = 0
+            for except_chr in (u'\xa2', u'\xa3', u'\xae'):
+                if except_chr in raw_str:
+                    exempt += 1
+            illegal -= exempt
+        return (illegal / len(raw_str)) >= ratio and illegal >= count
 
     def check_for_forged_hotmail_received_headers(self, msg, target=None):
         return False
@@ -152,7 +183,7 @@ class HeaderEval(pad.plugins.base.BasePlugin):
                 continue
             if subject.isupper():
                 return True
-        return  False
+        return False
 
     def check_for_to_in_subject(self, msg, target=None):
         return False

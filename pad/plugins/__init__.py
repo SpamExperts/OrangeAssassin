@@ -39,4 +39,6 @@ REIMPLEMENTED_PLUGINS = {
         "pad.plugins.spam_cop.SpamCopPlugin",
     "Mail::SpamAssassin::Plugin::RelayEval":
         "pad.plugins.relay_eval.RelayEval",
+    "Mail::SpamAssassin::Plugin::HeaderEval":
+        "pad.plugins.header_eval.HeaderEval",
 }
