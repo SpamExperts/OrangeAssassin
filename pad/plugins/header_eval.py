@@ -135,7 +135,24 @@ class HeaderEval(pad.plugins.base.BasePlugin):
         return False
 
     def subject_is_all_caps(self, msg, target=None):
-        return False
+        """Checks if the subject is all capital letters.
+
+        This eval rule ignore short subjects, one word subject and
+        the prepended notations. (E.g. ``Re:``)
+        """
+        for subject in msg.get_decoded_header("Subject"):
+            # Remove the Re/Fwd notations in the subject
+            subject = Regex(r"^(Re|Fwd|Fw|Aw|Antwort|Sv):").sub("", subject)
+            subject = subject.strip()
+            if len(subject) < 10:
+                # Don't match short subjects
+                continue
+            if len(subject.split()) == 1:
+                # Don't match one word subjects
+                continue
+            if subject.isupper():
+                return True
+        return  False
 
     def check_for_to_in_subject(self, msg, target=None):
         return False
