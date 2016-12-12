@@ -41,4 +41,6 @@ REIMPLEMENTED_PLUGINS = {
         "pad.plugins.relay_eval.RelayEval",
     "Mail::SpamAssassin::Plugin::HeaderEval":
         "pad.plugins.header_eval.HeaderEval",
+    "Mail::SpamAssassin::Plugin::DKIM":
+        "pad.plugins.dkim.DKIMPlugin",
 }
