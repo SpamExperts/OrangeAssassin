@@ -1,43 +1,17 @@
-"DKIM Plugin."
+"""DKIM Plugin."""
 
 from __future__ import absolute_import
 
 import re
+import dns
 from collections import defaultdict
 
-import dns
 import dkim
 
 import pad.plugins.base
 
 FROM_HEADERS = ('From', "Envelope-Sender", 'Resent-From', 'X-Envelope-From',
                 'EnvelopeFrom')
-
-
-def get_txt(name):
-    """Return a TXT record associated with a DNS name.
-
-    @param name: The bytestring domain name to look up.
-    """
-    try:
-        unicode_name = name.decode('ascii')
-    except UnicodeDecodeError:
-        return None
-    txt = get_txt_dnspython(unicode_name)
-    if txt:
-      txt = txt.encode('utf-8')
-    return txt
-
-
-def get_txt_dnspython(name):
-    """Return a TXT record associated with a DNS name."""
-    try:
-        a = dns.resolver.query(name, dns.rdatatype.TXT, raise_on_no_answer=False)
-        for r in a.response.answer:
-            if r.rdtype == dns.rdatatype.TXT:
-                return "".join(r.items[0].strings)
-    except dns.resolver.NXDOMAIN: pass
-    return None
 
 
 class DKIMPlugin(pad.plugins.base.BasePlugin):
@@ -79,6 +53,31 @@ class DKIMPlugin(pad.plugins.base.BasePlugin):
         "3": "custom_high",
         "U": "unknown"
     }
+
+    def get_txt(self, name):
+        """Return a TXT record associated with a DNS name.
+
+        @param name: The bytestring domain name to look up.
+        """
+        try:
+            unicode_name = name.decode('ascii')
+        except UnicodeDecodeError:
+            return None
+        txt = self.get_txt_dnspython(unicode_name)
+        if txt:
+            txt = txt.encode('utf-8')
+        return txt
+
+    def get_txt_dnspython(self, name):
+        """Return a TXT record associated with a DNS name."""
+        try:
+            a = self.ctxt.dns.query(name, dns.rdatatype.TXT)
+            for r in a.response.answer:
+                if r.rdtype == dns.rdatatype.TXT:
+                    return "".join(r.items[0].strings)
+        except dns.resolver.NXDOMAIN:
+            pass
+        return None
 
     def get_from_addresses(self, msg):
         """Get addresses from 'Resent-From' header,
@@ -167,7 +166,7 @@ class DKIMPlugin(pad.plugins.base.BasePlugin):
                             or whitelist_address[address.encode()] == "":
                         return True
                 except KeyError:
-                    return False
+                    continue
         return False
 
     def check_for_def_dkim_whitelist_from(self, msg, target=None):
@@ -248,7 +247,7 @@ class DKIMPlugin(pad.plugins.base.BasePlugin):
             minimum_key_bits = self["dkim_minimum_key_bits"]
             if minimum_key_bits < 0:
                 minimum_key_bits = 0
-            result = dkim.verify(message.encode(), dnsfunc=get_txt,
+            result = dkim.verify(message.encode(), dnsfunc=self.get_txt,
                                  minkey=minimum_key_bits*2)
             if not result:
                 self.is_valid = 0
