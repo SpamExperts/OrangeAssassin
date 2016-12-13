@@ -215,3 +215,29 @@ class TestHeaderEval(unittest.TestCase):
                                                         ]
         result = self.plugin.gated_through_received_hdr_remover(self.mock_msg)
         self.assertTrue(result)
+
+    def test_check_for_forged_eudoramail_received_headers(self):
+        from_addr = "test@eudoramail.com"
+        received = ("from Unknown/Local ([?.?.?.?]) by "
+                    "shared1-mail.example.com; Thu Nov 29 13:44:25 2001")
+        ip = ""
+        self.mock_msg.get_all_addr_header.side_effect = [[from_addr]]
+        self.mock_msg.get_decoded_header.side_effect = [[received], [ip]]
+        patch("pad.plugins.header_eval.HeaderEval.gated_through_received_hdr_remover",
+              return_value=False).start()
+        result = self.plugin.check_for_forged_eudoramail_received_headers(
+            self.mock_msg)
+        self.assertTrue(result)
+
+    def test_check_for_forged_eudoramail_received_headers_false(self):
+        from_addr = "test@eudoramail.com"
+        received = ("from Unknown/Local ([?.?.?.?]) by "
+                    "shared1-mail.whowhere.com; Thu Nov 29 13:44:25 2001")
+        ip = "192.168.34.41"
+        self.mock_msg.get_all_addr_header.side_effect = [[from_addr]]
+        self.mock_msg.get_decoded_header.side_effect = [[received], [ip]]
+        patch("pad.plugins.header_eval.HeaderEval.gated_through_received_hdr_remover",
+              return_value=False).start()
+        result = self.plugin.check_for_forged_eudoramail_received_headers(
+            self.mock_msg)
+        self.assertFalse(result)

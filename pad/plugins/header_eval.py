@@ -10,6 +10,7 @@ import pad.locales
 import pad.plugins.base
 
 from pad.regex import Regex
+from pad.received_parser import IP_ADDRESS
 
 
 class HeaderEval(pad.plugins.base.BasePlugin):
@@ -154,7 +155,21 @@ class HeaderEval(pad.plugins.base.BasePlugin):
         return True
 
     def check_for_forged_eudoramail_received_headers(self, msg, target=None):
-        return False
+        """Check if the email has forged eudoramail received header"""
+        from_addr = ''.join(msg.get_all_addr_header("From"))
+        if from_addr.rsplit("@", 1)[-1] != "eudoramail.com":
+            return False
+        rcvd = ''.join(msg.get_decoded_header("Received"))
+        ip = ''.join(msg.get_decoded_header("X-Sender-Ip"))
+        if ip and IP_ADDRESS.search(ip):
+            ip = True
+        else:
+            ip = False
+        if self.gated_through_received_hdr_remover(msg):
+            return False
+        if Regex(r"by \S*whowhere.com\;").search(rcvd) and ip:
+            return False
+        return True
 
     def check_for_forged_yahoo_received_headers(self, msg, target=None):
         return False
