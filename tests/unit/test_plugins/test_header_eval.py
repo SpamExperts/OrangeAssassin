@@ -185,3 +185,33 @@ class TestHeaderEval(unittest.TestCase):
                                                         [message_id]]
         result = self.plugin.check_for_msn_groups_headers(self.mock_msg)
         self.assertTrue(result)
+
+    def test_gated_through_received_hdr_remover(self):
+        mailing_list = "contact test@example.com; run by ezmlm"
+        received = "(qmail 47240 invoked by uid 33); 01 Oct 2010 20:35:23 +0000"
+        delivered_to = "mailing list test@example.com"
+        self.mock_msg.get_decoded_header.side_effect = [[mailing_list],
+                                                        [received],
+                                                        [delivered_to]]
+        result = self.plugin.gated_through_received_hdr_remover(self.mock_msg)
+        self.assertTrue(result)
+
+    def test_gated_thorugh_received_hdr_remover_no_received(self):
+        mailing_list = "test@example.com"
+        received = ''
+        self.mock_msg.get_decoded_header.side_effect = [[mailing_list],
+                                                        [received],
+                                                        ]
+        result = self.plugin.gated_through_received_hdr_remover(self.mock_msg)
+        self.assertTrue(result)
+
+    def test_gated_thorugh_received_hdr_remover_msn_group(self):
+        mailing_list = "test@example.com"
+        received = ("from groups.msn.com (tk2dcpuba02.msn.com [65.54.195.210]) by"
+                    "dogma.slashnull.org (8.11.6/8.11.6) with ESMTP id g72K35v10457 for"
+                    "<zzzzzzzzzzzz@jmason.org>; Fri, 2 Aug 2002 21:03:05 +0100")
+        self.mock_msg.get_decoded_header.side_effect = [[mailing_list],
+                                                        [received],
+                                                        ]
+        result = self.plugin.gated_through_received_hdr_remover(self.mock_msg)
+        self.assertTrue(result)

@@ -40,6 +40,7 @@ class HeaderEval(pad.plugins.base.BasePlugin):
         "check_unresolved_template",
         "check_ratware_name_id",
         "check_ratware_envelope_from",
+        "gated_through_received_hdr_remover",
     )
 
     def check_for_fake_aol_relay_in_rcvd(self, msg, target=None):
@@ -237,4 +238,21 @@ class HeaderEval(pad.plugins.base.BasePlugin):
         return False
 
     def check_ratware_envelope_from(self, msg, target=None):
+        return False
+
+    def gated_through_received_hdr_remover(self, msg, target=None):
+        """Check if the email is gated through ezmlm"""
+        txt = ''.join(msg.get_decoded_header("Mailing-List"))
+        rcvd = ''.join(msg.get_decoded.header("Received"))
+        if Regex(r"^contact \S+\@\S+\; run by ezmlm$").search(txt):
+            dlto = ''.join(msg.get_decoded_header("Delivered-To"))
+            mailing_list_re = Regex(r"^mailing list \S+\@\S+")
+            qmail_re = Regex(r"qmail \d+ invoked (?:from "
+                             r"network|by .{3,20})\); \d+ ... \d+")
+            if mailing_list_re.search(dlto) and qmail_re.search(rcvd):
+                return True
+        if not rcvd:
+            return True
+        if Regex(r"from groups\.msn\.com \(\S+\.msn\.com ").search(rcvd):
+            return True
         return False
