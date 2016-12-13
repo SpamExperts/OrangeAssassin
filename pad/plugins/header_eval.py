@@ -226,7 +226,37 @@ class HeaderEval(pad.plugins.base.BasePlugin):
                 return True
         return False
 
-    def check_for_to_in_subject(self, msg, target=None):
+    def check_for_to_in_subject(self, msg, test, target=None):
+        """
+        Check if to address is in Subject field.
+
+        If it is called with 'address', check if full address is in subject,
+        else if the parameter is 'user', then check if user name is in subject.
+        """
+        full_to = msg.get_all_addr_header('To')
+        if not full_to:
+            return False
+        subject = msg.msg.get('Subject', "")
+        for to in full_to:
+            if test == "address":
+                my_regex = r".*" + re.escape(to) + r".*"
+                if re.search(my_regex, subject, re.IGNORECASE):
+                    return True
+            elif test == "user":
+                regex = re.match("(\S+)@.*", to)
+                if regex:
+                    to = regex.group(1)
+                    if Regex(r"^" + re.escape(to) + "$").search(subject):
+                        return True
+                    if Regex(r"(?:re|fw):\s*(?:\w+\s+)?" + re.escape(to) + "$")\
+                            .search(subject):
+                        return True
+                    if Regex(r"\s*" + re.escape(to) + "[,:;!?-]$")\
+                            .search(subject):
+                        return True
+                    if Regex(r"^" + re.escape(to) + "\s*[,:;!?-](\s).*")\
+                            .search(subject):
+                        return True
         return False
 
     def check_outlook_message_id(self, msg, target=None):

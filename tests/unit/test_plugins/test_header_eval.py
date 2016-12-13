@@ -241,3 +241,50 @@ class TestHeaderEval(unittest.TestCase):
         result = self.plugin.check_for_forged_eudoramail_received_headers(
             self.mock_msg)
         self.assertFalse(result)
+
+    def test_check_for_to_in_subject_address_true(self):
+        to_addr = "test@example.com"
+        self.mock_msg.get_all_addr_header.side_effect = [[to_addr]]
+        self.mock_msg.msg.get.side_effect = ["test@example.com"]
+        result = self.plugin.check_for_to_in_subject(self.mock_msg, "address")
+        self.assertTrue(result)
+
+    def test_check_for_to_in_subject_address_false(self):
+        to_addr = "test@example.com"
+        self.mock_msg.get_all_addr_header.side_effect = [[to_addr]]
+        self.mock_msg.msg.get.side_effect = ["This is a"]
+        result = self.plugin.check_for_to_in_subject(self.mock_msg, "address")
+        self.assertFalse(result)
+
+    def test_check_for_to_in_subject_no_to_address(self):
+        self.mock_msg.get_all_addr_header.side_effect = [[]]
+        result = self.plugin.check_for_to_in_subject(self.mock_msg, "address")
+        self.assertFalse(result)
+
+    def test_check_for_to_in_subject_user_true_regex1(self):
+        to_addr = "test@example.com"
+        self.mock_msg.get_all_addr_header.side_effect = [[to_addr]]
+        self.mock_msg.msg.get.side_effect = ["test"]
+        result = self.plugin.check_for_to_in_subject(self.mock_msg, "user")
+        self.assertTrue(result)
+
+    def test_check_for_to_in_subject_user_true_regex2(self):
+        to_addr = "test@example.com"
+        self.mock_msg.get_all_addr_header.side_effect = [[to_addr]]
+        self.mock_msg.msg.get.side_effect = ["re: for test"]
+        result = self.plugin.check_for_to_in_subject(self.mock_msg, "user")
+        self.assertTrue(result)
+
+    def test_check_for_to_in_subject_user_true_regex3(self):
+        to_addr = "test@example.com"
+        self.mock_msg.get_all_addr_header.side_effect = [[to_addr]]
+        self.mock_msg.msg.get.side_effect = ["test,"]
+        result = self.plugin.check_for_to_in_subject(self.mock_msg, "user")
+        self.assertTrue(result)
+
+    def test_check_for_to_in_subject_user_true_regex4(self):
+        to_addr = "test@example.com"
+        self.mock_msg.get_all_addr_header.side_effect = [[to_addr]]
+        self.mock_msg.msg.get.side_effect = ["test , This is a test"]
+        result = self.plugin.check_for_to_in_subject(self.mock_msg, "user")
+        self.assertTrue(result)
