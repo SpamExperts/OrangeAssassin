@@ -4,6 +4,7 @@ from __future__ import division
 from __future__ import absolute_import
 
 import re
+import time
 import email.header
 
 import pad.locales
@@ -260,7 +261,27 @@ class HeaderEval(pad.plugins.base.BasePlugin):
         return False
 
     def check_outlook_message_id(self, msg, target=None):
-        return False
+        message_id = msg.msg.get("Message-ID")
+        msg_regex = r"^<[0-9a-f]{4}([0-9a-f]{8})\$[0-9a-f]{8}\$[0-9a-f]{8}\@"
+        regex = re.search(msg_regex, message_id)
+        if not regex:
+            return False
+        timetocken = int(regex.group(1), 16)
+
+        date = msg.msg.get("Date")
+        x = 0.0023283064365387
+        y = 27111902.8329849
+        mail_date = time.mktime(email.utils.parsedate(date))
+        expected = int((mail_date * x) + y)
+        if abs(timetocken - expected) < 250:
+            return False
+        received = msg.msg.get("Received")
+        regex = re.search(r"(\s.?\d+ \S\S\S \d+ \d+:\d+:\d+ \S+).*?$", received)
+        received_date = 0
+        if regex:
+            received_date = time.mktime(email.utils.parsedate(regex.group()))
+        expected = int((received_date * x) + y)
+        return abs(timetocken - expected) >= 250
 
     def check_messageid_not_usable(self, msg, target=None):
         return False

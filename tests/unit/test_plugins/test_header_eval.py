@@ -288,3 +288,18 @@ class TestHeaderEval(unittest.TestCase):
         self.mock_msg.msg.get.side_effect = ["test , This is a test"]
         result = self.plugin.check_for_to_in_subject(self.mock_msg, "user")
         self.assertTrue(result)
+
+    def test_check_outlook_message_id_invalid_message_id(self):
+        self.mock_msg.msg.get.side_effect = [
+            "<CA+KsZ1C=Lm-ehUW7wQuGud7ifh6_dQDzy>"]
+        result = self.plugin.check_outlook_message_id(self.mock_msg)
+        self.assertFalse(result)
+
+    def test_check_outlook_message_id(self):
+        self.mock_msg.msg.get.side_effect = [
+            "<111112345678$11111111$11111111@>",
+            "Tue, 29 Nov 2016 14:38:59 +0200",
+            """by 10.28.145.16 with SMTP id t16csp2363316wmd;
+        Tue, 29 Nov 2016 04:39:00 -0800 (PST)"""]
+        result = self.plugin.check_outlook_message_id(self.mock_msg)
+        self.assertTrue(result)
