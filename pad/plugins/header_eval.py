@@ -284,6 +284,18 @@ class HeaderEval(pad.plugins.base.BasePlugin):
         return abs(timetocken - expected) >= 250
 
     def check_messageid_not_usable(self, msg, target=None):
+        list_unsubscribe = msg.msg.get("List-Unsubscribe")
+        if list_unsubscribe:
+            if re.search(r"<mailto:(?:leave-\S+|\S+-unsubscribe)\@\S+>$",
+                         list_unsubscribe):
+                return True
+        if self.gated_through_received_hdr_remover(msg):
+            return True
+        received = msg.msg.get("Received")
+        if re.search(r"/CWT/DCE\)", received):
+            return True
+        if re.search(r"iPlanet Messaging Server", received):
+            return True
         return False
 
     def check_header_count_range(self, msg, header, minr, maxr, target=None):
@@ -309,7 +321,7 @@ class HeaderEval(pad.plugins.base.BasePlugin):
     def gated_through_received_hdr_remover(self, msg, target=None):
         """Check if the email is gated through ezmlm"""
         txt = ''.join(msg.get_decoded_header("Mailing-List"))
-        rcvd = ''.join(msg.get_decoded.header("Received"))
+        rcvd = ''.join(msg.get_decoded_header("Received"))
         if Regex(r"^contact \S+\@\S+\; run by ezmlm$").search(txt):
             dlto = ''.join(msg.get_decoded_header("Delivered-To"))
             mailing_list_re = Regex(r"^mailing list \S+\@\S+")
