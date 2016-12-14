@@ -206,7 +206,13 @@ class HeaderEval(pad.plugins.base.BasePlugin):
         return False
 
     def check_for_matching_env_and_hdr_from(self, msg, target=None):
-        return False
+        from_addr = ''.join(msg.get_all_addr_header("From"))
+        envfrom = ""
+        for relay in msg.trusted_relays + msg.untrusted_relays:
+            if relay.get('envfrom'):
+                envfrom = relay.get('envfrom')
+                break
+        return from_addr == envfrom
 
     def sorted_recipients(self, msg, target=None):
         return False

@@ -390,27 +390,12 @@ class TestHeaderEval(unittest.TestCase):
         self.assertTrue(result)
 
 
-class TestMessageId(unittest.TestCase):
+class TestMessageId(TestHeaderEval):
     def setUp(self):
-        unittest.TestCase.setUp(self)
-        self.local_data = {}
-        self.global_data = {}
-        self.mock_ctxt = MagicMock()
-        self.mock_msg = MagicMock()
-        self.plugin = pad.plugins.header_eval.HeaderEval(self.mock_ctxt)
-        self.plugin.set_local = lambda m, k, v: self.local_data.__setitem__(k,
-                                                                            v)
-        self.plugin.get_local = lambda m, k: self.local_data.__getitem__(k)
-        self.plugin.set_global = self.global_data.__setitem__
-        self.plugin.get_global = self.global_data.__getitem__
-        self.mock_ruleset = MagicMock()
+        super(TestMessageId, self).setUp()
         self.mock_gated = patch(
             "pad.plugins.header_eval.HeaderEval."
             "gated_through_received_hdr_remover").start()
-
-    def tearDown(self):
-        unittest.TestCase.tearDown(self)
-        patch.stopall()
 
     def test_check_messageid_not_usable_list_unsubscribe_true(self):
         self.mock_msg.msg.get.side_effect = [
@@ -454,3 +439,4 @@ for ; Sat, 18 Jun 2016 05:00:14 GMT"""]
         self.mock_gated.return_value = False
         result = self.plugin.check_messageid_not_usable(self.mock_msg)
         self.assertTrue(result)
+
