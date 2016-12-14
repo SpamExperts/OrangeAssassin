@@ -300,6 +300,122 @@ Received: from test.com ([1.2.3.4])
         result = self.check_pad(email)
         self.check_report(result, 0, [])
 
+    def test_relay_from_domain_in_received_headers_desire_true(self):
+
+        email = """From: email@nonexisting.com
+Received: from aol.com (nonexisting.com [1.2.3.4])
+ by nonexisting.com with esmtps (ceva)"""
+
+        self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG)
+        result = self.check_pad(email)
+        self.check_report(result, 2, ['CHECK_FOR_FROM_DOMAIN_IN_RECEIVED_HEADERS', 'CHECK_FOR_SENDER_NO_REVERSE'])
+
+    def test_relay_from_domain_in_received_headers_negative_desire_true(self):
+
+        email = """From: email@nonexisting.com
+Received: from aol.com (test.com [1.2.3.4])
+ by nonexisting.com with esmtps (ceva)"""
+
+        self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG)
+        result = self.check_pad(email)
+        self.check_report(result, 1, ['CHECK_FOR_SENDER_NO_REVERSE'])
+
+    def test_relay_from_domain_in_received_headers_different_by_desire_true(self):
+
+        email = """From: email@nonexisting.com
+Received: from aol.com (nonexisting.com [1.2.3.4])
+ by test.com with esmtps (ceva)"""
+
+        self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG)
+        result = self.check_pad(email)
+        self.check_report(result, 1, ['CHECK_FOR_SENDER_NO_REVERSE'])
+
+    def test_relay_from_domain_in_received_headers_multiple_from_headers_desire_true(self):
+
+        email = """From: email@ceva.com
+From: email@nonexisting.com
+From: email@test.com
+Received: from aol.com (nonexisting.com [1.2.3.4])
+ by nonexisting.com with esmtps (ceva)"""
+
+        self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG)
+        result = self.check_pad(email)
+        self.check_report(result, 2, ['CHECK_FOR_FROM_DOMAIN_IN_RECEIVED_HEADERS', 'CHECK_FOR_SENDER_NO_REVERSE'])
+
+    def test_relay_from_domain_in_received_headers_different_by_desire_false(self):
+
+        config = """
+header CHECK_FOR_FROM_DOMAIN_IN_RECEIVED_HEADERS   eval:check_for_from_domain_in_received_headers('nonexisting.com', 'false')
+                 """
+
+        email = """From: email@nonexisting.com
+Received: from aol.com (nonexisting.com [1.2.3.4])
+ by test.com with esmtps (ceva)"""
+
+        self.setup_conf(config=config, pre_config=PRE_CONFIG)
+        result = self.check_pad(email)
+        self.check_report(result, 1, ['CHECK_FOR_FROM_DOMAIN_IN_RECEIVED_HEADERS'])
+
+    def test_relay_from_domain_in_received_headers_different_rdns_desire_false(self):
+
+        config = """
+header CHECK_FOR_FROM_DOMAIN_IN_RECEIVED_HEADERS   eval:check_for_from_domain_in_received_headers('nonexisting.com', 'false')
+                 """
+
+        email = """From: email@nonexisting.com
+Received: from aol.com (test.com [1.2.3.4])
+ by nonexisting.com with esmtps (ceva)"""
+
+        self.setup_conf(config=config, pre_config=PRE_CONFIG)
+        result = self.check_pad(email)
+        self.check_report(result, 1, ['CHECK_FOR_FROM_DOMAIN_IN_RECEIVED_HEADERS'])
+
+    def test_relay_from_domain_in_received_headers_desire_false_negative(self):
+
+        config = """
+header CHECK_FOR_FROM_DOMAIN_IN_RECEIVED_HEADERS   eval:check_for_from_domain_in_received_headers('nonexisting.com', 'false')
+                 """
+
+        email = """From: email@nonexisting.com
+Received: from aol.com (nonexisting.com [1.2.3.4])
+ by nonexisting.com with esmtps (ceva)"""
+
+        self.setup_conf(config=config, pre_config=PRE_CONFIG)
+        result = self.check_pad(email)
+        self.check_report(result, 0, [])
+
+    def test_relay_from_domain_in_received_headers_multiple_from_headers_desire_false(self):
+
+        config = """
+header CHECK_FOR_FROM_DOMAIN_IN_RECEIVED_HEADERS   eval:check_for_from_domain_in_received_headers('nonexisting.com', 'false')
+                 """
+
+        email = """From: email@ceva.com
+From: email@nonexisting.com
+From: email@test.com
+Received: from aol.com (nonexisting.com [1.2.3.4])
+ by test.com with esmtps (ceva)"""
+
+        self.setup_conf(config=config, pre_config=PRE_CONFIG)
+        result = self.check_pad(email)
+        self.check_report(result, 1, ['CHECK_FOR_FROM_DOMAIN_IN_RECEIVED_HEADERS'])
+
+    def test_relay_from_domain_in_received_headers_multiple_from_headers_desire_false_negative(self):
+
+        config = """
+header CHECK_FOR_FROM_DOMAIN_IN_RECEIVED_HEADERS   eval:check_for_from_domain_in_received_headers('nonexisting.com', 'false')
+                 """
+
+        email = """From: email@ceva.com
+From: email@nonexisting.com
+From: email@test.com
+Received: from aol.com (nonexisting.com [1.2.3.4])
+ by nonexisting.com with esmtps (ceva)"""
+
+        self.setup_conf(config=config, pre_config=PRE_CONFIG)
+        result = self.check_pad(email)
+        self.check_report(result, 0, [])
+
 def suite():
     """Gather all the tests from this package in a test suite."""
     test_suite = unittest.TestSuite()
