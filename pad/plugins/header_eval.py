@@ -318,6 +318,7 @@ class HeaderEval(pad.plugins.base.BasePlugin):
 
     def check_messageid_not_usable(self, msg, target=None):
         list_unsubscribe = msg.msg.get("List-Unsubscribe")
+        print(list_unsubscribe)
         if list_unsubscribe:
             if re.search(r"<mailto:(?:leave-\S+|\S+-unsubscribe)\@\S+>$",
                          list_unsubscribe):
@@ -354,6 +355,14 @@ class HeaderEval(pad.plugins.base.BasePlugin):
         return False
 
     def check_ratware_name_id(self, msg, target=None):
+        message_id = msg.msg.get("Message-Id")
+        from_header = msg.msg.get("From")
+        if not message_id and not from_header:
+            return False
+        regex = re.search(r"<[A-Z]{28}\.([^>]+?)>", message_id)
+        if regex:
+            if re.search(r"\"[^\"]+\"\s*<" + regex.group(1) + ">", from_header):
+                return True
         return False
 
     def check_ratware_envelope_from(self, msg, target=None):

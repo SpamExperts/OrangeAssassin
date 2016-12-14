@@ -444,6 +444,25 @@ To: user@gmail.com
         result = self.plugin.check_unresolved_template(self.mock_msg)
         self.assertTrue(result)
 
+    def test_check_ratware_name_id(self):
+        self.mock_msg.msg.get.side_effect = [
+            '<AAAAAAAAAAAAAAAAAAAAAAAAAAAA.EXAMPLE>',
+            '"UNSER EXAMPLE" <EXAMPLE>']
+        result = self.plugin.check_ratware_name_id(self.mock_msg)
+        self.assertTrue(result)
+
+    def test_check_ratware_name_id_no_message_id(self):
+        self.mock_msg.msg.get.side_effect = ['', '']
+        result = self.plugin.check_ratware_name_id(self.mock_msg)
+        self.assertFalse(result)
+
+    def test_check_ratware_name_id_false(self):
+        self.mock_msg.msg.get.side_effect = [
+            '<AAAAAAAAAAAAAAAAAAAAAAAAAAAA>',
+            '"UNSER EXAMPLE" <EXAMPLE>']
+        result = self.plugin.check_ratware_name_id(self.mock_msg)
+        self.assertFalse(result)
+
 
 class TestMessageId(TestHeaderEval):
     def setUp(self):
