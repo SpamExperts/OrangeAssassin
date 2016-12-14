@@ -151,3 +151,11 @@ Plugin :mod:`spam_cop`
     :members:
     :undoc-members:
     :show-inheritance:
+
+Plugin :mod:`dkim`
+------------------
+
+.. automodule:: pad.plugins.dkim
+    :members:
+    :undoc-members:
+    :show-inheritance:

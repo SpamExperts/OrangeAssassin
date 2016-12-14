@@ -227,4 +227,5 @@ class PADConf(Conf):
         "autolearn": ("bool", False),
         "training": ("bool", False),
         "user_config": ("bool", True),
+        "ok_locales": ("str", ""),
     }
