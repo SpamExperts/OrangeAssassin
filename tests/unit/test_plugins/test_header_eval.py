@@ -463,6 +463,12 @@ To: user@gmail.com
         result = self.plugin.check_ratware_name_id(self.mock_msg)
         self.assertFalse(result)
 
+    def test_check_for_forged_gw05_received_headers(self):
+        received = "from mail3.icytundra.com by gw05 with ESMTP; Thu, 21 Jun 2001 02:28:32 -0400"
+        self.mock_msg.get_decoded_header.side_effect = [[received]]
+        result = self.plugin.check_for_forged_gw05_received_headers(self.mock_msg)
+        self.assertTrue(result)
+
 
 class TestMessageId(TestHeaderEval):
     def setUp(self):

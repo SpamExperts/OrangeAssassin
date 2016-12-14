@@ -229,6 +229,20 @@ class HeaderEval(pad.plugins.base.BasePlugin):
         return True
 
     def check_for_forged_gw05_received_headers(self, msg, target=None):
+        gw05_re = Regex(r"from\s(\S+)\sby\s(\S+)\swith\sESMTP\;\s+\S\S\S,"
+                        r"\s+\d+\s+\S\S\S\s+\d{4}\s+\d\d:\d\d:\d\d\s+[-+]*"
+                        r"\d{4}", re.X | re.I)
+        for rcv in msg.get_decoded_header("Received"):
+            h1 = ""
+            h2 = ""
+            try:
+                match = gw05_re.match(rcv)
+                if match:
+                    h1, h2 = match.groups()
+                if h1 and h2 and h2 != ".":
+                    return True
+            except IndexError:
+                continue
         return False
 
     def check_for_round_the_world_received_helo(self, msg, target=None):
