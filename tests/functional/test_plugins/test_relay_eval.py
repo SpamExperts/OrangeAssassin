@@ -40,7 +40,7 @@ class TestFunctionalRelayEval(tests.util.TestBase):
 
     def test_relay_check_for_helo_numeric_forged_and_missmatch_positive(self):
 
-        email = """Received: from 1.2.3.4 ([4.4.4.4]) by example.com"""
+        email = """Received: from 1.2.3.4 ([4.4.4.4]) by example.com with esmtps (ceva)"""
 
         self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG)
         result = self.check_pad(email)
@@ -48,9 +48,9 @@ class TestFunctionalRelayEval(tests.util.TestBase):
 
     def test_relay_check_for_helo_numeric_forged_and_missmatch_positive_with_multiple_headers(self):
 
-        email = """Received: from ceva.com ([1.2.3.4]) by example.com
-Received: from example.com (ceva.com [1.2.3.4]) by example.com
-Received: from 1.2.3.4 ([4.4.4.4]) by example.com"""
+        email = """Received: from ceva.com ([1.2.3.4]) by example.com with esmtps (ceva)
+Received: from example.com (ceva.com [1.2.3.4]) by example.com with esmtps (ceva)
+Received: from 1.2.3.4 ([4.4.4.4]) by example.com with esmtps (ceva)"""
 
         self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG)
         result = self.check_pad(email)
@@ -58,7 +58,7 @@ Received: from 1.2.3.4 ([4.4.4.4]) by example.com"""
 
     def test_relay_check_for_helo_numeric_forged_and_missmatch_with_ipv6(self):
 
-        email = """Received: from 1.2.3.4 ([2001:1af8:4700:a02d:2::1]) by example.com"""
+        email = """Received: from 1.2.3.4 ([2001:1af8:4700:a02d:2::1]) by example.com with esmtps (ceva)"""
 
         self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG)
         result = self.check_pad(email)
@@ -66,7 +66,7 @@ Received: from 1.2.3.4 ([4.4.4.4]) by example.com"""
 
     def test_relay_check_for_helo_numeric_and_missmatch_positive(self):
 
-        email = """Received: from 4.4.6.4 ([4.4.4.4]) by example.com"""
+        email = """Received: from 4.4.6.4 ([4.4.4.4]) by example.com with esmtps (ceva)"""
 
         self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG)
         result = self.check_pad(email)
@@ -74,7 +74,7 @@ Received: from 1.2.3.4 ([4.4.4.4]) by example.com"""
 
     def test_relay_helo_numeric_forged_and_missmatch_with_ipv6_different_16(self):
 
-        email = """Received: from 2001:1af7:4700:a02d:2::1 ([2001:1af8:4700:a02d:2::1]) by example.com"""
+        email = """Received: from 2001:1af7:4700:a02d:2::1 ([2001:1af8:4700:a02d:2::1]) by example.com with esmtps (ceva)"""
 
         self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG)
         result = self.check_pad(email)
@@ -82,7 +82,7 @@ Received: from 1.2.3.4 ([4.4.4.4]) by example.com"""
 
     def test_relay_helo_numeric_forged_and_missmatch_with_ipv6_different_24(self):
 
-        email = """Received: from 2001:1af8:4702:a02d:2::1 ([2001:1af8:4700:a02d:2::1]) by example.com"""
+        email = """Received: from 2001:1af8:4702:a02d:2::1 ([2001:1af8:4700:a02d:2::1]) by example.com with esmtps (ceva)"""
 
         self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG)
         result = self.check_pad(email)
@@ -90,7 +90,7 @@ Received: from 1.2.3.4 ([4.4.4.4]) by example.com"""
 
     def test_relay_helo_numeric_forged_and_missmatch_with_ipv6_different_32(self):
 
-        email = """Received: from 2001:1af8:4700:a02c:2::1 ([2001:1af8:4700:a02d:2::1]) by example.com"""
+        email = """Received: from 2001:1af8:4700:a02c:2::1 ([2001:1af8:4700:a02d:2::1]) by example.com with esmtps (ceva)"""
 
         self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG)
         result = self.check_pad(email)
@@ -98,7 +98,7 @@ Received: from 1.2.3.4 ([4.4.4.4]) by example.com"""
 
     def test_relay_check_for_helo_missmatch_negative(self):
 
-        email = """Received: from 4.4.4.177 ([4.4.4.4]) by example.com"""
+        email = """Received: from 4.4.4.177 ([4.4.4.4]) by example.com with esmtps (ceva)"""
 
         self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG)
         result = self.check_pad(email)
@@ -106,7 +106,7 @@ Received: from 1.2.3.4 ([4.4.4.4]) by example.com"""
 
     def test_relay_sender_no_reverse_positive(self):
 
-        email = """Received: from example.com (ceva.com [1.2.3.4]) by example.com"""
+        email = """Received: from example.com (ceva.com [1.2.3.4]) by example.com with esmtps (ceva)"""
 
         self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG)
         result = self.check_pad(email)
@@ -114,7 +114,7 @@ Received: from 1.2.3.4 ([4.4.4.4]) by example.com"""
 
     def test_relay_sender_no_reverse_negative(self):
 
-        email = """Received: from example.com (ceva [1.2.3.4]) by example.com"""
+        email = """Received: from example.com (ceva [1.2.3.4]) by example.com with esmtps (ceva)"""
 
         self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG)
         result = self.check_pad(email)
@@ -126,7 +126,7 @@ Received: from 1.2.3.4 ([4.4.4.4]) by example.com"""
                                 trusted_networks 1.2.3.4
                            """
 
-        email = """Received: from example.com ([1.2.3.4]) by example.com"""
+        email = """Received: from example.com ([1.2.3.4]) by example.com with esmtps (ceva)"""
 
         self.setup_conf(config=CONFIG + trusted_networks, pre_config=PRE_CONFIG)
         result = self.check_pad(email)
@@ -138,7 +138,7 @@ Received: from 1.2.3.4 ([4.4.4.4]) by example.com"""
                                 trusted_networks !1.2.3.4
                            """
 
-        email = """Received: from example.com ([1.2.3.4]) by example.com"""
+        email = """Received: from example.com ([1.2.3.4]) by example.com with esmtps (ceva)"""
 
         self.setup_conf(config=CONFIG + trusted_networks, pre_config=PRE_CONFIG)
         result = self.check_pad(email)
@@ -150,7 +150,7 @@ Received: from 1.2.3.4 ([4.4.4.4]) by example.com"""
                                 trusted_networks 1.2.3.4
                            """
 
-        email = """Received: from 4.4.4.4 ([1.2.3.4]) by example.com"""
+        email = """Received: from 4.4.4.4 ([1.2.3.4]) by example.com with esmtps (ceva)"""
 
         self.setup_conf(config=CONFIG + trusted_networks, pre_config=PRE_CONFIG)
         result = self.check_pad(email)
@@ -173,13 +173,132 @@ for <cosmin.b@gapps.spamexperts.com>; Mon, 04 Jul 2016 01:11:24 -0700 (PDT)"""
         email = """X-Received: by 10.98.4.193 with SMTP id 184mr20495892pfe.98.1467619884181;
         Mon, 04 Jul 2016 01:11:24 -0700 (PDT)
 From: test@test.example.com
-Received: from example.com (ceva.com [1.2.3.4]) by example.com
+Received: from example.com (ceva.com [1.2.3.4]) by example.com with esmtps (ceva)
 Received: by mail-pf0-x248.google.com with SMTP id e189so378665533pfa.2
         for <cosmin.b@gapps.spamexperts.com>; Mon, 04 Jul 2016 01:11:24 -0700 (PDT)"""
 
         self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG)
         result = self.check_pad(email)
         self.check_report(result, 1, ['CHECK_FOR_SENDER_NO_REVERSE'])
+
+    def test_relay_forged_received_trail_positive(self):
+
+        email = """Received: from rdns.example.com (test.com [1.2.3.4])
+ by test.com with esmtps (ceva)
+Received: from rdns.example.com (test.com [1.2.3.4])
+ by example.org with esmtps (ceva)
+Received: from rdns.example.com (test.com [1.2.3.4])
+ by example.org with esmtps (ceva)"""
+
+        self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG)
+        result = self.check_pad(email)
+        self.check_report(result, 2, ['CHECK_FOR_FORGED_RECEIVED_TRAIL', 'CHECK_FOR_SENDER_NO_REVERSE'])
+
+    def test_relay_forged_received_trail_negative(self):
+
+        email = """Received: from rdns.example.com (test.com [1.2.3.4])
+ by test.com with esmtps (ceva)
+Received: from rdns.example.com (test.com [1.2.3.4])
+ by example.org with esmtps (ceva)
+Received: from rdns.example.com (test.com [1.2.3.4])
+ by test.com with esmtps (ceva)"""
+
+        self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG)
+        result = self.check_pad(email)
+        self.check_report(result, 1, ['CHECK_FOR_SENDER_NO_REVERSE'])
+
+    def test_relay_forged_received_trail_negative_ip_trusted(self):
+
+        trusted_networks = """
+                                trusted_networks 1.2.3.4
+                           """
+
+        email = """Received: from rdns.example.com (test.com [1.2.3.4])
+ by test.com with esmtps (ceva)
+Received: from rdns.example.com (test.com [4.4.4.4])
+ by example.org with esmtps (ceva)
+Received: from rdns.example.com (test.com [5.5.5.5])
+ by example.org with esmtps (ceva)"""
+
+        self.setup_conf(config=CONFIG + trusted_networks, pre_config=PRE_CONFIG)
+        result = self.check_pad(email)
+        self.check_report(result, 1, ['CHECK_FOR_SENDER_NO_REVERSE'])
+
+    def test_relay_forged_received_trail_multiple_headers(self):
+
+        email = """Received: from rdns.example.com (test.com [1.2.3.4])
+ by test.com with esmtps (ceva)
+Received: from rdns.example.com (test.com [1.2.3.4])
+ by test.com with esmtps (ceva)
+Received: from rdns.example.com (test.com [1.2.3.4])
+ by example.org with esmtps (ceva)
+Received: from rdns.example.com (test.com [1.2.3.4])
+ by example.org with esmtps (ceva)"""
+
+        self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG)
+        result = self.check_pad(email)
+        self.check_report(result, 2, ['CHECK_FOR_FORGED_RECEIVED_TRAIL', 'CHECK_FOR_SENDER_NO_REVERSE'])
+
+    def test_relay_forged_received_trail_multiple_headers_negative(self):
+
+        email = """Received: from rdns.example.com (test.com [1.2.3.4])
+ by test.com with esmtps (ceva)
+Received: from rdns.example.com (test.com [1.2.3.4])
+ by test.com with esmtps (ceva)
+Received: from rdns.example.com (test.com [1.2.3.4])
+ by test.com with esmtps (ceva)
+Received: from rdns.example.com (test.com [1.2.3.4])
+ by example.org with esmtps (ceva)"""
+
+        self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG)
+        result = self.check_pad(email)
+        self.check_report(result, 1, ['CHECK_FOR_SENDER_NO_REVERSE'])
+
+    def test_relay_no_rdns_dotcom_helo(self):
+
+        email = """Received: from yahoo.com ([1.2.3.4])
+ by test.com with esmtps (ceva)"""
+
+        self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG)
+        result = self.check_pad(email)
+        self.check_report(result, 1, ['CHECK_FOR_NO_RDNS_DOTCOM_HELO'])
+
+    def test_relay_no_rdns_dotcom_helo_negative(self):
+
+        email = """Received: from yahoo.com ([1.2.3.4])
+ by test.com with esmtps (ceva)
+Received: from yahoo.ro ([1.2.3.4])
+ by test.com with esmtps (ceva)"""
+
+        self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG)
+        result = self.check_pad(email)
+        self.check_report(result, 0, [])
+
+    def test_relay_no_rdns_dotcom_helo_multiple_headers(self):
+
+        email = """Received: from example.com ([1.2.3.4])
+ by test.com with esmtps (ceva)
+Received: from yahoo.ro ([1.2.3.4])
+ by test.com with esmtps (ceva)
+Received: from aol.com ([1.2.3.4])
+ by test.com with esmtps (ceva)"""
+
+        self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG)
+        result = self.check_pad(email)
+        self.check_report(result, 1, ['CHECK_FOR_NO_RDNS_DOTCOM_HELO'])
+
+    def test_relay_no_rdns_dotcom_helo_multiple_headers_negative(self):
+
+        email = """Received: from aol.com ([1.2.3.4])
+ by test.com with esmtps (ceva)
+Received: from aol.com ([1.2.3.4])
+ by test.com with esmtps (ceva)
+Received: from test.com ([1.2.3.4])
+ by test.com with esmtps (ceva)"""
+
+        self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG)
+        result = self.check_pad(email)
+        self.check_report(result, 0, [])
 
 def suite():
     """Gather all the tests from this package in a test suite."""
