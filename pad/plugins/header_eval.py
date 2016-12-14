@@ -175,6 +175,33 @@ class HeaderEval(pad.plugins.base.BasePlugin):
         return False
 
     def check_for_forged_juno_received_headers(self, msg, target=None):
+        from_addr = ''.join(msg.get_all_addr_header("From"))
+        if from_addr.rsplit("@", 1)[-1] != "juno.com":
+            return False
+        if self.gated_through_received_hdr_remover(msg):
+            return False
+        xorig = ''.join(msg.get_decoded_header("X-Originating-IP"))
+        xmailer = ''.join(msg.get_decoded_header(""))
+        rcvd = ''.join(msg.get_decoded_header("Received"))
+        if xorig != "":
+            juno_re = Regex(r"from.*\b(?:juno|untd)\.com.*"
+                            r"[\[\(]{0}[\]\)].*by".format(IP_ADDRESS.pattern), re.X)
+            cookie_re = Regex(r" cookie\.(?:juno|untd)\.com ")
+            if not juno_re.search(rcvd) and cookie_re.search(rcvd):
+                return True
+            if "Juno " not in xmailer:
+                return True
+        else:
+            mail_com_re = Regex(r"from.*\bmail\.com.*\[{}\].*by".format(
+                IP_ADDRESS.pattern), re.X)
+            untd_com_re = Regex(r"from (webmail\S+\.untd"
+                                r"\.com) \(\1 \[\d+.\d+.\d+.\d+\]\) by")
+            if mail_com_re.search(rcvd) and not Regex(r"\bmail\.com").search(
+                    xmailer):
+                return True
+            elif untd_com_re.search(rcvd) and not Regex(
+                    r"^Webmail Version \d").search(xmailer):
+                return True
         return False
 
     def check_for_matching_env_and_hdr_from(self, msg, target=None):

@@ -241,3 +241,88 @@ class TestHeaderEval(unittest.TestCase):
         result = self.plugin.check_for_forged_eudoramail_received_headers(
             self.mock_msg)
         self.assertFalse(result)
+
+    def test_check_for_forged_juno_received_headers_no_juno(self):
+        from_addr = "test@example.com"
+        self.mock_msg.get_all_addr_header.side_effect = [[from_addr]]
+        result = self.plugin.check_for_forged_juno_received_headers(
+            self.mock_msg)
+        self.assertFalse(result)
+
+    def test_check_for_forged_juno_received_headers_gated_through(self):
+        from_addr = "test@juno.com"
+        self.mock_msg.get_all_addr_header.side_effect = [[from_addr]]
+        patch("pad.plugins.header_eval.HeaderEval.gated_through_received_hdr_remover",
+              return_value=True).start()
+        result = self.plugin.check_for_forged_juno_received_headers(
+            self.mock_msg)
+        self.assertFalse(result)
+
+    def test_check_for_forged_juno_received_headers(self):
+        from_addr = "test@juno.com"
+        xorig = "8.8.8.8"
+        received = "from test.com[5.6.7.8] by cookie.juno.com"
+        self.mock_msg.get_all_addr_header.side_effect = [[from_addr]]
+        self.mock_msg.get_decoded_header.side_effect = [[xorig], [""],
+                                                        [received]]
+        patch("pad.plugins.header_eval.HeaderEval.gated_through_received_hdr_remover",
+              return_value=False).start()
+        result = self.plugin.check_for_forged_juno_received_headers(
+            self.mock_msg)
+        self.assertTrue(result)
+
+    def test_check_for_forged_juno_received_headers_juno_xmailer(self):
+        from_addr = "test@juno.com"
+        xorig = "8.8.8.8"
+        xmailer = "Juno Mailer v.8.2.3"
+        received = "from untd.com[5.6.7.8] by cookie.juno.com"
+        self.mock_msg.get_all_addr_header.side_effect = [[from_addr]]
+        self.mock_msg.get_decoded_header.side_effect = [[xorig], [xmailer],
+                                                        [received]]
+        patch("pad.plugins.header_eval.HeaderEval.gated_through_received_hdr_remover",
+              return_value=False).start()
+        result = self.plugin.check_for_forged_juno_received_headers(
+            self.mock_msg)
+        self.assertFalse(result)
+
+    def test_check_for_forged_juno_received_headers_no_xorig(self):
+        from_addr = "test@juno.com"
+        xorig = ""
+        xmailer = "Juno Mailer v.8.2.3"
+        received = "from mail.com [45.46.37.48] by example.juno.com"
+        self.mock_msg.get_all_addr_header.side_effect = [[from_addr]]
+        self.mock_msg.get_decoded_header.side_effect = [[xorig], [xmailer],
+                                                        [received]]
+        patch("pad.plugins.header_eval.HeaderEval.gated_through_received_hdr_remover",
+              return_value=False).start()
+        result = self.plugin.check_for_forged_juno_received_headers(
+            self.mock_msg)
+        self.assertTrue(result)
+
+    def test_check_for_forged_juno_received_headers_no_xorig_webmail(self):
+        from_addr = "test@juno.com"
+        xorig = ""
+        xmailer = "Juno Mailer v.8.2.3"
+        received = "from webmail.test.untd.com (webmail.test.untd.com [1.2.3.4]) by "
+        self.mock_msg.get_all_addr_header.side_effect = [[from_addr]]
+        self.mock_msg.get_decoded_header.side_effect = [[xorig], [xmailer],
+                                                        [received]]
+        patch("pad.plugins.header_eval.HeaderEval.gated_through_received_hdr_remover",
+              return_value=False).start()
+        result = self.plugin.check_for_forged_juno_received_headers(
+            self.mock_msg)
+        self.assertTrue(result)
+
+    def test_check_for_forged_juno_received_headers_no_xorig_no_ip(self):
+        from_addr = "test@juno.com"
+        xorig = ""
+        xmailer = "Juno Mailer v.8.2.3"
+        received = "from mail.com[5.6.7.8] by example.juno.com"
+        self.mock_msg.get_all_addr_header.side_effect = [[from_addr]]
+        self.mock_msg.get_decoded_header.side_effect = [[xorig], [xmailer],
+                                                        [received]]
+        patch("pad.plugins.header_eval.HeaderEval.gated_through_received_hdr_remover",
+              return_value=False).start()
+        result = self.plugin.check_for_forged_juno_received_headers(
+            self.mock_msg)
+        self.assertTrue(result)
