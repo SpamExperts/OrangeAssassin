@@ -389,6 +389,33 @@ class TestHeaderEval(unittest.TestCase):
         result = self.plugin.check_outlook_message_id(self.mock_msg)
         self.assertTrue(result)
 
+    def check_for_matching_env_and_hdr_from(self):
+        from_addr = "test@example.com"
+        envfrom = "test@example.com"
+        self.mock_msg.get_all_addr_header.side_effect = [[from_addr]]
+        self.mock_msg.trusted_relays = [{"envfrom": ''}]
+        self.mock_msg.untrusted_relays = [{"envfrom": envfrom}]
+        result = self.plugin.check_for_matching_env_and_hdr_from(self.mock_msg)
+        self.assertTrue(result)
+
+    def check_for_matching_env_and_hdr_from_false(self):
+        from_addr = "test@example.com"
+        envfrom = "accept@example.com"
+        self.mock_msg.get_all_addr_header.side_effect = [[from_addr]]
+        self.mock_msg.trusted_relays = [{"envfrom": ''}]
+        self.mock_msg.untrusted_relays = [{"envfrom": envfrom}]
+        result = self.plugin.check_for_matching_env_and_hdr_from(self.mock_msg)
+        self.assertFalse(result)
+
+    def check_for_matching_env_and_hdr_from_false_no_envfrom(self):
+        from_addr = "test@example.com"
+        envfrom = ""
+        self.mock_msg.get_all_addr_header.side_effect = [[from_addr]]
+        self.mock_msg.trusted_relays = [{"envfrom": ''}]
+        self.mock_msg.untrusted_relays = [{"envfrom": envfrom}]
+        result = self.plugin.check_for_matching_env_and_hdr_from(self.mock_msg)
+        self.assertFalse(result)
+
     def test_check_unresolved_template_false(self):
         message = """
         Delivered-To: user@gmail.com
