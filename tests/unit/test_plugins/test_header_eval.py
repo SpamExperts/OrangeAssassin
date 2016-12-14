@@ -389,6 +389,34 @@ class TestHeaderEval(unittest.TestCase):
         result = self.plugin.check_outlook_message_id(self.mock_msg)
         self.assertTrue(result)
 
+    def test_check_unresolved_template_false(self):
+        message = """
+        Delivered-To: user@gmail.com
+Received: from smtp.mesvr.com (localhost.localdomain [127.0.0.1])
+From: user@gmail.com
+Date: Tue, 10 Nov 2016 14:38:59 +0200
+Subject: This is a test
+To: user@gmail.com
+
+        """
+        self.mock_msg.raw_msg = message
+        result = self.plugin.check_unresolved_template(self.mock_msg)
+        self.assertFalse(result)
+
+    def test_check_unresolved_template_true(self):
+        message = """
+        Delivered-To: user@gmail.com%AA
+Received: from smtp.mesvr.com (localhost.localdomain [127.0.0.1])
+From: user@gmail.com
+Date: Tue, 10 Nov 2016 14:38:59 +0200
+Subject: This is a test
+To: user@gmail.com
+
+        """
+        self.mock_msg.raw_msg = message
+        result = self.plugin.check_unresolved_template(self.mock_msg)
+        self.assertTrue(result)
+
 
 class TestMessageId(TestHeaderEval):
     def setUp(self):

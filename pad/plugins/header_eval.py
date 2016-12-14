@@ -343,6 +343,14 @@ class HeaderEval(pad.plugins.base.BasePlugin):
         return int(minr) <= len(msg.get_raw_header(header)) <= int(maxr)
 
     def check_unresolved_template(self, msg, target=None):
+        message = msg.raw_msg
+        headers = message.split("\n")
+        for header in headers:
+            if re.search(r"%[A-Z][A-Z_-]", header) and not \
+                    re.search(r"^(?:x-vms-to|x-uidl|x-face|to|cc|from|subject|"
+                              r"references|in-reply-to|(?:x-|resent-|"
+                              r"x-original-)?message-id):", header.lower()):
+                return True
         return False
 
     def check_ratware_name_id(self, msg, target=None):
