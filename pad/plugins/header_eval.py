@@ -4,6 +4,7 @@ from __future__ import division
 from __future__ import absolute_import
 
 import re
+import time
 import email.header
 
 import pad.locales
@@ -175,6 +176,33 @@ class HeaderEval(pad.plugins.base.BasePlugin):
         return False
 
     def check_for_forged_juno_received_headers(self, msg, target=None):
+        from_addr = ''.join(msg.get_all_addr_header("From"))
+        if from_addr.rsplit("@", 1)[-1] != "juno.com":
+            return False
+        if self.gated_through_received_hdr_remover(msg):
+            return False
+        xorig = ''.join(msg.get_decoded_header("X-Originating-IP"))
+        xmailer = ''.join(msg.get_decoded_header(""))
+        rcvd = ''.join(msg.get_decoded_header("Received"))
+        if xorig != "":
+            juno_re = Regex(r"from.*\b(?:juno|untd)\.com.*"
+                            r"[\[\(]{0}[\]\)].*by".format(IP_ADDRESS.pattern), re.X)
+            cookie_re = Regex(r" cookie\.(?:juno|untd)\.com ")
+            if not juno_re.search(rcvd) and cookie_re.search(rcvd):
+                return True
+            if "Juno " not in xmailer:
+                return True
+        else:
+            mail_com_re = Regex(r"from.*\bmail\.com.*\[{}\].*by".format(
+                IP_ADDRESS.pattern), re.X)
+            untd_com_re = Regex(r"from (webmail\S+\.untd"
+                                r"\.com) \(\1 \[\d+.\d+.\d+.\d+\]\) by")
+            if mail_com_re.search(rcvd) and not Regex(r"\bmail\.com").search(
+                    xmailer):
+                return True
+            elif untd_com_re.search(rcvd) and not Regex(
+                    r"^Webmail Version \d").search(xmailer):
+                return True
         return False
 
     def check_for_matching_env_and_hdr_from(self, msg, target=None):
@@ -260,9 +288,41 @@ class HeaderEval(pad.plugins.base.BasePlugin):
         return False
 
     def check_outlook_message_id(self, msg, target=None):
-        return False
+        message_id = msg.msg.get("Message-ID")
+        msg_regex = r"^<[0-9a-f]{4}([0-9a-f]{8})\$[0-9a-f]{8}\$[0-9a-f]{8}\@"
+        regex = re.search(msg_regex, message_id)
+        if not regex:
+            return False
+        timetocken = int(regex.group(1), 16)
+
+        date = msg.msg.get("Date")
+        x = 0.0023283064365387
+        y = 27111902.8329849
+        mail_date = time.mktime(email.utils.parsedate(date))
+        expected = int((mail_date * x) + y)
+        if abs(timetocken - expected) < 250:
+            return False
+        received = msg.msg.get("Received")
+        regex = re.search(r"(\s.?\d+ \S\S\S \d+ \d+:\d+:\d+ \S+).*?$", received)
+        received_date = 0
+        if regex:
+            received_date = time.mktime(email.utils.parsedate(regex.group()))
+        expected = int((received_date * x) + y)
+        return abs(timetocken - expected) >= 250
 
     def check_messageid_not_usable(self, msg, target=None):
+        list_unsubscribe = msg.msg.get("List-Unsubscribe")
+        if list_unsubscribe:
+            if re.search(r"<mailto:(?:leave-\S+|\S+-unsubscribe)\@\S+>$",
+                         list_unsubscribe):
+                return True
+        if self.gated_through_received_hdr_remover(msg):
+            return True
+        received = msg.msg.get("Received")
+        if re.search(r"/CWT/DCE\)", received):
+            return True
+        if re.search(r"iPlanet Messaging Server", received):
+            return True
         return False
 
     def check_header_count_range(self, msg, header, minr, maxr, target=None):
@@ -288,7 +348,7 @@ class HeaderEval(pad.plugins.base.BasePlugin):
     def gated_through_received_hdr_remover(self, msg, target=None):
         """Check if the email is gated through ezmlm"""
         txt = ''.join(msg.get_decoded_header("Mailing-List"))
-        rcvd = ''.join(msg.get_decoded.header("Received"))
+        rcvd = ''.join(msg.get_decoded_header("Received"))
         if Regex(r"^contact \S+\@\S+\; run by ezmlm$").search(txt):
             dlto = ''.join(msg.get_decoded_header("Delivered-To"))
             mailing_list_re = Regex(r"^mailing list \S+\@\S+")

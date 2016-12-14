@@ -242,6 +242,91 @@ class TestHeaderEval(unittest.TestCase):
             self.mock_msg)
         self.assertFalse(result)
 
+    def test_check_for_forged_juno_received_headers_no_juno(self):
+        from_addr = "test@example.com"
+        self.mock_msg.get_all_addr_header.side_effect = [[from_addr]]
+        result = self.plugin.check_for_forged_juno_received_headers(
+            self.mock_msg)
+        self.assertFalse(result)
+
+    def test_check_for_forged_juno_received_headers_gated_through(self):
+        from_addr = "test@juno.com"
+        self.mock_msg.get_all_addr_header.side_effect = [[from_addr]]
+        patch("pad.plugins.header_eval.HeaderEval.gated_through_received_hdr_remover",
+              return_value=True).start()
+        result = self.plugin.check_for_forged_juno_received_headers(
+            self.mock_msg)
+        self.assertFalse(result)
+
+    def test_check_for_forged_juno_received_headers(self):
+        from_addr = "test@juno.com"
+        xorig = "8.8.8.8"
+        received = "from test.com[5.6.7.8] by cookie.juno.com"
+        self.mock_msg.get_all_addr_header.side_effect = [[from_addr]]
+        self.mock_msg.get_decoded_header.side_effect = [[xorig], [""],
+                                                        [received]]
+        patch("pad.plugins.header_eval.HeaderEval.gated_through_received_hdr_remover",
+              return_value=False).start()
+        result = self.plugin.check_for_forged_juno_received_headers(
+            self.mock_msg)
+        self.assertTrue(result)
+
+    def test_check_for_forged_juno_received_headers_juno_xmailer(self):
+        from_addr = "test@juno.com"
+        xorig = "8.8.8.8"
+        xmailer = "Juno Mailer v.8.2.3"
+        received = "from untd.com[5.6.7.8] by cookie.juno.com"
+        self.mock_msg.get_all_addr_header.side_effect = [[from_addr]]
+        self.mock_msg.get_decoded_header.side_effect = [[xorig], [xmailer],
+                                                        [received]]
+        patch("pad.plugins.header_eval.HeaderEval.gated_through_received_hdr_remover",
+              return_value=False).start()
+        result = self.plugin.check_for_forged_juno_received_headers(
+            self.mock_msg)
+        self.assertFalse(result)
+
+    def test_check_for_forged_juno_received_headers_no_xorig(self):
+        from_addr = "test@juno.com"
+        xorig = ""
+        xmailer = "Juno Mailer v.8.2.3"
+        received = "from mail.com [45.46.37.48] by example.juno.com"
+        self.mock_msg.get_all_addr_header.side_effect = [[from_addr]]
+        self.mock_msg.get_decoded_header.side_effect = [[xorig], [xmailer],
+                                                        [received]]
+        patch("pad.plugins.header_eval.HeaderEval.gated_through_received_hdr_remover",
+              return_value=False).start()
+        result = self.plugin.check_for_forged_juno_received_headers(
+            self.mock_msg)
+        self.assertTrue(result)
+
+    def test_check_for_forged_juno_received_headers_no_xorig_webmail(self):
+        from_addr = "test@juno.com"
+        xorig = ""
+        xmailer = "Juno Mailer v.8.2.3"
+        received = "from webmail.test.untd.com (webmail.test.untd.com [1.2.3.4]) by "
+        self.mock_msg.get_all_addr_header.side_effect = [[from_addr]]
+        self.mock_msg.get_decoded_header.side_effect = [[xorig], [xmailer],
+                                                        [received]]
+        patch("pad.plugins.header_eval.HeaderEval.gated_through_received_hdr_remover",
+              return_value=False).start()
+        result = self.plugin.check_for_forged_juno_received_headers(
+            self.mock_msg)
+        self.assertTrue(result)
+
+    def test_check_for_forged_juno_received_headers_no_xorig_no_ip(self):
+        from_addr = "test@juno.com"
+        xorig = ""
+        xmailer = "Juno Mailer v.8.2.3"
+        received = "from mail.com[5.6.7.8] by example.juno.com"
+        self.mock_msg.get_all_addr_header.side_effect = [[from_addr]]
+        self.mock_msg.get_decoded_header.side_effect = [[xorig], [xmailer],
+                                                        [received]]
+        patch("pad.plugins.header_eval.HeaderEval.gated_through_received_hdr_remover",
+              return_value=False).start()
+        result = self.plugin.check_for_forged_juno_received_headers(
+            self.mock_msg)
+        self.assertTrue(result)
+
     def test_check_for_to_in_subject_address_true(self):
         to_addr = "test@example.com"
         self.mock_msg.get_all_addr_header.side_effect = [[to_addr]]
@@ -287,4 +372,85 @@ class TestHeaderEval(unittest.TestCase):
         self.mock_msg.get_all_addr_header.side_effect = [[to_addr]]
         self.mock_msg.msg.get.side_effect = ["test , This is a test"]
         result = self.plugin.check_for_to_in_subject(self.mock_msg, "user")
+        self.assertTrue(result)
+
+    def test_check_outlook_message_id_invalid_message_id(self):
+        self.mock_msg.msg.get.side_effect = [
+            "<CA+KsZ1C=Lm-ehUW7wQuGud7ifh6_dQDzy>"]
+        result = self.plugin.check_outlook_message_id(self.mock_msg)
+        self.assertFalse(result)
+
+    def test_check_outlook_message_id(self):
+        self.mock_msg.msg.get.side_effect = [
+            "<111112345678$11111111$11111111@>",
+            "Tue, 29 Nov 2016 14:38:59 +0200",
+            """by 10.28.145.16 with SMTP id t16csp2363316wmd;
+        Tue, 29 Nov 2016 04:39:00 -0800 (PST)"""]
+        result = self.plugin.check_outlook_message_id(self.mock_msg)
+        self.assertTrue(result)
+
+
+class TestMessageId(unittest.TestCase):
+    def setUp(self):
+        unittest.TestCase.setUp(self)
+        self.local_data = {}
+        self.global_data = {}
+        self.mock_ctxt = MagicMock()
+        self.mock_msg = MagicMock()
+        self.plugin = pad.plugins.header_eval.HeaderEval(self.mock_ctxt)
+        self.plugin.set_local = lambda m, k, v: self.local_data.__setitem__(k,
+                                                                            v)
+        self.plugin.get_local = lambda m, k: self.local_data.__getitem__(k)
+        self.plugin.set_global = self.global_data.__setitem__
+        self.plugin.get_global = self.global_data.__getitem__
+        self.mock_ruleset = MagicMock()
+        self.mock_gated = patch(
+            "pad.plugins.header_eval.HeaderEval."
+            "gated_through_received_hdr_remover").start()
+
+    def tearDown(self):
+        unittest.TestCase.tearDown(self)
+        patch.stopall()
+
+    def test_check_messageid_not_usable_list_unsubscribe_true(self):
+        self.mock_msg.msg.get.side_effect = [
+            "<mailto:example-unsubscribe@-espc-tech-12345N@domain.com>"
+        ]
+        result = self.plugin.check_messageid_not_usable(self.mock_msg)
+        self.assertTrue(result)
+
+    def test_check_messageid_not_usable_gated(self):
+        self.mock_msg.msg.get.side_effect = [
+            "<mailto:unsubscribe@-espc-tech-12345N@domain.com>"]
+        self.mock_gated.return_value = True
+        result = self.plugin.check_messageid_not_usable(self.mock_msg)
+        self.assertTrue(result)
+
+    def test_check_messageid_not_usable_received(self):
+        self.mock_msg.msg.get.side_effect = [
+            "<mailto:unsubscribe@-espc-tech-12345N@domain.com>",
+            """from smtp.mesvr.com (localhost.localdomain [127.0.0.1])
+by smtp.mesvr.com (8.14.4/8.13.8/CWT/DCE) with ESMTP id u5I50E6V009236
+(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+for ; Sat, 18 Jun 2016 05:00:14 GMT"""]
+        self.mock_gated.return_value = False
+        result = self.plugin.check_messageid_not_usable(self.mock_msg)
+        self.assertTrue(result)
+
+    def test_check_messageid_not_usable_false(self):
+        self.mock_msg.msg.get.side_effect = [
+            "<mailto:unsubscribe@-espc-tech-12345N@domain.com>",
+            """by 10.28.145.16 with SMTP id t16csp2363316wmd;
+        Tue, 29 Nov 2016 04:39:00 -0800 (PST)"""]
+        self.mock_gated.return_value = False
+        result = self.plugin.check_messageid_not_usable(self.mock_msg)
+        self.assertFalse(result)
+
+    def test_check_messageid_not_usable_iplanet(self):
+        self.mock_msg.msg.get.side_effect = [
+            "<mailto:unsubscribe@-espc-tech-12345N@domain.com>",
+            """by 10.28.145.16 with SMTP id t16csp2363316wmd;
+        Tue, 29 Nov 2016 04:39:00 -0800 (iPlanet Messaging Server)"""]
+        self.mock_gated.return_value = False
+        result = self.plugin.check_messageid_not_usable(self.mock_msg)
         self.assertTrue(result)
