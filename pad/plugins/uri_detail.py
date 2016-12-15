@@ -2,10 +2,6 @@
 
 from __future__ import absolute_import
 
-import re
-
-from html.parser import HTMLParser
-
 try:
     from urllib.parse import unquote
     from urllib.parse import urlparse
@@ -16,7 +12,7 @@ except ImportError:
 import pad.regex
 import pad.rules.uri
 import pad.plugins.base
-import pad.html.html_parser
+import pad.html_parser
 
 URI_DRREG = pad.regex.Regex(
         r"(?P<key>\w*)\s+(?P<op>[\=\!\~]{1,2})\s+(?P<regex>/.*?/)")
@@ -78,4 +74,4 @@ class URIDetailPlugin(pad.plugins.base.BasePlugin):
     def parsed_metadata(self, msg):
         """Goes through the URIs, parse them and store them locally in the
         message"""
-        pad.html.html_parser.parsed_metadata(msg, self.ctxt)
+        pad.html_parser.parsed_metadata(msg, self.ctxt)
