@@ -136,9 +136,9 @@ class DKIMPlugin(pad.plugins.base.BasePlugin):
         if not self.dkim_signed:
             return False
         if not args:
-            return self._check_dkim_signed_by(msg, 0, 0, '')
-        for acceptable_domains in args:
-            result = self._check_dkim_signed_by(msg, 0, 0, acceptable_domains)
+            return True
+        for acceptable_domain in args:
+            result = self._check_dkim_signed_by(msg, 0, 0, acceptable_domain)
             if result:
                 return True
         return False
@@ -151,9 +151,9 @@ class DKIMPlugin(pad.plugins.base.BasePlugin):
         if not self.dkim_valid:
             return False
         if not args:
-            return self._check_dkim_signed_by(msg, 1, 0, '')
-        for acceptable_domains in args:
-            result = self._check_dkim_signed_by(msg, 1, 0, acceptable_domains)
+            return True
+        for acceptable_domain in args:
+            result = self._check_dkim_signed_by(msg, 1, 0, acceptable_domain)
             if result:
                 return True
         return False
@@ -166,9 +166,9 @@ class DKIMPlugin(pad.plugins.base.BasePlugin):
         if not self.dkim_has_valid_author_sig:
             return False
         if not args:
-            return self._check_dkim_signed_by(msg, 1, 1, '')
-        for acceptable_domains in args:
-            result = self._check_dkim_signed_by(msg, 1, 1, acceptable_domains)
+            return True
+        for acceptable_domain in args:
+            result = self._check_dkim_signed_by(msg, 1, 1, acceptable_domain)
             if result:
                 return True
         return False
@@ -226,8 +226,6 @@ class DKIMPlugin(pad.plugins.base.BasePlugin):
     def _check_dkim_signed_by(self, msg, must_be_valid,
                               must_be_author_domain_signature,
                               acceptable_domains=None):
-        if not acceptable_domains:
-            return True
         result = 0
         signature = msg.msg.get('DKIM-Signature', "")
         parsed_signature = dkim.util.parse_tag_value(signature.encode())

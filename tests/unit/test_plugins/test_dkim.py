@@ -425,10 +425,6 @@ class TestCheckSignature(unittest.TestCase):
                                                  'gmail.com')
         self.assertTrue(result)
 
-    def test_check_signed_by_no_acceptable_domains(self):
-        result = self.plug._check_dkim_signed_by(self.mock_msg, 1, 1)
-        self.assertTrue(result)
-
     def test_check_signed_by_not_valid(self):
         dkim_signature = "Signature"
         parsed_signature = {b'a': b'rsa-sha256',
