@@ -198,8 +198,6 @@ class RelayEval(pad.plugins.base.BasePlugin):
                 helo_host if helo_host else "(undef)",
                 by_host if by_host else "(undef)"
             ))
-            if not hostname_re.match(by_host):
-                continue
             if (ip_re.match(helo_host) and
                     ip_re.match(from_ip) and from_ip != helo_host):
                 try:

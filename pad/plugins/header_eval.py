@@ -176,10 +176,43 @@ class HeaderEval(pad.plugins.base.BasePlugin):
         return False
 
     def check_for_forged_juno_received_headers(self, msg, target=None):
+        from_addr = ''.join(msg.get_all_addr_header("From"))
+        if from_addr.rsplit("@", 1)[-1] != "juno.com":
+            return False
+        if self.gated_through_received_hdr_remover(msg):
+            return False
+        xorig = ''.join(msg.get_decoded_header("X-Originating-IP"))
+        xmailer = ''.join(msg.get_decoded_header(""))
+        rcvd = ''.join(msg.get_decoded_header("Received"))
+        if xorig != "":
+            juno_re = Regex(r"from.*\b(?:juno|untd)\.com.*"
+                            r"[\[\(]{0}[\]\)].*by".format(IP_ADDRESS.pattern), re.X)
+            cookie_re = Regex(r" cookie\.(?:juno|untd)\.com ")
+            if not juno_re.search(rcvd) and cookie_re.search(rcvd):
+                return True
+            if "Juno " not in xmailer:
+                return True
+        else:
+            mail_com_re = Regex(r"from.*\bmail\.com.*\[{}\].*by".format(
+                IP_ADDRESS.pattern), re.X)
+            untd_com_re = Regex(r"from (webmail\S+\.untd"
+                                r"\.com) \(\1 \[\d+.\d+.\d+.\d+\]\) by")
+            if mail_com_re.search(rcvd) and not Regex(r"\bmail\.com").search(
+                    xmailer):
+                return True
+            elif untd_com_re.search(rcvd) and not Regex(
+                    r"^Webmail Version \d").search(xmailer):
+                return True
         return False
 
     def check_for_matching_env_and_hdr_from(self, msg, target=None):
-        return False
+        from_addr = ''.join(msg.get_all_addr_header("From"))
+        envfrom = ""
+        for relay in msg.trusted_relays + msg.untrusted_relays:
+            if relay.get('envfrom'):
+                envfrom = relay.get('envfrom')
+                break
+        return from_addr == envfrom
 
     def sorted_recipients(self, msg, target=None):
         return False
@@ -196,6 +229,20 @@ class HeaderEval(pad.plugins.base.BasePlugin):
         return True
 
     def check_for_forged_gw05_received_headers(self, msg, target=None):
+        gw05_re = Regex(r"from\s(\S+)\sby\s(\S+)\swith\sESMTP\;\s+\S\S\S,"
+                        r"\s+\d+\s+\S\S\S\s+\d{4}\s+\d\d:\d\d:\d\d\s+[-+]*"
+                        r"\d{4}", re.X | re.I)
+        for rcv in msg.get_decoded_header("Received"):
+            h1 = ""
+            h2 = ""
+            try:
+                match = gw05_re.match(rcv)
+                if match:
+                    h1, h2 = match.groups()
+                if h1 and h2 and h2 != ".":
+                    return True
+            except IndexError:
+                continue
         return False
 
     def check_for_round_the_world_received_helo(self, msg, target=None):
@@ -284,6 +331,19 @@ class HeaderEval(pad.plugins.base.BasePlugin):
         return abs(timetocken - expected) >= 250
 
     def check_messageid_not_usable(self, msg, target=None):
+        list_unsubscribe = msg.msg.get("List-Unsubscribe")
+        print(list_unsubscribe)
+        if list_unsubscribe:
+            if re.search(r"<mailto:(?:leave-\S+|\S+-unsubscribe)\@\S+>$",
+                         list_unsubscribe):
+                return True
+        if self.gated_through_received_hdr_remover(msg):
+            return True
+        received = msg.msg.get("Received")
+        if re.search(r"/CWT/DCE\)", received):
+            return True
+        if re.search(r"iPlanet Messaging Server", received):
+            return True
         return False
 
     def check_header_count_range(self, msg, header, minr, maxr, target=None):
@@ -298,9 +358,25 @@ class HeaderEval(pad.plugins.base.BasePlugin):
         return int(minr) <= len(msg.get_raw_header(header)) <= int(maxr)
 
     def check_unresolved_template(self, msg, target=None):
+        message = msg.raw_msg
+        headers = message.split("\n")
+        for header in headers:
+            if re.search(r"%[A-Z][A-Z_-]", header) and not \
+                    re.search(r"^(?:x-vms-to|x-uidl|x-face|to|cc|from|subject|"
+                              r"references|in-reply-to|(?:x-|resent-|"
+                              r"x-original-)?message-id):", header.lower()):
+                return True
         return False
 
     def check_ratware_name_id(self, msg, target=None):
+        message_id = msg.msg.get("Message-Id")
+        from_header = msg.msg.get("From")
+        if not message_id and not from_header:
+            return False
+        regex = re.search(r"<[A-Z]{28}\.([^>]+?)>", message_id)
+        if regex:
+            if re.search(r"\"[^\"]+\"\s*<" + regex.group(1) + ">", from_header):
+                return True
         return False
 
     def check_ratware_envelope_from(self, msg, target=None):
@@ -309,7 +385,7 @@ class HeaderEval(pad.plugins.base.BasePlugin):
     def gated_through_received_hdr_remover(self, msg, target=None):
         """Check if the email is gated through ezmlm"""
         txt = ''.join(msg.get_decoded_header("Mailing-List"))
-        rcvd = ''.join(msg.get_decoded.header("Received"))
+        rcvd = ''.join(msg.get_decoded_header("Received"))
         if Regex(r"^contact \S+\@\S+\; run by ezmlm$").search(txt):
             dlto = ''.join(msg.get_decoded_header("Delivered-To"))
             mailing_list_re = Regex(r"^mailing list \S+\@\S+")
