@@ -2,12 +2,12 @@
 
 Check the data parsed from ReceivedParser against different rules.
 """
+import ipaddress
 
 import pad.plugins.base
 
 from pad.received_parser import IP_ADDRESS
 from pad.received_parser import IP_PRIVATE
-
 from pad.regex import Regex
 
 
@@ -151,8 +151,9 @@ class RelayEval(pad.plugins.base.BasePlugin):
                 continue
             helo = relay.get("helo")
             ip = relay.get("ip")
-            netmask_24 = Regex(r"(\d+\.\d+\.\d+\.)").match(helo).group()
-            if helo != ip and not ip.startswith(netmask_24):
+            netmask_24_helo = ipaddress.ip_network(helo).supernet(8)
+            netmask_24_ip = ipaddress.ip_network(ip).supernet(8)
+            if helo != ip and netmask_24_helo != netmask_24_ip:
                 return True
         return False
 
