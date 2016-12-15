@@ -62,7 +62,7 @@ Received: from 1.2.3.4 ([4.4.4.4]) by example.com with esmtps (ceva)"""
 
         self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG)
         result = self.check_pad(email)
-        self.check_report(result, 3, ['CHECK_FOR_FORGED_RECEIVED_IP_HELO', 'HELO_IP_MISSMATCH', 'CHECK_FOR_NUMERIC_HELO'])
+        self.check_report(result, 1, ['CHECK_FOR_NUMERIC_HELO'])
 
     def test_relay_check_for_helo_numeric_and_missmatch_positive(self):
 
@@ -72,13 +72,21 @@ Received: from 1.2.3.4 ([4.4.4.4]) by example.com with esmtps (ceva)"""
         result = self.check_pad(email)
         self.check_report(result, 2, ['HELO_IP_MISSMATCH', 'CHECK_FOR_NUMERIC_HELO'])
 
+    def test_relay_check_for_helo_numeric_missmatch_forged_different_16_positive(self):
+
+        email = """Received: from 4.2.4.4 ([4.4.4.4]) by example.com with esmtps (ceva)"""
+
+        self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG)
+        result = self.check_pad(email)
+        self.check_report(result, 3, ['HELO_IP_MISSMATCH', 'CHECK_FOR_NUMERIC_HELO', 'CHECK_FOR_FORGED_RECEIVED_IP_HELO'])
+
     def test_relay_helo_numeric_forged_and_missmatch_with_ipv6_different_16(self):
 
         email = """Received: from 2001:1af7:4700:a02d:2::1 ([2001:1af8:4700:a02d:2::1]) by example.com with esmtps (ceva)"""
 
         self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG)
         result = self.check_pad(email)
-        self.check_report(result, 1, [])
+        self.check_report(result, 0, [])
 
     def test_relay_helo_numeric_forged_and_missmatch_with_ipv6_different_24(self):
 
@@ -86,15 +94,7 @@ Received: from 1.2.3.4 ([4.4.4.4]) by example.com with esmtps (ceva)"""
 
         self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG)
         result = self.check_pad(email)
-        self.check_report(result, 2, ['HELO_IP_MISSMATCH', 'CHECK_FOR_NUMERIC_HELO'])
-
-    def test_relay_helo_numeric_forged_and_missmatch_with_ipv6_different_32(self):
-
-        email = """Received: from 2001:1af8:4700:a02c:2::1 ([2001:1af8:4700:a02d:2::1]) by example.com with esmtps (ceva)"""
-
-        self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG)
-        result = self.check_pad(email)
-        self.check_report(result, 3, ['CHECK_FOR_NUMERIC_HELO'])
+        self.check_report(result, 0, [])
 
     def test_relay_check_for_helo_missmatch_negative(self):
 
@@ -151,6 +151,18 @@ Received: from 1.2.3.4 ([4.4.4.4]) by example.com with esmtps (ceva)"""
                            """
 
         email = """Received: from 4.4.4.4 ([1.2.3.4]) by example.com with esmtps (ceva)"""
+
+        self.setup_conf(config=CONFIG + trusted_networks, pre_config=PRE_CONFIG)
+        result = self.check_pad(email)
+        self.check_report(result, 1, ['CHECK_ALL_TRUSTED'])
+
+    def test_relay_all_trusted_ip_helo_with_ipv6_positive(self):
+
+        trusted_networks = """
+                                trusted_networks 2001:1af8:4700:a02d:2::1
+                           """
+
+        email = """Received: from 1.2.3.4 ([2001:1af8:4700:a02d:2::1]) by example.com with esmtps (ceva)"""
 
         self.setup_conf(config=CONFIG + trusted_networks, pre_config=PRE_CONFIG)
         result = self.check_pad(email)
