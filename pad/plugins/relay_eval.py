@@ -49,7 +49,11 @@ class RelayEval(pad.plugins.base.BasePlugin):
     @staticmethod
     def _check_helo(relay):
         helo = relay.get("helo")
-        if helo and IP_ADDRESS.match(helo) and not IP_PRIVATE.match(helo):
+        try:
+            helo_ipv4 = ipaddress.IPv4Address(helo)
+        except ValueError:
+            helo_ipv4 = None
+        if helo and helo_ipv4 and not IP_PRIVATE.match(helo):
             return True
         return False
 
@@ -107,11 +111,12 @@ class RelayEval(pad.plugins.base.BasePlugin):
             - desired: 'true' or 'false' depends on the behavior
         """
         try:
-            from_addr = msg.get_addr_header("from")[0]
+            if domain not in [addr.rsplit("@", 1)[-1]
+                              for addr in msg.get_addr_header("from")]:
+                return False
         except IndexError:
-            from_addr = ''
-        if domain not in from_addr:
             return False
+
         for relay in msg.trusted_relays + msg.untrusted_relays:
             if domain in relay.get("rdns") and domain in relay.get("by"):
                 return desired == "true"
@@ -199,17 +204,16 @@ class RelayEval(pad.plugins.base.BasePlugin):
                 helo_host if helo_host else "(undef)",
                 by_host if by_host else "(undef)"
             ))
-            if (ip_re.match(helo_host) and
-                    ip_re.match(from_ip) and from_ip != helo_host):
-                try:
-                    hclassb = ip_re.match(helo_host).groups()[0]
-                except (AttributeError, IndexError):
-                    hclassb = ''
-                try:
-                    fclassb = ip_re.match(from_ip).groups()[0]
-                except (AttributeError, IndexError):
-                    fclassb = ''
-                if (hclassb and fclassb and hclassb != fclassb and
+            try:
+                ip_netmask_16 = ipaddress.IPv4Network(from_ip).supernet(16)
+            except ValueError:
+                ip_netmask_16 = ""
+            try:
+                helo_netmask_16 = ipaddress.IPv4Network(helo_host).supernet(16)
+            except ValueError:
+                helo_netmask_16 = ""
+            if ip_netmask_16 and helo_netmask_16 and from_ip != helo_host:
+                if (ip_netmask_16 != helo_netmask_16 and
                         not IP_PRIVATE.match(helo_host)):
                     self.ctxt.log.debug("eval: forged-HELO: massive mismatch "
                                         "on IP-addr HELO: %s != %s" %
