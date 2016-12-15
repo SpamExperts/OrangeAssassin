@@ -11,7 +11,7 @@ except ImportError:
 
 
 import pad.plugins.base
-from pad.plugins.uri_detail import HTML, URIDetailPlugin
+import pad.html_parser
 from pad.regex import Regex
 
 
@@ -52,7 +52,7 @@ class URIEvalPlugin(pad.plugins.base.BasePlugin):
         if in anchor text we have an uri without ip.
         """
         if not hasattr(msg, "uri_detail_links"):
-            URIDetailPlugin.parsed_metadata(msg)
+            pad.html_parser.parsed_metadata(msg, self.ctxt)
         for key in msg.uri_detail_links:
             type = msg.uri_detail_links[key].get("type", None)
             if type in ("a", "link"):
@@ -76,7 +76,7 @@ class URIEvalPlugin(pad.plugins.base.BasePlugin):
                 urls_list.append(value)
         return urls_list
 
-    def match_uri_truncatred(self, key, uri_list, uri_details):
+    def match_uri_truncated(self, key, uri_list, uri_details):
         """Returns True if the uri length from href attribute is
         greater than uri length from anchor text.
         """
@@ -92,7 +92,7 @@ class URIEvalPlugin(pad.plugins.base.BasePlugin):
         """Checks if we have uri truncated in msg.
         """
         if not hasattr(msg, "uri_detail_links"):
-            URIDetailPlugin.parsed_metadata(msg)
+            pad.html_parser.parsed_metadata(msg, self.ctxt)
         for key in msg.uri_detail_links:
             type = msg.uri_detail_links[key].get("type", None)
             if type in ("a", "link"):
@@ -103,7 +103,7 @@ class URIEvalPlugin(pad.plugins.base.BasePlugin):
                 except KeyError:
                     return 0
 
-                if self.match_uri_truncatred(key, uri_list, uri_details):
+                if self.match_uri_truncated(key, uri_list, uri_details):
                     return 1
 
         return 0
