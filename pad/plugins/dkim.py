@@ -128,33 +128,50 @@ class DKIMPlugin(pad.plugins.base.BasePlugin):
                 return True
         return False
 
-    def check_dkim_signed(self, msg, acceptable_domains=None, target=None):
+    def check_dkim_signed(self, msg, *args, target=None):
         """Check if message has a DKIM signature, not necessarily valid.
         """
         if not self.dkim_checked_signature:
             self.check_dkim_signature(msg)
         if not self.dkim_signed:
             return False
-        return self._check_dkim_signed_by(msg, 0, 0, acceptable_domains)
+        if not args:
+            return self._check_dkim_signed_by(msg, 0, 0, '')
+        for acceptable_domains in args:
+            result = self._check_dkim_signed_by(msg, 0, 0, acceptable_domains)
+            if result:
+                return True
+        return False
 
-    def check_dkim_valid(self, msg, acceptable_domains=None, target=None):
+    def check_dkim_valid(self, msg, *args, target=None):
         """Check if message has at least one valid DKIM signature.
         """
         if not self.dkim_checked_signature:
             self.check_dkim_signature(msg)
         if not self.dkim_valid:
             return False
-        return self._check_dkim_signed_by(msg, 1, 0, acceptable_domains)
+        if not args:
+            return self._check_dkim_signed_by(msg, 1, 0, '')
+        for acceptable_domains in args:
+            result = self._check_dkim_signed_by(msg, 1, 0, acceptable_domains)
+            if result:
+                return True
+        return False
 
-    def check_dkim_valid_author_sig(self, msg, acceptable_domains=None,
-                                    target=None):
+    def check_dkim_valid_author_sig(self, msg, *args, target=None):
         """Check if message has a valid DKIM signature from author's domain.
         """
         if not self.dkim_checked_signature:
             self.check_dkim_signature(msg)
         if not self.dkim_has_valid_author_sig:
             return False
-        return self._check_dkim_signed_by(msg, 1, 1, acceptable_domains)
+        if not args:
+            return self._check_dkim_signed_by(msg, 1, 1, '')
+        for acceptable_domains in args:
+            result = self._check_dkim_signed_by(msg, 1, 1, acceptable_domains)
+            if result:
+                return True
+        return False
 
     def check_dkim_dependable(self, msg, target=None):
         if not self.dkim_checked_signature:
