@@ -133,15 +133,6 @@ class HeaderEval(pad.plugins.base.BasePlugin):
             return False
         return True
 
-    def word_is_in_dictionary(self, word):
-        """
-        See if the word looks like an English word, by checking if each triplet
-        of letters it contains is one that can be found in the English language.
-        Does not include triplets only found in proper names, or in the Latin
-        and Greek terms that might be found in a larger dictionary
-        """
-        return False
-
     def check_illegal_chars(self, msg, header, ratio, count, target=None):
         """look for 8-bit and other illegal characters that should be MIME
         encoded, these might want to exempt languages that do not use
@@ -267,7 +258,39 @@ class HeaderEval(pad.plugins.base.BasePlugin):
         return True
 
     def check_for_forged_yahoo_received_headers(self, msg, target=None):
-        return False
+        """Check for forged yahoo received headers"""
+        from_addr = ''.join(msg.get_all_addr_header("From"))
+        rcvd = ''.join(msg.get_decoded_header("Received"))
+        if from_addr.rsplit("@", 1)[-1] != "yahoo.com":
+            return False
+        if (msg.get_decoded_header("Resent-From") and
+                msg.get_decoded_header("Resent-To")):
+            xrcvd = ''.join(msg.get_decoded_header("X-Received"))
+            rcvd = xrcvd if xrcvd else rcvd
+
+        if self.gated_through_received_hdr_remover(msg):
+            return False
+        for relay in msg.untrusted_relays + msg.trusted_relays:
+            rdns = relay.get("rdns")
+            if rdns and "yahoo.com" in rdns:
+                return False
+        if Regex(r"by web\S+\.mail\S*\.yahoo\.com via HTTP").search(rcvd):
+            return False
+        if Regex(r"by smtp\S+\.yahoo\.com with SMTP").search(rcvd):
+            return False
+        yahoo_ip_re = Regex(
+            r"from \[{}\] by \S+\."
+            r"(?:groups|scd|dcn)\.yahoo\.com with NNFMP".format(
+                IP_ADDRESS.pattern), re.X)
+        if yahoo_ip_re.search(rcvd):
+            return False
+        if (Regex(r"\bmailer\d+\.bulk\.scd\.yahoo\.com\b").search(rcvd) and
+                    from_addr.rsplit("@", 1)[-1] == "reply.yahoo.com"):
+            return False
+        if Regex("by \w+\.\w+\.yahoo\.com \(\d+\.\d+\.\d+\/\d+\.\d+\.\d+\)"
+                 "(?: with ESMTP)? id \w+").search(rcvd):
+            return False
+        return True
 
     def check_for_forged_juno_received_headers(self, msg, target=None):
         from_addr = ''.join(msg.get_all_addr_header("From"))

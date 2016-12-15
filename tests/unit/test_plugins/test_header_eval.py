@@ -525,6 +525,71 @@ To: user@gmail.com
         result = self.plugin.check_for_unique_subject_id(self.mock_msg)
         self.assertTrue(result)
 
+    def test_check_for_forged_yahoo_received_headers_true(self):
+        from_addr = "test.example@yahoo.com"
+        received = ("from unknown (HELO mta05bw.bigpond.com) (80.71.176.130) "
+                    "by rly-xw01.mx.aol.com with QMQP; Sat, 15 Jun 2002 "
+                    "23:37:16 -0000")
+        resent_from = ""
+        resent_to = ""
+        xreceived = ""
+        self.mock_msg.get_all_addr_header.side_effect = [[from_addr]]
+        self.mock_msg.get_decoded_header.side_effect = [[received],
+                                                        [resent_from],
+                                                        [resent_to],
+                                                        [xreceived]]
+        patch(
+            "pad.plugins.header_eval.HeaderEval."
+            "gated_through_received_hdr_remover", return_value=False).start()
+        result = self.plugin.check_for_forged_yahoo_received_headers(self.mock_msg)
+        self.assertTrue(result)
+
+    def test_check_for_forged_yahoo_received_headers_not_yahoo(self):
+        from_addr = "test.example@example.com"
+        received = ("from unknown (HELO mta05bw.bigpond.com) (80.71.176.130) "
+                    "by rly-xw01.mx.aol.com with QMQP; Sat, 15 Jun 2002 "
+                    "23:37:16 -0000")
+        resent_from = ""
+        resent_to = ""
+        xreceived = ""
+        self.mock_msg.get_all_addr_header.side_effect = [[from_addr]]
+        self.mock_msg.get_decoded_header.side_effect = [[received],
+                                                        [resent_from],
+                                                        [resent_to],
+                                                        [xreceived]]
+        patch(
+            "pad.plugins.header_eval.HeaderEval."
+            "gated_through_received_hdr_remover", return_value=False).start()
+        result = self.plugin.check_for_forged_yahoo_received_headers(self.mock_msg)
+        self.assertFalse(result)
+
+    def test_check_for_forged_yahoo_received_headers_yahoo_real(self):
+        from_addr = "test.example@yahoo.com"
+        received = ("from omp1035.mail.bf1.yahoo.com (omp1035.mail.bf1.yahoo.com "
+                    "[98.139.212.226]) by mx9.webfaction.com (Postfix) with "
+                    "ESMTPS id 8B4514989194 for <b@aromaesti.ro>; "
+                    "Wed, 29 Oct 2014 10:11:29 +0000 (UTC)")
+        resent_from = "another@yahoo.com"
+        resent_to = "test@example.com"
+        xreceived = ""
+        self.mock_msg.get_all_addr_header.side_effect = [[from_addr]]
+        self.mock_msg.get_decoded_header.side_effect = [[received],
+                                                        [resent_from],
+                                                        [resent_to],
+                                                        [xreceived]]
+        self.mock_msg.trusted_relays = [{'intl': 0, 'auth': '',
+                                         'ident': '', 'ip': '98.139.212.226',
+                                         'helo': 'omp1035.mail.bf1.yahoo.com',
+                                         'rdns': 'omp1035.mail.bf1.yahoo.com',
+                                         'envfrom': '', 'id': '8B4514989194',
+                                         'by': 'mx9.webfaction.com', 'msa': 0}]
+        self.mock_msg.untrusted_relays = []
+        patch(
+            "pad.plugins.header_eval.HeaderEval."
+            "gated_through_received_hdr_remover", return_value=False).start()
+        result = self.plugin.check_for_forged_yahoo_received_headers(self.mock_msg)
+        self.assertFalse(result)
+
 
 class TestMessageId(TestHeaderEvalBase):
     def setUp(self):
