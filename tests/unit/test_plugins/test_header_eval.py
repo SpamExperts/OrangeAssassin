@@ -532,6 +532,9 @@ class TestMessageId(TestHeaderEvalBase):
         self.mock_gated = patch(
             "pad.plugins.header_eval.HeaderEval."
             "gated_through_received_hdr_remover").start()
+        self.mock_check_msn = patch(
+            "pad.plugins.header_eval.HeaderEval."
+            "check_for_msn_groups_headers").start()
 
     def test_check_messageid_not_usable_list_unsubscribe_true(self):
         self.mock_msg.msg.get.side_effect = [
@@ -575,4 +578,114 @@ for ; Sat, 18 Jun 2016 05:00:14 GMT"""]
         self.mock_gated.return_value = False
         result = self.plugin.check_messageid_not_usable(self.mock_msg)
         self.assertTrue(result)
+
+    def test_check_forged_hotmail(self):
+        self.mock_msg.msg.get.side_effect = [
+            """from hotmail.com (example.com [1.2.3.4])
+    by example.com
+    (envelope-from <example.com.user@something>)""",
+            "",
+            "user@hotmail.com"]
+        self.mock_check_msn.return_value = False
+        self.mock_gated.return_value = False
+        self.plugin._check_for_forged_hotmail_received_headers(
+            self.mock_msg)
+        self.assertEqual(self.plugin.hotmail_addr_with_forged_hotmail_received, 1)
+
+    def test_check_forged_hotmail_hotmail_addr(self):
+        self.mock_msg.msg.get.side_effect = [
+            """from example.com (example.com [1.2.3.4])
+    by example.com
+    (envelope-from <example.com.user@something>)""",
+            "",
+            "user@hotmail.com"]
+        self.mock_check_msn.return_value = False
+        self.mock_gated.return_value = False
+        self.plugin._check_for_forged_hotmail_received_headers(
+            self.mock_msg)
+        self.assertEqual(self.plugin.hotmail_addr_but_no_hotmail_received, 1)
+
+    def test_check_forged_hotmail_hotmail_addr_false(self):
+        self.mock_msg.msg.get.side_effect = [
+            """from example.com (example.com [1.2.3.4])
+    by example.com
+    (envelope-from <example.com.user@something>)""",
+            "",
+            "user@example.com"]
+        self.mock_check_msn.return_value = False
+        self.mock_gated.return_value = False
+        result = self.plugin._check_for_forged_hotmail_received_headers(
+            self.mock_msg)
+        self.assertFalse(result)
+
+    def test_check_forged_hotmail_false_pickup(self):
+        self.mock_msg.msg.get.side_effect = [
+            """from mail pickup service by hotmail.com with Microsoft SMTPSVC;"""]
+        result = self.plugin._check_for_forged_hotmail_received_headers(
+            self.mock_msg)
+        self.assertFalse(result)
+
+    def test_check_forged_hotmail_check_msn_true(self):
+        self.mock_msg.msg.get.side_effect = [
+            """from example.com (example.com [1.2.3.4])
+    by example.com
+    (envelope-from <example.com.user@something>)""",
+            "",
+            "user@example.com"""]
+        self.mock_check_msn.return_value = True
+        result = self.plugin._check_for_forged_hotmail_received_headers(
+            self.mock_msg)
+        self.assertFalse(result)
+
+    def test_check_forged_hotmail_false_gated_true(self):
+        self.mock_msg.msg.get.side_effect = [
+            """from example.com (example.com [1.2.3.4])
+    by example.com
+    (envelope-from <example.com.user@something>)""",
+            "[1.2.3.4]",
+            "user@example.com"""]
+        self.mock_check_msn.return_value = False
+        self.mock_gated.return_value = True
+        result = self.plugin._check_for_forged_hotmail_received_headers(
+            self.mock_msg)
+        self.assertFalse(result)
+
+    def test_check_forged_hotmail_originating_ip_regex1(self):
+        self.mock_msg.msg.get.side_effect = [
+            """from user.hotmail.com (user.hotmail.com)""",
+            "[1.2.3.4]",
+            "user@example.com"""]
+        self.mock_check_msn.return_value = False
+        result = self.plugin._check_for_forged_hotmail_received_headers(
+            self.mock_msg)
+        self.assertFalse(result)
+
+    def test_check_forged_hotmail_originating_ip_regex2(self):
+        self.mock_msg.msg.get.side_effect = [
+            """from example.hotmail.com ([1.2.3.4])""",
+            "[1.2.3.4]"]
+        self.mock_check_msn.return_value = False
+        result = self.plugin._check_for_forged_hotmail_received_headers(
+            self.mock_msg)
+        self.assertFalse(result)
+
+    def test_check_forged_hotmail_originating_ip_regex3(self):
+        self.mock_msg.msg.get.side_effect = [
+            """from example by example.hotmail.com with HTTP;""",
+            "[1.2.3.4]"]
+        self.mock_check_msn.return_value = False
+        result = self.plugin._check_for_forged_hotmail_received_headers(
+            self.mock_msg)
+        self.assertFalse(result)
+
+    def test_check_forged_hotmail_originating_ip_regex4(self):
+        self.mock_msg.msg.get.side_effect = [
+            """from [66.218.example] by example.yahoo.com""",
+            "[1.2.3.4]"]
+        self.mock_check_msn.return_value = False
+        result = self.plugin._check_for_forged_hotmail_received_headers(
+            self.mock_msg)
+        self.assertFalse(result)
+
+
 

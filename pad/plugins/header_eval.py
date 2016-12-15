@@ -16,6 +16,9 @@ from pad.received_parser import IP_ADDRESS
 
 
 class HeaderEval(pad.plugins.base.BasePlugin):
+    hotmail_addr_with_forged_hotmail_received = 0
+    hotmail_addr_but_no_hotmail_received = 0
+
     eval_rules = (
         "check_for_fake_aol_relay_in_rcvd",
         "check_for_faraway_charset_in_headers",
@@ -174,10 +177,49 @@ class HeaderEval(pad.plugins.base.BasePlugin):
         return (illegal / len(raw_str)) >= ratio and illegal >= count
 
     def check_for_forged_hotmail_received_headers(self, msg, target=None):
-        return False
+        self._check_for_forged_hotmail_received_headers(msg)
+        return self.hotmail_addr_with_forged_hotmail_received
 
     def check_for_no_hotmail_received_headers(self, msg, target=None):
-        return False
+        self._check_for_forged_hotmail_received_headers(msg)
+        return self.hotmail_addr_but_no_hotmail_received
+
+    def _check_for_forged_hotmail_received_headers(self, msg):
+        self.hotmail_addr_but_no_hotmail_received = 0
+        self.hotmail_addr_with_forged_hotmail_received = 0
+        rcvd = msg.msg.get("Received")
+        if re.search(r"from mail pickup service by hotmail"
+                     r"\.com with Microsoft SMTPSVC;", rcvd):
+            return False
+        if self.check_for_msn_groups_headers(msg):
+            return False
+        ip_header = msg.msg.get("X-ORIGINATING-IP")
+        if ip_header and IP_ADDRESS.search(ip_header):
+            if re.search(r"from (?:\S*\.)?hotmail.com \("
+                         r"\S+\.hotmail(?:\.msn)?\.com[ \)]", rcvd):
+                return False
+            # FETCHMAIL = Regex(
+            #     r"from \S*\.hotmail\.com "
+            #     r"\(\[{IP_ADDRESS}\][ \):]".format(
+            #         IP_ADDRESS=IP_ADDRESS.pattern), re.I)
+            # if FETCHMAIL.search(rcvd):
+            #     return False
+            if re.search(r"from \S+ by \S+\.hotmail(?:\.msn)?\.com with "
+                         r"HTTP\;", rcvd):
+                return False
+            if re.search(r"from \[66\.218.\S+\] by \S+\.yahoo\.com", rcvd):
+                return False
+        if self.gated_through_received_hdr_remover(msg):
+            return False
+
+        if re.search(r"(?:from |HELO |helo=)\S*hotmail\.com\b", rcvd):
+            self.hotmail_addr_with_forged_hotmail_received = 1
+        else:
+            from_address = msg.msg.get("From")
+            if not re.search(r"\bhotmail\.com$", from_address):
+                return False
+            self.hotmail_addr_but_no_hotmail_received = 1
+
 
     def check_for_msn_groups_headers(self, msg, target=None):
         """Check if the email's destination is a msn group"""
@@ -384,7 +426,6 @@ class HeaderEval(pad.plugins.base.BasePlugin):
 
     def check_messageid_not_usable(self, msg, target=None):
         list_unsubscribe = msg.msg.get("List-Unsubscribe")
-        print(list_unsubscribe)
         if list_unsubscribe:
             if re.search(r"<mailto:(?:leave-\S+|\S+-unsubscribe)\@\S+>$",
                          list_unsubscribe):
