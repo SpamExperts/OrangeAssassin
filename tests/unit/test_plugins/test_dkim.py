@@ -35,14 +35,16 @@ class TestGetHeader(unittest.TestCase):
         unittest.TestCase.tearDown(self)
         patch.stopall()
 
-    def get_resent_from_header(self, header):
+    @staticmethod
+    def get_resent_from_header(header):
         if header == "Resent-From":
             return ["addr1", "addr2"]
         elif header == "From":
             return ["address1", "address2", "address3"]
         return list()
 
-    def get_from_header(self, header):
+    @staticmethod
+    def get_from_header(header):
         if header == "From":
             return ["address1", "address2", "address3"]
 
@@ -605,7 +607,6 @@ class TestCheckSignature(unittest.TestCase):
 
         self.assertEqual((self.plug.dkim_valid, self.plug.dkim_signed,
                           self.plug.dkim_has_valid_author_sig), (0, 1, 0))
-
 
     def test_check_dkim_signature_uncorrect_signature_domain(self):
         message = "Message"
