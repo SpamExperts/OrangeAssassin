@@ -156,9 +156,12 @@ class RelayEval(pad.plugins.base.BasePlugin):
                 continue
             helo = relay.get("helo")
             ip = relay.get("ip")
-            netmask_24_helo = ipaddress.ip_network(helo).supernet(8)
-            netmask_24_ip = ipaddress.ip_network(ip).supernet(8)
-            if helo != ip and netmask_24_helo != netmask_24_ip:
+            netmask_24_helo = ipaddress.IPv4Network(helo).supernet(8)
+            try:
+                netmask_24_ip = ipaddress.IPv4Network(ip).supernet(8)
+            except ValueError:
+                netmask_24_ip = None
+            if helo != ip and netmask_24_ip and netmask_24_helo != netmask_24_ip:
                 return True
         return False
 
