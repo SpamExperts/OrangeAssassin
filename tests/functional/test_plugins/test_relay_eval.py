@@ -78,7 +78,7 @@ Received: from 1.2.3.4 ([4.4.4.4]) by example.com with esmtps (ceva)"""
 
         self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG)
         result = self.check_pad(email)
-        self.check_report(result, 3, ['CHECK_FOR_FORGED_RECEIVED_IP_HELO', 'HELO_IP_MISSMATCH', 'CHECK_FOR_NUMERIC_HELO'])
+        self.check_report(result, 1, [])
 
     def test_relay_helo_numeric_forged_and_missmatch_with_ipv6_different_24(self):
 
@@ -94,7 +94,7 @@ Received: from 1.2.3.4 ([4.4.4.4]) by example.com with esmtps (ceva)"""
 
         self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG)
         result = self.check_pad(email)
-        self.check_report(result, 1, ['CHECK_FOR_NUMERIC_HELO'])
+        self.check_report(result, 3, ['CHECK_FOR_NUMERIC_HELO'])
 
     def test_relay_check_for_helo_missmatch_negative(self):
 
