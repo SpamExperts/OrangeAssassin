@@ -9,7 +9,27 @@ Example usage
 
 .. code-block:: none
 
-    loadplugin      pad.plugins.dkim.DKIMPLugin
+    loadplugin      pad.plugins.dkim.DKIMPlugin
+
+    adsp_override example.com custom_high
+    whitelist_from_dkim user@example.com
+    def_whitelist_from_dkim  *@example.com example.com
+
+
+    full   DKIM_SIGNED           eval:check_dkim_signed("example.com")
+    full   DKIM_VALID            eval:check_dkim_valid("example.com")
+    full   DKIM_VALID_AU         eval:check_dkim_valid_author_sig('example.com')
+
+    header DKIM_ADSP_NXDOMAIN    eval:check_dkim_adsp('*', 'example.com')
+    header DKIM_ADSP_ALL         eval:check_dkim_adsp('A')
+    header DKIM_ADSP_DISCARD     eval:check_dkim_adsp('D')
+    header DKIM_ADSP_CUSTOM_LOW  eval:check_dkim_adsp('1')
+    header DKIM_ADSP_CUSTOM_MED  eval:check_dkim_adsp('2')
+    header DKIM_ADSP_CUSTOM_HIGH eval:check_dkim_adsp('3')
+
+    header USER_IN_DKIM_WL	eval:check_for_dkim_whitelist_from()
+    header USER_IN_DEF_DKIM_WL	eval:check_for_def_dkim_whitelist_from()
+
 
 Usage
 =====

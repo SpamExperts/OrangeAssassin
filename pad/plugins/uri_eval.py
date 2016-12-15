@@ -2,20 +2,17 @@
 
 from __future__ import absolute_import
 
-from html.parser import HTMLParser
-
 try:
     from urllib.parse import unquote
-    from urllib.parse import urlparse, urlsplit
+    from urllib.parse import urlparse
 except ImportError:
     from urllib import unquote
     from urlparse import urlparse
 
 
 import pad.plugins.base
-from pad.plugins.uri_detail import HTML
+from pad.plugins.uri_detail import HTML, URIDetailPlugin
 from pad.regex import Regex
-
 
 
 HTTP_REDIR = Regex(r'(^https?:\/\/[^\/:\?]+.+?)(https?:\/{0,2}?[^\/:\?]+.*)')
@@ -25,36 +22,20 @@ HTTPS = Regex(r'(https:)')
 
 
 class URIEvalPlugin(pad.plugins.base.BasePlugin):
+    """Implements the uri_eval rule
+        """
+
     eval_rules = ("check_for_http_redirector",
                   "check_https_ip_mismatch",
                   "check_uri_truncated"
                   )
 
-    def parse_link(self, value, linktype=""):
-        """ Returns a dictionary with information for the link"""
-        link = {}
-        link["raw"] = value
-        urlp = urlparse(value)
-        link["scheme"] = urlp.scheme
-        link["cleaned"] = unquote(value)
-        if linktype:
-            link["type"] = linktype
-        link["domain"] = urlp.netloc
-        return link
-
-    def parsed_metadata_uri(self, msg):
-        """Goes through the URIs, parse them and store them locally in the
-        message"""
-        parser = HTML(self.ctxt.log)
-        parser.feed(msg.raw_text)
-        for uri in msg.uri_list:
-            if uri in parser.links:
-                continue
-            link = self.parse_link(uri, "parsed")
-            parser.links[uri] = link
-        msg.uri_detail_links = parser.links
-
     def check_for_http_redirector(self, msg, target=None):
+        """Checks if the uri has been redirected.
+            -use HTTP_REDIR regex in order to extract the
+            destination domain and compare it with source
+            domain
+        """
         for uri in msg.uri_list:
             while HTTP_REDIR.match(uri):
                 h_redir = HTTP_REDIR.match(uri).groups()[0]
@@ -67,8 +48,11 @@ class URIEvalPlugin(pad.plugins.base.BasePlugin):
         return 0
 
     def check_https_ip_mismatch(self, msg, target=None):
+        """Checks if in <a> or <link> tags we have an ip and
+        if in anchor text we have an uri without ip.
+        """
         if not hasattr(msg, "uri_detail_links"):
-            self.parsed_metadata_uri(msg)
+            URIDetailPlugin.parsed_metadata(msg)
         for key in msg.uri_detail_links:
             type = msg.uri_detail_links[key].get("type", None)
             if type in ("a", "link"):
@@ -83,6 +67,9 @@ class URIEvalPlugin(pad.plugins.base.BasePlugin):
         return 0
 
     def extract_url_from_text(self, text):
+        """Parses anchor text from html tags in order to extract
+        a list with uri.
+        """
         urls_list = []
         for value in text.split():
             if HTTPS.match(value):
@@ -90,6 +77,9 @@ class URIEvalPlugin(pad.plugins.base.BasePlugin):
         return urls_list
 
     def match_uri_truncatred(self, key, uri_list, uri_details):
+        """Returns True if the uri length from href attribute is
+        greater than uri length from anchor text.
+        """
         if HTTPS.match(key) and len(uri_list) != 0:
             for uri in uri_list:
                 key_domain = urlparse(uri).netloc
@@ -99,8 +89,10 @@ class URIEvalPlugin(pad.plugins.base.BasePlugin):
         return False
 
     def check_uri_truncated(self, msg, target=None):
+        """Checks if we have uri truncated in msg.
+        """
         if not hasattr(msg, "uri_detail_links"):
-            self.parsed_metadata_uri(msg)
+            URIDetailPlugin.parsed_metadata(msg)
         for key in msg.uri_detail_links:
             type = msg.uri_detail_links[key].get("type", None)
             if type in ("a", "link"):

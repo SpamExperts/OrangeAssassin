@@ -45,6 +45,12 @@ class HeaderEval(pad.plugins.base.BasePlugin):
         "gated_through_received_hdr_remover",
     )
 
+    options = {
+        "util_rb_tld": ("append_split", []),
+        "util_rb_2tld": ("append_split", []),
+        "util_rb_3tld": ("append_split", [])
+    }
+
     def check_for_fake_aol_relay_in_rcvd(self, msg, target=None):
         """Check for common AOL fake received header."""
         for recv in msg.get_decoded_header("Received"):
@@ -379,7 +385,41 @@ class HeaderEval(pad.plugins.base.BasePlugin):
                 return True
         return False
 
+    def check_in_TL_TLDS(self, address):
+        if address in self["util_rb_tld"]:
+            return True
+        if address in self["util_rb_2tld"]:
+            return True
+        if address in self["util_rb_3tld"]:
+            return True
+        return False
+
+    def is_domain_valid(self, domain):
+        domain = domain.lower()
+        if re.search(r"\s", domain):
+            return False
+        parts = domain.split(".")
+        if len(parts) <= 1:
+            return False
+        elif not self.check_in_TL_TLDS(".".join(parts[1:])):
+            return False
+        return True
+
     def check_ratware_envelope_from(self, msg, target=None):
+        to_header = msg.msg.get("To")
+        envelope_from = msg.sender_address
+        if not to_header or not envelope_from:
+            return False
+        if re.search(r"^SRS\d=", envelope_from):
+            return False
+        regex = re.search(r"^([^@]+)@(.+)$", to_header)
+        if regex:
+            user = regex.group(1)
+            dom = regex.group(2)
+            if not self.is_domain_valid(dom):
+                return False
+            if re.search(r"\b" + dom + "." + user + "@", envelope_from):
+                return True
         return False
 
     def gated_through_received_hdr_remover(self, msg, target=None):

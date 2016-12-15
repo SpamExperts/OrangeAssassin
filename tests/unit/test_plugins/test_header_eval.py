@@ -25,6 +25,8 @@ class TestHeaderEval(unittest.TestCase):
         self.mock_ruleset = MagicMock()
         self.mock_locale = patch("pad.plugins.header_eval."
                                  "pad.locales.charset_ok_for_locales").start()
+        self.mock_is_domain_valid = patch("pad.plugins.header_eval."
+                                          "HeaderEval.is_domain_valid").start()
 
     def tearDown(self):
         unittest.TestCase.tearDown(self)
@@ -468,6 +470,40 @@ To: user@gmail.com
         self.mock_msg.get_decoded_header.side_effect = [[received]]
         result = self.plugin.check_for_forged_gw05_received_headers(self.mock_msg)
         self.assertTrue(result)
+
+    def test_check_ratware_envelope_from(self):
+        self.mock_msg.msg.get.side_effect = ["user@example.com"]
+        self.mock_msg.sender_address = "example.com.user@something"
+        self.mock_is_domain_valid.return_value = True
+        result = self.plugin.check_ratware_envelope_from(self.mock_msg)
+        self.assertTrue(result)
+
+    def test_check_ratware_envelope_from_SRS(self):
+        self.mock_msg.msg.get.side_effect = ["user@example.com"]
+        self.mock_msg.sender_address = "SRS5=example.com.user@something"
+        result = self.plugin.check_ratware_envelope_from(self.mock_msg)
+        self.assertFalse(result)
+
+    def test_check_ratware_envelope_from_invalid_domain(self):
+        self.mock_msg.msg.get.side_effect = ["user@examplecom"]
+        self.mock_msg.sender_address = "example.com.user@something"
+        self.mock_is_domain_valid.return_value = False
+        result = self.plugin.check_ratware_envelope_from(self.mock_msg)
+        self.assertFalse(result)
+
+    def test_check_ratware_envelope_from_no_to_header(self):
+        self.mock_msg.msg.get.side_effect = [""]
+        self.mock_msg.sender_address = "example.com.user@something"
+        result = self.plugin.check_ratware_envelope_from(self.mock_msg)
+        self.assertFalse(result)
+
+    def test_check_ratware_envelope_from_false(self):
+        self.mock_msg.msg.get.side_effect = ["user@example.com"]
+        self.mock_msg.sender_address = "user@example.com"
+        self.mock_is_domain_valid.return_value = True
+        result = self.plugin.check_ratware_envelope_from(self.mock_msg)
+        self.assertFalse(result)
+
 
 
 class TestMessageId(TestHeaderEval):
