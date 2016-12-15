@@ -9,7 +9,7 @@ except ImportError:
 import pad.plugins.header_eval
 
 
-class TestHeaderEval(unittest.TestCase):
+class TestHeaderEvalBase(unittest.TestCase):
     def setUp(self):
         unittest.TestCase.setUp(self)
         self.local_data = {}
@@ -31,6 +31,9 @@ class TestHeaderEval(unittest.TestCase):
     def tearDown(self):
         unittest.TestCase.tearDown(self)
         patch.stopall()
+
+
+class TestHeaderEval(TestHeaderEvalBase):
 
     def test_check_for_fake_aol_relay_in_rcvd_spam(self):
         header = ("from unknown (HELO mta05bw.bigpond.com) (80.71.176.130) "
@@ -504,9 +507,26 @@ To: user@gmail.com
         result = self.plugin.check_ratware_envelope_from(self.mock_msg)
         self.assertFalse(result)
 
+    def test_check_for_unique_subject_id(self):
+        subject = "This is an subject with -------ak2l4"
+        self.mock_msg.get_decoded_header.side_effect = [[subject]]
+        result = self.plugin.check_for_unique_subject_id(self.mock_msg)
+        self.assertTrue(result)
+
+    def test_check_for_unique_subject_id_case(self):
+        subject = "Invoice 45621 "
+        self.mock_msg.get_decoded_header.side_effect = [[subject]]
+        result = self.plugin.check_for_unique_subject_id(self.mock_msg)
+        self.assertFalse(result)
+
+    def test_check_for_unique_subject_id_regex3(self):
+        subject = "This is a test   :3ad41d421"
+        self.mock_msg.get_decoded_header.side_effect = [[subject]]
+        result = self.plugin.check_for_unique_subject_id(self.mock_msg)
+        self.assertTrue(result)
 
 
-class TestMessageId(TestHeaderEval):
+class TestMessageId(TestHeaderEvalBase):
     def setUp(self):
         super(TestMessageId, self).setUp()
         self.mock_gated = patch(

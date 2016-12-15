@@ -14,6 +14,7 @@ from pad.regex import Regex
 from pad.received_parser import IP_ADDRESS
 
 
+
 class HeaderEval(pad.plugins.base.BasePlugin):
     eval_rules = (
         "check_for_fake_aol_relay_in_rcvd",
@@ -91,6 +92,51 @@ class HeaderEval(pad.plugins.base.BasePlugin):
         return False
 
     def check_for_unique_subject_id(self, msg, target=None):
+        """Check if in subject appears an unique id"""
+        subject = "".join(msg.get_decoded_header("Subject"))
+        id = None
+        unique_id_re_list = [
+            r"[-_\.\s]{7,}([-a-z0-9]{4,})$",
+            r"\s{10,}(?:\S\s)?(\S+)$",
+            r"\s{3,}[-:\#\(\[]+([-a-z0-9]{4,})[\]\)]+$",
+            r"\s{3,}[-:\#]([a-z0-9]{5,})$",
+            r"[\s._]{3,}([^0\s._]\d{3,})$",
+            r"[\s._]{3,}\[(\S+)\]$",
+
+            # (7217vPhZ0-478TLdy5829qicU9-0@26) and similar
+            r"\(([-\w]{7,}\@\d+)\)$",
+            r"\b(\d{7,})\s*$",
+
+            # stuff at end of line after "!" or "?" is usually an id
+            r"[!\?]\s*(\d{4,}|\w+(-\w+)+)\s*$",
+
+            # 9095IPZK7-095wsvp8715rJgY8-286-28 and similar
+            # excluding 'Re:', etc and the first word
+            r"(?:\w{2,3}:\s)?\w+\s+(\w{7,}-\w{7,}(-\w+)*)\s*$",
+
+            # #30D7 and similar
+            r"\s#\s*([a-f0-9]{4,})\s*$"
+        ]
+        for rgx in unique_id_re_list:
+            match = Regex(rgx).search(subject)
+            if match:
+                id = match.group()
+                break
+        if not id:
+            return False
+        comercial_re = Regex(r"(?:item|invoice|order|number|confirmation)"
+                             r".{1,6}%s\s*$" % id, re.X | re.I)
+        if Regex(r"\d{5,}").search(id) and comercial_re.search(subject):
+            return False
+        return True
+
+    def word_is_in_dictionary(self, word):
+        """
+        See if the word looks like an English word, by checking if each triplet
+        of letters it contains is one that can be found in the English language.
+        Does not include triplets only found in proper names, or in the Latin
+        and Greek terms that might be found in a larger dictionary
+        """
         return False
 
     def check_illegal_chars(self, msg, header, ratio, count, target=None):
