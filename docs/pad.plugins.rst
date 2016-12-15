@@ -159,3 +159,11 @@ Plugin :mod:`dkim`
     :members:
     :undoc-members:
     :show-inheritance:
+
+Plugin :mod:`uri_eval`
+----------------------
+
+.. automodule:: pad.plugins.uri_eval
+    :members:
+    :undoc-members:
+    :show-inheritance:
