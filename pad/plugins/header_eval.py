@@ -375,7 +375,7 @@ class HeaderEval(pad.plugins.base.BasePlugin):
                 continue
             addresses.append(rcpt2)
 
-        if not len(addresses) >= self.tocc_similar_count:
+        if len(addresses) < self.tocc_similar_count:
             self.set_local(msg, "tocc_similar", 0)
             return
 
@@ -488,8 +488,6 @@ class HeaderEval(pad.plugins.base.BasePlugin):
         if not self.get_local(msg, "received_header_times"):
             self._get_received_header_times(msg)
         # to finish
-
-
 
     def check_for_shifted_date(self, msg, min=None, max=None, target=None):
         self._get_date_header_time(msg)
