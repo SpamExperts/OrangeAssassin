@@ -8,6 +8,8 @@ import email.header
 import email.utils
 import re
 import time
+import itertools
+import email.header
 
 import pad.locales
 import pad.plugins.base
@@ -18,6 +20,9 @@ from pad.regex import Regex
 class HeaderEval(pad.plugins.base.BasePlugin):
     hotmail_addr_with_forged_hotmail_received = 0
     hotmail_addr_but_no_hotmail_received = 0
+    tocc_sorted_count = 7
+    tocc_similar_count = 5
+    tocc_similar_length = 2
 
     eval_rules = (
         "check_for_fake_aol_relay_in_rcvd",
@@ -337,11 +342,79 @@ class HeaderEval(pad.plugins.base.BasePlugin):
                 break
         return from_addr == envfrom
 
-    def sorted_recipients(self, msg, target=None):
-        return False
+    def _parse_rcpt(self, addr):
+        user = addr[:self.tocc_similar_count]
+        try:
+            fqhn = addr.rsplit("@", 1)[0]
+        except IndexError:
+            fqhn = addr
+        host = fqhn[:self.tocc_similar_length]
+        return user, fqhn, host
 
-    def similar_recipients(self, msg, target=None):
-        return False
+    def _check_recipients(self, msg):
+        """Check for similar recipients addresses.
+
+        Return the ratio of possibly similar recipient of
+        the total number of possible combinations.
+        """
+        try:
+            return self.get_local(msg, "tocc_similar")
+        except KeyError:
+            pass
+
+        recipients = []
+        for header_name in ("To", "Cc", "Bcc", "ToCc"):
+            recipients.extend(msg.get_all_addr_header(header_name))
+
+        sorted_recipients = sorted(recipients)
+        self.set_local(msg, "tocc_sorted", sorted_recipients == recipients)
+        # Remove dupes IF they are next to each other
+        addresses = [recipients[0]]
+        for rcpt1, rcpt2 in zip(recipients, recipients[1:]):
+            if rcpt1 == rcpt2:
+                continue
+            addresses.append(rcpt2)
+
+        if not len(addresses) >= self.tocc_similar_count:
+            self.set_local(msg, "tocc_similar", 0)
+            return
+
+        hits = 0
+        combinations = 0
+        for rcpt1, rcpt2 in itertools.combinations(addresses, 2):
+            user1, fqhn1, host1 = self._parse_rcpt(rcpt1)
+            user2, fqhn2, host2 = self._parse_rcpt(rcpt2)
+            combinations += 1
+            if user1 == user2:
+                hits += 1
+            if host1 == host2 and fqhn1 != fqhn2:
+                hits += 1
+        ratio = hits / combinations
+        self.set_local(msg, "tocc_similar", ratio)
+        return ratio
+
+    def sorted_recipients(self, msg, target=None):
+        """Matches if the recipients are sorted"""
+        self._check_recipients(msg)
+        return self.get_local(msg, "tocc_sorted")
+
+    def similar_recipients(self, msg, minr=None, maxr=None,
+                           target=None):
+        """Matches if the similar recipients ratio is in the
+        specified .
+
+        :param minr: The minimum for the ratio
+        :param maxr: The maximum for the ratio
+        """
+        ratio = self._check_recipients(msg)
+        try:
+            return (
+                (minr is None or float(minr) < ratio) and
+                (maxr is None or ratio < float(maxr))
+            )
+        except (TypeError, ValueError):
+            return False
+
 
     def check_for_missing_to_header(self, msg, target=None):
         """Check if the To header is missing."""
