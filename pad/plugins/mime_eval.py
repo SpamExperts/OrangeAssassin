@@ -13,7 +13,7 @@ class MIMEEval(pad.plugins.base.BasePlugin):
         "check_for_mime_html",
         "check_for_mime_html_only",
         "check_mime_multipart_ratio",
-        # "check_msg_parse_flags",
+        "check_msg_parse_flags",
         "check_for_ascii_text_illegal",
         "check_abundant_unicode_ratio",
         "check_for_faraway_charset",
@@ -25,6 +25,13 @@ class MIMEEval(pad.plugins.base.BasePlugin):
 
     options = {
         "ok_locales": ("string", "all"),
+    }
+
+    parse_flags = {
+        "missing_mime_head_body_separator",
+        "mime_epilogue_exists",
+        "missing_mime_headers",
+        "truncated_headers",
     }
 
     mime_checks = {
@@ -41,7 +48,7 @@ class MIMEEval(pad.plugins.base.BasePlugin):
         "mime_qp_long_line": False,
         "mime_qp_ratio": 0,
         "mime_ascii_text_illegal": False,
-        "mime_txt_unicode_ratio": 0,
+        "mime_text_unicode_ratio": 0,
         "mime_bad_iso_charset": False,
     }
 
@@ -105,6 +112,11 @@ class MIMEEval(pad.plugins.base.BasePlugin):
         text_count = self.get_local(msg, "mime_body_text_count")
         self.set_local(msg, "mime_body_text_count", text_count + 1)
         if part.get_content_subtype() == "plain":
+            plain_characters_count = self.get_local(msg, "plain_characters_count")
+            self.set_local(msg, "plain_characters_count",
+                           plain_characters_count + len(text))
+            # XXX it may be easier to encode/decode ascii with ignore and keep
+            # XXX the difference
             ascii_count = self.get_local(msg, "ascii_count")
             ascii_count += sum(1 for c in text if ord(c) < 128)
             unicode_count = self.get_local(msg, "unicode_count")
@@ -127,7 +139,10 @@ class MIMEEval(pad.plugins.base.BasePlugin):
         self.set_local(msg, "mime_ma_non_text", False)
         self.set_local(msg, "base64_length", 0)
         self.set_local(msg, "ascii_count", 0)
+        self.set_local(msg, "plain_characters_count", 0)
+        self.set_local(msg, "html_characters_count", 0)
         self.set_local(msg, "unicode_count", 0)
+
 
     def extract_metadata(self, msg, payload, text, part):
 
@@ -145,6 +160,8 @@ class MIMEEval(pad.plugins.base.BasePlugin):
         if part.get_content_subtype() == "html":
             html_count = self.get_local(msg, "mime_body_html_count")
             self.set_local(msg, "mime_body_html_count", html_count + 1)
+            html_characters_count = self.get_local(msg, "html_characters_count")
+            self.set_local(msg, "html_characters_count", html_characters_count + 1)
 
         if part.get_content_type() == "text/plain":
             self._update_mime_text_info(msg, part, text)
@@ -163,8 +180,8 @@ class MIMEEval(pad.plugins.base.BasePlugin):
         self._update_faraway_charset(msg, charset)
 
     def parsed_metadata(self, msg):
-        html_count = self.get_local(msg, "mime_body_html_count")
-        text_count = self.get_local(msg, "mime_body_text_count")
+        html_count = self.get_local(msg, "html_characters_count")
+        text_count = self.get_local(msg, "plain_characters_count")
         if html_count and text_count:
             self.set_local(msg, "mime_multipart_ratio",
                            text_count / html_count)
@@ -176,7 +193,7 @@ class MIMEEval(pad.plugins.base.BasePlugin):
                            unicode_count / ascii_count)
 
     def check_for_mime(self, msg, test, target=None):
-        """Checks for a mime var from the following:
+        """Checks for one of the the following metadata:
           mime_base64_count: Number of base64 parts in the email
           mime_base64_encoded_text: Number of base64 encoded text parts
           mime_body_html_count: Number of html parts
@@ -189,7 +206,7 @@ class MIMEEval(pad.plugins.base.BasePlugin):
           mime_qp_long_line: Quoted printable line over 79
           mime_qp_ratio: quoted printable count / bytes
           mime_ascii_text_illegal:
-          mime_txt_unicode_ratio":
+          mime_text_unicode_ratio":
         """
 
         if test not in self.mime_checks.keys():
@@ -198,19 +215,40 @@ class MIMEEval(pad.plugins.base.BasePlugin):
         return self.get_local(msg, test)
 
     def check_for_mime_html(self, msg, target=None):
-        """True if at least part of the message is html"""
+        """True if at least one part of the message is text/html"""
         return bool(self.get_local(msg, "mime_body_html_count"))
 
     def check_for_mime_html_only(self, msg, target=None):
-        """True if message has html and not text"""
+        """True if message has html parts and no text parts"""
         has_html = bool(self.get_local(msg, "mime_body_html_count"))
         has_text = bool(self.get_local(msg, "mime_body_text_count"))
         return has_html and not has_text
 
-    def check_msg_parse_flags(self, msg, target=None):
+    def check_msg_parse_flags(self, msg, flag, target=None):
         """Checks the value of flags added when parsing the msssage.
-        eg. """
-        pass
+        The following flags are allowed
+         - missing_mime_head_body_separator: There is no newline after the header
+         - missing_mime_headers: if the line after the opening boundary isn't a
+          header, flag it
+         - truncated_headers: if any header name is over 512 or any header
+         value is over 8192
+         - mime_epilogue_exists: The message has an epilogue
+        """
+
+        if flag == "missing_mime_head_body_separator":
+            pass
+
+        if flag == "missing_mime_headers":
+            pass
+
+        if flag == "truncated_headers":
+            # we don't truncate the headers
+            return self.get("truncated_headers", False)
+
+        if flag == 'mime_epilogue_exists':
+            return bool(msg.epilogue)
+
+        return False
 
     def check_for_faraway_charset(self, msg, target=None):
         return bool(self.get_local(msg, "mime_faraway_charset"))
@@ -227,35 +265,85 @@ class MIMEEval(pad.plugins.base.BasePlugin):
 
     def check_mime_multipart_ratio(self, msg, min_ratio, max_ratio,
                                    target=None):
+        """
+        Checks the ratio of text/plain characters to text/html characters
+        :param msg:
+        :param min_ratio:
+        :param max_ratio:
+        :param target:
+        :return: bool
+        """
         min_ratio = float(min_ratio)
         max_ratio = float(max_ratio)
         ratio = self.get_local(msg, "mime_multipart_ratio")
-        return min_ratio <= ratio < max_ratio
+        return float(min_ratio) <= ratio < float(max_ratio)
 
-    def check_base64_length(self, msg, min_length, max_length=None,
+    def check_base64_length(self, msg, min_length, max_length='inf',
                             target=None):
+        """
+        Checks if there is any base64 encoded lines that above or below the
+        given parameters
+        :param min_length: Below this number they will return true
+        :param max_length: (Optional) above this number it will reutrn true
+        :return: bool
+        """
         base64_length = self.get_local(msg, "base64_length")
-
-        if max_length:
-            return min_length <= base64_length <= max_length
-        return min_length <= base64_length
+        return float(min_length) <= base64_length <= float(max_length)
 
     def check_ma_non_text(self, msg, target=None):
+        """
+        Checks to see if an email with multipart alternative is missing a
+        text like alternative like application/rtf or text/*
+        """
         return self.get_local(msg, "mime_ma_non_text")
 
     def check_for_ascii_text_illegal(self, msg, target=None):
+        """
+        If a MIME part claims to be text/plain or text/plain;charset=us-ascii
+        and the Content-Transfer-Encoding is 7bit (either explicitly or
+        by default), then we should enforce the actual text being only TAB, NL,
+        SPACE through TILDE, i.e. all 7bit characters excluding
+        NO-WS-CTL (per RFC-2822).
+        :param msg:
+        :param target:
+        :return:
+        """
         return self.get_local(msg, "mime_ascii_text_illegal")
 
-    def check_abundant_unicode_ratio(self, msg, min_ratio, max_ratio=None,
+    def check_abundant_unicode_ratio(self, msg, min_ratio, max_ratio="inf",
                                      target=None):
-        ratio = self.get_local(msg, "abundant_unicode_ratio")
-        if max_ratio:
-            return min_ratio <= ratio <= max_ratio
-        return min_ratio <= ratio
+        """A MIME part claiming to be text/plain and containing Unicode
+        characters must be encoded as quoted-printable or base64, or use UTF
+        data coding (typically with 8bit encoding).  Any message in 7bit or
+        8bit encoding containing (HTML) Unicode entities will not render them
+        as Unicode, but literally.
 
-    def check_qp_ratio(self, msg, min_ratio, max_ratio=None, target=None):
+        Thus a few such sequences might occur on a mailing list of
+        developers discussing such characters, but a message with a high
+        density of such characters is likely spam.
+
+        :param msg:
+        :param min_ratio:
+        :param max_ratio:
+        :param target:
+        :return:
+        """
+
+
+        ratio = self.get_local(msg, "mime_text_unicode_ratio")
+        return float(min_ratio) <= ratio <= float(max_ratio)
+
+    def check_qp_ratio(self, msg, min_ratio, max_ratio="inf", target=None):
+        """
+        Takes a min ratio to use in eval to see if there is an spamminess to
+        the ratio of quoted printable to total bytes in an email.
+
+        :param msg:
+        :param min_ratio:
+        :param max_ratio:
+        :param target:
+        :return:
+        """
 
         ratio = self.get_local(msg, "qp_ratio")
-        if max_ratio:
-            return min_ratio <= ratio <= max_ratio
-        return min_ratio <= ratio
+        return float(min_ratio) <= ratio <= float(max_ratio)
