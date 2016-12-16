@@ -42,6 +42,8 @@ Available plugins
     pad.plugins.razor2
     pad.plugins.spam_cop
     pad.plugins.free_mail
+    pad.plugins.dkim
+    pad.plugins.uri_eval
 
 
 Plugin reference
