@@ -1,18 +1,18 @@
 """Expose some eval rules that do checks on the headers."""
 
-from __future__ import division
 from __future__ import absolute_import
+from __future__ import division
 
+import datetime
+import email.header
+import email.utils
 import re
 import time
-import email.header
 
 import pad.locales
 import pad.plugins.base
-
-from pad.regex import Regex
 from pad.received_parser import IP_ADDRESS
-
+from pad.regex import Regex
 
 
 class HeaderEval(pad.plugins.base.BasePlugin):
@@ -54,6 +54,12 @@ class HeaderEval(pad.plugins.base.BasePlugin):
         "util_rb_2tld": ("append_split", []),
         "util_rb_3tld": ("append_split", [])
     }
+
+    def check_star(self, msg):
+        self.set_local(msg, "date_diff", None)
+        self.set_local(msg, "date_header_time", None)
+        self.set_local(msg, "received_header_times", None)
+        self.set_local(msg, "received_fetchmail_time", None)
 
     def check_for_fake_aol_relay_in_rcvd(self, msg, target=None):
         """Check for common AOL fake received header."""
@@ -368,7 +374,59 @@ class HeaderEval(pad.plugins.base.BasePlugin):
     def check_for_round_the_world_received_revdns(self, msg, target=None):
         return False
 
-    def check_for_shifted_date(self, msg, target=None):
+    def _get_date_header_time(self, msg):
+        resent_date = msg.get_decoded_header('Resent-Date')
+        date = msg.get_decoded_header('Date')
+        # ValueError if we pass invalid time to mktime
+        date_time = None
+        for header in ["Resent-Date", "Date"]:
+            dates = msg.get_decoded_header(header)
+            for date in dates:
+                try:
+                    parsed_date = email.utils.parsedate(date)
+                    time_in_seconds = time.mktime(parsed_date)
+                    date_time = datetime.datetime.utcfromtimestamp(
+                        time_in_seconds)
+                except ValueError:
+                    pass
+                if date_time:
+                    break
+        if date_time:
+            self.set_local(msg, "date_header_time", date_time)
+        else:
+            self.set_local(msg, "date_header_time", -1)
+
+
+    def _get_received_header_times(self, msg):
+        self.set_local(msg, "received_header_times", list())
+        received = msg.get_decoded_header("Received")
+        if len(received) == 0:
+            return
+        # handle fetchmail headers
+        # to finish
+        pass
+
+    def _check_date_diff(self, msg):
+        self.set_local(msg, "date_diff", 0)
+        if not self.get_local(msg, "date_header_time"):
+            self._get_date_header_time(msg)
+        if self.get_local(msg, "date_header_time") == -1:
+            return
+        if not self.get_local(msg, "received_header_times"):
+            self._get_received_header_times(msg)
+        # to finish
+
+
+
+    def check_for_shifted_date(self, msg, min=None, max=None, target=None):
+        self._get_date_header_time(msg)
+        # if not self.get_local(msg, "date_diff"):
+        #     self._check_date_diff(msg)
+        # ret_val_min = not min or self.get_local(msg, "date_diff") < \
+        #                          (3600 * min)
+        # ret_val_max = not max or self.get_local(msg, "date_diff") >= \
+        #                         (3600 * max)
+        # return ret_val_min and ret_val_max
         return False
 
     def subject_is_all_caps(self, msg, target=None):
