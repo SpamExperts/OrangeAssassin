@@ -115,6 +115,8 @@ class DKIMPlugin(pad.plugins.base.BasePlugin):
             self.check_dkim_signature(msg)
         if self.dkim_valid:
             return False
+        if len(self["adsp_override"]) > 3:
+            return False
         parsed_adsp_override = self.parse_input("adsp_override")
         for author in self.author_domains:
             if domains_list and domains_list.encode() != author:
@@ -124,11 +126,14 @@ class DKIMPlugin(pad.plugins.base.BasePlugin):
                     return True
             if adsp_char == "*":
                 return True
-            if self.adsp_options[adsp_char] == parsed_adsp_override[author].lower():
-                return True
+            try:
+                if self.adsp_options[adsp_char] == parsed_adsp_override[author].lower():
+                    return True
+            except KeyError:
+                return False
         return False
 
-    def check_dkim_signed(self, msg, *args, target=None):
+    def check_dkim_signed(self, msg, target=None, *args):
         """Check if message has a DKIM signature, not necessarily valid.
         """
         if not self.dkim_checked_signature:
@@ -143,7 +148,7 @@ class DKIMPlugin(pad.plugins.base.BasePlugin):
                 return True
         return False
 
-    def check_dkim_valid(self, msg, *args, target=None):
+    def check_dkim_valid(self, msg, target=None, *args):
         """Check if message has at least one valid DKIM signature.
         """
         if not self.dkim_checked_signature:
@@ -158,7 +163,7 @@ class DKIMPlugin(pad.plugins.base.BasePlugin):
                 return True
         return False
 
-    def check_dkim_valid_author_sig(self, msg, *args, target=None):
+    def check_dkim_valid_author_sig(self, msg, target=None, *args):
         """Check if message has a valid DKIM signature from author's domain.
         """
         if not self.dkim_checked_signature:
@@ -285,7 +290,6 @@ class DKIMPlugin(pad.plugins.base.BasePlugin):
         except dkim.MessageFormatError:
             self.dkim_valid = 0
             self.dkim_has_valid_author_sig = 0
-            self.dkim_signatures_dependable = 0
         except dkim.ValidationError:
             self.dkim_valid = 0
             self.dkim_has_valid_author_sig = 0
