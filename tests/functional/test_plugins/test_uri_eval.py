@@ -31,6 +31,81 @@ class TestFunctionalURIEval(tests.util.TestBase):
         result = self.check_pad(email)
         self.check_report(result, 1, ['CHECK_FOR_HTTP_REDIRECTOR'])
 
+    def test_check_for_http_redirector_same_address(self):
+
+        email = """From: sender@example.com
+\nhttp://google.com=https://google.com""" 
+
+        self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG)
+        result = self.check_pad(email)
+        self.check_report(result, 0, [])
+
+    def test_check_for_http_redirector_inverted_commas(self):
+
+        email = """From: sender@example.com
+\nhttp://utility.'baidu'.com/traf/click.php?id=215&url=https://log0.wordpress.com""" 
+
+        self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG)
+        result = self.check_pad(email)
+        self.check_report(result, 1, ['CHECK_FOR_HTTP_REDIRECTOR'])
+
+    def test_check_for_http_redirector_inverted_commas_on_all_address(self):
+
+        email = """From: sender@example.com
+\nhttp://'utility.baidu.com/traf/click.php?id=215&url'=https://log0.wordpress.com""" 
+
+        self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG)
+        result = self.check_pad(email)
+        self.check_report(result, 1, ['CHECK_FOR_HTTP_REDIRECTOR'])
+
+    def test_check_for_http_redirector_inverted_commas_left_and_right(self):
+
+        email = """From: sender@example.com
+\nhttp://'utility.baidu.com/traf/click.php?id=215&url'=https://'log0.wordpress.com'""" 
+
+        self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG)
+        result = self.check_pad(email)
+        self.check_report(result, 1, ['CHECK_FOR_HTTP_REDIRECTOR'])
+
+    def test_check_for_http_redirector_in_a_label_unclosed_commas(self):
+
+        email = """From: sender@example.com
+\n<html>
+Dear user,
+Your account has been limited please follow the instructions on the next link:
+<a href="http://utility.baidu.com/traf/click.php?id=215&url=https://log0.wordpress.com></a>
+</html>""" 
+
+        self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG)
+        result = self.check_pad(email)
+        self.check_report(result, 0, [])
+
+    def test_check_for_http_redirector_in_a_label_closed_commas(self):
+
+        email = """From: sender@example.com
+\n<html>
+Dear user,
+Your account has been limited please follow the instructions on the next link:
+<a href="http://utility.baidu.com/traf/click.php?id=215&url=https://log0.wordpress.com"></a>
+</html>""" 
+
+        self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG)
+        result = self.check_pad(email)
+        self.check_report(result, 1, ['CHECK_FOR_HTTP_REDIRECTOR'])
+
+    def test_check_for_http_redirector_in_a_label_no_commas(self):
+
+        email = """From: sender@example.com
+\n<html>
+Dear user,
+Your account has been limited please follow the instructions on the next link:
+<a href=http://utility.baidu.com/traf/click.php?id=215&url=https://log0.wordpress.com></a>
+</html>""" 
+
+        self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG)
+        result = self.check_pad(email)
+        self.check_report(result, 1, ['CHECK_FOR_HTTP_REDIRECTOR'])
+
     def test_check_for_http_redirector_links_combined(self):
 
         email = """From: sender@example.com
@@ -108,6 +183,123 @@ Your account has been limited http://utility.baidu.com/traf/click.php?id=215&url
         result = self.check_pad(email)
         self.check_report(result, 2, ['CHECK_HTTPS_IP_MISMATCH', 'CHECK_FOR_HTTP_REDIRECTOR'])
 
+    def test_check_for_https_ip_mismatch_and_redirector_in_a_label(self):
+
+        email = """From: sender@example.com
+\n<html>
+Dear user,
+Your account has been limited please follow the instructions on the next link:
+<a href="http://google.com=https://log0.wordpress.com/">https://ceva.com/</a>
+</html>""" 
+
+        self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG)
+        result = self.check_pad(email)
+        self.check_report(result, 1, ['CHECK_FOR_HTTP_REDIRECTOR'])
+
+    def test_check_for_https_ip_mismatch_and_redirector_in_a_label_with_invalid_expression(self):
+
+        email = """From: sender@example.com
+\n<html>
+Dear user,
+Your account has been limited please follow the instructions on the next link:
+<a href="http://@1.2.3.4=https://log0.wordpress.com/">https://ceva.com/</a>
+</html>""" 
+
+        self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG)
+        result = self.check_pad(email)
+        self.check_report(result, 1, ['CHECK_FOR_HTTP_REDIRECTOR'])
+
+    def test_check_for_https_ip_mismatch_and_redirector_in_a_label_with_commas_on_ip(self):
+
+        email = """From: sender@example.com
+\n<html>
+Dear user,
+Your account has been limited please follow the instructions on the next link:
+<a href="http://'1.2.3.4'=https://log0.wordpress.com/">https://ceva.com/</a>
+</html>""" 
+
+        self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG)
+        result = self.check_pad(email)
+        self.check_report(result, 1, ['CHECK_FOR_HTTP_REDIRECTOR'])
+
+    def test_check_for_https_ip_mismatch_and_redirector_in_a_label_ip_left(self):
+
+        email = """From: sender@example.com
+\n<html>
+Dear user,
+Your account has been limited please follow the instructions on the next link:
+<a href="http://1.2.3.4=https://log0.wordpress.com/">https://ceva.com/</a>
+</html>""" 
+
+        self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG)
+        result = self.check_pad(email)
+        self.check_report(result, 2, ['CHECK_HTTPS_IP_MISMATCH', 'CHECK_FOR_HTTP_REDIRECTOR'])
+
+    def test_check_for_https_ip_mismatch_and_redirector_in_link_label_same_address(self):
+
+        email = """From: sender@example.com
+\n<html>
+Dear user,
+Your account has been limited please follow the instructions on the next link:
+<link rel=parent href="http://log0.wordpress.com=https://log0.wordpress.com/">
+</html>""" 
+
+        self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG)
+        result = self.check_pad(email)
+        self.check_report(result, 0, [])
+
+    def test_check_for_https_ip_mismatch_and_redirector_in_link_label(self):
+
+        email = """From: sender@example.com
+\n<html>
+Dear user,
+Your account has been limited please follow the instructions on the next link:
+<link href="http://google.com=https://log0.wordpress.com/">https://ceva.com/</link>
+</html>""" 
+
+        self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG)
+        result = self.check_pad(email)
+        self.check_report(result, 1, ['CHECK_FOR_HTTP_REDIRECTOR'])
+
+    def test_check_for_https_ip_mismatch_and_redirector_in_link_label_with_invalid_expression(self):
+
+        email = """From: sender@example.com
+\n<html>
+Dear user,
+Your account has been limited please follow the instructions on the next link:
+<link href="http://@1.2.3.4=https://log0.wordpress.com/">https://ceva.com/</link>
+</html>""" 
+
+        self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG)
+        result = self.check_pad(email)
+        self.check_report(result, 1, ['CHECK_FOR_HTTP_REDIRECTOR'])
+
+    def test_check_for_https_ip_mismatch_and_redirector_in_link_label_with_commas_on_ip(self):
+
+        email = """From: sender@example.com
+\n<html>
+Dear user,
+Your account has been limited please follow the instructions on the next link:
+<link href="http://'1.2.3.4'=https://log0.wordpress.com/">https://ceva.com/</link>
+</html>""" 
+
+        self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG)
+        result = self.check_pad(email)
+        self.check_report(result, 1, ['CHECK_FOR_HTTP_REDIRECTOR'])
+
+    def test_check_for_https_ip_mismatch_and_redirector_in_link_label_ip_left(self):
+
+        email = """From: sender@example.com
+\n<html>
+Dear user,
+Your account has been limited please follow the instructions on the next link:
+<link href="http://1.2.3.4=https://log0.wordpress.com/">https://ceva.com/</link>
+</html>""" 
+
+        self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG)
+        result = self.check_pad(email)
+        self.check_report(result, 1, ['CHECK_FOR_HTTP_REDIRECTOR'])
+
     def test_check_for_https_ip_mismatch_domains(self):
 
         email = """From: sender@example.com
@@ -115,6 +307,19 @@ Your account has been limited http://utility.baidu.com/traf/click.php?id=215&url
 Dear user,
 Your account has been limited please follow the instructions on the next link:
 <a href="http://google.com/">https://www.google.com/</a>
+</html>""" 
+
+        self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG)
+        result = self.check_pad(email)
+        self.check_report(result, 0, [])
+
+    def test_check_for_https_ip_mismatch_domains_incomplete_right(self):
+
+        email = """From: sender@example.com
+\n<html>
+Dear user,
+Your account has been limited please follow the instructions on the next link:
+<a href="http://google.com/"> cevatest https://ceva/</a>
 </html>""" 
 
         self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG)
@@ -212,6 +417,97 @@ Your account has been limited please follow the instructions on the next link:
         result = self.check_pad(email)
         self.check_report(result, 0, [])
 
+    def test_check_for_https_ip_mismatch_no_domain(self):
+
+        email = """From: sender@example.com
+\n<html>
+Dear user,
+Your account has been limited please follow the instructions on the next link:
+<a href="http://1.2.3.4/">https://</a>
+</html>""" 
+
+        self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG)
+        result = self.check_pad(email)
+        self.check_report(result, 1, ['CHECK_HTTPS_IP_MISMATCH'])
+
+    def test_check_for_https_ip_mismatch_incorrect_ip(self):
+
+        email = """From: sender@example.com
+\n<html>
+Dear user,
+Your account has been limited please follow the instructions on the next link:
+<a href="http://1.2.3/">https://</a>
+</html>""" 
+
+        self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG)
+        result = self.check_pad(email)
+        self.check_report(result, 0, [])
+
+    def test_check_for_https_ip_mismatch_unfinished_ip(self):
+
+        email = """From: sender@example.com
+\n<html>
+Dear user,
+Your account has been limited please follow the instructions on the next link:
+<a href="http://1.2.3./">https://</a>
+</html>""" 
+
+        self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG)
+        result = self.check_pad(email)
+        self.check_report(result, 0, [])
+
+    def test_check_for_https_ip_mismatch_inverted_commas_16_ip(self):
+
+        email = """From: sender@example.com
+\n<html>
+Dear user,
+Your account has been limited please follow the instructions on the next link:
+<a href="http://1.'2'.3.4/">https://test.com</a>
+</html>""" 
+
+        self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG)
+        result = self.check_pad(email)
+        self.check_report(result, 0, [])
+
+    def test_check_for_https_ip_mismatch_inverted_commas_ip_right(self):
+
+        email = """From: sender@example.com
+\n<html>
+Dear user,
+Your account has been limited please follow the instructions on the next link:
+<a href="http://1.2.3.4/">https://'1'.2.3.4</a>
+</html>""" 
+
+        self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG)
+        result = self.check_pad(email)
+        self.check_report(result, 1, ['CHECK_HTTPS_IP_MISMATCH'])
+
+    def test_check_for_https_ip_mismatch_inverted_commas_on_all_ip(self):
+
+        email = """From: sender@example.com
+\n<html>
+Dear user,
+Your account has been limited please follow the instructions on the next link:
+<a href="http://'1.2.3.4'/">https://test.com</a>
+</html>""" 
+
+        self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG)
+        result = self.check_pad(email)
+        self.check_report(result, 0, [])
+
+    def test_check_for_https_ip_mismatch_invalid_expression_ip(self):
+
+        email = """From: sender@example.com
+\n<html>
+Dear user,
+Your account has been limited please follow the instructions on the next link:
+<a href="http://@1.2.3.4/">https://test.com</a>
+</html>""" 
+
+        self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG)
+        result = self.check_pad(email)
+        self.check_report(result, 0, [])
+
     def test_check_for_https_ip_mismatch_ipv6_right(self):
 
         email = """From: sender@example.com
@@ -237,6 +533,58 @@ Your account has been limited please follow the instructions on the next link:
         self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG)
         result = self.check_pad(email)
         self.check_report(result, 0, [])
+
+    def test_check_for_https_ip_mismatch_text_between_links_domain_right(self):
+
+        email = """From: sender@example.com
+\n<html>
+Dear user,
+Your account has been limited please follow the instructions on the next link:
+<a href="http://1.2.3.4/">cevatesthttps://google.com/</a>
+</html>""" 
+
+        self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG)
+        result = self.check_pad(email)
+        self.check_report(result, 1, ['CHECK_HTTPS_IP_MISMATCH'])
+
+    def test_check_for_https_ip_mismatch_text_between_links_ip_right(self):
+
+        email = """From: sender@example.com
+\n<html>
+Dear user,
+Your account has been limited please follow the instructions on the next link:
+<a href="http://1.2.3.4/">cevatesthttps://1.2.3.4/</a>
+</html>""" 
+
+        self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG)
+        result = self.check_pad(email)
+        self.check_report(result, 1, ['CHECK_HTTPS_IP_MISMATCH'])
+
+    def test_check_for_https_ip_mismatch_text_between_links(self):
+
+        email = """From: sender@example.com
+\n<html>
+Dear user,
+Your account has been limited please follow the instructions on the next link:
+<a href="http://1.2.3.4/"> cevatest https://1.2.3.4/</a>
+</html>""" 
+
+        self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG)
+        result = self.check_pad(email)
+        self.check_report(result, 1, ['CHECK_HTTPS_IP_MISMATCH'])
+
+    def test_check_for_https_ip_mismatch_label_not_closed(self):
+
+        email = """From: sender@example.com
+\n<html>
+Dear user,
+Your account has been limited please follow the instructions on the next link:
+<a href="http://1.2.3.4/">https://google
+</html>""" 
+
+        self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG)
+        result = self.check_pad(email)
+        self.check_report(result, 1, ['CHECK_HTTPS_IP_MISMATCH'])
 
     def test_check_for_https_ip_mismatch_incorrect_link_label(self):
 
@@ -338,6 +686,19 @@ Your account has been limited please follow the instructions on the next link:
         result = self.check_pad(email)
         self.check_report(result, 1, ['CHECK_HTTPS_IP_MISMATCH'])
 
+    def test_check_for_uri_truncated_negative(self):
+
+        email = """From: sender@example.com
+\n<html>
+Dear user,
+Your account has been limited please follow the instructions on the next link:
+<a href="https://www.PAYPAL.com/login/account-unlock">It is a truncated uri https://www.PAYPAL.com/...</a>
+</html>""" 
+
+        self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG)
+        result = self.check_pad(email)
+        self.check_report(result, 0, [])
+
 def suite():
     """Gather all the tests from this package in a test suite."""
     test_suite = unittest.TestSuite()
@@ -347,3 +708,6 @@ def suite():
 
 if __name__ == '__main__':
     unittest.main(defaultTest='suite')
+
+
+
