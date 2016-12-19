@@ -1,4 +1,5 @@
 import unittest
+import datetime
 import collections
 
 try:
@@ -769,6 +770,60 @@ for ; Sat, 18 Jun 2016 05:00:14 GMT"""]
         self.assertEqual((self.plugin.hotmail_addr_but_no_hotmail_received,
                           self.plugin.hotmail_addr_with_forged_hotmail_received),
                          (0, 0))
+
+    def test_get_received_headers_times(self):
+        received = [
+            ("from localhost (unknown [127.0.0.1]) by cabbage.jmason.org "
+             "(Postfix) with ESMTP id A96E18BD97 for <jm@localhost>; "
+             "Thu, 13 Mar 2003 15:23:15 -0500 (EST)"),
+            ("cabbage.jmason.org [127.0.0.1] "
+             "by localhost with IMAP (fetchmail-5.9.0) "
+             "for jm@localhost (single-drop)"
+             "Thu, 13 Mar 2004 19:00:15 -0500 (EST)"),
+            ("from server1.test10.simplyspamfree.com ([5.79.78.146])"
+             "by server1.test10.simplyspamfree.com with esmtpa (Exim 4.86)"
+             "(envelope-from <sorin@spamexperts.com>)"
+             "id 1cIvAL-0004E2-3M"
+             "for sorin@spamexperts.com; Mon, 19 Dec 2016 21:27:34 +1100"),
+        ]
+        self.mock_msg.get_decoded_header.side_effect = [received]
+        self.plugin._get_received_header_times(self.mock_msg)
+        fetchmail_times = self.local_data.get("received_fetchmail_time", None)
+        header_times = self.local_data.get("received_header_times", None)
+        self.assertIsNotNone(fetchmail_times)
+        self.assertTrue(header_times)
+
+    def test_check_date_diff_none(self):
+        self.local_data = {"date_header_time": -1}
+        result = self.plugin._check_date_diff(self.mock_msg)
+        self.assertIsNone(result)
+
+    def test_check_date_diff(self):
+        date_header_time = datetime.datetime(2016, 10, 10, 15, 0, 0)
+        received_header_times = [datetime.datetime(2016, 10, 10, 14, 0)]
+        self.local_data = {"date_header_time": date_header_time,
+                           "received_header_times": received_header_times}
+        self.plugin._check_date_diff(self.mock_msg)
+        self.assertIsNotNone(self.local_data.get("date_diff"))
+        self.assertEqual(3600, self.local_data.get("date_diff"))
+
+    def test_check_date_diff_many_dates(self):
+        date_header_time = datetime.datetime(2016, 10, 10, 15, 0, 0)
+        received_header_times = [datetime.datetime(2016, 10, 10, 14, 0, 0),
+                                 datetime.datetime(2016, 10, 10, 12, 0, 0),
+                                 datetime.datetime(2016, 10, 10, 11, 0, 0)]
+        self.local_data = {"date_header_time": date_header_time,
+                           "received_header_times": received_header_times}
+        self.plugin._check_date_diff(self.mock_msg)
+        self.assertIsNotNone(self.local_data.get("date_diff"))
+        self.assertEqual(3600, self.local_data.get("date_diff"))
+
+    def test_check_for_shifted_date(self):
+        """Date is 3 to 6 hours before Received: date"""
+        self.local_data = {"date_diff": -14400}
+        result = self.plugin.check_for_shifted_date(self.mock_msg, min="-6",
+                                                    max="-3")
+        self.assertTrue(result)
 
 
 class TestRecipientsRules(TestHeaderEvalBase):

@@ -150,13 +150,13 @@ class HeaderEval(pad.plugins.base.BasePlugin):
         try:
             ratio = float(ratio)
         except ValueError:
-            self.ctxt.logger.warn("HeaderEval::Plugin check_illegal_chars "
+            self.ctxt.log.warn("HeaderEval::Plugin check_illegal_chars "
                                   "invalid option: %s", ratio)
             return False
         try:
             count = int(count)
         except ValueError:
-            self.ctxt.logger.warn("HeaderEval::Plugin check_illegal_chars "
+            self.ctxt.log.warn("HeaderEval::Plugin check_illegal_chars "
                                   "invalid option: %s", count)
             return False
         if header == 'ALL':
@@ -485,15 +485,15 @@ class HeaderEval(pad.plugins.base.BasePlugin):
             except TypeError:
                 date = None
             if date:
-                self.ctxt.logger.debug(
+                self.ctxt.log.debug(
                     "eval: trying Received fetchmail "
                     "header date for real time: %s", date)
-                time = self._parse_rfc822_date(date)
+                received_time = self._parse_rfc822_date(date)
                 current_time = datetime.datetime.utcfromtimestamp(time.time())
-                if time and  current_time >= time:
-                    self.ctxt.logger.debug("eval: time_t from date=%s, rcvd=%s",
-                                           time, date)
-                    fetchmail_times.append(time)
+                if received_time and current_time >= received_time:
+                    self.ctxt.log.debug("eval: time_t from date=%s, rcvd=%s",
+                                           received_time, date)
+                    fetchmail_times.append(received_time)
         if len(fetchmail_times) > 1:
             self.set_local(msg, "received_fetchmail_time",
                            sorted(fetchmail_times, reverse=True)[0])
@@ -501,20 +501,19 @@ class HeaderEval(pad.plugins.base.BasePlugin):
         for rcvd in received:
             try:
                 date = date_re.search(rcvd).group()
-            except TypeError:
+            except (AttributeError, TypeError):
                 date = None
             if not date:
                 continue
-            self.ctxt.logger.debug("eval: trying Received header date for "
+            self.ctxt.log.debug("eval: trying Received header date for "
                                    "real time: %s", date)
-            time = self._parse_rfc822_date(date)
-            if time:
-                header_times.append(time)
+            received_time = self._parse_rfc822_date(date)
+            if received_time:
+                header_times.append(received_time)
         if header_times:
             self.set_local(msg, "received_header_times", header_times)
         else:
-            self.ctxt.logger.debug("eval: no dates found in Received headers")
-
+            self.ctxt.log.debug("eval: no dates found in Received headers")
 
     def _check_date_diff(self, msg):
         self.set_local(msg, "date_diff", 0)
@@ -524,16 +523,42 @@ class HeaderEval(pad.plugins.base.BasePlugin):
             return
         if not self.get_local(msg, "received_header_times"):
             self._get_received_header_times(msg)
-        # to finish
+        header_times = self.get_local(msg, "received_header_times")
+        if not header_times:
+            return
+        diffs = []
+        for hdr_time in header_times:
+            diff = self.get_local(msg, "date_header_time") - hdr_time
+            diff_seconds = diff.total_seconds()
+            if diff_seconds != 0:
+                diffs.append(diff_seconds)
+        self.set_local(msg, "date_diff", sorted(diffs)[0])
 
     def check_for_shifted_date(self, msg, min=None, max=None, target=None):
-        self._get_date_header_time(msg)
+        """Check if the difference between Date header and date from received
+        headers its between min,max interval
+
+        * min: minimum time express in hours
+        * max: maximum time express in hours"""
+        if min == "undef":
+            min = None
+        if max == "undef":
+            max = None
+        try:
+            if min:
+                min = int(min)
+            if max:
+                max = int(max)
+        except ValueError:
+            self.ctxt.log.warn("HeaderEval::Plugin check_for_shifted_date "
+                               "min and max should be integer values")
+            return False
         if not self.get_local(msg, "date_diff"):
             self._check_date_diff(msg)
         ret_val_min = (not min or
-                       self.get_local(msg, "date_diff") < (3600 * min))
+                       self.get_local(msg, "date_diff") >= (3600 * min))
         ret_val_max = (not max or
-                       self.get_local(msg, "date_diff") >= (3600 * max))
+                       self.get_local(msg, "date_diff") < (3600 * max))
         return ret_val_min and ret_val_max
 
     def subject_is_all_caps(self, msg, target=None):
