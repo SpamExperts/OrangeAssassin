@@ -268,6 +268,8 @@ class DKIMPlugin(pad.plugins.base.BasePlugin):
         if not self.author_domains:
             self._get_authors(msg)
         signature = msg.msg.get('DKIM-Signature', "")
+        if not signature:
+            self.dkim_signed = 0
         parsed_signature = dkim.util.parse_tag_value(signature.encode())
         try:
             if parsed_signature[b'd'] not in self.author_domains:
