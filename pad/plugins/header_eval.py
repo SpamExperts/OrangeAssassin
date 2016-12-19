@@ -342,7 +342,7 @@ class HeaderEval(pad.plugins.base.BasePlugin):
     def _parse_rcpt(self, addr):
         user = addr[:self.tocc_similar_count]
         try:
-            fqhn = addr.rsplit("@", 1)[0]
+            fqhn = addr.rsplit("@", 1)[1]
         except IndexError:
             fqhn = addr
         host = fqhn[:self.tocc_similar_length]
