@@ -177,10 +177,12 @@ class HeaderEval(pad.plugins.base.BasePlugin):
         return (illegal / len(raw_str)) >= ratio and illegal >= count
 
     def check_for_forged_hotmail_received_headers(self, msg, target=None):
+        """Check for forged hotmail received headers"""
         self._check_for_forged_hotmail_received_headers(msg)
         return self.hotmail_addr_with_forged_hotmail_received
 
     def check_for_no_hotmail_received_headers(self, msg, target=None):
+        """Check for no hotmail received headers"""
         self._check_for_forged_hotmail_received_headers(msg)
         return self.hotmail_addr_but_no_hotmail_received
 
@@ -195,19 +197,15 @@ class HeaderEval(pad.plugins.base.BasePlugin):
             return False
         ip_header = msg.msg.get("X-ORIGINATING-IP")
         if ip_header and IP_ADDRESS.search(ip_header):
-            if re.search(r"from (?:\S*\.)?hotmail.com \("
-                         r"\S+\.hotmail(?:\.msn)?\.com[ \)]", rcvd):
-                return False
-            # FETCHMAIL = Regex(
-            #     r"from \S*\.hotmail\.com "
-            #     r"\(\[{IP_ADDRESS}\][ \):]".format(
-            #         IP_ADDRESS=IP_ADDRESS.pattern), re.I)
-            # if FETCHMAIL.search(rcvd):
-            #     return False
-            if re.search(r"from \S+ by \S+\.hotmail(?:\.msn)?\.com with "
-                         r"HTTP\;", rcvd):
-                return False
-            if re.search(r"from \[66\.218.\S+\] by \S+\.yahoo\.com", rcvd):
+            FORGED_REGEX = Regex(
+                r"from\s+(?:\S*\.)?hotmail.com\s+\(\S+\.hotmail("
+                r"?:\.msn)?\.com[ "
+                r"\)]|"
+                r"from\s+\S*\.hotmail\.com\s+\(\[{IP_ADDRESS}\]|"
+                r"from\s+ \S+\s+ by\s+ \S+\.hotmail(?:\.msn)?\.com with HTTP\;|"
+                r"from\s+\[66\.218.\S+\]\s+by\s+\S+\.yahoo\.com"
+                r"".format(IP_ADDRESS=IP_ADDRESS.pattern), re.I|re.X)
+            if FORGED_REGEX.search(rcvd):
                 return False
         if self.gated_through_received_hdr_remover(msg):
             return False
@@ -653,6 +651,7 @@ class HeaderEval(pad.plugins.base.BasePlugin):
         return False
 
     def check_ratware_name_id(self, msg, target=None):
+        """Check if message-id is ratware or not."""
         message_id = msg.msg.get("Message-Id")
         from_header = msg.msg.get("From")
         if not message_id and not from_header:
@@ -684,6 +683,7 @@ class HeaderEval(pad.plugins.base.BasePlugin):
         return True
 
     def check_ratware_envelope_from(self, msg, target=None):
+        """Check if envelope-from address is ratware or not."""
         to_header = msg.msg.get("To")
         envelope_from = msg.sender_address
         if not to_header or not envelope_from:

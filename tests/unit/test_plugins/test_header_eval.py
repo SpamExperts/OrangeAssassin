@@ -730,6 +730,9 @@ for ; Sat, 18 Jun 2016 05:00:14 GMT"""]
         result = self.plugin._check_for_forged_hotmail_received_headers(
             self.mock_msg)
         self.assertFalse(result)
+        self.assertEqual((self.plugin.hotmail_addr_but_no_hotmail_received,
+                          self.plugin.hotmail_addr_with_forged_hotmail_received),
+                         (0, 0))
 
     def test_check_forged_hotmail_originating_ip_regex2(self):
         self.mock_msg.msg.get.side_effect = [
@@ -739,6 +742,9 @@ for ; Sat, 18 Jun 2016 05:00:14 GMT"""]
         result = self.plugin._check_for_forged_hotmail_received_headers(
             self.mock_msg)
         self.assertFalse(result)
+        self.assertEqual((self.plugin.hotmail_addr_but_no_hotmail_received,
+                          self.plugin.hotmail_addr_with_forged_hotmail_received),
+                         (0, 0))
 
     def test_check_forged_hotmail_originating_ip_regex3(self):
         self.mock_msg.msg.get.side_effect = [
@@ -748,6 +754,9 @@ for ; Sat, 18 Jun 2016 05:00:14 GMT"""]
         result = self.plugin._check_for_forged_hotmail_received_headers(
             self.mock_msg)
         self.assertFalse(result)
+        self.assertEqual((self.plugin.hotmail_addr_but_no_hotmail_received,
+                          self.plugin.hotmail_addr_with_forged_hotmail_received),
+                         (0, 0))
 
     def test_check_forged_hotmail_originating_ip_regex4(self):
         self.mock_msg.msg.get.side_effect = [
@@ -757,6 +766,9 @@ for ; Sat, 18 Jun 2016 05:00:14 GMT"""]
         result = self.plugin._check_for_forged_hotmail_received_headers(
             self.mock_msg)
         self.assertFalse(result)
+        self.assertEqual((self.plugin.hotmail_addr_but_no_hotmail_received,
+                          self.plugin.hotmail_addr_with_forged_hotmail_received),
+                         (0, 0))
 
 
 class TestRecipientsRules(TestHeaderEvalBase):
@@ -856,3 +868,21 @@ class TestRecipientsRules(TestHeaderEvalBase):
         self.assertEqual(ratio, 0.0)
         self.assertFalse(result)
 
+
+class TestForgedHotmailRcvd(TestHeaderEvalBase):
+    def setUp(self):
+        super(TestForgedHotmailRcvd, self).setUp()
+        self.headers = {}
+        self.mock_forged_hotmail = patch("pad.plugins.header_eval.HeaderEval."
+                                         "_check_for_forged_hotmail"
+                                         "_received_headers").start()
+
+    def test_check_for_forged_hotmail_received_headers(self):
+        self.plugin.hotmail_addr_with_forged_hotmail_received = 1
+        result = self.plugin.check_for_forged_hotmail_received_headers(self.mock_msg)
+        self.assertTrue(result)
+
+    def test_check_for_no_hotmail_received_headers(self):
+        self.plugin.hotmail_addr_but_no_hotmail_received = 1
+        result = self.plugin.check_for_no_hotmail_received_headers(self.mock_msg)
+        self.assertTrue(result)
