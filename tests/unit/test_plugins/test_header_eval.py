@@ -590,6 +590,12 @@ To: user@gmail.com
         result = self.plugin.check_for_forged_yahoo_received_headers(self.mock_msg)
         self.assertFalse(result)
 
+    def test_parse_recipients(self):
+        rcpt = "test@example.com"
+        expected = ("test@", "example.com", "ex")
+        result = self.plugin._parse_rcpt(rcpt)
+        self.assertEqual(result, expected)
+
 
 class TestMessageId(TestHeaderEvalBase):
     def setUp(self):
@@ -753,4 +759,100 @@ for ; Sat, 18 Jun 2016 05:00:14 GMT"""]
         self.assertFalse(result)
 
 
+class TestRecipientsRules(TestHeaderEvalBase):
+
+    def setUp(self):
+        super(TestRecipientsRules, self).setUp()
+        self.headers = {}
+        self.mock_msg.get_all_addr_header.side_effect  = self._get_headers
+
+    def _get_headers(self, name):
+        try:
+            return self.headers[name]
+        except KeyError:
+            return []
+
+    def test_sorted_rcpt(self):
+        self.headers["To"] = ["alex@example.com", "bob@example.com"]
+        result = self.plugin.sorted_recipients(self.mock_msg)
+        self.assertTrue(result)
+
+    def test_sorted_multi_header(self):
+        self.headers["To"] = ["alex@example.com"]
+        self.headers["Cc"] = ["bob@example.com"]
+        self.headers["Bcc"] = ["carol@example.com"]
+        self.headers["ToCc"] = ["david@example.com"]
+        result = self.plugin.sorted_recipients(self.mock_msg)
+        self.assertTrue(result)
+
+    def test_sorted_rcpt_no_match(self):
+        self.headers["To"] = ["bob@example.com", "alice@example.com"]
+        result = self.plugin.sorted_recipients(self.mock_msg)
+        self.assertFalse(result)
+
+    def test_similar_rcpt(self):
+        self.headers["To"] = [
+            "alex@example.com", "bob@example.com", "alex@example.com",
+            "david@example.com", "alex@example.com", "frank@example.com"
+        ]
+        result = self.plugin.similar_recipients(self.mock_msg,
+                                                0, 1)
+        ratio = self.local_data["tocc_similar"]
+        self.assertEqual(ratio, 0.2)
+        self.assertTrue(result)
+
+    def test_similar_rcpt_fq_match(self):
+        self.headers["To"] = [
+            "alex@1.example.com", "bob@1.example.net", "carol@1.example.org",
+            "david@1.example.com", "eli@1.example.net", "frank@1.example.org"
+        ]
+        result = self.plugin.similar_recipients(self.mock_msg,
+                                                0, 1)
+        ratio = self.local_data["tocc_similar"]
+        self.assertEqual(ratio, 0.8)
+        self.assertTrue(result)
+
+    def test_similar_rcpt_no_match(self):
+        self.headers["To"] = [
+            "alex@example.com", "bob@example.com", "carol@example.com",
+            "david@example.com", "eli@example.com", "frank@example.com"
+        ]
+        result = self.plugin.similar_recipients(self.mock_msg,
+                                                0, 1)
+        ratio = self.local_data["tocc_similar"]
+        self.assertEqual(ratio, 0.0)
+        self.assertFalse(result)
+
+    def test_similar_rcpt_no_match_dupes(self):
+        self.headers["To"] = [
+            "alex@example.com", "alex@example.com", "carol@example.com",
+            "carol@example.com", "eli@example.com", "eli@example.com"
+        ]
+        result = self.plugin.similar_recipients(self.mock_msg,
+                                                0, 1)
+        ratio = self.local_data["tocc_similar"]
+        self.assertEqual(ratio, 0.0)
+        self.assertFalse(result)
+
+    def test_similar_rcpt_not_consecutive_dupes(self):
+        self.headers["To"] = [
+            "alex@example.com", "carol@example.com", "alex@example.com",
+            "eli@example.com", "carol@example.com", "eli@example.com"
+        ]
+        result = self.plugin.similar_recipients(self.mock_msg,
+                                                0, 1)
+        ratio = self.local_data["tocc_similar"]
+        self.assertEqual(ratio, 0.2)
+        self.assertTrue(result)
+
+    def test_similar_rcpt_to_few_recipient(self):
+        self.headers["To"] = [
+            "alex@example.com", "carol@example.com", "alex@example.com",
+            "eli@example.com"
+        ]
+        result = self.plugin.similar_recipients(self.mock_msg,
+                                                0, 1)
+        ratio = self.local_data["tocc_similar"]
+        self.assertEqual(ratio, 0.0)
+        self.assertFalse(result)
 

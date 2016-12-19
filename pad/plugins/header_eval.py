@@ -40,8 +40,6 @@ class HeaderEval(pad.plugins.base.BasePlugin):
         "similar_recipients",
         "check_for_missing_to_header",
         "check_for_forged_gw05_received_headers",
-        "check_for_round_the_world_received_helo",
-        "check_for_round_the_world_received_revdns",
         "check_for_shifted_date",
         "subject_is_all_caps",
         "check_for_to_in_subject",
@@ -60,7 +58,7 @@ class HeaderEval(pad.plugins.base.BasePlugin):
         "util_rb_3tld": ("append_split", [])
     }
 
-    def check_star(self, msg):
+    def check_start(self, msg):
         self.set_local(msg, "date_diff", None)
         self.set_local(msg, "date_header_time", None)
         self.set_local(msg, "received_header_times", None)
@@ -222,7 +220,6 @@ class HeaderEval(pad.plugins.base.BasePlugin):
                 return False
             self.hotmail_addr_but_no_hotmail_received = 1
 
-
     def check_for_msn_groups_headers(self, msg, target=None):
         """Check if the email's destination is a msn group"""
         to = ''.join(msg.get_decoded_header('To'))
@@ -345,7 +342,7 @@ class HeaderEval(pad.plugins.base.BasePlugin):
     def _parse_rcpt(self, addr):
         user = addr[:self.tocc_similar_count]
         try:
-            fqhn = addr.rsplit("@", 1)[0]
+            fqhn = addr.rsplit("@", 1)[1]
         except IndexError:
             fqhn = addr
         host = fqhn[:self.tocc_similar_length]
@@ -375,7 +372,7 @@ class HeaderEval(pad.plugins.base.BasePlugin):
                 continue
             addresses.append(rcpt2)
 
-        if not len(addresses) >= self.tocc_similar_count:
+        if len(addresses) < self.tocc_similar_count:
             self.set_local(msg, "tocc_similar", 0)
             return
 
@@ -415,7 +412,6 @@ class HeaderEval(pad.plugins.base.BasePlugin):
         except (TypeError, ValueError):
             return False
 
-
     def check_for_missing_to_header(self, msg, target=None):
         """Check if the To header is missing."""
         if msg.get_raw_header("To"):
@@ -441,27 +437,22 @@ class HeaderEval(pad.plugins.base.BasePlugin):
                 continue
         return False
 
-    def check_for_round_the_world_received_helo(self, msg, target=None):
-        return False
-
-    def check_for_round_the_world_received_revdns(self, msg, target=None):
-        return False
+    def _parse_rfc822_date(self, date):
+        try:
+            parsed_date = email.utils.parsedate(date)
+            time_in_seconds = time.mktime(parsed_date)
+            date_time = datetime.datetime.utcfromtimestamp(
+                time_in_seconds)
+        except ValueError:
+            return
+        return date_time
 
     def _get_date_header_time(self, msg):
-        resent_date = msg.get_decoded_header('Resent-Date')
-        date = msg.get_decoded_header('Date')
-        # ValueError if we pass invalid time to mktime
         date_time = None
         for header in ["Resent-Date", "Date"]:
             dates = msg.get_decoded_header(header)
             for date in dates:
-                try:
-                    parsed_date = email.utils.parsedate(date)
-                    time_in_seconds = time.mktime(parsed_date)
-                    date_time = datetime.datetime.utcfromtimestamp(
-                        time_in_seconds)
-                except ValueError:
-                    pass
+                date_time = self._parse_rfc822_date(date)
                 if date_time:
                     break
         if date_time:
@@ -469,15 +460,64 @@ class HeaderEval(pad.plugins.base.BasePlugin):
         else:
             self.set_local(msg, "date_header_time", -1)
 
-
     def _get_received_header_times(self, msg):
         self.set_local(msg, "received_header_times", list())
         received = msg.get_decoded_header("Received")
-        if len(received) == 0:
+        if not len(received):
             return
         # handle fetchmail headers
-        # to finish
-        pass
+        local = []
+        from_local_re = Regex(r"\bfrom (?:localhost\s|(?:\S+ ){1,2}\S*\b127\.0\.0\.1\b)")
+        qmail_re = Regex(r"qmail \d+ invoked by uid \d+")
+        if from_local_re.search(received[0]) or qmail_re.search(received[0]):
+            local.append(received[0])
+            del received[0]
+        local_with_fetch_re = Regex(r"\bby localhost with \w+ \(fetchmail-[\d.]+")
+        if received and local_with_fetch_re.search(received[0]):
+            local.append(received[0])
+            del received[0]
+        elif local:
+            received.insert(0, local[0])
+            del local[0]
+
+        fetchmail_times = []
+        date_re = Regex(r"(\s.?\d+ \S\S\S \d+ \d+:\d+:\d+ \S+)")
+        for rcvd in local:
+            try:
+                date = date_re.search(rcvd).group()
+            except TypeError:
+                date = None
+            if date:
+                self.ctxt.logger.debug(
+                    "eval: trying Received fetchmail "
+                    "header date for real time: %s", date)
+                time = self._parse_rfc822_date(date)
+                current_time = datetime.datetime.utcfromtimestamp(time.time())
+                if time and  current_time >= time:
+                    self.ctxt.logger.debug("eval: time_t from date=%s, rcvd=%s",
+                                           time, date)
+                    fetchmail_times.append(time)
+        if len(fetchmail_times) > 1:
+            self.set_local(msg, "received_fetchmail_time",
+                           sorted(fetchmail_times, reverse=True)[0])
+        header_times = []
+        for rcvd in received:
+            try:
+                date = date_re.search(rcvd).group()
+            except TypeError:
+                date = None
+            if not date:
+                continue
+            self.ctxt.logger.debug("eval: trying Received header date for "
+                                   "real time: %s", date)
+            time = self._parse_rfc822_date(date)
+            if time:
+                header_times.append(time)
+        if header_times:
+            self.set_local(msg, "received_header_times", header_times)
+        else:
+            self.ctxt.logger.debug("eval: no dates found in Received headers")
+
 
     def _check_date_diff(self, msg):
         self.set_local(msg, "date_diff", 0)
@@ -489,18 +529,15 @@ class HeaderEval(pad.plugins.base.BasePlugin):
             self._get_received_header_times(msg)
         # to finish
 
-
-
     def check_for_shifted_date(self, msg, min=None, max=None, target=None):
         self._get_date_header_time(msg)
-        # if not self.get_local(msg, "date_diff"):
-        #     self._check_date_diff(msg)
-        # ret_val_min = not min or self.get_local(msg, "date_diff") < \
-        #                          (3600 * min)
-        # ret_val_max = not max or self.get_local(msg, "date_diff") >= \
-        #                         (3600 * max)
-        # return ret_val_min and ret_val_max
-        return False
+        if not self.get_local(msg, "date_diff"):
+            self._check_date_diff(msg)
+        ret_val_min = (not min or
+                       self.get_local(msg, "date_diff") < (3600 * min))
+        ret_val_max = (not max or
+                       self.get_local(msg, "date_diff") >= (3600 * max))
+        return ret_val_min and ret_val_max
 
     def subject_is_all_caps(self, msg, target=None):
         """Checks if the subject is all capital letters.
