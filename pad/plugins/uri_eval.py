@@ -2,6 +2,9 @@
 
 from __future__ import absolute_import
 
+import ipaddress
+from builtins import str
+
 try:
     from urllib.parse import unquote
     from urllib.parse import urlparse
@@ -13,7 +16,6 @@ except ImportError:
 import pad.plugins.base
 import pad.html_parser
 from pad.regex import Regex
-
 
 HTTP_REDIR = Regex(r'(^https?:\/\/[^\/:\?]+.+?)(https?:\/{0,2}?[^\/:\?]+.*)')
 HTTP_URI = Regex(r'(^https?:\/\/[^\/:\?]+.+?)')
@@ -55,7 +57,12 @@ class URIEvalPlugin(pad.plugins.base.BasePlugin):
             pad.html_parser.parsed_metadata(msg, self.ctxt)
         for key in msg.uri_detail_links:
             type = msg.uri_detail_links[key].get("type", None)
-            if type in ("a", "link"):
+            domain = msg.uri_detail_links[key].get("domain", None)
+            if type == "a":
+                try:
+                    ipaddress.ip_address(str(domain))
+                except ValueError:
+                    return 0
                 try:
                     value = msg.uri_detail_links[key]["text"]
                     uri_list = self.extract_url_from_text(value)
