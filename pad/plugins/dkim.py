@@ -282,7 +282,7 @@ class DKIMPlugin(pad.plugins.base.BasePlugin):
             if minimum_key_bits < 0:
                 minimum_key_bits = 0
             result = dkim.verify(message.encode(), dnsfunc=self.get_txt,
-                                 minkey=minimum_key_bits*2)
+                                 minkey=minimum_key_bits)
             if not result:
                 self.is_valid = 0
                 self.dkim_valid = 0
