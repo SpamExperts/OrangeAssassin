@@ -199,8 +199,7 @@ class HeaderEval(pad.plugins.base.BasePlugin):
         if ip_header and IP_ADDRESS.search(ip_header):
             FORGED_REGEX = Regex(
                 r"from\s+(?:\S*\.)?hotmail.com\s+\(\S+\.hotmail("
-                r"?:\.msn)?\.com[ "
-                r"\)]|"
+                r"?:\.msn)?\.com[\)]|"
                 r"from\s+\S*\.hotmail\.com\s+\(\[{IP_ADDRESS}\]|"
                 r"from\s+ \S+\s+ by\s+ \S+\.hotmail(?:\.msn)?\.com with HTTP\;|"
                 r"from\s+\[66\.218.\S+\]\s+by\s+\S+\.yahoo\.com"

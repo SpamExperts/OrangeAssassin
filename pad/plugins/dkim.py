@@ -48,6 +48,7 @@ class DKIMPlugin(pad.plugins.base.BasePlugin):
     adsp_options = {
         "A": "all",
         "D": "discardable",
+        "N": "nxdomain",
         "1": "custom_low",
         "2": "custom_med",
         "3": "custom_high",
