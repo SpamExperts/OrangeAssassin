@@ -46,7 +46,6 @@ class TestFunctionalDKIM(tests.util.TestBase):
         result = self.check_pad(MSG)
         self.check_report(result, 1, ['DKIM_SIGNED'])
 
-    @unittest.skip
     def test_dkim_valid(self):
         config = ("full DKIM_VALID    "
                  "eval:check_dkim_valid()")
@@ -61,32 +60,130 @@ class TestFunctionalDKIM(tests.util.TestBase):
         result = self.check_pad(MSG)
         self.check_report(result, 1, ['DKIM_VALID_AUTHOR_SIG'])
 
-    @unittest.skip
+    @unittest.skip("Skipping until fixed")
     def test_dkim_signed_list(self):
         config = ("full DKIM_SIGNED    eval:"
-                  "check_dkim_signed('{}', '{}')".format(
+                  "check_dkim_signed(\"{}\", \"{}\")".format(
             self.dkim_domain, self.test_domain))
         self.setup_conf(config, PRE_CONFIG)
         result = self.check_pad(MSG)
         self.check_report(result, 1, ['DKIM_SIGNED'])
 
-    @unittest.skip
+    @unittest.skip("Skipping until fixed")
     def test_dkim_valid_list(self):
         config = ("full DKIM_VALID    eval:"
-                  "check_dkim_valid('{}', '{}')".format(
+                  "check_dkim_valid(\"{}\", \"{}\")".format(
             self.dkim_domain, self.test_domain))
         self.setup_conf(config, PRE_CONFIG)
         result = self.check_pad(MSG)
         self.check_report(result, 1, ['DKIM_VALID'])
 
-    @unittest.skip
+    @unittest.skip("Skipping until fixed")
     def test_dkim_valid_author_sig_list(self):
         config = ("full DKIM_VALID_AUTHOR_SIG    eval:"
-                  "check_dkim_valid_author_sig('{}', '{}')".format(
+                  "check_dkim_valid_author_sig(\"{}\", \"{}\")".format(
             self.dkim_domain, self.test_domain))
         self.setup_conf(config, PRE_CONFIG)
         result = self.check_pad(MSG)
         self.check_report(result, 1, ['DKIM_VALID_AUTHOR_SIG'])
+
+    @unittest.skip("Skipping until fixed")
+    def test_dkim_adsp_d(self):
+        config = ("header DKIM_ADSP_DISCARD    eval:"
+                  "check_dkim_adsp('D')")
+        self.setup_conf(config, PRE_CONFIG)
+        result = self.check_pad(MSG)
+        self.check_report(result, 1, ['DKIM_ADSP_DISCARD'])
+
+    @unittest.skip("Skipping until fixed")
+    def test_dkim_adsp_a(self):
+        config = ("header DKIM_ADSP_ALL    eval:"
+                  "check_dkim_adsp('A')")
+        self.setup_conf(config, PRE_CONFIG)
+        result = self.check_pad(MSG)
+        self.check_report(result, 1, ['DKIM_ADSP_ALL'])
+
+    @unittest.skip("Skipping until fixed")
+    def test_dkim_adsp_n(self):
+        config = ("header DKIM_ADSP_NXDOMAIN    eval:"
+                  "check_dkim_adsp('N')")
+        self.setup_conf(config, PRE_CONFIG)
+        result = self.check_pad(MSG)
+        self.check_report(result, 1, ['DKIM_ADSP_NXDOMAIN'])
+
+    @unittest.skip("Skipping until fixed")
+    def test_dkim_adsp_low(self):
+        config = ("header DKIM_ADSP_CUSTOM_LOW    eval:"
+                  "check_dkim_adsp('1')")
+        pconfig = PRE_CONFIG + "\nadsp_override {} custom_low".format(
+            self.dkim_domain)
+        self.setup_conf(config, pconfig)
+        result = self.check_pad(MSG)
+        self.check_report(result, 1, ['DKIM_ADSP_CUSTOM_LOW'])
+
+    @unittest.skip("Skipping until fixed")
+    def test_dkim_adsp_med(self):
+        config = ("header DKIM_ADSP_CUSTOM_MED    eval:"
+                  "check_dkim_adsp('2')")
+        pconfig = PRE_CONFIG + "\nadsp_override {} custom_med".format(
+            self.dkim_domain)
+        self.setup_conf(config, pconfig)
+        result = self.check_pad(MSG)
+        self.check_report(result, 1, ['DKIM_ADSP_CUSTOM_MED'])
+
+    @unittest.skip("Skipping until fixed")
+    def test_dkim_adsp_high(self):
+        config = ("header DKIM_ADSP_CUSTOM_HIGH    eval:"
+                  "check_dkim_adsp('3')")
+        pconfig = PRE_CONFIG + "\nadsp_override {} custom_high".format(
+            self.dkim_domain)
+        self.setup_conf(config, pconfig)
+        result = self.check_pad(MSG)
+        self.check_report(result, 1, ['DKIM_ADSP_CUSTOM_HIGH'])
+
+    @unittest.skip("Skipping until fixed")
+    def test_dkim_adsp_override_all(self):
+        config = ("header DKIM_ADSP_ALL    eval:"
+                  "check_dkim_adsp('A')\n"
+                  "header DKIM_ADSP_CUSTOM_LOW    eval:"
+                  "check_dkim_adsp('1')\n")
+        pconfig = PRE_CONFIG + "\nadsp_override {} custom_low".format(
+            self.dkim_domain)
+        self.setup_conf(config, pconfig)
+        result = self.check_pad(MSG)
+        self.check_report(result, 1, ['DKIM_ADSP_CUSTOM_LOW'])
+
+    @unittest.skip("Skipping until fixed")
+    def test_dkim_adsp_high_wildcard_domain(self):
+        config = ("header DKIM_ADSP_CUSTOM_HIGH    eval:"
+                  "check_dkim_adsp('3')")
+        pconfig = PRE_CONFIG + "\nadsp_override *{} custom_high".format(
+            self.dkim_domain[-3:])
+        self.setup_conf(config, pconfig)
+        result = self.check_pad(MSG)
+        self.check_report(result, 1, ['DKIM_ADSP_CUSTOM_HIGH'])
+
+    @unittest.skip("Skipping until fixed")
+    def test_dkim_adsp_high_wildcard(self):
+        config = ("header DKIM_ADSP_CUSTOM_HIGH    eval:"
+                  "check_dkim_adsp('3')")
+        pconfig = PRE_CONFIG + "\nadsp_override *@{} custom_high".format(
+            self.dkim_domain)
+        self.setup_conf(config, pconfig)
+        result = self.check_pad(MSG)
+        self.check_report(result, 1, ['DKIM_ADSP_CUSTOM_HIGH'])
+
+    def test_whitelist_from_address(self):
+        pass
+
+    def test_whitelist_from_wildcard(self):
+        pass
+
+    def test_def_whitelist_from_address(self):
+        pass
+
+    def test_def_whitelist_from_wildcard(self):
+        pass
 
 
 def suite():
