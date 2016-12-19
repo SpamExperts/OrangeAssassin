@@ -48,6 +48,7 @@ class DKIMPlugin(pad.plugins.base.BasePlugin):
     adsp_options = {
         "A": "all",
         "D": "discardable",
+        "N": "nxdomain",
         "1": "custom_low",
         "2": "custom_med",
         "3": "custom_high",
@@ -267,6 +268,8 @@ class DKIMPlugin(pad.plugins.base.BasePlugin):
         if not self.author_domains:
             self._get_authors(msg)
         signature = msg.msg.get('DKIM-Signature', "")
+        if not signature:
+            self.dkim_signed = 0
         parsed_signature = dkim.util.parse_tag_value(signature.encode())
         try:
             if parsed_signature[b'd'] not in self.author_domains:
@@ -282,7 +285,7 @@ class DKIMPlugin(pad.plugins.base.BasePlugin):
             if minimum_key_bits < 0:
                 minimum_key_bits = 0
             result = dkim.verify(message.encode(), dnsfunc=self.get_txt,
-                                 minkey=minimum_key_bits*2)
+                                 minkey=minimum_key_bits)
             if not result:
                 self.is_valid = 0
                 self.dkim_valid = 0

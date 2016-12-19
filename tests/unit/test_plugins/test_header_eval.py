@@ -592,43 +592,9 @@ To: user@gmail.com
 
     def test_parse_recipients(self):
         rcpt = "test@example.com"
-        expected = ("test@", "test", "te")
+        expected = ("test@", "example.com", "ex")
         result = self.plugin._parse_rcpt(rcpt)
         self.assertEqual(result, expected)
-
-    def test_check_recipients_less_addresses_than_tocc_similar(self):
-        to = ["to@example.com"]
-        cc = ["cc@example.com"]
-        bcc = ["bcc@example.com"]
-        tocc = []
-        self.mock_msg.get_all_addr_header.side_effect = [to, cc, bcc, tocc]
-        result = self.plugin._check_recipients(self.mock_msg)
-        self.assertIsNone(result)
-
-    def test_check_recipients(self):
-        to = ["to@example.com", "to2@example.com", "to3@example.com"]
-        cc = ["cc@example.com"]
-        bcc = ["bcc@example.com", "bcc2@example.com"]
-        tocc = []
-        self.mock_msg.get_all_addr_header.side_effect = [to, cc, bcc, tocc]
-        result = self.plugin._check_recipients(self.mock_msg)
-        self.assertAlmostEqual(round(result, 4), 0.2667)
-
-    def test_check_similar_recipients(self):
-        patch(
-            "pad.plugins.header_eval.HeaderEval."
-            "similar_recipients", return_value=0.26666).start()
-        result = self.plugin.similar_recipients(self.mock_msg, minr=0.1,
-                                                maxr=0.3)
-        self.assertTrue(result)
-
-    def test_check_similar_recipients_false(self):
-        patch(
-            "pad.plugins.header_eval.HeaderEval."
-            "similar_recipients", return_value=1.26666).start()
-        result = self.plugin.similar_recipients(self.mock_msg, minr=0.1,
-                                                maxr=0.3)
-        self.assertTrue(result)
 
 
 class TestMessageId(TestHeaderEvalBase):
@@ -764,6 +730,9 @@ for ; Sat, 18 Jun 2016 05:00:14 GMT"""]
         result = self.plugin._check_for_forged_hotmail_received_headers(
             self.mock_msg)
         self.assertFalse(result)
+        self.assertEqual((self.plugin.hotmail_addr_but_no_hotmail_received,
+                          self.plugin.hotmail_addr_with_forged_hotmail_received),
+                         (0, 0))
 
     def test_check_forged_hotmail_originating_ip_regex2(self):
         self.mock_msg.msg.get.side_effect = [
@@ -773,6 +742,9 @@ for ; Sat, 18 Jun 2016 05:00:14 GMT"""]
         result = self.plugin._check_for_forged_hotmail_received_headers(
             self.mock_msg)
         self.assertFalse(result)
+        self.assertEqual((self.plugin.hotmail_addr_but_no_hotmail_received,
+                          self.plugin.hotmail_addr_with_forged_hotmail_received),
+                         (0, 0))
 
     def test_check_forged_hotmail_originating_ip_regex3(self):
         self.mock_msg.msg.get.side_effect = [
@@ -782,6 +754,9 @@ for ; Sat, 18 Jun 2016 05:00:14 GMT"""]
         result = self.plugin._check_for_forged_hotmail_received_headers(
             self.mock_msg)
         self.assertFalse(result)
+        self.assertEqual((self.plugin.hotmail_addr_but_no_hotmail_received,
+                          self.plugin.hotmail_addr_with_forged_hotmail_received),
+                         (0, 0))
 
     def test_check_forged_hotmail_originating_ip_regex4(self):
         self.mock_msg.msg.get.side_effect = [
@@ -791,6 +766,123 @@ for ; Sat, 18 Jun 2016 05:00:14 GMT"""]
         result = self.plugin._check_for_forged_hotmail_received_headers(
             self.mock_msg)
         self.assertFalse(result)
+        self.assertEqual((self.plugin.hotmail_addr_but_no_hotmail_received,
+                          self.plugin.hotmail_addr_with_forged_hotmail_received),
+                         (0, 0))
 
 
+class TestRecipientsRules(TestHeaderEvalBase):
 
+    def setUp(self):
+        super(TestRecipientsRules, self).setUp()
+        self.headers = {}
+        self.mock_msg.get_all_addr_header.side_effect  = self._get_headers
+
+    def _get_headers(self, name):
+        try:
+            return self.headers[name]
+        except KeyError:
+            return []
+
+    def test_sorted_rcpt(self):
+        self.headers["To"] = ["alex@example.com", "bob@example.com"]
+        result = self.plugin.sorted_recipients(self.mock_msg)
+        self.assertTrue(result)
+
+    def test_sorted_multi_header(self):
+        self.headers["To"] = ["alex@example.com"]
+        self.headers["Cc"] = ["bob@example.com"]
+        self.headers["Bcc"] = ["carol@example.com"]
+        self.headers["ToCc"] = ["david@example.com"]
+        result = self.plugin.sorted_recipients(self.mock_msg)
+        self.assertTrue(result)
+
+    def test_sorted_rcpt_no_match(self):
+        self.headers["To"] = ["bob@example.com", "alice@example.com"]
+        result = self.plugin.sorted_recipients(self.mock_msg)
+        self.assertFalse(result)
+
+    def test_similar_rcpt(self):
+        self.headers["To"] = [
+            "alex@example.com", "bob@example.com", "alex@example.com",
+            "david@example.com", "alex@example.com", "frank@example.com"
+        ]
+        result = self.plugin.similar_recipients(self.mock_msg,
+                                                0, 1)
+        ratio = self.local_data["tocc_similar"]
+        self.assertEqual(ratio, 0.2)
+        self.assertTrue(result)
+
+    def test_similar_rcpt_fq_match(self):
+        self.headers["To"] = [
+            "alex@1.example.com", "bob@1.example.net", "carol@1.example.org",
+            "david@1.example.com", "eli@1.example.net", "frank@1.example.org"
+        ]
+        result = self.plugin.similar_recipients(self.mock_msg,
+                                                0, 1)
+        ratio = self.local_data["tocc_similar"]
+        self.assertEqual(ratio, 0.8)
+        self.assertTrue(result)
+
+    def test_similar_rcpt_no_match(self):
+        self.headers["To"] = [
+            "alex@example.com", "bob@example.com", "carol@example.com",
+            "david@example.com", "eli@example.com", "frank@example.com"
+        ]
+        result = self.plugin.similar_recipients(self.mock_msg,
+                                                0, 1)
+        ratio = self.local_data["tocc_similar"]
+        self.assertEqual(ratio, 0.0)
+        self.assertFalse(result)
+
+    def test_similar_rcpt_no_match_dupes(self):
+        self.headers["To"] = [
+            "alex@example.com", "alex@example.com", "carol@example.com",
+            "carol@example.com", "eli@example.com", "eli@example.com"
+        ]
+        result = self.plugin.similar_recipients(self.mock_msg,
+                                                0, 1)
+        ratio = self.local_data["tocc_similar"]
+        self.assertEqual(ratio, 0.0)
+        self.assertFalse(result)
+
+    def test_similar_rcpt_not_consecutive_dupes(self):
+        self.headers["To"] = [
+            "alex@example.com", "carol@example.com", "alex@example.com",
+            "eli@example.com", "carol@example.com", "eli@example.com"
+        ]
+        result = self.plugin.similar_recipients(self.mock_msg,
+                                                0, 1)
+        ratio = self.local_data["tocc_similar"]
+        self.assertEqual(ratio, 0.2)
+        self.assertTrue(result)
+
+    def test_similar_rcpt_to_few_recipient(self):
+        self.headers["To"] = [
+            "alex@example.com", "carol@example.com", "alex@example.com",
+            "eli@example.com"
+        ]
+        result = self.plugin.similar_recipients(self.mock_msg,
+                                                0, 1)
+        ratio = self.local_data["tocc_similar"]
+        self.assertEqual(ratio, 0.0)
+        self.assertFalse(result)
+
+
+class TestForgedHotmailRcvd(TestHeaderEvalBase):
+    def setUp(self):
+        super(TestForgedHotmailRcvd, self).setUp()
+        self.headers = {}
+        self.mock_forged_hotmail = patch("pad.plugins.header_eval.HeaderEval."
+                                         "_check_for_forged_hotmail"
+                                         "_received_headers").start()
+
+    def test_check_for_forged_hotmail_received_headers(self):
+        self.plugin.hotmail_addr_with_forged_hotmail_received = 1
+        result = self.plugin.check_for_forged_hotmail_received_headers(self.mock_msg)
+        self.assertTrue(result)
+
+    def test_check_for_no_hotmail_received_headers(self):
+        self.plugin.hotmail_addr_but_no_hotmail_received = 1
+        result = self.plugin.check_for_no_hotmail_received_headers(self.mock_msg)
+        self.assertTrue(result)
