@@ -592,43 +592,9 @@ To: user@gmail.com
 
     def test_parse_recipients(self):
         rcpt = "test@example.com"
-        expected = ("test@", "test", "te")
+        expected = ("test@", "example.com", "ex")
         result = self.plugin._parse_rcpt(rcpt)
         self.assertEqual(result, expected)
-
-    def test_check_recipients_less_addresses_than_tocc_similar(self):
-        to = ["to@example.com"]
-        cc = ["cc@example.com"]
-        bcc = ["bcc@example.com"]
-        tocc = []
-        self.mock_msg.get_all_addr_header.side_effect = [to, cc, bcc, tocc]
-        result = self.plugin._check_recipients(self.mock_msg)
-        self.assertIsNone(result)
-
-    def test_check_recipients(self):
-        to = ["to@example.com", "to2@example.com", "to3@example.com"]
-        cc = ["cc@example.com"]
-        bcc = ["bcc@example.com", "bcc2@example.com"]
-        tocc = []
-        self.mock_msg.get_all_addr_header.side_effect = [to, cc, bcc, tocc]
-        result = self.plugin._check_recipients(self.mock_msg)
-        self.assertAlmostEqual(round(result, 4), 0.2667)
-
-    def test_check_similar_recipients(self):
-        patch(
-            "pad.plugins.header_eval.HeaderEval."
-            "similar_recipients", return_value=0.26666).start()
-        result = self.plugin.similar_recipients(self.mock_msg, minr=0.1,
-                                                maxr=0.3)
-        self.assertTrue(result)
-
-    def test_check_similar_recipients_false(self):
-        patch(
-            "pad.plugins.header_eval.HeaderEval."
-            "similar_recipients", return_value=1.26666).start()
-        result = self.plugin.similar_recipients(self.mock_msg, minr=0.1,
-                                                maxr=0.3)
-        self.assertTrue(result)
 
 
 class TestMessageId(TestHeaderEvalBase):
