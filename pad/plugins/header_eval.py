@@ -130,7 +130,7 @@ class HeaderEval(pad.plugins.base.BasePlugin):
             r"\s#\s*([a-f0-9]{4,})\s*$"
         ]
         for rgx in unique_id_re_list:
-            match = Regex(rgx).search(subject)
+            match = Regex(rgx, re.I).search(subject)
             if match:
                 id = match.group()
                 break
