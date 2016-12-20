@@ -1,3 +1,4 @@
+
 """Test for pad.plugins.relay_eval Plugin"""
 
 
@@ -35,11 +36,11 @@ class TestRelayEvalBase(unittest.TestCase):
 
 class TestEvalRules(TestRelayEvalBase):
     def test_check_for_numeric_helo(self):
-        self.mock_msg.untrusted_relays = [{"helo": "127.0.0.1"}]
+        self.mock_msg.untrusted_relays = [{u"helo": u"127.0.0.1"}]
         result = self.plugin.check_for_numeric_helo(self.mock_msg)
         self.assertFalse(result)
 
-        self.mock_msg.untrusted_relays = [{"helo": "83.45.21.22"}]
+        self.mock_msg.untrusted_relays = [{u"helo": u"83.45.21.22"}]
         result = self.plugin.check_for_numeric_helo(self.mock_msg)
         self.assertTrue(result)
 
@@ -48,33 +49,33 @@ class TestEvalRules(TestRelayEvalBase):
         self.assertFalse(result)
 
     def test_check_all_trusted(self):
-        self.mock_msg.trusted_relays = [{"ip": "127.0.0.1"}]
+        self.mock_msg.trusted_relays = [{u"ip": u"127.0.0.1"}]
         self.mock_msg.untrusted_relays = []
         result = self.plugin.check_all_trusted(self.mock_msg)
         self.assertTrue(result)
 
-        self.mock_msg.trusted_relays = [{"ip": "127.0.0.1"}]
-        self.mock_msg.untrusted_relays = [{"ip": "128.0.0.2"}]
+        self.mock_msg.trusted_relays = [{u"ip": u"127.0.0.1"}]
+        self.mock_msg.untrusted_relays = [{u"ip": u"128.0.0.2"}]
         result = self.plugin.check_all_trusted(self.mock_msg)
         self.assertFalse(result)
 
     def test_check_for_sender_no_reverse(self):
-        self.mock_msg.trusted_relays = [{"ip": "127.0.0.1"}]
+        self.mock_msg.trusted_relays = [{u"ip": u"127.0.0.1"}]
         self.mock_msg.untrusted_relays = []
         result = self.plugin.check_for_sender_no_reverse(self.mock_msg)
         self.assertFalse(result)
 
-        self.mock_msg.untrusted_relays = [{"rdns": "badrdns"}]
+        self.mock_msg.untrusted_relays = [{u"rdns": u"badrdns"}]
         result = self.plugin.check_for_sender_no_reverse(self.mock_msg)
         self.assertFalse(result)
 
-        self.mock_msg.untrusted_relays = [{"rdns": "test.example.com",
-                                           "ip": "127.0.0.1"}]
+        self.mock_msg.untrusted_relays = [{u"rdns": u"test.example.com",
+                                           u"ip": u"127.0.0.1"}]
         result = self.plugin.check_for_sender_no_reverse(self.mock_msg)
         self.assertFalse(result)
 
-        self.mock_msg.untrusted_relays = [{"rdns": "test.example.com",
-                                           "ip": "83.45.21.22"}]
+        self.mock_msg.untrusted_relays = [{u"rdns": u"test.example.com",
+                                           u"ip": u"83.45.21.22"}]
         result = self.plugin.check_for_sender_no_reverse(self.mock_msg)
         self.assertTrue(result)
 
@@ -85,61 +86,61 @@ class TestEvalRules(TestRelayEvalBase):
             self.mock_msg, 'example.org', 'true')
         self.assertFalse(result)
 
-        self.mock_msg.trusted_relays = [{"rdns": "example.com",
-                                         "by": "example.com"}]
+        self.mock_msg.trusted_relays = [{u"rdns": u"example.com",
+                                         u"by": u"example.com"}]
         result = self.plugin.check_for_from_domain_in_received_headers(
             self.mock_msg, 'example.com', 'true')
         self.assertTrue(result)
 
     def test_helo_ip_mismatch(self):
-        self.mock_msg.untrusted_relays = [{"helo": "83.45.21.22",
-                                           "ip": "84.55.21.45"}]
+        self.mock_msg.untrusted_relays = [{u"helo": u"83.45.21.22",
+                                           u"ip": u"84.55.21.45"}]
         result = self.plugin.helo_ip_mismatch(self.mock_msg)
         self.assertTrue(result)
 
-        self.mock_msg.untrusted_relays = [{"helo": "83.45.21.22",
-                                           "ip": "83.45.21.45"}]
+        self.mock_msg.untrusted_relays = [{u"helo": u"83.45.21.22",
+                                           u"ip": u"83.45.21.45"}]
 
         result = self.plugin.helo_ip_mismatch(self.mock_msg)
         self.assertFalse(result)
 
     def test_check_for_no_rdns_dotcom_helo(self):
-        self.mock_msg.untrusted_relays = [{"ip": "83.45.21.22", "rdns": "",
-                                           "helo": "subdomain.lycos.com"}]
+        self.mock_msg.untrusted_relays = [{u"ip": u"83.45.21.22", u"rdns": u"",
+                                           u"helo": u"subdomain.lycos.com"}]
         result = self.plugin.check_for_no_rdns_dotcom_helo(self.mock_msg)
         self.assertTrue(result)
 
-        self.mock_msg.untrusted_relays = [{"ip": "83.45.21.22", "rdns": "some",
-                                           "helo": "subdomain.lycos.com"}]
+        self.mock_msg.untrusted_relays = [{u"ip": u"83.45.21.22", u"rdns": u"some",
+                                           u"helo": u"subdomain.lycos.com"}]
         result = self.plugin.check_for_no_rdns_dotcom_helo(self.mock_msg)
         self.assertFalse(result)
 
     def test_hostname_to_domain(self):
-        hostname = "subdomain.example.com"
+        hostname = u"subdomain.example.com"
         result = self.plugin.hostname_to_domain(hostname)
-        self.assertEqual(result, "example.com")
-        hostname = "83.45.21.22"
+        self.assertEqual(result, u"example.com")
+        hostname = u"83.45.21.22"
         result = self.plugin.hostname_to_domain(hostname)
         self.assertEqual(result, hostname)
 
     def test_check_for_forged_received(self):
-        self.mock_msg.untrusted_relays = [{"ip": "83.45.21.22",
-                                           "rdns": "test.example.com",
-                                           "by": "example.com",
-                                           "helo": "22.33.44.55"}]
+        self.mock_msg.untrusted_relays = [{u"ip": u"83.45.21.22",
+                                           u"rdns": u"test.example.com",
+                                           u"by": u"example.com",
+                                           u"helo": u"22.33.44.55"}]
         self.plugin._check_for_forged_received(self.mock_msg)
         mismatch_ip_helo = self.plugin.get_global("mismatch_ip_helo")
         self.assertEqual(mismatch_ip_helo, 1)
 
     def test_check_for_forged_received_mismatch_from(self):
-        self.mock_msg.untrusted_relays = [{"ip": "83.45.21.22",
-                                           "rdns": "test.example.com",
-                                           "by": "example.com",
-                                           "helo": "22.33.44.55"},
-                                          {"ip": "83.45.21.22",
-                                           "rdns": "test.example.com",
-                                           "by": "example.com",
-                                           "helo": "22.33.44.55"}]
+        self.mock_msg.untrusted_relays = [{u"ip": u"83.45.21.22",
+                                           u"rdns": u"test.example.com",
+                                           u"by": u"example.com",
+                                           u"helo": u"22.33.44.55"},
+                                          {u"ip": u"83.45.21.22",
+                                           u"rdns": u"test.example.com",
+                                           u"by": u"example.com",
+                                           u"helo": u"22.33.44.55"}]
         self.plugin._check_for_forged_received(self.mock_msg)
         mismatch_ip_helo = self.plugin.get_global("mismatch_ip_helo")
         mismatch_from = self.plugin.get_global("mismatch_from")
@@ -147,19 +148,19 @@ class TestEvalRules(TestRelayEvalBase):
         self.assertEqual(mismatch_from, 1)
 
     def test_check_for_forged_received_trail(self):
-        self.mock_msg.untrusted_relays = [{"ip": "83.45.21.22",
-                                           "rdns": "test.example.com",
-                                           "by": "example.com",
-                                           "helo": "22.33.44.55"}
+        self.mock_msg.untrusted_relays = [{u"ip": u"83.45.21.22",
+                                           u"rdns": u"test.example.com",
+                                           u"by": u"example.com",
+                                           u"helo": u"22.33.44.55"}
                                           for _ in range(3)]
         result = self.plugin.check_for_forged_received_trail(self.mock_msg)
         self.assertTrue(result)
 
     def test_check_for_forged_received_ip_helo(self):
-        self.mock_msg.untrusted_relays = [{"ip": "83.45.21.22",
-                                           "rdns": "test.example.com",
-                                           "by": "example.com",
-                                           "helo": "22.33.44.55"}]
+        self.mock_msg.untrusted_relays = [{u"ip": u"83.45.21.22",
+                                           u"rdns": u"test.example.com",
+                                           u"by": u"example.com",
+                                           u"helo": u"22.33.44.55"}]
         result = self.plugin.check_for_forged_received_ip_helo(self.mock_msg)
         self.assertTrue(result)
 
