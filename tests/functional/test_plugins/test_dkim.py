@@ -173,17 +173,81 @@ class TestFunctionalDKIM(tests.util.TestBase):
         result = self.check_pad(MSG)
         self.check_report(result, 1, ['DKIM_ADSP_CUSTOM_HIGH'])
 
+    @unittest.skip("Skipping until fixed")
     def test_whitelist_from_address(self):
-        pass
+        config = ("full DKIM_SIGNED    "
+                  "eval:check_dkim_signed()")
+        pconfig = PRE_CONFIG + "\nwhitelist_from_dkim test@{} ".format(
+            self.dkim_domain)
+        self.setup_conf(config, pconfig)
+        result = self.check_pad(MSG)
+        self.check_report(result, 0, ['DKIM_SIGNED'])
 
+    @unittest.skip("Skipping until fixed")
     def test_whitelist_from_wildcard(self):
-        pass
+        config = ("full DKIM_SIGNED    "
+                  "eval:check_dkim_signed()")
+        pconfig = PRE_CONFIG + "\nwhitelist_from_dkim *@{} ".format(
+            self.dkim_domain)
+        self.setup_conf(config, pconfig)
+        result = self.check_pad(MSG)
+        self.check_report(result, 0, ['DKIM_SIGNED'])
 
-    def test_def_whitelist_from_address(self):
-        pass
+    @unittest.skip("Skipping until fixed")
+    def test_whitelist_from_domain(self):
+        config = ("full DKIM_SIGNED    "
+                  "eval:check_dkim_signed()")
+        pconfig = PRE_CONFIG + "\nwhitelist_from_dkim {} ".format(
+            self.dkim_domain)
+        self.setup_conf(config, pconfig)
+        result = self.check_pad(MSG)
+        self.check_report(result, 0, ['DKIM_SIGNED'])
 
+    @unittest.skip("Skipping until fixed")
     def test_def_whitelist_from_wildcard(self):
-        pass
+        config = ("full DKIM_SIGNED    "
+                  "eval:check_dkim_signed()")
+        pconfig = PRE_CONFIG + "\ndef_whitelist_from_dkim *@{} ".format(
+            self.dkim_domain[-3:])
+        self.setup_conf(config, pconfig)
+        result = self.check_pad(MSG)
+        self.check_report(result, 0, ['DKIM_SIGNED'])
+
+    @unittest.skip("Skipping until fixed")
+    def test_listed_whitelist_from_wildcard(self):
+        config = ("full DKIM_SIGNED    "
+                  "eval:check_dkim_signed('{}')".format(self.dkim_domain))
+        pconfig = PRE_CONFIG + "\nwhitelist_from_dkim *@{} ".format(
+            self.dkim_domain)
+        self.setup_conf(config, pconfig)
+        result = self.check_pad(MSG)
+        self.check_report(result, 0, ['DKIM_SIGNED'])
+
+    @unittest.skip("Skipping until fixed")
+    def test_listed_def_whitelist_from_wildcard(self):
+        config = ("full DKIM_SIGNED    "
+                  "eval:check_dkim_signed('{}')".format(self.dkim_domain))
+        pconfig = PRE_CONFIG + "\ndef_whitelist_from_dkim *@{} ".format(
+            self.dkim_domain)
+        self.setup_conf(config, pconfig)
+        result = self.check_pad(MSG)
+        self.check_report(result, 0, ['DKIM_SIGNED'])
+
+    def test_dkim_valid_minimum_bits(self):
+        config = ("full DKIM_VALID    "
+                 "eval:check_dkim_valid()")
+        pconfig = PRE_CONFIG + "\ndkim_minimum_key_bits 2048"
+        self.setup_conf(config, pconfig)
+        result = self.check_pad(MSG)
+        self.check_report(result, 0, [])
+
+    def test_dkim_valid_timeout(self):
+        config = ("full DKIM_VALID    "
+                 "eval:check_dkim_valid()")
+        pconfig = PRE_CONFIG + "\ndkim_timeout 2"
+        self.setup_conf(config, pconfig)
+        result = self.check_pad(MSG)
+        self.check_report(result, 1, ['DKIM_VALID'])
 
 
 def suite():
