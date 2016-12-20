@@ -85,6 +85,23 @@ MSG_ABUNDANT_UNICODE = """Content-Type: text/plain
 abc&#x3030;
 """
 
+
+MSG_PARSE_FLAGS = """Content-Type: multipart/mixed; boundary="sb"
+%s: %s
+MIME-Version: 1.0
+Test
+
+--sb
+
+Test
+--sb
+Content-type: text/plain; charset=us-ascii
+
+Test
+
+--sb--
+This is the epilogue.  It is also to be ignored.""" % ("a"*257, "b"*8193)
+
 class TestFunctionalMIMEEval(tests.util.TestBase):
 
     def test_check_html_only(self):
@@ -158,6 +175,42 @@ class TestFunctionalMIMEEval(tests.util.TestBase):
             pre_config=PRE_CONFIG)
         result = self.check_pad(MSG_HTML_MOSTLY)
         self.check_report(result, 1.0, ["TEXT_COUNT"])
+
+    def test_check_parse_flags_missing_headers_body_separator(self):
+        self.setup_conf(
+            config="""
+            body MISSING_HB eval:check_msg_parse_flags("missing_mime_head_body_separator")
+            """,
+            pre_config=PRE_CONFIG)
+        result = self.check_pad(MSG_PARSE_FLAGS)
+        self.check_report(result, 1.0, ["MISSING_HB"])
+
+    def test_check_parse_flags_missing_headers(self):
+        self.setup_conf(
+            config="""
+            body MISSING_H eval:check_msg_parse_flags("missing_mime_headers")
+            """,
+            pre_config=PRE_CONFIG)
+        result = self.check_pad(MSG_PARSE_FLAGS, debug=True)
+        self.check_report(result, 1.0, ["MISSING_H"])
+
+    def test_check_parse_flags_truncated_headers(self):
+        self.setup_conf(
+            config="""
+            body TRUNCATED_H eval:check_msg_parse_flags("truncated_headers")
+            """,
+            pre_config=PRE_CONFIG)
+        result = self.check_pad(MSG_PARSE_FLAGS, debug=True)
+        self.check_report(result, 1.0, ["TRUNCATED_H"])
+
+    def test_check_parse_flags_mime_epilogue_exists(self):
+        self.setup_conf(
+            config="""
+            body MIME_EPILOGUE_EXISTS eval:check_msg_parse_flags("mime_epilogue_exists")
+            """,
+            pre_config=PRE_CONFIG)
+        result = self.check_pad(MSG_PARSE_FLAGS, debug=True)
+        self.check_report(result, 1.0, ["MIME_EPILOGUE_EXISTS"])
 
 
 def suite():

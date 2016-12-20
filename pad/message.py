@@ -14,6 +14,7 @@ import email.utils
 import html.parser
 import collections
 import email.header
+import email.errors
 import email.mime.base
 import email.mime.text
 import email.mime.multipart
@@ -26,6 +27,10 @@ import pad.context
 from pad.received_parser import ReceivedParser
 from pad.rules.ruleset import RuleSet
 from pad.regex import Regex
+
+class MissingBoundaryHeaderDefect(email.errors.MessageDefect):
+    """There are no headers after an opening boundary"""
+
 
 URL_RE = Regex(r"""
 (
@@ -430,6 +435,8 @@ class Message(pad.context.MessageContext):
         body = list(self.get_decoded_header("Subject"))
         raw_body = list()
         for payload, part in self._iter_parts(self.msg):
+            if not part._headers:
+                self.msg.defects.append(MissingBoundaryHeaderDefect())
             # Extract any MIME headers
             for name, raw_value in part._headers:
                 self.raw_mime_headers[name].append(raw_value)

@@ -1,6 +1,7 @@
 """ MIME Eval Plugin replacement """
 
 import re
+import pad.message
 import pad.locales
 import pad.plugins.base
 
@@ -123,7 +124,7 @@ class MIMEEval(pad.plugins.base.BasePlugin):
                                                                 locales)
                     self.set_local(msg, "mime_faraway_charset", result)
 
-    def _update_mime_text_info(self, msg, part, text):
+    def _update_mime_text_info(self, msg, payload, part, text):
         charset = part.get_charset()
         text_count = self.get_local(msg, "mime_body_text_count")
         self.set_local(msg, "mime_body_text_count", text_count + 1)
@@ -143,7 +144,7 @@ class MIMEEval(pad.plugins.base.BasePlugin):
             # XXX This does not work properly anymore
             if not charset or charset == r"us-ascii":
                 try:
-                    part.get_payload().encode("ascii")
+                    payload.encode("ascii")
                 except UnicodeEncodeError:
                     self.set_local(msg, "mime_ascii_text_illegal", True)
 
@@ -189,7 +190,7 @@ class MIMEEval(pad.plugins.base.BasePlugin):
                            html_characters_count + len(payload))
 
         if part.get_content_type() == "text/plain":
-            self._update_mime_text_info(msg, part, text)
+            self._update_mime_text_info(msg, part.get_payload(), part, text)
 
         self._update_base64_text_stats(msg, content_type,
                                        content_transfer_encoding,
@@ -264,25 +265,32 @@ class MIMEEval(pad.plugins.base.BasePlugin):
          - missing_mime_head_body_separator: There is no newline after the header
          - missing_mime_headers: if the line after the opening boundary isn't a
           header, flag it
-         - truncated_headers: if any header name is over 512 or any header
+         - truncated_headers: if any header name is over 256 or any header
          value is over 8192
          - mime_epilogue_exists: The message has an epilogue
         """
 
+        import email.errors
         if flag == "missing_mime_head_body_separator":
-            pass
+            return any(
+                isinstance(x, email.errors.MissingHeaderBodySeparatorDefect)
+                for x in msg.msg.defects
+            )
 
         if flag == "missing_mime_headers":
-            pass
+            return any(
+                isinstance(x, pad.message.MissingBoundaryHeaderDefect)
+                for x in msg.msg.defects
+            )
 
         if flag == "truncated_headers":
-            for key,value in msg.raw_headers.items():
+            for key, value in msg.raw_headers.items():
                 if len(key) > MAX_HEADER_KEY or len(value)> MAX_HEADER_VALUE:
                     return True
 
         if flag == 'mime_epilogue_exists':
             try:
-                return bool(msg.epilogue)
+                return bool(msg.msg.epilogue)
             except AttributeError:
                 pass
 
