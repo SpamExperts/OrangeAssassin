@@ -4,6 +4,8 @@ import re
 import pad.locales
 import pad.plugins.base
 
+MAX_HEADER_KEY = 256
+MAX_HEADER_VALUE = 8192
 
 class MIMEEval(pad.plugins.base.BasePlugin):
     """Reimplementation of the awl spamassassin plugin"""
@@ -55,7 +57,10 @@ class MIMEEval(pad.plugins.base.BasePlugin):
     def _update_base64_information(self, msg, text):
 
         base64_length = self.get_local(msg, "base64_length")
-        self.set_local(msg, "base64_length", base64_length + len(text))
+        self.ctxt.log.debug("BASE 64 text %s", text)
+        self.set_local(
+            msg, "base64_length",
+            base64_length + max(len(line) for line in text.splitlines()))
 
         base64_count = self.get_local(msg, "mime_base64_count")
         self.set_local(msg, "mime_base64_count", base64_count + 1)
@@ -63,6 +68,17 @@ class MIMEEval(pad.plugins.base.BasePlugin):
     def _update_quopri_stats(self, msg, part):
         max_line_len = 79
         qp_count = self.get_local(msg, "mime_qp_count")
+        qp_bytes = self.get_local(msg, "qp_bytes")
+        qp_chars = self.get_local(msg, "qp_chars")
+        quoted_printables = re.search(
+            r"=(?:09|3[0-9ABCEF]|[2456][0-9A-F]|7[0-9A-E])",
+            part.get_payload()
+        )
+        qp_bytes += len(part.get_payload())
+        self.set_local(msg, "qp_bytes", qp_bytes)
+        if quoted_printables:
+            qp_chars += len(quoted_printables.groups())
+            self.set_local(msg, "qp_chars", qp_chars)
         self.set_local(msg, "mime_qp_count", qp_count + 1)
         raw = msg.translate_line_breaks(part.as_string())
         has_long_line = self.get_local(msg, "mime_qp_long_line")
@@ -115,15 +131,21 @@ class MIMEEval(pad.plugins.base.BasePlugin):
             plain_characters_count = self.get_local(msg, "plain_characters_count")
             self.set_local(msg, "plain_characters_count",
                            plain_characters_count + len(text))
-            # XXX it may be easier to encode/decode ascii with ignore and keep
-            # XXX the difference
             ascii_count = self.get_local(msg, "ascii_count")
-            ascii_count += sum(1 for c in text if ord(c) < 128)
-            unicode_count = self.get_local(msg, "unicode_count")
-            unicode_count += len(text) - ascii_count
-            if charset or charset == r"us-ascii":
-                has_illegal = bool(unicode_count)
-                self.set_local(msg, "mime_ascii_text_illegal", has_illegal)
+            ascii_count += len(text)
+            self.set_local(msg, "ascii_count", ascii_count)
+            unicode_chars = re.search(r"(&\#x[0-9A-F]{4};)", text, re.X)
+            unicode_count = 0
+            if unicode_chars:
+                unicode_count = self.get_local(msg, "unicode_count")
+                unicode_count += len(unicode_chars.groups())
+                self.set_local(msg, "unicode_count", unicode_count)
+            # XXX This does not work properly anymore
+            if not charset or charset == r"us-ascii":
+                try:
+                    part.get_payload().encode("ascii")
+                except UnicodeEncodeError:
+                    self.set_local(msg, "mime_ascii_text_illegal", True)
 
     def _update_mime_ma_non_text(self, msg, part):
         if not self.get_local(msg, "mime_ma_non_text"):
@@ -142,6 +164,8 @@ class MIMEEval(pad.plugins.base.BasePlugin):
         self.set_local(msg, "plain_characters_count", 0)
         self.set_local(msg, "html_characters_count", 0)
         self.set_local(msg, "unicode_count", 0)
+        self.set_local(msg, "qp_chars", 0)
+        self.set_local(msg, "qp_bytes", 0)
 
 
     def extract_metadata(self, msg, payload, text, part):
@@ -161,7 +185,8 @@ class MIMEEval(pad.plugins.base.BasePlugin):
             html_count = self.get_local(msg, "mime_body_html_count")
             self.set_local(msg, "mime_body_html_count", html_count + 1)
             html_characters_count = self.get_local(msg, "html_characters_count")
-            self.set_local(msg, "html_characters_count", html_characters_count + 1)
+            self.set_local(msg, "html_characters_count",
+                           html_characters_count + len(payload))
 
         if part.get_content_type() == "text/plain":
             self._update_mime_text_info(msg, part, text)
@@ -172,7 +197,7 @@ class MIMEEval(pad.plugins.base.BasePlugin):
                                        charset)
 
         if "base64" in content_transfer_encoding.lower():
-            self._update_base64_information(msg, payload)
+            self._update_base64_information(msg, part.get_payload())
 
         if "quoted-printable" in content_transfer_encoding.lower():
             self._update_quopri_stats(msg, part)
@@ -184,13 +209,22 @@ class MIMEEval(pad.plugins.base.BasePlugin):
         text_count = self.get_local(msg, "plain_characters_count")
         if html_count and text_count:
             self.set_local(msg, "mime_multipart_ratio",
-                           text_count / html_count)
+                           text_count / float(html_count))
 
         unicode_count = self.get_local(msg, "unicode_count")
+        self.ctxt.log.debug("Unicode characters count %s", unicode_count)
         ascii_count = self.get_local(msg, "ascii_count")
+        self.ctxt.log.debug("Ascii characters count %s", ascii_count)
         if ascii_count:
             self.set_local(msg, "mime_text_unicode_ratio",
                            unicode_count / ascii_count)
+        chars = float(self.get_local(msg, "qp_chars"))
+        bytes = float(self.get_local(msg, "qp_bytes"))
+        if chars and bytes:
+            ratio = chars/bytes
+            self.set_local(msg, "mime_qp_ratio", ratio)
+
+
 
     def check_for_mime(self, msg, test, target=None):
         """Checks for one of the the following metadata:
@@ -205,8 +239,8 @@ class MIMEEval(pad.plugins.base.BasePlugin):
           mime_qp_count: Quoted printable count
           mime_qp_long_line: Quoted printable line over 79
           mime_qp_ratio: quoted printable count / bytes
-          mime_ascii_text_illegal:
-          mime_text_unicode_ratio":
+          mime_ascii_text_illegal: us-ascii mail contains unicode characters
+          mime_text_unicode_ratio": number of unicode encoded chars / total chars
         """
 
         if test not in self.mime_checks.keys():
@@ -242,18 +276,26 @@ class MIMEEval(pad.plugins.base.BasePlugin):
             pass
 
         if flag == "truncated_headers":
-            # we don't truncate the headers
-            return self.get("truncated_headers", False)
+            for key,value in msg.raw_headers.items():
+                if len(key) > MAX_HEADER_KEY or len(value)> MAX_HEADER_VALUE:
+                    return True
 
         if flag == 'mime_epilogue_exists':
-            return bool(msg.epilogue)
+            try:
+                return bool(msg.epilogue)
+            except AttributeError:
+                pass
 
         return False
 
     def check_for_faraway_charset(self, msg, target=None):
+        """ Checks if the message is in another locale than the users own and a
+        list of preapproved locales.
+        """
         return bool(self.get_local(msg, "mime_faraway_charset"))
 
     def check_for_uppercase(self, msg, min_percent, max_percent, target=None):
+        """Checks the percent of uppercase letters is between desired limits"""
         text = re.sub(r"[\W_]", "", msg.text)
         if len(text) < 200:
             return False
@@ -261,21 +303,18 @@ class MIMEEval(pad.plugins.base.BasePlugin):
         count_lower = sum(1 for a, b in zip(msg.msg.as_string(), msg.msg.as_string().upper())
                           if a != b or a.isdigit())
         count_upper = len(text) - count_lower
-        return min_percent <= (count_upper / len(text)) * 100 <= max_percent
+        return float(min_percent) <= (count_upper / len(text)) * 100 <= float(max_percent)
 
     def check_mime_multipart_ratio(self, msg, min_ratio, max_ratio,
                                    target=None):
-        """
-        Checks the ratio of text/plain characters to text/html characters
-        :param msg:
+        """Checks the ratio of text/plain characters to text/html characters
         :param min_ratio:
         :param max_ratio:
-        :param target:
-        :return: bool
         """
         min_ratio = float(min_ratio)
         max_ratio = float(max_ratio)
         ratio = self.get_local(msg, "mime_multipart_ratio")
+        self.ctxt.log.debug("%s %s %s", min_ratio, max_ratio, ratio)
         return float(min_ratio) <= ratio < float(max_ratio)
 
     def check_base64_length(self, msg, min_length, max_length='inf',
@@ -304,9 +343,6 @@ class MIMEEval(pad.plugins.base.BasePlugin):
         by default), then we should enforce the actual text being only TAB, NL,
         SPACE through TILDE, i.e. all 7bit characters excluding
         NO-WS-CTL (per RFC-2822).
-        :param msg:
-        :param target:
-        :return:
         """
         return self.get_local(msg, "mime_ascii_text_illegal")
 
@@ -322,11 +358,8 @@ class MIMEEval(pad.plugins.base.BasePlugin):
         developers discussing such characters, but a message with a high
         density of such characters is likely spam.
 
-        :param msg:
         :param min_ratio:
         :param max_ratio:
-        :param target:
-        :return:
         """
 
 
@@ -337,13 +370,8 @@ class MIMEEval(pad.plugins.base.BasePlugin):
         """
         Takes a min ratio to use in eval to see if there is an spamminess to
         the ratio of quoted printable to total bytes in an email.
-
-        :param msg:
         :param min_ratio:
         :param max_ratio:
-        :param target:
-        :return:
         """
-
-        ratio = self.get_local(msg, "qp_ratio")
+        ratio = self.get_local(msg, "mime_qp_ratio")
         return float(min_ratio) <= ratio <= float(max_ratio)

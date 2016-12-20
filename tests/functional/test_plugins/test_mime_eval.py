@@ -31,14 +31,10 @@ header MISSING_HB_SEP		eval:check_msg_parse_flags('missing_head_body_separator')
 #######################################################
 
 body     PP_MIME_FAKE_ASCII_TEXT  eval:check_for_ascii_text_illegal()
-body     PP_TOO_MUCH_UNICODE02      eval:check_abundant_unicode_ratio(0.02)
-body     PP_TOO_MUCH_UNICODE05	eval:check_abundant_unicode_ratio(0.05)
+body ABUNDANT_UNICODE      eval:check_abundant_unicode_ratio(0.02)
 body CHARSEFARAWAY		eval:check_for_faraway_charset()
 body UPPERCASE_25_50          eval:check_for_uppercase('25', '50')
-body UPPERCASE_50_75          eval:check_for_uppercase('50', '75')
-body UPPERCASE_75_100         eval:check_for_uppercase('75', '100')
 body MULTIPARALNON_TEXT	eval:check_ma_non_text()
-body BASE64_LENGTH_78_79        eval:check_base64_length('78','79')
 body BASE64_LENGTH_79_INF       eval:check_base64_length('79')
 """
 
@@ -58,6 +54,11 @@ MSG_HTML = """
 Subject: test
 """
 
+MSG_ILLEGAL_ASCII = u"""Subject: test
+
+Τεστ
+"""
+
 MSG_HTML_MOSTLY = """Subject: test
 Content-Type: multipart/alternative; boundary=001a1148e51c20e31305439a7bc2
 
@@ -74,15 +75,15 @@ Content-Type: text/html; charset=UTF-8
 --001a1148e51c20e31305439a7bc2--
 """
 
-MSG_ASCII_ILLEGAL = """
-Subject: test
-"""
+MSG_BASE64_LONG = """Content-Transfer-Encoding: base64
 
-MSG_ASCII_ILLEGAL = """
-Subject: test
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa==
 """
 
 
+MSG_ABUNDANT_UNICODE = """Content-Type: text/plain
+abc&#x3030;
+"""
 
 class TestFunctionalMIMEEval(tests.util.TestBase):
 
@@ -98,7 +99,7 @@ class TestFunctionalMIMEEval(tests.util.TestBase):
     def test_check_mime_multipart_ratio(self):
         self.setup_conf(
             config="""
-            body MIME_HTML_MOSTLY eval:eval:check_mime_multipart_ratio('0.00','0.6')
+            body MIME_HTML_MOSTLY eval:eval:check_mime_multipart_ratio('0.30','0.50')
             """,
             pre_config=PRE_CONFIG)
         result = self.check_pad(MSG_HTML_MOSTLY)
@@ -112,6 +113,51 @@ class TestFunctionalMIMEEval(tests.util.TestBase):
             pre_config=PRE_CONFIG)
         result = self.check_pad(MSG_HTML_MOSTLY)
         self.check_report(result, 1.0, ["MIME_HTML"])
+
+    def test_abundant_unicode_ratio(self):
+        self.setup_conf(
+            config="""
+            body ABUNDANT_UNICODE eval:check_abundant_unicode_ratio(0.02)
+            """,
+            pre_config=PRE_CONFIG)
+        result = self.check_pad(MSG_ABUNDANT_UNICODE)
+        self.check_report(result, 1.0, ["ABUNDANT_UNICODE"])
+
+    def test_base64_length(self):
+        self.setup_conf(
+            config="""
+            body BASE64_LENGTH eval:check_base64_length(79)
+            """,
+            pre_config=PRE_CONFIG)
+        result = self.check_pad(MSG_BASE64_LONG)
+        self.check_report(result, 1.0, ["BASE64_LENGTH"])
+
+    def test_mime_ascii_text_illegal(self):
+        self.setup_conf(
+            config="""
+            body ILLEGAL_ASCII eval:check_for_mime("mime_ascii_text_illegal")
+            """,
+            pre_config=PRE_CONFIG)
+        result = self.check_pad(MSG_ILLEGAL_ASCII)
+        self.check_report(result, 1.0, ["ILLEGAL_ASCII"])
+
+    def test_mime_body_html_count(self):
+        self.setup_conf(
+            config="""
+            body HTML_COUNT eval:check_for_mime("mime_body_html_count")
+            """,
+            pre_config=PRE_CONFIG)
+        result = self.check_pad(MSG_HTML_MOSTLY)
+        self.check_report(result, 1.0, ["HTML_COUNT"])
+
+    def test_mime_body_text_count(self):
+        self.setup_conf(
+            config="""
+            body TEXT_COUNT eval:check_for_mime("mime_body_text_count")
+            """,
+            pre_config=PRE_CONFIG)
+        result = self.check_pad(MSG_HTML_MOSTLY)
+        self.check_report(result, 1.0, ["TEXT_COUNT"])
 
 
 def suite():
