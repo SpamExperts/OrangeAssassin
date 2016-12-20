@@ -132,9 +132,11 @@ class DKIMPlugin(pad.plugins.base.BasePlugin):
                     return True
             except KeyError:
                 return False
+            except AttributeError:
+                continue
         return False
 
-    def check_dkim_signed(self, msg, target=None, *args):
+    def check_dkim_signed(self, msg, *args, **kwargs):
         """Check if message has a DKIM signature, not necessarily valid.
         """
         if not self.dkim_checked_signature:
@@ -149,7 +151,7 @@ class DKIMPlugin(pad.plugins.base.BasePlugin):
                 return True
         return False
 
-    def check_dkim_valid(self, msg, target=None, *args):
+    def check_dkim_valid(self, msg, *args, **kwargs):
         """Check if message has at least one valid DKIM signature.
         """
         if not self.dkim_checked_signature:
@@ -164,7 +166,7 @@ class DKIMPlugin(pad.plugins.base.BasePlugin):
                 return True
         return False
 
-    def check_dkim_valid_author_sig(self, msg, target=None, *args):
+    def check_dkim_valid_author_sig(self, msg, *args, **kwargs):
         """Check if message has a valid DKIM signature from author's domain.
         """
         if not self.dkim_checked_signature:
