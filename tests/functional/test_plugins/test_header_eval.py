@@ -86,6 +86,45 @@ class TestFunctionalHeaderEval(tests.util.TestBase):
         result = self.check_pad(email)
         self.check_report(result, 0, [])
 
+    def test_check_for_unique_subject_id_starting_with_special_char_match(self):
+
+        config = "header TEST_RULE eval:check_for_unique_subject_id()"
+
+        email = "Subject: This is a test subject   :3ad41d421";
+
+        self.setup_conf(config=config, pre_config=PRE_CONFIG)
+        result = self.check_pad(email)
+        self.check_report(result, 1, ['TEST_RULE'])
+
+    def test_check_for_unique_subject_id_in_parenthesis_match(self):
+
+        config = "header TEST_RULE eval:check_for_unique_subject_id()"
+
+        email = "Subject: This is a test subject (7217vPhZ0-478TLdy5829qicU9-0@26)";
+
+        self.setup_conf(config=config, pre_config=PRE_CONFIG)
+        result = self.check_pad(email)
+        self.check_report(result, 1, ['TEST_RULE'])
+
+    def test_check_for_unique_subject_id_starting_with_number_sign(self):
+
+        config = "header TEST_RULE eval:check_for_unique_subject_id()"
+
+        email = "Subject: This is a test subject #30D7";
+
+        self.setup_conf(config=config, pre_config=PRE_CONFIG)
+        result = self.check_pad(email)
+        self.check_report(result, 1, ['TEST_RULE'])
+
+    def test_check_for_unique_subject_id_not_match(self):
+
+        config = "header TEST_RULE eval:check_for_unique_subject_id()"
+
+        email = "Subject: This is a test subject 7217vPhZ0-478TLdy5829qicU9-0@26";
+
+        self.setup_conf(config=config, pre_config=PRE_CONFIG)
+        result = self.check_pad(email)
+        self.check_report(result, 0, [])
 
 def suite():
     """Gather all the tests from this package in a test suite."""
