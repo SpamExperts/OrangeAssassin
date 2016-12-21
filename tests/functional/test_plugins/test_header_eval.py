@@ -362,7 +362,7 @@ def suite():
     test_suite.addTest(unittest.makeSuite(TestFunctionalCheckForFakeAolRelayInRcvd, "test"))
     test_suite.addTest(unittest.makeSuite(TestFunctionalCheckForFarawayCharset, "test"))
     test_suite.addTest(unittest.makeSuite(TestFunctionalCheckForUniqueSubjectId, "test"))
-    test_suite.addTest(unittest.makeSuite(TestCheckIllegalCharsInHeader, "test"))
+    test_suite.addTest(unittest.makeSuite(TestFunctionalCheckIllegalCharsInHeader, "test"))
     test_suite.addTest(unittest.makeSuite(TestFunctionalCheckForForgedHotmailReceivedHeaders, "test"))
     test_suite.addTest(unittest.makeSuite(TestFunctionalCheckForNoHotmailReceivedHeaders, "test"))
     return test_suite
