@@ -139,7 +139,7 @@ class TestFunctionalCheckIllegalCharsInHeader(tests.util.TestBase):
 
         config = "header TEST_RULE eval:check_illegal_chars('MyHeader','0.5','2')"
 
-        email = "MyHeader: ὲὲaa"
+        email = u"MyHeader: ὲὲaa"
 
         self.setup_conf(config=config, pre_config=PRE_CONFIG)
         result = self.check_pad(email)
