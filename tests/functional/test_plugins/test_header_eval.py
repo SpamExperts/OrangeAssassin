@@ -13,7 +13,6 @@ report _TESTS_
 
 class TestFunctionalHeaderEval(tests.util.TestBase):
 
-
     def test_check_for_fake_aol_relay_in_rcvd_match(self):
 
         config = "header TEST_RULE eval:check_for_fake_aol_relay_in_rcvd()"
@@ -65,12 +64,16 @@ class TestFunctionalHeaderEval(tests.util.TestBase):
         result = self.check_pad(email)
         self.check_report(result, 0, [])
 
+# ==============================================================================
+
     def test_check_for_faraway_charset_in_headers_match(self):
 
-        config = ("header TEST_RULE eval:check_for_faraway_charset_in_headers() "
+        config = ("header TEST_RULE eval:check_for_faraway_charset_in_headers()\n"
             "ok_locales ru")
 
-        email = "Subject: This is a test subject";
+        email = "Subject: This is a test subject"
+
+        print(config)
 
         self.setup_conf(config=config, pre_config=PRE_CONFIG)
         result = self.check_pad(email)
@@ -80,17 +83,19 @@ class TestFunctionalHeaderEval(tests.util.TestBase):
 
         config = "header TEST_RULE eval:check_for_faraway_charset_in_headers()"
 
-        email = "Subject: This is a test subject";
+        email = "Subject: This is a test subject"
 
         self.setup_conf(config=config, pre_config=PRE_CONFIG)
         result = self.check_pad(email)
         self.check_report(result, 0, [])
 
+# ==============================================================================
+
     def test_check_for_unique_subject_id_starting_with_special_char_match(self):
 
         config = "header TEST_RULE eval:check_for_unique_subject_id()"
 
-        email = "Subject: This is a test subject   :3ad41d421";
+        email = "Subject: This is a test subject   :3ad41d421"
 
         self.setup_conf(config=config, pre_config=PRE_CONFIG)
         result = self.check_pad(email)
@@ -100,7 +105,7 @@ class TestFunctionalHeaderEval(tests.util.TestBase):
 
         config = "header TEST_RULE eval:check_for_unique_subject_id()"
 
-        email = "Subject: This is a test subject (7217vPhZ0-478TLdy5829qicU9-0@26)";
+        email = "Subject: This is a test subject (7217vPhZ0-478TLdy5829qicU9-0@26)"
 
         self.setup_conf(config=config, pre_config=PRE_CONFIG)
         result = self.check_pad(email)
@@ -110,7 +115,7 @@ class TestFunctionalHeaderEval(tests.util.TestBase):
 
         config = "header TEST_RULE eval:check_for_unique_subject_id()"
 
-        email = "Subject: This is a test subject #30D7";
+        email = "Subject: This is a test subject #30D7"
 
         self.setup_conf(config=config, pre_config=PRE_CONFIG)
         result = self.check_pad(email)
@@ -120,11 +125,124 @@ class TestFunctionalHeaderEval(tests.util.TestBase):
 
         config = "header TEST_RULE eval:check_for_unique_subject_id()"
 
-        email = "Subject: This is a test subject 7217vPhZ0-478TLdy5829qicU9-0@26";
+        email = "Subject: This is a test subject 7217vPhZ0-478TLdy5829qicU9-0@26"
 
         self.setup_conf(config=config, pre_config=PRE_CONFIG)
         result = self.check_pad(email)
         self.check_report(result, 0, [])
+
+# ==============================================================================
+
+    def test_check_illegal_chars_in_header_match_ratio_and_count(self):
+
+        config = "header TEST_RULE eval:check_illegal_chars('MyHeader','0.5','2')"
+
+        email = "MyHeader: ὲὲaa"
+
+        self.setup_conf(config=config, pre_config=PRE_CONFIG)
+        result = self.check_pad(email)
+        self.check_report(result, 1, ['TEST_RULE'])
+
+    def test_check_illegal_chars_in_header_not_match_ratio_and_count(self):
+
+        config = "header TEST_RULE eval:check_illegal_chars('MyHeader','0.6','2')"
+
+        email = "MyHeader: ὲὲaaa"
+
+        self.setup_conf(config=config, pre_config=PRE_CONFIG)
+        result = self.check_pad(email)
+        self.check_report(result, 0, [])
+
+    def test_check_no_illegal_chars_in_header(self):
+
+        config = "header TEST_RULE eval:check_illegal_chars('MyHeader','0.5','1')"
+
+        email = "MyHeader: aaaa"
+
+        self.setup_conf(config=config, pre_config=PRE_CONFIG)
+        result = self.check_pad(email)
+        self.check_report(result, 0, [])
+
+    def test_check_illegal_chars_in_header_match_if_ratio_and_count_zero(self):
+
+        config = "header TEST_RULE eval:check_illegal_chars('MyHeader','0','0')"
+
+        email = "MyHeader: aaaa"
+
+        self.setup_conf(config=config, pre_config=PRE_CONFIG)
+        result = self.check_pad(email)
+        self.check_report(result, 1, ['TEST_RULE'])
+
+    def test_check_illegal_chars_if_empty_header(self):
+        config = "header TEST_RULE eval:check_illegal_chars('MyHeader','0','0')"
+
+        email = "MyHeader:"
+
+        self.setup_conf(config=config, pre_config=PRE_CONFIG)
+        result = self.check_pad(email)
+        self.check_report(result, 0, [])
+
+    def text_check_illegal_chars_multiple_subject_exemptions(self):
+
+        config = "header TEST_RULE eval:check_illegal_chars('Subject','0.5','3')"
+
+        email = "Subject:  ®¢£aaa"
+
+        self.setup_conf(config=config, pre_config=PRE_CONFIG)
+        result = self.check_pad(email)
+        self.check_report(result, 1, ['TEST_RULE'])
+
+    def text_check_illegal_chars_single_subject_exemption_registered(self):
+
+        config = "header TEST_RULE eval:check_illegal_chars('Subject','0.33','1')"
+
+        email = "Subject: ®aa";
+
+        self.setup_conf(config=config, pre_config=PRE_CONFIG)
+        result = self.check_pad(email)
+        self.check_report(result, 0, [])
+
+    def text_check_illegal_chars_single_subject_exemption_cent(self):
+
+        config = "header TEST_RULE eval:check_illegal_chars('Subject','0.33','1')"
+
+        email = "Subject: a¢a"
+
+        self.setup_conf(config=config, pre_config=PRE_CONFIG)
+        result = self.check_pad(email)
+        self.check_report(result, 0, [])
+
+    def text_check_illegal_chars_single_subject_exemption_pound(self):
+
+        config = "header TEST_RULE eval:check_illegal_chars('Subject','0.33','1')"
+
+        email = "Subject: aa£"
+
+        self.setup_conf(config=config, pre_config=PRE_CONFIG)
+        result = self.check_pad(email)
+        self.check_report(result, 0, [])
+
+    def test_check_illegal_chars_in_all_headers_with_from_and_subject(self):
+
+        config = "header TEST_RULE eval:check_illegal_chars('ALL','0.5','3')"
+
+        email = ("Subject: a∞a∞a∞\n"
+                 "From: a∞a∞a∞")
+
+        self.setup_conf(config=config, pre_config=PRE_CONFIG)
+        result = self.check_pad(email)
+        self.check_report(result, 0, [])
+
+    def test_check_illegal_chars_in_all_headers(self):
+        config = "header TEST_RULE eval:check_illegal_chars('ALL','0.45','5')"
+
+        email = ("To: a∞a∞a∞\n"
+                 "Cc: a∞a∞a")
+
+        self.setup_conf(config=config, pre_config=PRE_CONFIG)
+        result = self.check_pad(email)
+        self.check_report(result, 1, ['TEST_RULE'])
+
 
 def suite():
     """Gather all the tests from this package in a test suite."""
