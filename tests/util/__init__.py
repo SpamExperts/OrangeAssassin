@@ -66,7 +66,7 @@ class TestBase(unittest.TestCase):
             conf.write(config)
 
     def check_pad(self, message, message_only=False, report_only=True,
-                  extra_args=None, debug=False, env=None):
+                  extra_args=None, debug=False, expect_failure=False, env=None):
         """Run the match script and return the result.
 
         :param message: Pipe this message to the script
@@ -108,7 +108,8 @@ class TestBase(unittest.TestCase):
 
         stdout, stderr = proc.communicate(message.encode("utf8"))
 
-        if not debug and stderr:
+
+        if not debug and not expect_failure and stderr:
             self.fail(stderr)
 
         result = stdout.decode("utf8")

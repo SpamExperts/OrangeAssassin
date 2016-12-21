@@ -11,7 +11,7 @@ report _SCORE_
 report _TESTS_
 """
 
-class TestFunctionalHeaderEval(tests.util.TestBase):
+class TestFunctionalCheckForFakeAolRelayInRcvd(tests.util.TestBase):
 
     def test_check_for_fake_aol_relay_in_rcvd_match(self):
 
@@ -38,7 +38,6 @@ class TestFunctionalHeaderEval(tests.util.TestBase):
         result = self.check_pad(email)
         self.check_report(result, 0, [])
 
-
     def test_check_for_fake_aol_relay_in_rcvd_not_match2(self):
 
         config = "header TEST_RULE eval:check_for_fake_aol_relay_in_rcvd()"
@@ -64,7 +63,8 @@ class TestFunctionalHeaderEval(tests.util.TestBase):
         result = self.check_pad(email)
         self.check_report(result, 0, [])
 
-# ==============================================================================
+
+class TestFunctionalCheckForFarawayCharset(tests.util.TestBase):
 
     def test_check_for_faraway_charset_in_headers_match(self):
 
@@ -89,7 +89,8 @@ class TestFunctionalHeaderEval(tests.util.TestBase):
         result = self.check_pad(email)
         self.check_report(result, 0, [])
 
-# ==============================================================================
+
+class TestFunctionalCheckForUniqueSubjectId(tests.util.TestBase):
 
     def test_check_for_unique_subject_id_starting_with_special_char_match(self):
 
@@ -131,7 +132,8 @@ class TestFunctionalHeaderEval(tests.util.TestBase):
         result = self.check_pad(email)
         self.check_report(result, 0, [])
 
-# ==============================================================================
+
+class TestCheckIllegalCharsInHeader(tests.util.TestBase):
 
     def test_check_illegal_chars_in_header_match_ratio_and_count(self):
 
@@ -247,7 +249,10 @@ class TestFunctionalHeaderEval(tests.util.TestBase):
 def suite():
     """Gather all the tests from this package in a test suite."""
     test_suite = unittest.TestSuite()
-    test_suite.addTest(unittest.makeSuite(TestFunctionalHeaderEval, "test"))
+    test_suite.addTest(unittest.makeSuite(TestFunctionalCheckForFakeAolRelayInRcvd, "test"))
+    test_suite.addTest(unittest.makeSuite(TestFunctionalCheckForFarawayCharset, "test"))
+    test_suite.addTest(unittest.makeSuite(TestFunctionalCheckForUniqueSubjectId, "test"))
+    test_suite.addTest(unittest.makeSuite(TestCheckIllegalCharsInHeader, "test"))
     return test_suite
 
 
