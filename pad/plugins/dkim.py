@@ -128,8 +128,11 @@ class DKIMPlugin(pad.plugins.base.BasePlugin):
             if adsp_char == "*":
                 return True
             try:
-                if self.adsp_options[adsp_char] == parsed_adsp_override[author].lower():
-                    return True
+                for key in parsed_adsp_override.keys():
+                    if re.search(key, author) and parsed_adsp_override[key]:
+                        if self.adsp_options[adsp_char] == \
+                                parsed_adsp_override[key].lower():
+                            return True
             except KeyError:
                 return False
             except AttributeError:
@@ -190,30 +193,20 @@ class DKIMPlugin(pad.plugins.base.BasePlugin):
         """Get all the from addresses and check if they match the
         'whitelist_from_dkim' regexes.
         """
-        if not self.dkim_checked_signature:
-            self.check_dkim_signature(msg)
-        if not self.dkim_valid:
-            return False
-        whitelist_address = self.parse_input("whitelist_from_dkim")
-        for address in self.author_addresses:
-            for domain in self.author_domains:
-                try:
-                    if whitelist_address[address.encode()] == domain.decode() \
-                            or whitelist_address[address.encode()] == "":
-                        return True
-                except KeyError:
-                    continue
-        return False
+        return self._check_dkim_whitelist(msg, "whitelist_from_dkim")
 
     def check_for_def_dkim_whitelist_from(self, msg, target=None):
         """Get all the from addresses and check if they match the
         'def_whitelist_from_dkim' regexes.
         """
+        return self._check_dkim_whitelist(msg, "def_whitelist_from_dkim")
+
+    def _check_dkim_whitelist(self, msg, list_name):
         if not self.dkim_checked_signature:
             self.check_dkim_signature(msg)
         if not self.dkim_valid:
             return False
-        whitelist_address = self.parse_input("def_whitelist_from_dkim")
+        whitelist_address = self.parse_input(list_name)
         for author in self.author_addresses:
             for key, value in whitelist_address.items():
                 if re.match(key, author.encode()):
