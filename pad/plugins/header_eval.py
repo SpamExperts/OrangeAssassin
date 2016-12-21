@@ -161,19 +161,28 @@ class HeaderEval(pad.plugins.base.BasePlugin):
             return False
         if header == 'ALL':
             raw_headers = msg.raw_headers
-            for hdr in ("Subject", "From"):
-                del raw_headers[hdr]
+            for hdr in ("subject", "from"):
+                try:
+                    del raw_headers[hdr]
+                except KeyError:
+                    pass
         else:
             raw_headers = {header: msg.get_raw_header(header)}
+
+        # count illegal substrings (RFC 2045)
+        # (non-ASCII + C0 controls except TAB, NL, CR)
+
         raw_str = ''.join([''.join(value) for value in raw_headers.values()])
         clean_hdr = ''.join([i if ord(i) < 128 else '' for i in raw_str])
         illegal = len(raw_str) - len(clean_hdr)
         if illegal > 0 and header.lower() == "subject":
             exempt = 0
+            # only exempt a single cent sign, pound sign, or registered sign
             for except_chr in (u'\xa2', u'\xa3', u'\xae'):
                 if except_chr in raw_str:
                     exempt += 1
-            illegal -= exempt
+            if exempt == 1:
+                illegal -= exempt
         return (illegal / len(raw_str)) >= ratio and illegal >= count
 
     def check_for_forged_hotmail_received_headers(self, msg, target=None):

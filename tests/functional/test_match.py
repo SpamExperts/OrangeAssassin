@@ -200,8 +200,9 @@ class TestMatchScript(tests.util.TestBase):
             pre_config="loadplugin %s %s" % (plugin_name, cwd)
         )
         result = self.check_pad("Subject: test\n\nTest abcd test.",
-                                report_only=False, extra_args=["--report",
-                                                               "--revoke"])
+                                report_only=False,
+                                extra_args=["--report", "--revoke"],
+                                expect_failure=True)
         self.assertEqual(result, expected)
 
 

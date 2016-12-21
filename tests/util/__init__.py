@@ -66,7 +66,7 @@ class TestBase(unittest.TestCase):
             conf.write(config)
 
     def check_pad(self, message, message_only=False, report_only=True,
-                  extra_args=None, debug=False, env=""):
+                  extra_args=None, debug=False, expect_failure=False, env=None):
         """Run the match script and return the result.
 
         :param message: Pipe this message to the script
@@ -91,27 +91,27 @@ class TestBase(unittest.TestCase):
         if extra_args is not None:
             args.extend(extra_args)
 
-        if env:
-            if os.environ.get("USE_PICKLES") == "1":
-                proc_compile = subprocess.Popen(compile_args,
-                                                stdin=subprocess.PIPE,
-                                                stdout=subprocess.PIPE, env=env)
-                stdout, stderr = proc_compile.communicate()
-                if stderr or proc_compile.returncode:
-                    self.fail(stderr)
-            proc = subprocess.Popen(args, stdin=subprocess.PIPE,
-                                    stdout=subprocess.PIPE, env=env)
-        else:
-            if os.environ.get("USE_PICKLES") == "1":
-                proc_compile = subprocess.Popen(compile_args,
-                                                stdin=subprocess.PIPE,
-                                                stdout=subprocess.PIPE)
-                stdout, stderr = proc_compile.communicate()
-                if stderr or proc_compile.returncode:
-                    self.fail(stderr)
-            proc = subprocess.Popen(args, stdin=subprocess.PIPE,
-                                    stdout=subprocess.PIPE)
+        if os.environ.get("USE_PICKLES") == "1":
+            proc_compile = subprocess.Popen(compile_args,
+                                            stdin=subprocess.PIPE,
+                                            stdout=subprocess.PIPE,
+                                            env=env)
+            stdout, stderr = proc_compile.communicate()
+            if stderr or proc_compile.returncode:
+                self.fail(stderr)
+
+        proc = subprocess.Popen(args,
+                                stdin=subprocess.PIPE,
+                                stdout=subprocess.PIPE,
+                                stderr=subprocess.PIPE,
+                                env=env)
+
         stdout, stderr = proc.communicate(message.encode("utf8"))
+
+
+        if not debug and not expect_failure and stderr:
+            self.fail(stderr)
+
         result = stdout.decode("utf8")
         if report_only:
             try:
