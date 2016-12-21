@@ -149,7 +149,7 @@ class TestFunctionalCheckIllegalCharsInHeader(tests.util.TestBase):
 
         config = "header TEST_RULE eval:check_illegal_chars('MyHeader','0.6','2')"
 
-        email = "MyHeader: ὲὲaaa"
+        email = u"MyHeader: ὲὲaaa"
 
         self.setup_conf(config=config, pre_config=PRE_CONFIG)
         result = self.check_pad(email)
@@ -159,7 +159,7 @@ class TestFunctionalCheckIllegalCharsInHeader(tests.util.TestBase):
 
         config = "header TEST_RULE eval:check_illegal_chars('MyHeader','0.5','1')"
 
-        email = "MyHeader: aaaa"
+        email = u"MyHeader: aaaa"
 
         self.setup_conf(config=config, pre_config=PRE_CONFIG)
         result = self.check_pad(email)
@@ -169,7 +169,7 @@ class TestFunctionalCheckIllegalCharsInHeader(tests.util.TestBase):
 
         config = "header TEST_RULE eval:check_illegal_chars('MyHeader','0','0')"
 
-        email = "MyHeader: aaaa"
+        email = u"MyHeader: aaaa"
 
         self.setup_conf(config=config, pre_config=PRE_CONFIG)
         result = self.check_pad(email)
@@ -178,7 +178,7 @@ class TestFunctionalCheckIllegalCharsInHeader(tests.util.TestBase):
     def test_check_illegal_chars_if_empty_header(self):
         config = "header TEST_RULE eval:check_illegal_chars('MyHeader','0','0')"
 
-        email = "MyHeader:"
+        email = u"MyHeader:"
 
         self.setup_conf(config=config, pre_config=PRE_CONFIG)
         result = self.check_pad(email)
@@ -188,7 +188,7 @@ class TestFunctionalCheckIllegalCharsInHeader(tests.util.TestBase):
 
         config = "header TEST_RULE eval:check_illegal_chars('Subject','0.5','3')"
 
-        email = "Subject:  ®¢£aaa"
+        email = u"Subject:  ®¢£aaa"
 
         self.setup_conf(config=config, pre_config=PRE_CONFIG)
         result = self.check_pad(email)
@@ -198,7 +198,7 @@ class TestFunctionalCheckIllegalCharsInHeader(tests.util.TestBase):
 
         config = "header TEST_RULE eval:check_illegal_chars('Subject','0.33','1')"
 
-        email = "Subject: ®aa";
+        email = u"Subject: ®aa";
 
         self.setup_conf(config=config, pre_config=PRE_CONFIG)
         result = self.check_pad(email)
@@ -208,7 +208,7 @@ class TestFunctionalCheckIllegalCharsInHeader(tests.util.TestBase):
 
         config = "header TEST_RULE eval:check_illegal_chars('Subject','0.33','1')"
 
-        email = "Subject: a¢a"
+        email = u"Subject: a¢a"
 
         self.setup_conf(config=config, pre_config=PRE_CONFIG)
         result = self.check_pad(email)
@@ -218,7 +218,7 @@ class TestFunctionalCheckIllegalCharsInHeader(tests.util.TestBase):
 
         config = "header TEST_RULE eval:check_illegal_chars('Subject','0.33','1')"
 
-        email = "Subject: aa£"
+        email = u"Subject: aa£"
 
         self.setup_conf(config=config, pre_config=PRE_CONFIG)
         result = self.check_pad(email)
@@ -228,8 +228,8 @@ class TestFunctionalCheckIllegalCharsInHeader(tests.util.TestBase):
 
         config = "header TEST_RULE eval:check_illegal_chars('ALL','0.5','3')"
 
-        email = ("Subject: a∞a∞a∞\n"
-                 "From: a∞a∞a∞")
+        email = (u"Subject: a∞a∞a∞\n"
+                 u"From: a∞a∞a∞")
 
         self.setup_conf(config=config, pre_config=PRE_CONFIG)
         result = self.check_pad(email)
@@ -238,8 +238,8 @@ class TestFunctionalCheckIllegalCharsInHeader(tests.util.TestBase):
     def test_check_illegal_chars_in_all_headers(self):
         config = "header TEST_RULE eval:check_illegal_chars('ALL','0.45','5')"
 
-        email = ("To: a∞a∞a∞\n"
-                 "Cc: a∞a∞a")
+        email = (u"To: a∞a∞a∞\n"
+                 u"Cc: a∞a∞a")
 
         self.setup_conf(config=config, pre_config=PRE_CONFIG)
         result = self.check_pad(email)
