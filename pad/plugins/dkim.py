@@ -26,6 +26,7 @@ class DKIMPlugin(pad.plugins.base.BasePlugin):
     dkim_has_valid_author_sig = 0
     dkim_signatures_dependable = 0
     is_valid = 1
+    match_adsp = 0
 
     eval_rules = (
         "check_dkim_adsp",
@@ -124,19 +125,24 @@ class DKIMPlugin(pad.plugins.base.BasePlugin):
                 continue
             if not parsed_adsp_override[author]:
                 if adsp_char == 'D':
+                    self.match_adsp = 1
                     return True
             if adsp_char == "*":
+                self.match_adsp = 1
                 return True
             try:
                 for key in parsed_adsp_override.keys():
                     if re.search(key, author) and parsed_adsp_override[key]:
                         if self.adsp_options[adsp_char] == \
                                 parsed_adsp_override[key].lower():
+                            self.match_adsp = 1
                             return True
             except KeyError:
                 return False
             except AttributeError:
                 continue
+        if not self.match_adsp and adsp_char == 'U':
+            return True
         return False
 
     def check_dkim_signed(self, msg, *args, **kwargs):
