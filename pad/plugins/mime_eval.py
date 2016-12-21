@@ -309,8 +309,9 @@ class MIMEEval(pad.plugins.base.BasePlugin):
         if len(text) < 200:
             return False
 
-        count_lower = sum(1 for a, b in zip(msg.msg.as_string(), msg.msg.as_string().upper())
-                          if a != b or a.isdigit())
+        count_lower = sum(
+            1 for a, b in zip(text, text.upper()) if a != b or a.isdigit()
+        )
         count_upper = len(text) - count_lower
         return float(min_percent) <= (count_upper / len(text)) * 100 <= float(max_percent)
 

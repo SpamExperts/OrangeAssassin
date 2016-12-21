@@ -183,7 +183,10 @@ class HeaderEval(pad.plugins.base.BasePlugin):
                     exempt += 1
             if exempt == 1:
                 illegal -= exempt
-        return (illegal / len(raw_str)) >= ratio and illegal >= count
+        if raw_str:
+            return (illegal / len(raw_str)) >= ratio and illegal >= count
+        else:
+            return False
 
     def check_for_forged_hotmail_received_headers(self, msg, target=None):
         """Check for forged hotmail received headers"""
@@ -210,9 +213,10 @@ class HeaderEval(pad.plugins.base.BasePlugin):
                 r"from\s+(?:\S*\.)?hotmail.com\s+\(\S+\.hotmail("
                 r"?:\.msn)?\.com[\)]|"
                 r"from\s+\S*\.hotmail\.com\s+\(\[{IP_ADDRESS}\]|"
-                r"from\s+ \S+\s+ by\s+ \S+\.hotmail(?:\.msn)?\.com with HTTP\;|"
+                r"from\s+\S+\s+by\s+\S+\.hotmail(?:\.msn)?\.com\s+with\s+ "
+                r"HTTP\;|"
                 r"from\s+\[66\.218.\S+\]\s+by\s+\S+\.yahoo\.com"
-                r"".format(IP_ADDRESS=IP_ADDRESS.pattern), re.I|re.X)
+                r"".format(IP_ADDRESS=IP_ADDRESS.pattern), re.I | re.X)
             if FORGED_REGEX.search(rcvd):
                 return False
         if self.gated_through_received_hdr_remover(msg):
