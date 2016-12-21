@@ -133,7 +133,7 @@ class TestFunctionalCheckForUniqueSubjectId(tests.util.TestBase):
         self.check_report(result, 0, [])
 
 
-class TestCheckIllegalCharsInHeader(tests.util.TestBase):
+class TestFunctionalCheckIllegalCharsInHeader(tests.util.TestBase):
 
     def test_check_illegal_chars_in_header_match_ratio_and_count(self):
 
@@ -246,6 +246,116 @@ class TestCheckIllegalCharsInHeader(tests.util.TestBase):
         self.check_report(result, 1, ['TEST_RULE'])
 
 
+class TestFunctionalCheckForForgedHotmailReceivedHeaders(tests.util.TestBase):
+
+    def test_check_for_forget_hotmail_received_headers_match(self):
+
+        config = ("header TEST_RULE1 eval:check_for_forged_hotmail_received_headers()\n"
+                  "header TEST_RULE2 eval:check_for_no_hotmail_received_headers()")
+
+        email = ("Received: from hotmail.com (example.com [1.2.3.4])\n"
+                 "by example.com\n"
+                 "(envelope-from <example.com.user@something>)\n"
+                 "From: user@hotmail.com")
+
+        self.setup_conf(config=config, pre_config=PRE_CONFIG)
+        result = self.check_pad(email)
+        self.check_report(result, 1, ['TEST_RULE1'])
+
+    def test_check_for_forget_hotmail_received_headers_false_addr(self):
+
+        config = ("header TEST_RULE1 eval:check_for_forged_hotmail_received_headers()\n"
+                  "header TEST_RULE2 eval:check_for_no_hotmail_received_headers()")
+
+        email = ("Received: from hotmail.com (example.com [1.2.3.4])\n"
+                 "by example.com\n"
+                 "(envelope-from <example.com.user@something>)\n"
+                 "From: user@example.com")
+
+        self.setup_conf(config=config, pre_config=PRE_CONFIG)
+        result = self.check_pad(email)
+        self.check_report(result, 1, ['TEST_RULE1'])
+
+    def test_check_for_forget_hotmail_received_headers_false_pickup(self):
+
+        config = ("header TEST_RULE1 eval:check_for_forged_hotmail_received_headers()\n"
+                  "header TEST_RULE2 eval:check_for_no_hotmail_received_headers()")
+
+        email = ("Received: from mail pickup service by hotmail.com with Microsoft SMTPSVC;"
+                 "From: user@hotmail.com")
+
+        self.setup_conf(config=config, pre_config=PRE_CONFIG)
+        result = self.check_pad(email)
+        self.check_report(result, 0, [])
+
+    def test_check_for_forget_hotmail_received_headers_false_gated_true(self):
+
+        config = ("header TEST_RULE1 eval:check_for_forged_hotmail_received_headers()\n"
+                  "header TEST_RULE2 eval:check_for_no_hotmail_received_headers()")
+
+        email = ("Received: from hotmail.com (example.com [1.2.3.4])\n"
+                 "by example.com\n"
+                 "(envelope-from <example.com.user@something>)\n"
+                 "X-ORIGINATING-IP: [1.2.3.4]\n"
+                 "From: user@example.com")
+
+        self.setup_conf(config=config, pre_config=PRE_CONFIG)
+        result = self.check_pad(email)
+        self.check_report(result, 1, ['TEST_RULE1'])
+
+    def test_check_for_forget_hotmail_received_headers_ip_regex1(self):
+
+        config = ("header TEST_RULE1 eval:check_for_forged_hotmail_received_headers()\n"
+                  "header TEST_RULE2 eval:check_for_no_hotmail_received_headers()")
+
+        email = ("Received: from user.hotmail.com (user.hotmail.com)\n"
+                 "X-ORIGINATING-IP: [1.2.3.4]\n"
+                 "From: user@hotmail.com")
+
+        self.setup_conf(config=config, pre_config=PRE_CONFIG)
+        result = self.check_pad(email)
+        self.check_report(result, 0, [])
+
+    def test_check_for_forget_hotmail_received_headers_ip_regex2(self):
+
+        config = ("header TEST_RULE1 eval:check_for_forged_hotmail_received_headers()\n"
+                  "header TEST_RULE2 eval:check_for_no_hotmail_received_headers()")
+
+        email = ("Received: from example.hotmail.com ([1.2.3.4])\n"
+                 "X-ORIGINATING-IP: [1.2.3.4]\n"
+                 "From: user@hotmail.com")
+
+        self.setup_conf(config=config, pre_config=PRE_CONFIG)
+        result = self.check_pad(email)
+        self.check_report(result, 0, [])
+
+    def test_check_for_forget_hotmail_received_headers_ip_regex3(self):
+
+        config = ("header TEST_RULE1 eval:check_for_forged_hotmail_received_headers()\n"
+                  "header TEST_RULE2 eval:check_for_no_hotmail_received_headers()")
+
+        email = ("Received: from example by example.hotmail.com with HTTP;\n"
+                 "X-ORIGINATING-IP: [1.2.3.4]\n"
+                 "From: user@hotmail.com")
+
+        self.setup_conf(config=config, pre_config=PRE_CONFIG)
+        result = self.check_pad(email)
+        self.check_report(result, 0, [])
+
+    def test_check_for_forget_hotmail_received_headers_ip_regex4(self):
+
+        config = ("header TEST_RULE1 eval:check_for_forged_hotmail_received_headers()\n"
+                  "header TEST_RULE2 eval:check_for_no_hotmail_received_headers()")
+
+        email = ("Received: from [66.218.example] by example.yahoo.com\n"
+                 "X-ORIGINATING-IP: [1.2.3.4]\n"
+                 "From: user@hotmail.com")
+
+        self.setup_conf(config=config, pre_config=PRE_CONFIG)
+        result = self.check_pad(email)
+        self.check_report(result, 0, [])
+
+
 def suite():
     """Gather all the tests from this package in a test suite."""
     test_suite = unittest.TestSuite()
@@ -253,6 +363,8 @@ def suite():
     test_suite.addTest(unittest.makeSuite(TestFunctionalCheckForFarawayCharset, "test"))
     test_suite.addTest(unittest.makeSuite(TestFunctionalCheckForUniqueSubjectId, "test"))
     test_suite.addTest(unittest.makeSuite(TestCheckIllegalCharsInHeader, "test"))
+    test_suite.addTest(unittest.makeSuite(TestFunctionalCheckForForgedHotmailReceivedHeaders, "test"))
+    test_suite.addTest(unittest.makeSuite(TestFunctionalCheckForNoHotmailReceivedHeaders, "test"))
     return test_suite
 
 
