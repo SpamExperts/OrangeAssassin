@@ -123,7 +123,6 @@ class TestFunctionalDKIM(tests.util.TestBase):
         result = self.check_pad(MSG_INVALID)
         self.check_report(result, 1, ['DKIM_ADSP_DISCARD'])
 
-    @unittest.skip("Skipping until fixed")
     def test_dkim_adsp_u(self):
         config = ("header DKIM_ADSP_UNKNOWN    eval:"
                   "check_dkim_adsp('U')")
@@ -131,19 +130,21 @@ class TestFunctionalDKIM(tests.util.TestBase):
         result = self.check_pad(MSG_INVALID)
         self.check_report(result, 1, ['DKIM_ADSP_UNKNOWN'])
 
-    @unittest.skip("Skipping until fixed")
     def test_dkim_adsp_a(self):
         config = ("header DKIM_ADSP_ALL    eval:"
                   "check_dkim_adsp('A')")
-        self.setup_conf(config, PRE_CONFIG)
+        pconfig = (PRE_CONFIG +
+                   "\nadsp_override *.simplyspamfree.com all")
+        self.setup_conf(config, pconfig)
         result = self.check_pad(MSG_INVALID)
         self.check_report(result, 1, ['DKIM_ADSP_ALL'])
 
-    @unittest.skip("Skipping until fixed")
     def test_dkim_adsp_n(self):
         config = ("header DKIM_ADSP_NXDOMAIN    eval:"
                   "check_dkim_adsp('N')")
-        self.setup_conf(config, PRE_CONFIG)
+        pconfig = (PRE_CONFIG +
+                   "\nadsp_override *.simplyspamfree.com nxdomain")
+        self.setup_conf(config, pconfig)
         result = self.check_pad(MSG_INVALID)
         self.check_report(result, 1, ['DKIM_ADSP_NXDOMAIN'])
 
@@ -185,7 +186,6 @@ class TestFunctionalDKIM(tests.util.TestBase):
         result = self.check_pad(MSG_INVALID)
         self.check_report(result, 1, ['DKIM_ADSP_CUSTOM_LOW'])
 
-    @unittest.skip("Skipping until fixed")
     def test_dkim_adsp_high_wildcard_domain(self):
         config = ("header DKIM_ADSP_CUSTOM_HIGH    eval:"
                   "check_dkim_adsp('3')")
@@ -195,7 +195,6 @@ class TestFunctionalDKIM(tests.util.TestBase):
         result = self.check_pad(MSG_INVALID)
         self.check_report(result, 1, ['DKIM_ADSP_CUSTOM_HIGH'])
 
-    @unittest.skip("Skipping until fixed")
     def test_dkim_adsp_high_wildcard(self):
         config = ("header DKIM_ADSP_CUSTOM_HIGH    eval:"
                   "check_dkim_adsp('3')")
@@ -213,7 +212,6 @@ class TestFunctionalDKIM(tests.util.TestBase):
         result = self.check_pad(MSG)
         self.check_report(result, 1, ['DKIM_WHITELIST'])
 
-    @unittest.skip("Skipping until fixed")
     def test_whitelist_from_wildcard(self):
         config = ("full DKIM_WHITELIST    "
                   "eval:check_for_dkim_whitelist_from()")
@@ -222,7 +220,6 @@ class TestFunctionalDKIM(tests.util.TestBase):
         result = self.check_pad(MSG)
         self.check_report(result, 1, ['DKIM_WHITELIST'])
 
-    @unittest.skip("Skipping until fixed")
     def test_whitelist_from_domain(self):
         config = ("full DKIM_WHITELIST    "
                   "eval:check_for_dkim_whitelist_from()")
