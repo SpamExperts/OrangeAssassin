@@ -1,42 +1,9 @@
+#coding: utf-8
 """Tests the URIDetail Plugin"""
 
 from __future__ import absolute_import
 import unittest
 import tests.util
-
-CONFIG = """
-rawbody MIME_BASE64		eval:check_for_mime('mime_base64_count')
-rawbody MIME_QP		eval:check_for_mime('mime_qp_count')
-rawbody MIME_BASE64_BLANKS	eval:check_for_mime('mime_base64_blanks')
-rawbody MIME_BASE64_TEXT	eval:check_for_mime('mime_base64_encoded_text')
-rawbody  MIME_QP_LONG_LINE	eval:check_for_mime('mime_qp_long_line')
-rawbody MIME_CHARSEFARAWAY	eval:check_for_mime('mime_faraway_charset')
-body MIME_BAD_ISO_CHARSET	eval:check_for_mime('mime_bad_iso_charset')
-body MIME_ATTACHMENT		eval:check_for_mime('mime_attachment')
-
-#######################################################
-
-body MIME_HTML		eval:check_for_mime_html()
-body MIME_HTML_ONLY		eval:check_for_mime_html_only()
-body MIME_HTML_MOSTLY		eval:check_mime_multipart_ratio('0.00','0.6')
-
-#######################################################
-
-body MISSING_MIME_HB_SEP	eval:check_msg_parse_flags('missing_mime_head_body_separator')
-body TVD_MIME_EPI             eval:check_msg_parse_flags('mime_epilogue_exists')
-body TVD_MIME_NO_HEADERS      eval:check_msg_parse_flags('missing_mime_headers')
-header HEAD_LONG                eval:check_msg_parse_flags('truncated_header')
-header MISSING_HB_SEP		eval:check_msg_parse_flags('missing_head_body_separator')
-
-#######################################################
-
-body     PP_MIME_FAKE_ASCII_TEXT  eval:check_for_ascii_text_illegal()
-body ABUNDANT_UNICODE      eval:check_abundant_unicode_ratio(0.02)
-body CHARSEFARAWAY		eval:check_for_faraway_charset()
-body UPPERCASE_25_50          eval:check_for_uppercase('25', '50')
-body MULTIPARALNON_TEXT	eval:check_ma_non_text()
-body BASE64_LENGTH_79_INF       eval:check_base64_length('79')
-"""
 
 PRE_CONFIG = """
 loadplugin     Mail::SpamAssassin::Plugin::MIMEEval
@@ -50,9 +17,6 @@ Content-Type: text/html
 <div dir="ltr">Test Body</div>
 """
 
-MSG_HTML = """
-Subject: test
-"""
 
 MSG_ILLEGAL_ASCII = u"""Subject: test
 

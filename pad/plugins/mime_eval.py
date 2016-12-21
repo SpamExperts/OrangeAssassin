@@ -1,6 +1,8 @@
 """ MIME Eval Plugin replacement """
 
 import re
+import email.errors
+
 import pad.message
 import pad.locales
 import pad.plugins.base
@@ -270,7 +272,6 @@ class MIMEEval(pad.plugins.base.BasePlugin):
          - mime_epilogue_exists: The message has an epilogue
         """
 
-        import email.errors
         if flag == "missing_mime_head_body_separator":
             return any(
                 isinstance(x, email.errors.MissingHeaderBodySeparatorDefect)
