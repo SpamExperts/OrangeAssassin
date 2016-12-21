@@ -71,6 +71,13 @@ class TestFunctionalDKIM(tests.util.TestBase):
         result = self.check_pad(MSG_NO_DKIM)
         self.check_report(result, 0, [])
 
+    def test_dkim_dependable(self):
+        config = ("full DKIM_DEPENDABLE    "
+                 "eval:check_dkim_dependable()")
+        self.setup_conf(config, PRE_CONFIG)
+        result = self.check_pad(MSG)
+        self.check_report(result, 1, ['DKIM_DEPENDABLE'])
+
     def test_dkim_valid(self):
         config = ("full DKIM_VALID    "
                  "eval:check_dkim_valid()")
@@ -115,6 +122,14 @@ class TestFunctionalDKIM(tests.util.TestBase):
         self.setup_conf(config, PRE_CONFIG)
         result = self.check_pad(MSG_INVALID)
         self.check_report(result, 1, ['DKIM_ADSP_DISCARD'])
+
+    @unittest.skip("Skipping until fixed")
+    def test_dkim_adsp_u(self):
+        config = ("header DKIM_ADSP_UNKNOWN    eval:"
+                  "check_dkim_adsp('U')")
+        self.setup_conf(config, PRE_CONFIG)
+        result = self.check_pad(MSG_INVALID)
+        self.check_report(result, 1, ['DKIM_ADSP_UNKNOWN'])
 
     @unittest.skip("Skipping until fixed")
     def test_dkim_adsp_a(self):
@@ -226,7 +241,6 @@ class TestFunctionalDKIM(tests.util.TestBase):
         result = self.check_pad(MSG)
         self.check_report(result, 1, ['DKIM_DEF_WHITELIST'])
 
-    # @unittest.skip("Skipping until fixed")
     def test_def_whitelist_from_wildcard_all(self):
         config = ("full DKIM_DEF_WHITELIST    "
                   "eval:check_for_def_dkim_whitelist_from()")
@@ -244,6 +258,16 @@ class TestFunctionalDKIM(tests.util.TestBase):
         result = self.check_pad(MSG)
         self.check_report(result, 1, ['DKIM_DEF_WHITELIST'])
 
+    def test_unwhitelist_from_address(self):
+        config = ("full DKIM_WHITELIST    "
+                  "eval:check_for_dkim_whitelist_from()")
+        pconfig = PRE_CONFIG + ("\nwhitelist_from_dkim test@{}"
+                                "\nunwhitelist_from_dkim test@{}".format(
+            self.dkim_domain, self.dkim_domain))
+        self.setup_conf(config, pconfig)
+        result = self.check_pad(MSG)
+        self.check_report(result, 0, [])
+
     def test_dkim_valid_minimum_bits(self):
         config = ("full DKIM_VALID    "
                  "eval:check_dkim_valid()")
@@ -259,6 +283,16 @@ class TestFunctionalDKIM(tests.util.TestBase):
         self.setup_conf(config, pconfig)
         result = self.check_pad(MSG)
         self.check_report(result, 1, ['DKIM_VALID'])
+
+    def test_dkim_several_rules(self):
+        pconfig = PRE_CONFIG + "\ndef_whitelist_from_dkim test@{} ".format(
+            self.dkim_domain)
+        self.setup_conf(DEFAULT_CONFIG, pconfig)
+        result = self.check_pad(MSG)
+        self.check_report(result, 5, ['DKIM_SIGNED', 'DKIM_DEPENDABLE',
+                                      'DKIM_DEF_WHITELIST_FROM',
+                                      'DKIM_VALID_AUTHOR_SIG',
+                                      'DKIM_VALID'])
 
 
 def suite():
