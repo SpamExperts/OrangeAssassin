@@ -1074,6 +1074,69 @@ class TestFunctionalCheckForForgedGw05ReceivedHeaders(tests.util.TestBase):
         self.check_report(result, 1, ['TEST_RULE'])
 
 
+class TestFunctionalCheckForMatchingEnvAndHdrFrom(tests.util.TestBase):
+
+    def test_check_for_matching_env_and_hdr_from_true(self):
+
+        config = "header TEST_RULE eval:check_for_matching_env_and_hdr_from()"
+
+        email = ("From: test@example.com\n"
+                 "Received: from example.com (example.com [1.2.3.4])\n"
+                 "\tby example.com\n"
+                 "\t(envelope-from <test@example.com>)\n")
+
+        self.setup_conf(config=config, pre_config=PRE_CONFIG)
+        result = self.check_pad(email)
+        self.check_report(result, 1, ['TEST_RULE'])
+
+
+    def test_check_for_matching_env_and_hdr_from_true_multi_relays(self):
+
+        config = "header TEST_RULE eval:check_for_matching_env_and_hdr_from()"
+
+        email = ("From: test1@example.com, test2@example.com\n"
+                 "Received: from example.com (example.com [1.2.3.4])\n"
+                 "\tby example.com\n"
+                 "\t(envelope-from <test@example.com>)\n"
+                 "Received: from example.com (example.com [1.2.3.4])\n"
+                 "\tby example.com\n"
+                 "\t(envelope-from <test2@example.com>)\n")
+
+        self.setup_conf(config=config, pre_config=PRE_CONFIG)
+        result = self.check_pad(email)
+        self.check_report(result, 1, ['TEST_RULE'])
+
+    def test_check_for_matching_env_and_hdr_from_false(self):
+
+        config = "header TEST_RULE eval:check_for_matching_env_and_hdr_from()"
+
+        email = ("From: test@example.com\n"
+                 "Received: from example.com (example.com [1.2.3.4])\n"
+                 "\tby example.com\n"
+                 "\t(envelope-from <test@example.net>)\n")
+
+        self.setup_conf(config=config, pre_config=PRE_CONFIG)
+        result = self.check_pad(email)
+        self.check_report(result, 0, [])
+
+    def test_check_for_matching_env_and_hdr_from_false_multi_relays(self):
+
+        config = "header TEST_RULE eval:check_for_matching_env_and_hdr_from()"
+
+        email = ("From: test1@example.com, test2@example.com\n"
+                 "Received: from example.com (example.com [1.2.3.4])\n"
+                 "\tby example.com\n"
+                 "\t(envelope-from <test@example.com>)\n"
+                 "Received: from example.com (example.com [1.2.3.4])\n"
+                 "\tby example.com\n"
+                 "\t(envelope-from <test@example.com>)\n")
+
+        self.setup_conf(config=config, pre_config=PRE_CONFIG)
+        result = self.check_pad(email)
+        self.check_report(result, 0, [])
+
+
+
 
 def suite():
     """Gather all the tests from this package in a test suite."""
@@ -1096,6 +1159,7 @@ def suite():
     test_suite.addTest(unittest.makeSuite(TestFunctionalCheckRatwareNameId, "test"))
     test_suite.addTest(unittest.makeSuite(TestFunctionalCheckRatwareEnvelopeFrom, "test"))
     test_suite.addTest(unittest.makeSuite(TestFunctionalCheckForForgedGw05ReceivedHeaders, "test"))
+    test_suite.addTest(unittest.makeSuite(TestFunctionalCheckForMatchingEnvAndHdrFrom, "test"))
     return test_suite
 
 
