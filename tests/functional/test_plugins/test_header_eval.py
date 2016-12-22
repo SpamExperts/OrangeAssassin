@@ -581,6 +581,190 @@ class TestFunctionalCheckForForgedEudoramailReceivedHeaders(tests.util.TestBase)
         self.check_report(result, 1, ['TEST_RULE'])
 
 
+class TestFunctionalCheckForMissingToHeader(tests.util.TestBase):
+
+    def test_check_for_missing_to_header(self):
+
+        config = "header TEST_RULE eval:check_for_missing_to_header()"
+
+        email = ("From: test@example.com")
+
+        self.setup_conf(config=config, pre_config=PRE_CONFIG)
+        result = self.check_pad(email)
+        self.check_report(result, 1, ['TEST_RULE'])
+
+    def test_check_for_existing_to_header(self):
+
+        config = "header TEST_RULE eval:check_for_missing_to_header()"
+
+        email = ("To: test@example.com")
+
+        self.setup_conf(config=config, pre_config=PRE_CONFIG)
+        result = self.check_pad(email)
+        self.check_report(result, 0, [])
+
+    def test_check_for_existing_apparently_to_header(self):
+
+        config = "header TEST_RULE eval:check_for_missing_to_header()"
+
+        email = ("Apparently-To: test@example.com")
+
+        self.setup_conf(config=config, pre_config=PRE_CONFIG)
+        result = self.check_pad(email)
+        self.check_report(result, 0, [])
+
+
+class TestFunctionalSubjectIsAllCaps(tests.util.TestBase):
+
+
+    def test_subject_is_all_caps_but_single_word(self):
+
+        config = "header TEST_RULE eval:subject_is_all_caps()"
+
+        email = ("Subject: THISISATESTSUBJECT")
+
+        self.setup_conf(config=config, pre_config=PRE_CONFIG)
+        result = self.check_pad(email)
+        self.check_report(result, 0, [])
+
+    def test_subject_is_all_caps_but_less_than_10_chars(self):
+
+        config = "header TEST_RULE eval:subject_is_all_caps()"
+
+        email = ("Subject: SUB JECT")
+
+        self.setup_conf(config=config, pre_config=PRE_CONFIG)
+        result = self.check_pad(email)
+        self.check_report(result, 0, [])
+
+    def test_subject_is_all_caps_match(self):
+
+        config = "header TEST_RULE eval:subject_is_all_caps()"
+
+        email = ("Subject: THISISAT ESTSUBJECT")
+
+        self.setup_conf(config=config, pre_config=PRE_CONFIG)
+        result = self.check_pad(email)
+        self.check_report(result, 1, ['TEST_RULE'])
+
+    def test_subject_is_all_caps_strip_notations_in_subject(self):
+
+        config = "header TEST_RULE eval:subject_is_all_caps()"
+
+        email = ("Subject: RE:THISI SAT")
+
+        self.setup_conf(config=config, pre_config=PRE_CONFIG)
+        result = self.check_pad(email)
+        self.check_report(result, 0, [])
+
+
+class TestFunctionalCheckForToInSubject(tests.util.TestBase):
+
+    def test_check_for_to_in_subject_full_address_match(self):
+
+        config = ("header TEST_RULE1 eval:check_for_to_in_subject('address')"
+                  "header TEST_RULE2 eval:check_for_to_in_subject('user')")
+
+        email = ("Subject: test@example.com\n"
+                 "To: test@example.com")
+
+        self.setup_conf(config=config, pre_config=PRE_CONFIG)
+        result = self.check_pad(email)
+        self.check_report(result, 1, ['TEST_RULE1'])
+
+    def test_check_for_to_in_subject_full_address_dont_match(self):
+
+        config = ("header TEST_RULE1 eval:check_for_to_in_subject('address')"
+                  "header TEST_RULE2 eval:check_for_to_in_subject('user')")
+
+        email = ("Subject: test@example.net\n"
+                 "To: test@example.com")
+
+        self.setup_conf(config=config, pre_config=PRE_CONFIG)
+        result = self.check_pad(email)
+        self.check_report(result, 0, [])
+
+    def test_check_for_to_in_subject_user_match(self):
+
+        config = ("header TEST_RULE1 eval:check_for_to_in_subject('address')"
+                  "header TEST_RULE2 eval:check_for_to_in_subject('user')")
+
+        email = ("Subject: test\n"
+                 "To: test@example.com")
+
+        self.setup_conf(config=config, pre_config=PRE_CONFIG)
+        result = self.check_pad(email)
+        self.check_report(result, 1, ['TEST_RULE2'])
+
+
+    def test_check_for_to_in_subject_user_dont_match(self):
+
+        config = ("header TEST_RULE1 eval:check_for_to_in_subject('address')"
+                  "header TEST_RULE2 eval:check_for_to_in_subject('user')")
+
+        email = ("Subject: This is a testing case\n"
+                 "To: test@example.com")
+
+        self.setup_conf(config=config, pre_config=PRE_CONFIG)
+        result = self.check_pad(email)
+        self.check_report(result, 0, [])
+
+
+class TestFunctionalCheckMessageidNotUsable(tests.util.TestBase):
+
+    def test_check_messageid_not_usable_list_unsibscribe(self):
+
+        config = ("header TEST_RULE eval:check_messageid_not_usable()")
+
+        email = ("List-Unsubscribe: <mailto:example-unsubscribe@-espc-tech-12345N@domain.com>\n")
+
+        self.setup_conf(config=config, pre_config=PRE_CONFIG)
+        result = self.check_pad(email)
+        self.check_report(result, 1, ['TEST_RULE'])
+
+    def test_check_messageid_not_usable_gated_through_received_hdr_remover(self):
+
+        config = ("header TEST_RULE eval:check_messageid_not_usable()")
+
+        email = ("Mailing-List: contact test@example.com; run by ezmlm\n"
+                 "Received: (qmail 47240 invoked by uid 33); 01 Oct 2010 20:35:23 +0000\n"
+                 "Delivered-To: mailing list test@example.com\n")
+
+        self.setup_conf(config=config, pre_config=PRE_CONFIG)
+        result = self.check_pad(email)
+        self.check_report(result, 1, ['TEST_RULE'])
+
+    def test_check_messageid_not_usable_cwt_dce(self):
+
+        config = ("header TEST_RULE eval:check_messageid_not_usable()")
+
+        email = ("Received:  by smtp.mesvr.com (8.14.4/8.13.8/CWT/DCE) with ESMTP id u5I50E6V009236")
+
+        self.setup_conf(config=config, pre_config=PRE_CONFIG)
+        result = self.check_pad(email)
+        self.check_report(result, 1, ['TEST_RULE'])
+
+    def test_check_messageid_not_usable_dont_match(self):
+
+        config = ("header TEST_RULE eval:check_messageid_not_usable()")
+
+        email = ("Received: by 10.107.170.150 with HTTP; Thu, 22 Dec 2016 03:54:03 -0800 (PST)")
+
+        self.setup_conf(config=config, pre_config=PRE_CONFIG)
+        result = self.check_pad(email)
+        self.check_report(result, 0, [])
+
+    def test_check_messageid_not_usable_iplanet_messaging_server(self):
+
+        config = ("header TEST_RULE eval:check_messageid_not_usable()")
+
+        email = ("Received: by iPlanet Messaging Server (10.107.170.150) with HTTP; Thu, 22 Dec 2016 03:54:03 -0800 (PST)")
+
+        self.setup_conf(config=config, pre_config=PRE_CONFIG)
+        result = self.check_pad(email)
+        self.check_report(result, 1, ['TEST_RULE'])
+
+
 def suite():
     """Gather all the tests from this package in a test suite."""
     test_suite = unittest.TestSuite()
@@ -592,6 +776,10 @@ def suite():
     test_suite.addTest(unittest.makeSuite(TestFunctionalCheckForMsnGroupsHeaders, "test"))
     test_suite.addTest(unittest.makeSuite(TestFunctionalGatedThroughReceivedHdrRemover, "test"))
     test_suite.addTest(unittest.makeSuite(TestFunctionalCheckForForgedEudoramailReceivedHeaders, "test"))
+    test_suite.addTest(unittest.makeSuite(TestFunctionalCheckForMissingToHeader, "test"))
+    test_suite.addTest(unittest.makeSuite(TestFunctionalSubjectIsAllCaps, "test"))
+    test_suite.addTest(unittest.makeSuite(TestFunctionalCheckForToInSubject, "test"))
+    test_suite.addTest(unittest.makeSuite(TestFunctionalCheckMessageidNotUsable, "test"))
     return test_suite
 
 
