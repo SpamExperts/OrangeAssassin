@@ -1,5 +1,5 @@
 #coding: utf-8
-"""Tests the URIDetail Plugin"""
+"""Functional tests for MIMEEval Plugin"""
 
 from __future__ import absolute_import
 import unittest
@@ -10,6 +10,40 @@ loadplugin     Mail::SpamAssassin::Plugin::MIMEEval
 
 report _SCORE_
 report _TESTS_
+"""
+
+# Define rules for plugin
+CONFIG = """
+body CHECK_MIME_BASE64_COUNT                     eval:check_for_mime("mime_base64_count")
+body CHECK_MIME_BASE64_ENCODED_TEXT              eval:check_for_mime("mime_base64_encoded_text")
+body CHECK_MIME_BODY_HTML_COUNT                  eval:check_for_mime("mime_body_html_count")
+body CHECK_MIME_BODY_TEXT_COUNT                  eval:check_for_mime("mime_body_text_count")
+body CHECK_MIME_FARAWAY_CHARSET                  eval:check_for_mime("mime_faraway_charset")
+body CHECK_MIME_MISSING_BOUNDARY                 eval:check_for_mime("mime_missing_boundary")
+body CHECK_MIME_MULTIPART_ALTERNATIVE            eval:check_for_mime("mime_multipart_alternative")
+body CHECK_MIME_MULTIPART_RATIO                  eval:check_for_mime("mime_multipart_ratio")
+body CHECK_MIME_QP_COUNT                         eval:check_for_mime("mime_qp_count")
+body CHECK_MIME_QP_LONG_LINE                     eval:check_for_mime("mime_qp_long_line")
+body CHECK_MIME_QP_RATIO                         eval:check_for_mime("mime_qp_ratio")
+body CHECK_MIME_ASCII_TEXT_ILLEGAL               eval:check_for_mime("mime_ascii_text_illegal")
+body CHECK_MIME_TEXT_UNICODE_RATIO               eval:check_for_mime("mime_text_unicode_ratio")
+
+body CHECK_MIME_HTML                             eval:check_for_mime_html()
+body CHECK_MIME_HTML_ONLY                        eval:check_for_mime_html_only()
+
+body CHECK_MISSING_MIME_HEAD_BODY_SEPARATOR      eval:check_msg_parse_flags("missing_mime_head_body_separator")
+body CHECK_MISSING_MIME_HEADERS                  eval:check_msg_parse_flags("missing_mime_headers")
+body CHECK_TRUNCATED_HEADERS                     eval:check_msg_parse_flags("truncated_headers")
+body CHECK_MIME_EPILOGUE_EXISTS                  eval:check_msg_parse_flags("mime_epilogue_exists")
+
+body CHECK_FARAWAY_CHARSET                       eval:check_for_faraway_charset()
+body CHECK_UPPERCASE                             eval:check_for_uppercase()
+body CHECK_MULTIPART_RATIO                       eval:check_mime_multipart_ratio('min_ration', 'max_ratio')
+body CHECK_BASE64_LENGTH                         eval:check_base64_length('min_length', 'max_length')
+body CHECK_MA_NON_TEXT                           eval:check_ma_non_text()
+body CHECK_ASCII_TEXT_ILLEGAL                    eval:check_for_ascii_text_illegal()
+body CHECK_ABUNDANT_UNICODE_RATIO                eval:check_abundant_unicode_ratio('min_ration', 'max_ratio')
+body CHECK_QP_RATION                             eval:check_qp_ratio('min_ration', 'max_ratio')
 """
 
 MSG_HTML_ONLY = """Subject: test
@@ -77,14 +111,14 @@ class TestFunctionalMIMEEval(tests.util.TestBase):
         result = self.check_pad(MSG_HTML_ONLY)
         self.check_report(result, 1.0, ["MIME_HTML_ONLY"])
 
-    def test_check_mime_multipart_ratio(self):
+    def test_check_html_only_negative(self):
         self.setup_conf(
             config="""
-            body MIME_HTML_MOSTLY eval:eval:check_mime_multipart_ratio('0.30','0.50')
+            body MIME_HTML_ONLY     eval:check_for_mime_html_only()l
             """,
             pre_config=PRE_CONFIG)
         result = self.check_pad(MSG_HTML_MOSTLY)
-        self.check_report(result, 1.0, ["MIME_HTML_MOSTLY"])
+        self.check_report(result, 0, [])
 
     def test_check_html(self):
         self.setup_conf(
@@ -94,6 +128,33 @@ class TestFunctionalMIMEEval(tests.util.TestBase):
             pre_config=PRE_CONFIG)
         result = self.check_pad(MSG_HTML_MOSTLY)
         self.check_report(result, 1.0, ["MIME_HTML"])
+
+    def test_check_html_negative(self):
+        self.setup_conf(
+            config="""
+            body MIME_HTML      eval:check_for_mime_html()
+            """,
+            pre_config=PRE_CONFIG)
+        result = self.check_pad(MSG_PARSE_FLAGS)
+        self.check_report(result, 0, [])
+
+    def test_check_html_on_html_only_mess(self):
+        self.setup_conf(
+            config="""
+            body MIME_HTML      eval:check_for_mime_html()
+            """,
+            pre_config=PRE_CONFIG)
+        result = self.check_pad(MSG_HTML_ONLY)
+        self.check_report(result, 1.0, ["MIME_HTML"])
+
+    def test_check_mime_multipart_ratio(self):
+        self.setup_conf(
+            config="""
+            body MIME_HTML_MOSTLY eval:check_mime_multipart_ratio('0.30','0.50')
+            """,
+            pre_config=PRE_CONFIG)
+        result = self.check_pad(MSG_HTML_MOSTLY)
+        self.check_report(result, 1.0, ["MIME_HTML_MOSTLY"])
 
     def test_abundant_unicode_ratio(self):
         self.setup_conf(
@@ -116,11 +177,38 @@ class TestFunctionalMIMEEval(tests.util.TestBase):
     def test_mime_ascii_text_illegal(self):
         self.setup_conf(
             config="""
-            body ILLEGAL_ASCII eval:check_for_mime("mime_ascii_text_illegal")
+            body MIME_ILLEGAL_ASCII eval:check_for_mime("mime_ascii_text_illegal")
+            """,
+            pre_config=PRE_CONFIG)
+        result = self.check_pad(MSG_ILLEGAL_ASCII)
+        self.check_report(result, 1.0, ["MIME_ILLEGAL_ASCII"])
+
+    def test_mime_ascii_text_illegal_negative(self):
+        self.setup_conf(
+            config="""
+            body MIME_ILLEGAL_ASCII eval:check_for_mime("mime_ascii_text_illegal")
+            """,
+            pre_config=PRE_CONFIG)
+        result = self.check_pad(MSG_PARSE_FLAGS)
+        self.check_report(result, 0, [])
+
+    def test_ascii_text_illegal(self):
+        self.setup_conf(
+            config="""
+            body ILLEGAL_ASCII eval:check_for_ascii_text_illegal()
             """,
             pre_config=PRE_CONFIG)
         result = self.check_pad(MSG_ILLEGAL_ASCII)
         self.check_report(result, 1.0, ["ILLEGAL_ASCII"])
+
+    def test_ascii_text_illegal_negative(self):
+        self.setup_conf(
+            config="""
+            body ILLEGAL_ASCII eval:check_for_ascii_text_illegal()
+            """,
+            pre_config=PRE_CONFIG)
+        result = self.check_pad(MSG_ABUNDANT_UNICODE)
+        self.check_report(result, 0, [])
 
     def test_mime_body_html_count(self):
         self.setup_conf(
