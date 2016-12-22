@@ -1002,7 +1002,7 @@ class TestFunctionalCheckRatwareEnvelopeFrom(tests.util.TestBase):
 
     def test_check_ratware_envelope_from_invalid_domain(self):
 
-        config = ("header TEST_RULE eval:check_ratware_envelope_from()")
+        config = "header TEST_RULE eval:check_ratware_envelope_from()"
 
         email = ("To: user@examplecom\n"
                  "Received: from example.com (example.com [1.2.3.4])\n"
@@ -1047,6 +1047,32 @@ class TestFunctionalCheckRatwareEnvelopeFrom(tests.util.TestBase):
         self.setup_conf(config=config, pre_config=PRE_CONFIG)
         result = self.check_pad(email)
         self.check_report(result, 0, [])
+
+
+class TestFunctionalCheckForForgedGw05ReceivedHeaders(tests.util.TestBase):
+
+    def test_check_for_forged_gw05_received_headers_dont_match(self):
+
+        config = "header TEST_RULE eval:check_for_forged_gw05_received_headers()"
+
+        email = ("Received: by 10.107.5.198 with SMTP id 189csp3231581iof;\n"
+                 "Wed, 21 Dec 2016 05:56:26 -0800 (PST)")
+
+        self.setup_conf(config=config, pre_config=PRE_CONFIG)
+        result = self.check_pad(email)
+        self.check_report(result, 0, [])
+
+    def test_check_for_forged_gw05_received_headers_match(self):
+
+        config = "header TEST_RULE eval:check_for_forged_gw05_received_headers()"
+
+        email = ("Received: from mail3.icytundra.com by gw05 with ESMTP;\n"
+                 "\tThu, 21 Jun 2001 02:28:32 -0400")
+
+        self.setup_conf(config=config, pre_config=PRE_CONFIG)
+        result = self.check_pad(email)
+        self.check_report(result, 1, ['TEST_RULE'])
+
 
 
 def suite():
