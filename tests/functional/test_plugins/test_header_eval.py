@@ -265,6 +265,34 @@ class TestFunctionalCheckForForgedHotmailReceivedHeaders(tests.util.TestBase):
         result = self.check_pad(email)
         self.check_report(result, 1, ['TEST_RULE1'])
 
+    def test_check_for_forget_hotmail_received_headers_no_from_address(self):
+
+        config = ("header TEST_RULE1 eval:check_for_forged_hotmail_received_headers()\n"
+                  "header TEST_RULE2 eval:check_for_no_hotmail_received_headers()")
+
+        email = ("Received: from mail pickup service by p23.groups.msn.com\n")
+
+        self.setup_conf(config=config, pre_config=PRE_CONFIG)
+        result = self.check_pad(email)
+        self.check_report(result, 0, [])
+
+    def test_check_for_forget_hotmail_received_headers_with_msn_group_headers(self):
+
+        config = ("header TEST_RULE1 eval:check_for_forged_hotmail_received_headers()\n"
+                  "header TEST_RULE2 eval:check_for_no_hotmail_received_headers()\n")
+
+        email = ("Received: from mail pickup service by p23.groups.msn.com\n"
+                 "Received: from hotmail.com (example.com [1.2.3.4])\n"
+                 "\tby example.com\n"
+                 "\t(envelope-from <testid123-bounce@groups.msn.com>)\n"
+                 "Message-Id: <testid123-aaa@groups.msn.com>\n"
+                 "To: <testid123@groups.msn.com>\n"
+                 "From: testid123-aaa@groups.msn.com")
+
+        self.setup_conf(config=config, pre_config=PRE_CONFIG)
+        result = self.check_pad(email)
+        self.check_report(result, 0, [])
+
     def test_check_for_forget_hotmail_received_headers_false_addr(self):
 
         config = ("header TEST_RULE1 eval:check_for_forged_hotmail_received_headers()\n"
@@ -359,6 +387,81 @@ class TestFunctionalCheckForForgedHotmailReceivedHeaders(tests.util.TestBase):
         self.check_report(result, 0, [])
 
 
+class TestFunctionalCheckForMsnGroupsHeaders(tests.util.TestBase):
+
+    def test_check_for_msn_groups_headers_match(self):
+
+        config = ("header TEST_RULE eval:check_for_msn_groups_headers()")
+
+        email = ("Received: from mail pickup service by p23.groups.msn.com\n"
+                 "Received: from hotmail.com (example.com [1.2.3.4])\n"
+                 "\tby example.com\n"
+                 "\t(envelope-from <testid123-bounce@groups.msn.com>)\n"
+                 "Message-Id: <testid123-aaa@groups.msn.com>\n"
+                 "To: <testid123@groups.msn.com>\n"
+                 "From: testid123-aaa@groups.msn.com")
+
+        self.setup_conf(config=config, pre_config=PRE_CONFIG)
+        result = self.check_pad(email)
+        self.check_report(result, 1, ['TEST_RULE'])
+
+    def test_check_for_msn_groups_headers_match_listname_notifications(self):
+
+        config = ("header TEST_RULE eval:check_for_msn_groups_headers()")
+
+        email = ("Received: from mail pickup service by p23.groups.msn.com\n"
+                 "Message-Id: <anything@p23.groups.msn.com>\n"
+                 "To: <notifications@groups.msn.com>")
+
+        self.setup_conf(config=config, pre_config=PRE_CONFIG)
+        result = self.check_pad(email)
+        self.check_report(result, 1, ['TEST_RULE'])
+
+    def test_check_for_msn_groups_headers_wrong_message_id(self):
+
+        config = ("header TEST_RULE eval:check_for_msn_groups_headers()")
+
+        email = ("Received: from mail pickup service by p23.groups.msn.com\n"
+                 "Received: from hotmail.com (example.com [1.2.3.4])\n"
+                 "\tby example.com\n"
+                 "\t(envelope-from <testid123-bounce@groups.msn.com>)\n"
+                 "Message-Id: <testid123@groups.msn.com>\n"
+                 "To: <testid123@groups.msn.com>\n"
+                 "From: testid123-aaa@groups.msn.com")
+
+        self.setup_conf(config=config, pre_config=PRE_CONFIG)
+        result = self.check_pad(email)
+        self.check_report(result, 0, [])
+
+    def test_check_for_msn_groups_headers_wrong_sender_address(self):
+
+        config = ("header TEST_RULE eval:check_for_msn_groups_headers()")
+
+        email = ("Received: from mail pickup service by p23.groups.msn.com\n"
+                 "Received: from hotmail.com (example.com [1.2.3.4])\n"
+                 "\tby example.com\n"
+                 "\t(envelope-from <testid123@groups.msn.com>)\n"
+                 "Message-Id: <testid123-aaa@groups.msn.com>\n"
+                 "To: <notifications@groups.msn.com>\n"
+                 "From: testid123-aaa@groups.msn.com")
+
+        self.setup_conf(config=config, pre_config=PRE_CONFIG)
+        result = self.check_pad(email)
+        self.check_report(result, 0, [])
+
+    def test_check_for_msn_groups_headers_not_match_listname_notifications(self):
+
+        config = ("header TEST_RULE eval:check_for_msn_groups_headers()")
+
+        email = ("Received: from mail pickup service by p23.groups.msn.com\n"
+                 "Message-Id: <anything@groups.msn.com>\n"
+                 "To: <notifications@groups.msn.com>")
+
+        self.setup_conf(config=config, pre_config=PRE_CONFIG)
+        result = self.check_pad(email)
+        self.check_report(result, 0, [])
+
+
 def suite():
     """Gather all the tests from this package in a test suite."""
     test_suite = unittest.TestSuite()
@@ -367,7 +470,7 @@ def suite():
     test_suite.addTest(unittest.makeSuite(TestFunctionalCheckForUniqueSubjectId, "test"))
     test_suite.addTest(unittest.makeSuite(TestFunctionalCheckIllegalCharsInHeader, "test"))
     test_suite.addTest(unittest.makeSuite(TestFunctionalCheckForForgedHotmailReceivedHeaders, "test"))
-    test_suite.addTest(unittest.makeSuite(TestFunctionalCheckForNoHotmailReceivedHeaders, "test"))
+    test_suite.addTest(unittest.makeSuite(TestFunctionalCheckForMsnGroupsHeaders, "test"))
     return test_suite
 
 
