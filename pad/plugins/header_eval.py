@@ -588,7 +588,8 @@ class HeaderEval(pad.plugins.base.BasePlugin):
         """
         for subject in msg.get_decoded_header("Subject"):
             # Remove the Re/Fwd notations in the subject
-            subject = Regex(r"^(Re|Fwd|Fw|Aw|Antwort|Sv):").sub("", subject)
+            subject = Regex(r"^(RE|FWD|FW|AW|ANTWORT|SV)"
+                            r":").sub("", subject.upper())
             subject = subject.strip()
             if len(subject) < 10:
                 # Don't match short subjects
