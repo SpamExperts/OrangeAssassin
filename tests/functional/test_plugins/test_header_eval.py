@@ -462,6 +462,125 @@ class TestFunctionalCheckForMsnGroupsHeaders(tests.util.TestBase):
         self.check_report(result, 0, [])
 
 
+class TestFunctionalGatedThroughReceivedHdrRemover(tests.util.TestBase):
+
+    def test_gated_through_received_hdr_remover(self):
+
+        config = "header TEST_RULE eval:gated_through_received_hdr_remover()"
+
+        email = ("Mailing-List: contact test@example.com; run by ezmlm\n"
+                 "Received: (qmail 47240 invoked by uid 33); 01 Oct 2010 20:35:23 +0000\n"
+                 "Delivered-To: mailing list test@example.com\n")
+
+        self.setup_conf(config=config, pre_config=PRE_CONFIG)
+        result = self.check_pad(email)
+        self.check_report(result, 1, ['TEST_RULE'])
+
+    def test_gated_through_received_hdr_remover_no_rcvd(self):
+
+        config = "header TEST_RULE eval:gated_through_received_hdr_remover()"
+
+        email = ("Mailing-List: contact test@example.com; run by ezmlm\n"
+                 "Delivered-To: mailing list test@example.com\n")
+
+        self.setup_conf(config=config, pre_config=PRE_CONFIG)
+        result = self.check_pad(email)
+        self.check_report(result, 1, ['TEST_RULE'])
+
+    def test_gated_through_received_hdr_remover_with_msngroups(self):
+
+        config = "header TEST_RULE eval:gated_through_received_hdr_remover()"
+
+        email = ("Received: from groups.msn.com (test.msn.com [1.2.3.4])\n"
+                 "\tby example.com\n"
+                 "\t(envelope-from <test@example.com>\n")
+
+        self.setup_conf(config=config, pre_config=PRE_CONFIG)
+        result = self.check_pad(email)
+        self.check_report(result, 1, ['TEST_RULE'])
+
+
+class TestFunctionalCheckForForgedEudoramailReceivedHeaders(tests.util.TestBase):
+
+    def test_check_for_forged_eudoramail_received_headers_not_gated_through_received_hdr_remover(self):
+
+        config = "header TEST_RULE eval:check_for_forged_eudoramail_received_headers()"
+
+        email = ("Received: from example.com (example.com [1.2.3.4])\n"
+                 "\tby example.com\n"
+                 "\t(envelope-from <test@example.com>\n"
+                 "From: test@eudoramail.com")
+
+        self.setup_conf(config=config, pre_config=PRE_CONFIG)
+        result = self.check_pad(email)
+        self.check_report(result, 1, ['TEST_RULE'])
+
+    def test_check_for_forged_eudoramail_received_headers_gated_through_received_hdr_remover(self):
+
+        config = "header TEST_RULE eval:check_for_forged_eudoramail_received_headers()"
+
+        email = ("Mailing-List: contact test@example.com; run by ezmlm\n"
+                 "Received: (qmail 47240 invoked by uid 33); 01 Oct 2010 20:35:23 +0000\n"
+                 "Delivered-To: mailing list test@example.com\n"
+                 "From: test@eudoramail.com")
+
+        self.setup_conf(config=config, pre_config=PRE_CONFIG)
+        result = self.check_pad(email)
+        self.check_report(result, 0, [])
+
+    def test_check_for_forged_eudoramail_received_headers_no_rcvd(self):
+
+        config = "header TEST_RULE eval:check_for_forged_eudoramail_received_headers()"
+
+        email = ("From: test@eudoramail.com")
+
+        self.setup_conf(config=config, pre_config=PRE_CONFIG)
+        result = self.check_pad(email)
+        self.check_report(result, 0, [])
+
+
+    def test_check_for_forged_eudoramail_received_headers_rcvd_from_msngroups(self):
+
+        config = "header TEST_RULE eval:check_for_forged_eudoramail_received_headers()"
+
+        email = ("Received: from groups.msn.com (test.msn.com [1.2.3.4])\n"
+                 "\tby example.com\n"
+                 "\t(envelope-from <test@example.com>\n"
+                 "From: test@eudoramail.com")
+
+        self.setup_conf(config=config, pre_config=PRE_CONFIG)
+        result = self.check_pad(email)
+        self.check_report(result, 0, [])
+
+    def test_check_for_forged_eudoramail_received_headers_rcvd_whowhere_with_valid_sender_ip(self):
+
+        config = "header TEST_RULE eval:check_for_forged_eudoramail_received_headers()"
+
+        email = ("Received: from example.com (example.com [1.2.3.4])\n"
+                 "\tby whowhere.com;\n"
+                 "\t(envelope-from <test@example.com>\n"
+                 "X-Sender-Ip: 1.2.3.4\n"
+                 "From: test@eudoramail.com")
+
+        self.setup_conf(config=config, pre_config=PRE_CONFIG)
+        result = self.check_pad(email)
+        self.check_report(result, 0, [])
+
+    def test_check_for_forged_eudoramail_received_headers_rcvd_whowhere_with_invalid_sender_ip(self):
+
+        config = "header TEST_RULE eval:check_for_forged_eudoramail_received_headers()"
+
+        email = ("Received: from example.com (example.com [1.2.3.4])\n"
+                 "\tby whowhere.com;\n"
+                 "\t(envelope-from <test@example.com>\n"
+                 "X-Sender-Ip: invalid\n"
+                 "From: test@eudoramail.com")
+
+        self.setup_conf(config=config, pre_config=PRE_CONFIG)
+        result = self.check_pad(email)
+        self.check_report(result, 1, ['TEST_RULE'])
+
+
 def suite():
     """Gather all the tests from this package in a test suite."""
     test_suite = unittest.TestSuite()
@@ -471,6 +590,8 @@ def suite():
     test_suite.addTest(unittest.makeSuite(TestFunctionalCheckIllegalCharsInHeader, "test"))
     test_suite.addTest(unittest.makeSuite(TestFunctionalCheckForForgedHotmailReceivedHeaders, "test"))
     test_suite.addTest(unittest.makeSuite(TestFunctionalCheckForMsnGroupsHeaders, "test"))
+    test_suite.addTest(unittest.makeSuite(TestFunctionalGatedThroughReceivedHdrRemover, "test"))
+    test_suite.addTest(unittest.makeSuite(TestFunctionalCheckForForgedEudoramailReceivedHeaders, "test"))
     return test_suite
 
 
