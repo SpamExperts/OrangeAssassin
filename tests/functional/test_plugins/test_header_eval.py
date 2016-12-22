@@ -647,11 +647,31 @@ class TestFunctionalSubjectIsAllCaps(tests.util.TestBase):
         result = self.check_pad(email)
         self.check_report(result, 1, ['TEST_RULE'])
 
-    def test_subject_is_all_caps_strip_notations_in_subject(self):
+    def test_subject_is_all_caps_strip_uppercase_notations_in_subject(self):
 
         config = "header TEST_RULE eval:subject_is_all_caps()"
 
         email = ("Subject: RE:THISI SAT")
+
+        self.setup_conf(config=config, pre_config=PRE_CONFIG)
+        result = self.check_pad(email)
+        self.check_report(result, 0, [])
+
+    def test_subject_is_all_caps_strip_capitalized_notations_in_subject(self):
+
+        config = "header TEST_RULE eval:subject_is_all_caps()"
+
+        email = ("Subject: Re:THIS IS A TEST SUBJECT")
+
+        self.setup_conf(config=config, pre_config=PRE_CONFIG)
+        result = self.check_pad(email)
+        self.check_report(result, 0, [])
+
+    def test_subject_is_all_caps_strip_lowercase_notations_in_subject(self):
+
+        config = "header TEST_RULE eval:subject_is_all_caps()"
+
+        email = ("Subject: re:THIS IS A TEST SUBJECT")
 
         self.setup_conf(config=config, pre_config=PRE_CONFIG)
         result = self.check_pad(email)
