@@ -50,6 +50,8 @@ class HeaderEval(pad.plugins.base.BasePlugin):
         "check_ratware_name_id",
         "check_ratware_envelope_from",
         "gated_through_received_hdr_remover",
+        "check_equal_from_domains",
+        "received_within_months"
     )
 
     options = {
@@ -61,6 +63,7 @@ class HeaderEval(pad.plugins.base.BasePlugin):
     def check_start(self, msg):
         self.set_local(msg, "date_diff", None)
         self.set_local(msg, "date_header_time", None)
+        self.set_local(msg, "date_received", None)
         self.set_local(msg, "received_header_times", None)
         self.set_local(msg, "received_fetchmail_time", None)
 
@@ -758,5 +761,76 @@ class HeaderEval(pad.plugins.base.BasePlugin):
         if not rcvd:
             return True
         if Regex(r"from groups\.msn\.com \(\S+\.msn\.com ").search(rcvd):
+            return True
+        return False
+
+    def check_equal_from_domains(self, msg, target=None):
+        """Check if the domain from `From` header and `EnvelopeFrom` header
+        are different."""
+        from_addr = ''.join(msg.get_all_addr_header("From"))
+        envfrom = ''.join(msg.get_all_addr_header("EnvelopeFrom"))
+        try:
+            fromdomain = from_addr.rsplit("@", 1)[-1]
+        except (IndexError, AttributeError):
+            return False
+        try:
+            envfromdomain = envfrom.rsplit("@", 1)[-1]
+        except (IndexError, AttributeError):
+            return False
+        self.ctxt.log.debug("eval: From 2nd level domain: %s, "
+                            "EnvelopeFrom 2nd level domain: %s", fromdomain,
+                            envfromdomain)
+        if fromdomain.lower() != envfromdomain.lower():
+            return True
+        return False
+
+    def _check_date_received(self, msg):
+        dates_poss = []
+        if not self.get_local(msg, "date_header_time"):
+            self._get_date_header_time(msg)
+        dates_poss.append(self.get_local(msg, "date_header_time"))
+        if not self.get_local(msg, "received_header_times"):
+            self._get_received_header_times(msg)
+        received_header_times = self.get_local(msg, "received_header_times")
+        dates_poss.append(received_header_times[0])
+        if self.get_local(msg, "received_fetchmail_time"):
+            dates_poss.append(self.get_local(msg, "received_fetchmail_time"))
+        if self.get_local(msg, "date_header_time") and received_header_times:
+            if not self.get_local(msg, "date_diff"):
+                self._check_date_diff(msg)
+            dates_poss.append(self.get_local(msg, "date_header_time") -
+                              self.get_local(msg, "date_diff"))
+        if dates_poss:
+            no_dates_poss = len(dates_poss)
+            date_received = sorted(dates_poss, reverse=True)[no_dates_poss/2]
+            self.set_local(msg, "date_received", date_received)
+            self.ctxt.log.debug("eval: date chosen from message: %s",
+                                date_received)
+        else:
+            self.ctxt.log.debug("eval: no dates found in message")
+
+    def received_within_months(self, msg, min, max, target=None):
+        """Check if the date from received is in past"""
+        if min == "undef":
+            min = None
+        if max == "undef":
+            max = None
+        try:
+            if min:
+                min = int(min)
+            if max:
+                max = int(max)
+        except ValueError:
+            self.ctxt.log.warn("HeaderEval::Plugin received_within_months "
+                               "min and max should be integer values")
+            return False
+        if not self.get_local(msg, "date_received"):
+            self._check_date_received(msg)
+        date_received = self.get_local(msg, "date_received")
+        diff = datetime.datetime.utcfromtimestamp(time.time()) - date_received
+        diff = diff.total_seconds()
+        # 365.2425 * 24 * 60 * 60 = 31556952 = seconds in year (including leap)
+        if ((not min or diff >= (31556952 * (min/12))) and
+                (not max or diff < (31556952 * (max/12)))):
             return True
         return False

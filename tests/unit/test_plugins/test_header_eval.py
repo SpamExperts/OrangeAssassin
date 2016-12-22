@@ -926,6 +926,22 @@ class TestRecipientsRules(TestHeaderEvalBase):
         self.assertEqual(ratio, 0.0)
         self.assertFalse(result)
 
+    def test_check_equal_from_domain(self):
+        from_addr = ["test@example.com"]
+        envfrom_addr = ["test@example.com"]
+        self.mock_msg.get_all_addr_header.side_effect = [from_addr,
+                                                         envfrom_addr]
+        result = self.plugin.check_equal_from_domains(self.mock_msg)
+        self.assertFalse(result)
+
+    def test_check_equal_from_domain_true(self):
+        from_addr = ["test@example.com"]
+        envfrom_addr = ["test@another.example.com"]
+        self.mock_msg.get_all_addr_header.side_effect = [from_addr,
+                                                         envfrom_addr]
+        result = self.plugin.check_equal_from_domains(self.mock_msg)
+        self.assertTrue(result)
+
 
 class TestForgedHotmailRcvd(TestHeaderEvalBase):
     def setUp(self):
