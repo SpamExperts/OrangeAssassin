@@ -657,6 +657,16 @@ class TestFunctionalSubjectIsAllCaps(tests.util.TestBase):
         result = self.check_pad(email)
         self.check_report(result, 0, [])
 
+    def test_subject_is_all_caps_false(self):
+
+        config = "header TEST_RULE eval:subject_is_all_caps()"
+
+        email = ("Subject: this is a test subject")
+
+        self.setup_conf(config=config, pre_config=PRE_CONFIG)
+        result = self.check_pad(email)
+        self.check_report(result, 0, [])
+
 
 class TestFunctionalCheckForToInSubject(tests.util.TestBase):
 
