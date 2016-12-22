@@ -67,14 +67,23 @@ class TestFunctionalCheckForFakeAolRelayInRcvd(tests.util.TestBase):
 
 class TestFunctionalCheckForFarawayCharset(tests.util.TestBase):
 
-    def test_check_for_faraway_charset_in_headers_match(self):
+    def test_check_for_faraway_charset_in_headers_match_subject(self):
 
         config = ("header TEST_RULE eval:check_for_faraway_charset_in_headers()\n"
-            "ok_locales ru")
+                  "ok_locales ru")
 
         email = "Subject: This is a test subject"
 
-        print(config)
+        self.setup_conf(config=config, pre_config=PRE_CONFIG)
+        result = self.check_pad(email)
+        self.check_report(result, 1, ['TEST_RULE'])
+
+    def test_check_for_faraway_charset_in_headers_match_from(self):
+
+        config = ("header TEST_RULE eval:check_for_faraway_charset_in_headers()\n"
+                  "ok_locales ru")
+
+        email = "From: This is a test subject"
 
         self.setup_conf(config=config, pre_config=PRE_CONFIG)
         result = self.check_pad(email)
@@ -83,6 +92,17 @@ class TestFunctionalCheckForFarawayCharset(tests.util.TestBase):
     def test_check_for_faraway_charset_in_headers_not_match(self):
 
         config = "header TEST_RULE eval:check_for_faraway_charset_in_headers()"
+
+        email = "Subject: This is a test subject"
+
+        self.setup_conf(config=config, pre_config=PRE_CONFIG)
+        result = self.check_pad(email)
+        self.check_report(result, 0, [])
+
+    def test_check_for_faraway_charset_in_headers_with_all_locales(self):
+
+        config = ("header TEST_RULE eval:check_for_faraway_charset_in_headers()\n"
+                  "ok_locales all")
 
         email = "Subject: This is a test subject"
 
