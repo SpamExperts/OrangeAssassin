@@ -1095,6 +1095,7 @@ def suite():
     test_suite.addTest(unittest.makeSuite(TestFunctionalCheckUnresolvedTemplate, "test"))
     test_suite.addTest(unittest.makeSuite(TestFunctionalCheckRatwareNameId, "test"))
     test_suite.addTest(unittest.makeSuite(TestFunctionalCheckRatwareEnvelopeFrom, "test"))
+    test_suite.addTest(unittest.makeSuite(TestFunctionalCheckForForgedGw05ReceivedHeaders, "test"))
     return test_suite
 
 
