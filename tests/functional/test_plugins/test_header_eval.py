@@ -714,7 +714,7 @@ class TestFunctionalCheckMessageidNotUsable(tests.util.TestBase):
 
     def test_check_messageid_not_usable_list_unsibscribe(self):
 
-        config = ("header TEST_RULE eval:check_messageid_not_usable()")
+        config = "header TEST_RULE eval:check_messageid_not_usable()"
 
         email = ("List-Unsubscribe: <mailto:example-unsubscribe@-espc-tech-12345N@domain.com>\n")
 
@@ -724,7 +724,7 @@ class TestFunctionalCheckMessageidNotUsable(tests.util.TestBase):
 
     def test_check_messageid_not_usable_gated_through_received_hdr_remover(self):
 
-        config = ("header TEST_RULE eval:check_messageid_not_usable()")
+        config = "header TEST_RULE eval:check_messageid_not_usable()"
 
         email = ("Mailing-List: contact test@example.com; run by ezmlm\n"
                  "Received: (qmail 47240 invoked by uid 33); 01 Oct 2010 20:35:23 +0000\n"
@@ -736,7 +736,7 @@ class TestFunctionalCheckMessageidNotUsable(tests.util.TestBase):
 
     def test_check_messageid_not_usable_cwt_dce(self):
 
-        config = ("header TEST_RULE eval:check_messageid_not_usable()")
+        config = "header TEST_RULE eval:check_messageid_not_usable()"
 
         email = ("Received:  by smtp.mesvr.com (8.14.4/8.13.8/CWT/DCE) with ESMTP id u5I50E6V009236")
 
@@ -746,7 +746,7 @@ class TestFunctionalCheckMessageidNotUsable(tests.util.TestBase):
 
     def test_check_messageid_not_usable_dont_match(self):
 
-        config = ("header TEST_RULE eval:check_messageid_not_usable()")
+        config = "header TEST_RULE eval:check_messageid_not_usable()"
 
         email = ("Received: by 10.107.170.150 with HTTP; Thu, 22 Dec 2016 03:54:03 -0800 (PST)")
 
@@ -756,13 +756,247 @@ class TestFunctionalCheckMessageidNotUsable(tests.util.TestBase):
 
     def test_check_messageid_not_usable_iplanet_messaging_server(self):
 
-        config = ("header TEST_RULE eval:check_messageid_not_usable()")
+        config = "header TEST_RULE eval:check_messageid_not_usable()"
 
         email = ("Received: by iPlanet Messaging Server (10.107.170.150) with HTTP; Thu, 22 Dec 2016 03:54:03 -0800 (PST)")
 
         self.setup_conf(config=config, pre_config=PRE_CONFIG)
         result = self.check_pad(email)
         self.check_report(result, 1, ['TEST_RULE'])
+
+
+class TestFunctionalCheckOutlookMessageId(tests.util.TestBase):
+
+    def test_check_outlook_invalid_message_id(self):
+
+        config = "header TEST_RULE eval:check_outlook_message_id()"
+
+        email = ("Message-ID: <CA+KsZ1C=Lm-ehUW7wQuGud7ifh6_dQDzy>")
+
+        self.setup_conf(config=config, pre_config=PRE_CONFIG)
+        result = self.check_pad(email)
+        self.check_report(result, 0, [])
+
+    def test_check_outlook_message_id(self):
+
+        config = "header TEST_RULE eval:check_outlook_message_id()"
+
+        email = ("Message-ID: <111112a45678$111b1111$1111a111@>\n"
+                 "Date: Tue, 29 Nov 2016 14:38:59 +0200\n"
+                 "Received: by 10.28.145.16 with SMTP id t16csp2363316wmd;\n"
+                 "Tue, 29 Nov 2016 04:39:00 -0800 (PST)")
+
+        self.setup_conf(config=config, pre_config=PRE_CONFIG)
+        result = self.check_pad(email)
+        self.check_report(result, 1, ['TEST_RULE'])
+
+
+class TestFunctionalCheckHeaderCountRange(tests.util.TestBase):
+
+    def test_check_header_count_range(self):
+
+        config = "header TEST_RULE eval:check_header_count_range('MyHeader', 2, 3)"
+
+        email = ("MyHeader: test@example.com\n"
+                 "MyHeader: test@example.net")
+
+        self.setup_conf(config=config, pre_config=PRE_CONFIG)
+        result = self.check_pad(email)
+        self.check_report(result, 1, ['TEST_RULE'])
+
+    def test_check_unique_header_count_range(self):
+
+        config = "header TEST_RULE eval:check_header_count_range('MyHeader', 2, 3)"
+
+        email = ("MyHeader: test@example.com\n"
+                 "MyHeader: test@example.com")
+
+        self.setup_conf(config=config, pre_config=PRE_CONFIG)
+        result = self.check_pad(email)
+        self.check_report(result, 0, [])
+
+    def test_check_header_count_invalid_range(self):
+
+        config = "header TEST_RULE eval:check_header_count_range('MyHeader', 3, 2)"
+
+        email = ("MyHeader: test@example.com\n"
+                 "MyHeader: test@example.net")
+
+        self.setup_conf(config=config, pre_config=PRE_CONFIG)
+        result = self.check_pad(email)
+        self.check_report(result, 0, [])
+
+    def test_check_header_count_negative_range(self):
+
+        config = "header TEST_RULE eval:check_header_count_range('MyHeader', -3, -2)"
+
+        email = ("MyHeader: test@example.com\n"
+                 "MyHeader: test@example.net")
+
+        self.setup_conf(config=config, pre_config=PRE_CONFIG)
+        result = self.check_pad(email)
+        self.check_report(result, 0, [])
+
+    def test_check_header_count_combined_range(self):
+
+        config = "header TEST_RULE eval:check_header_count_range('MyHeader', -1, 2)"
+
+        email = ("MyHeader: test@example.com\n"
+                 "MyHeader: test@example.net")
+
+        self.setup_conf(config=config, pre_config=PRE_CONFIG)
+        result = self.check_pad(email)
+        self.check_report(result, 0, [])
+
+    def test_check_header_count_same_edges(self):
+
+        config = "header TEST_RULE eval:check_header_count_range('MyHeader', 2, 2)"
+
+        email = ("MyHeader: test@example.com\n"
+                 "MyHeader: test@example.net")
+
+        self.setup_conf(config=config, pre_config=PRE_CONFIG)
+        result = self.check_pad(email)
+        self.check_report(result, 1, ['TEST_RULE'])
+
+
+class TestFunctionalCheckUnresolvedTemplate(tests.util.TestBase):
+
+    def test_check_unresolved_template_true(self):
+
+        config = "header TEST_RULE eval:check_unresolved_template()"
+
+        email = ("Delivered-To: user@gmail.com%AA\n"
+                 "Received: from smtp.mesvr.com (localhost.localdomain [127.0.0.1])\n"
+                 "From: user@gmail.com\n"
+                 "Date: Tue, 10 Nov 2016 14:38:59 +0200\n"
+                 "Subject: This is a test\n"
+                 "To: user@gmail.com")
+
+        self.setup_conf(config=config, pre_config=PRE_CONFIG)
+        result = self.check_pad(email)
+        self.check_report(result, 1, ['TEST_RULE'])
+
+    def test_check_unresolved_template_false(self):
+
+        config = "header TEST_RULE eval:check_unresolved_template()"
+
+        email = ("Delivered-To: user@gmail.com\n"
+                 "Received: from smtp.mesvr.com (localhost.localdomain [127.0.0.1])\n"
+                 "From: user@gmail.com\n"
+                 "Date: Tue, 10 Nov 2016 14:38:59 +0200\n"
+                 "Subject: This is a test\n"
+                 "To: user@gmail.com")
+
+        self.setup_conf(config=config, pre_config=PRE_CONFIG)
+        result = self.check_pad(email)
+        self.check_report(result, 0, [])
+
+
+class TestFunctionalCheckRatwareNameId(tests.util.TestBase):
+
+
+    def test_check_ratware_name_id_match(self):
+
+        config = "header TEST_RULE eval:check_ratware_name_id()"
+
+        email = ('Message-Id: <AAAAAAAAAAAAAAAAAAAAAAAAAAAA.EXAMPLE>\n'
+                 'From: "UNSER EXAMPLE" <EXAMPLE>')
+
+        self.setup_conf(config=config, pre_config=PRE_CONFIG)
+        result = self.check_pad(email)
+        self.check_report(result, 1, ['TEST_RULE'])
+
+
+    def test_check_ratware_name_id_dont_match(self):
+
+
+        config = "header TEST_RULE eval:check_ratware_name_id()"
+
+        email = ('Message-Id: <AAAAAAAAAAAAAAAAAAAAAAAAAAAA>\n'
+                 'From: "UNSER EXAMPLE" <EXAMPLE>')
+
+        self.setup_conf(config=config, pre_config=PRE_CONFIG)
+        result = self.check_pad(email)
+        self.check_report(result, 0, [])
+
+
+class TestFunctionalCheckRatwareEnvelopeFrom(tests.util.TestBase):
+
+    def test_check_ratware_envelope_from(self):
+
+        config = ("header TEST_RULE eval:check_ratware_envelope_from()\n"
+                  "util_rb_tld com")
+
+        email = ("To: user@example.com\n"
+                 "Received: from example.com (example.com [1.2.3.4])\n"
+                 "\tby example.com\n"
+                 "\t(envelope-from <example.com.user@something>)\n")
+
+        self.setup_conf(config=config, pre_config=PRE_CONFIG)
+        result = self.check_pad(email)
+        self.check_report(result, 1, ['TEST_RULE'])
+
+    def test_check_ratware_envelope_from_SRS(self):
+
+        config = "header TEST_RULE eval:check_ratware_envelope_from()"
+
+        email = ("To: user@example.com\n"
+                 "Received: from example.com (example.com [1.2.3.4])\n"
+                 "\tby example.com\n"
+                 "\t(envelope-from <SRS5=example.com.user@something>)\n")
+
+        self.setup_conf(config=config, pre_config=PRE_CONFIG)
+        result = self.check_pad(email)
+        self.check_report(result, 0, [])
+
+    def test_check_ratware_envelope_from_invalid_domain(self):
+
+        config = ("header TEST_RULE eval:check_ratware_envelope_from()")
+
+        email = ("To: user@examplecom\n"
+                 "Received: from example.com (example.com [1.2.3.4])\n"
+                 "\tby example.com\n"
+                 "\t(envelope-from <example.com.user@something>)\n")
+
+        self.setup_conf(config=config, pre_config=PRE_CONFIG)
+        result = self.check_pad(email)
+        self.check_report(result, 0, [])
+
+    def test_check_ratware_envelope_from_no_to_header(self):
+
+        config = "header TEST_RULE eval:check_ratware_envelope_from()"
+
+        email = ("Received: from example.com (example.com [1.2.3.4])\n"
+                 "\tby example.com\n"
+                 "\t(envelope-from <example.com.user@something>)\n")
+
+        self.setup_conf(config=config, pre_config=PRE_CONFIG)
+        result = self.check_pad(email)
+        self.check_report(result, 0, [])
+
+    def test_check_ratware_envelope_from_no_envelope_from(self):
+
+        config = "header TEST_RULE eval:check_ratware_envelope_from()"
+
+        email = ("To: user@example.com")
+
+        self.setup_conf(config=config, pre_config=PRE_CONFIG)
+        result = self.check_pad(email)
+        self.check_report(result, 0, [])
+
+    def test_check_ratware_envelope_from_false(self):
+
+        config = "header TEST_RULE eval:check_ratware_envelope_from()"
+
+        email = ("To: user@example.com\n"
+                 "Received: from example.com (example.com [1.2.3.4])\n"
+                 "\tby example.com\n"
+                 "\t(envelope-from <user@example.com>)\n")
+
+        self.setup_conf(config=config, pre_config=PRE_CONFIG)
+        result = self.check_pad(email)
+        self.check_report(result, 0, [])
 
 
 def suite():
@@ -780,6 +1014,11 @@ def suite():
     test_suite.addTest(unittest.makeSuite(TestFunctionalSubjectIsAllCaps, "test"))
     test_suite.addTest(unittest.makeSuite(TestFunctionalCheckForToInSubject, "test"))
     test_suite.addTest(unittest.makeSuite(TestFunctionalCheckMessageidNotUsable, "test"))
+    test_suite.addTest(unittest.makeSuite(TestFunctionalCheckOutlookMessageId, "test"))
+    test_suite.addTest(unittest.makeSuite(TestFunctionalCheckHeaderCountRange, "test"))
+    test_suite.addTest(unittest.makeSuite(TestFunctionalCheckUnresolvedTemplate, "test"))
+    test_suite.addTest(unittest.makeSuite(TestFunctionalCheckRatwareNameId, "test"))
+    test_suite.addTest(unittest.makeSuite(TestFunctionalCheckRatwareEnvelopeFrom, "test"))
     return test_suite
 
 
