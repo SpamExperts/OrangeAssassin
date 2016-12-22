@@ -1,3 +1,4 @@
+#coding:utf8
 """Tests the HeaderEval Plugin"""
 
 from __future__ import absolute_import
@@ -176,6 +177,7 @@ class TestFunctionalCheckIllegalCharsInHeader(tests.util.TestBase):
         self.check_report(result, 1, ['TEST_RULE'])
 
     def test_check_illegal_chars_if_empty_header(self):
+
         config = "header TEST_RULE eval:check_illegal_chars('MyHeader','0','0')"
 
         email = u"MyHeader:"
@@ -236,6 +238,7 @@ class TestFunctionalCheckIllegalCharsInHeader(tests.util.TestBase):
         self.check_report(result, 0, [])
 
     def test_check_illegal_chars_in_all_headers(self):
+
         config = "header TEST_RULE eval:check_illegal_chars('ALL','0.45','5')"
 
         email = (u"To: a∞a∞a∞\n"
