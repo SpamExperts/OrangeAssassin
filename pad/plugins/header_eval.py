@@ -161,11 +161,15 @@ class HeaderEval(pad.plugins.base.BasePlugin):
             return False
         if header == 'ALL':
             raw_headers = msg.raw_headers
-            for hdr in ("subject", "from"):
-                try:
-                    del raw_headers[hdr]
-                except KeyError:
-                    pass
+            key_headers = []
+            for keys in raw_headers.keys():
+                key_headers.append(keys)
+            for key in key_headers:
+                if key.lower() in ("subject", "from"):
+                    try:
+                        del raw_headers[key]
+                    except KeyError:
+                        pass
         else:
             raw_headers = {header: msg.get_raw_header(header)}
 
@@ -226,6 +230,8 @@ class HeaderEval(pad.plugins.base.BasePlugin):
             self.hotmail_addr_with_forged_hotmail_received = 1
         else:
             from_address = msg.msg.get("From")
+            if not from_address:
+                from_address = ""
             if not re.search(r"\bhotmail\.com$", from_address):
                 return False
             self.hotmail_addr_but_no_hotmail_received = 1
