@@ -307,7 +307,7 @@ class MIMEEval(pad.plugins.base.BasePlugin):
             1 for a, b in zip(text, text.upper()) if a != b or a.isdigit()
         )
         count_upper = len(text) - count_lower
-        return float(min_percent) <= (count_upper / len(text)) * 100 <= float(max_percent)
+        return float(min_percent) <= (count_upper / float(len(text))) * 100 <= float(max_percent)
 
     def check_mime_multipart_ratio(self, msg, min_ratio, max_ratio,
                                    target=None):
