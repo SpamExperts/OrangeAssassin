@@ -5,11 +5,11 @@ from __future__ import division
 
 import datetime
 import email.header
+import email.header
 import email.utils
+import itertools
 import re
 import time
-import itertools
-import email.header
 
 import pad.locales
 import pad.plugins.base
@@ -57,7 +57,8 @@ class HeaderEval(pad.plugins.base.BasePlugin):
     options = {
         "util_rb_tld": ("append_split", []),
         "util_rb_2tld": ("append_split", []),
-        "util_rb_3tld": ("append_split", [])
+        "util_rb_3tld": ("append_split", []),
+        # "ok_locales": ("appe", [])
     }
 
     def check_start(self, msg):
@@ -66,6 +67,8 @@ class HeaderEval(pad.plugins.base.BasePlugin):
         self.set_local(msg, "date_received", None)
         self.set_local(msg, "received_header_times", None)
         self.set_local(msg, "received_fetchmail_time", None)
+        # if not self.get_global("ok_locales"):
+        #     self.set_global("ok_locales", "ALL")
 
     def check_for_fake_aol_relay_in_rcvd(self, msg, target=None):
         """Check for common AOL fake received header."""
@@ -85,7 +88,8 @@ class HeaderEval(pad.plugins.base.BasePlugin):
         This eval rule requires the ok_locales setting configured,
         and not set to ALL.
         """
-        ok_locales = self.get_global("ok_locales")
+
+        ok_locales = self.ctxt.conf.get_global("ok_locales")
         if not ok_locales or ok_locales.lower() == "all":
             return False
         ok_locales = ok_locales.split()
@@ -356,7 +360,7 @@ class HeaderEval(pad.plugins.base.BasePlugin):
             if relay.get('envfrom'):
                 envfrom = relay.get('envfrom')
                 break
-        return from_addr == envfrom
+        return envfrom in from_addr
 
     def _parse_rcpt(self, addr):
         user = addr[:self.tocc_similar_count]
@@ -511,7 +515,7 @@ class HeaderEval(pad.plugins.base.BasePlugin):
                     "eval: trying Received fetchmail "
                     "header date for real time: %s", date)
                 received_time = self._parse_rfc822_date(date)
-                current_time = datetime.datetime.utcfromtimestamp(time.time())
+                current_time = datetime.datetime.utcnow()
                 if received_time and current_time >= received_time:
                     self.ctxt.log.debug("eval: time_t from date=%s, rcvd=%s",
                                            received_time, date)
@@ -591,8 +595,8 @@ class HeaderEval(pad.plugins.base.BasePlugin):
         """
         for subject in msg.get_decoded_header("Subject"):
             # Remove the Re/Fwd notations in the subject
-            subject = Regex(r"^(RE|FWD|FW|AW|ANTWORT|SV)"
-                            r":").sub("", subject.upper())
+            subject = Regex(r"^(Re|Fwd|Fw|Aw|Antwort|Sv):", re.I).sub("",
+                                                                     subject)
             subject = subject.strip()
             if len(subject) < 10:
                 # Don't match short subjects
@@ -684,7 +688,8 @@ class HeaderEval(pad.plugins.base.BasePlugin):
         :param maxr: the minimum number of headers with the same name
         :return: True if the header count is withing the range.
         """
-        return int(minr) <= len(msg.get_raw_header(header)) <= int(maxr)
+        raw_headers = set(msg.get_raw_header(header))
+        return int(minr) <= len(raw_headers) <= int(maxr)
 
     def check_unresolved_template(self, msg, target=None):
         message = msg.raw_msg
@@ -799,10 +804,10 @@ class HeaderEval(pad.plugins.base.BasePlugin):
             if not self.get_local(msg, "date_diff"):
                 self._check_date_diff(msg)
             dates_poss.append(self.get_local(msg, "date_header_time") -
-                              self.get_local(msg, "date_diff"))
+                              datetime.timedelta(seconds=self.get_local(msg, "date_diff")))
         if dates_poss:
             no_dates_poss = len(dates_poss)
-            date_received = sorted(dates_poss, reverse=True)[no_dates_poss/2]
+            date_received = sorted(dates_poss, reverse=True)[int(no_dates_poss/2)]
             self.set_local(msg, "date_received", date_received)
             self.ctxt.log.debug("eval: date chosen from message: %s",
                                 date_received)
@@ -827,7 +832,7 @@ class HeaderEval(pad.plugins.base.BasePlugin):
         if not self.get_local(msg, "date_received"):
             self._check_date_received(msg)
         date_received = self.get_local(msg, "date_received")
-        diff = datetime.datetime.utcfromtimestamp(time.time()) - date_received
+        diff = datetime.datetime.utcnow() - date_received
         diff = diff.total_seconds()
         # 365.2425 * 24 * 60 * 60 = 31556952 = seconds in year (including leap)
         if ((not min or diff >= (31556952 * (min/12))) and

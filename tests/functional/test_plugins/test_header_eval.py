@@ -712,7 +712,7 @@ class TestFunctionalCheckForToInSubject(tests.util.TestBase):
 
     def test_check_for_to_in_subject_full_address_match(self):
 
-        config = ("header TEST_RULE1 eval:check_for_to_in_subject('address')"
+        config = ("header TEST_RULE1 eval:check_for_to_in_subject('address')\n"
                   "header TEST_RULE2 eval:check_for_to_in_subject('user')")
 
         email = ("Subject: test@example.com\n"
@@ -736,7 +736,7 @@ class TestFunctionalCheckForToInSubject(tests.util.TestBase):
 
     def test_check_for_to_in_subject_user_match(self):
 
-        config = ("header TEST_RULE1 eval:check_for_to_in_subject('address')"
+        config = ("header TEST_RULE1 eval:check_for_to_in_subject('address')\n"
                   "header TEST_RULE2 eval:check_for_to_in_subject('user')")
 
         email = ("Subject: test\n"
@@ -749,7 +749,7 @@ class TestFunctionalCheckForToInSubject(tests.util.TestBase):
 
     def test_check_for_to_in_subject_user_dont_match(self):
 
-        config = ("header TEST_RULE1 eval:check_for_to_in_subject('address')"
+        config = ("header TEST_RULE1 eval:check_for_to_in_subject('address')\n"
                   "header TEST_RULE2 eval:check_for_to_in_subject('user')")
 
         email = ("Subject: This is a testing case\n"

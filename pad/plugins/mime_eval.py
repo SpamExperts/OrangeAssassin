@@ -273,16 +273,10 @@ class MIMEEval(pad.plugins.base.BasePlugin):
         """
 
         if flag == "missing_mime_head_body_separator":
-            return any(
-                isinstance(x, email.errors.MissingHeaderBodySeparatorDefect)
-                for x in msg.msg.defects
-            )
+            return msg.missing_header_body_separator
 
         if flag == "missing_mime_headers":
-            return any(
-                isinstance(x, pad.message.MissingBoundaryHeaderDefect)
-                for x in msg.msg.defects
-            )
+            return msg.missing_boundary_header
 
         if flag == "truncated_headers":
             for key, value in msg.raw_headers.items():

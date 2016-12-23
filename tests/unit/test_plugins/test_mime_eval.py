@@ -11,6 +11,7 @@ import pad.message
 import pad.plugins
 import pad.plugins.mime_eval
 
+
 class TestMIMEEval(unittest.TestCase):
 
     def setUp(self):
@@ -132,7 +133,6 @@ class TestMIMEEval(unittest.TestCase):
         ))
 
     def test_check_mime_multipart_ratio(self):
-        self.plugin.set_local(self.mock_msg, "mime_multipart_ratio",
-                              0.5)
-        self.assertTrue(self.plugin.check_mime_multipart_ratio,
-                        )
+        self.plugin.set_local(self.mock_msg, "mime_multipart_ratio", 0.5)
+        self.assertTrue(self.plugin.check_mime_multipart_ratio(self.mock_msg,
+                                                               "0.49", "0.51"))
