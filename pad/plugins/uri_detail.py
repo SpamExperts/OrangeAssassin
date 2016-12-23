@@ -43,11 +43,12 @@ class URIDetailRule(pad.rules.uri.URIRule):
 
     def match(self, msg):
         for key in msg.uri_detail_links:
-            value = msg.uri_detail_links[key]
-            result = self.check_single_item(value)
-            if result:
-                # At least this link match, return True
-                return True
+            for type in msg.uri_detail_links[key]:
+                value = msg.uri_detail_links[key][type]
+                result = self.check_single_item(value)
+                if result:
+                    # At least this link match, return True
+                    return True
         return False
 
     @staticmethod
