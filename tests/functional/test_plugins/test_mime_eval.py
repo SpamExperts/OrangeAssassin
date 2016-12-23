@@ -18,7 +18,7 @@ report _TESTS_
 
 # Define rules for plugin
 CONFIG = """
-body CHECK_MIME_BASE64_COUNT                     eval:check_for_mime("mime_base64_count")
+body CHECK_MIME_BASE64_COUNT                     eval:check_for_mime("mime_base64_count")   
 body CHECK_MIME_BASE64_ENCODED_TEXT              eval:check_for_mime("mime_base64_encoded_text")
 body CHECK_MIME_BODY_HTML_COUNT                  eval:check_for_mime("mime_body_html_count")
 body CHECK_MIME_BODY_TEXT_COUNT                  eval:check_for_mime("mime_body_text_count")
@@ -29,23 +29,23 @@ body CHECK_MIME_MULTIPART_RATIO                  eval:check_for_mime("mime_multi
 body CHECK_MIME_QP_COUNT                         eval:check_for_mime("mime_qp_count")
 body CHECK_MIME_QP_LONG_LINE                     eval:check_for_mime("mime_qp_long_line")
 body CHECK_MIME_QP_RATIO                         eval:check_for_mime("mime_qp_ratio")
-body CHECK_MIME_ASCII_TEXT_ILLEGAL               eval:check_for_mime("mime_ascii_text_illegal")
+body CHECK_MIME_ASCII_TEXT_ILLEGAL               eval:check_for_mime("mime_ascii_text_illegal")                    --done
 body CHECK_MIME_TEXT_UNICODE_RATIO               eval:check_for_mime("mime_text_unicode_ratio")
 
-body CHECK_MIME_HTML                             eval:check_for_mime_html()
-body CHECK_MIME_HTML_ONLY                        eval:check_for_mime_html_only()
+body CHECK_MIME_HTML                             eval:check_for_mime_html()                                        --done
+body CHECK_MIME_HTML_ONLY                        eval:check_for_mime_html_only()                                   --done
 
-body CHECK_MISSING_MIME_HEAD_BODY_SEPARATOR      eval:check_msg_parse_flags("missing_mime_head_body_separator")
-body CHECK_MISSING_MIME_HEADERS                  eval:check_msg_parse_flags("missing_mime_headers")
-body CHECK_TRUNCATED_HEADERS                     eval:check_msg_parse_flags("truncated_headers")
-body CHECK_MIME_EPILOGUE_EXISTS                  eval:check_msg_parse_flags("mime_epilogue_exists")
+body CHECK_MISSING_MIME_HEAD_BODY_SEPARATOR      eval:check_msg_parse_flags("missing_mime_head_body_separator")    --done
+body CHECK_MISSING_MIME_HEADERS                  eval:check_msg_parse_flags("missing_mime_headers")                
+body CHECK_TRUNCATED_HEADERS                     eval:check_msg_parse_flags("truncated_headers")                   
+body CHECK_MIME_EPILOGUE_EXISTS                  eval:check_msg_parse_flags("mime_epilogue_exists")                
 
 body CHECK_FARAWAY_CHARSET                       eval:check_for_faraway_charset()
-body CHECK_UPPERCASE                             eval:check_for_uppercase('min_length', 'max_length')
+body CHECK_UPPERCASE                             eval:check_for_uppercase('min_length', 'max_length')              --done
 body CHECK_MULTIPART_RATIO                       eval:check_mime_multipart_ratio('min_ration', 'max_ratio')
 body CHECK_BASE64_LENGTH                         eval:check_base64_length('min_length', 'max_length')
-body CHECK_MA_NON_TEXT                           eval:check_ma_non_text()
-body CHECK_ASCII_TEXT_ILLEGAL                    eval:check_for_ascii_text_illegal()
+body CHECK_MA_NON_TEXT                           eval:check_ma_non_text()                                          --done
+body CHECK_ASCII_TEXT_ILLEGAL                    eval:check_for_ascii_text_illegal()                               --done
 body CHECK_ABUNDANT_UNICODE_RATIO                eval:check_abundant_unicode_ratio('min_ration', 'max_ratio')
 body CHECK_QP_RATION                             eval:check_qp_ratio('min_ration', 'max_ratio')
 """
@@ -254,6 +254,106 @@ class TestFunctionalMIMEEval(tests.util.TestBase):
         result = self.check_pad(MSG_PARSE_FLAGS)
         self.check_report(result, 1.0, ["MISSING_HB"])
 
+    def test_check_parse_flags_missing_headers_body_separator_negative(self):
+        self.setup_conf(
+            config="""
+            body MISSING_HB eval:check_msg_parse_flags("missing_mime_head_body_separator")
+            """,
+            pre_config=PRE_CONFIG)
+
+        MSG_PARSE = """Content-Type: multipart/mixed; boundary="sb"   
+From: test.com
+
+Test
+
+--sb
+
+Test
+
+--sb
+
+Content-type: text/plain; charset=us-ascii
+
+Test
+
+--sb--
+
+This is the epilogue.  It is also to be ignored."""
+        result = self.check_pad(MSG_PARSE)
+        self.check_report(result, 0, [])
+
+    def test_check_parse_flags_missing_headers_body_separator_after_header(self):
+        self.setup_conf(
+            config="""
+            body MISSING_HB eval:check_msg_parse_flags("missing_mime_head_body_separator")
+            """,
+            pre_config=PRE_CONFIG)
+
+        MSG_PARSE = """Content-Type: multipart/mixed; boundary="sb"   
+From: test.com
+Test
+
+--sb
+
+Content-type: text/plain; charset=us-ascii
+
+Test
+
+--sb--
+
+This is the epilogue.  It is also to be ignored."""
+        result = self.check_pad(MSG_PARSE)
+        self.check_report(result, 1, ["MISSING_HB"])
+
+    def test_check_parse_flags_missing_headers_body_separator_after_separator(self):
+        self.setup_conf(
+            config="""
+            body MISSING_HB eval:check_msg_parse_flags("missing_mime_head_body_separator")
+            """,
+            pre_config=PRE_CONFIG)
+
+        MSG_PARSE = """Content-Type: multipart/mixed; boundary="sb"   
+From: test.com
+
+Test
+
+--sb
+
+Content-type: text/plain; charset=us-ascii
+
+Test
+
+--sb--
+This is the epilogue.  It is also to be ignored."""
+        result = self.check_pad(MSG_PARSE)
+        self.check_report(result, 1, ['MISSING_HB'])
+
+    def test_check_parse_flags_missing_headers_body_separator_before_content_type(self):
+        self.setup_conf(
+            config="""
+            body MISSING_HB eval:check_msg_parse_flags("missing_mime_head_body_separator")
+            """,
+            pre_config=PRE_CONFIG)
+
+        MSG_PARSE = """Content-Type: multipart/mixed; boundary="sb"
+From: test.com
+MIME-Version: 1.0
+
+Test
+
+--sb
+
+Test
+
+--sb
+Content-type: text/plain; charset=us-ascii
+Test
+
+--sb--
+This is the epilogue.  It is also to be ignored."""
+        result = self.check_pad(MSG_PARSE)
+        self.check_report(result, 1, ["MISSING_HB"])
+
     def test_check_parse_flags_missing_headers(self):
         self.setup_conf(
             config="""
@@ -413,6 +513,89 @@ class TestFunctionalMIMEEval(tests.util.TestBase):
 
         self.check_report(result, 1, ['CHECK_UPPERCASE'])
 
+    def test_check_for_ma_non_tex_negative(self):
+        self.setup_conf(
+            config="""
+            body CHECK_MA_NON_TEXT  eval:check_ma_non_text()
+            """,
+            pre_config=PRE_CONFIG)
+
+        result = self.check_pad(MSG_HTML_MOSTLY, debug=True)
+
+        self.check_report(result, 0, [])
+
+    def test_check_for_ma_non_tex_random_content_type(self):
+        self.setup_conf(
+            config="""
+            body CHECK_MA_NON_TEXT  eval:check_ma_non_text()
+            """,
+            pre_config=PRE_CONFIG)
+
+        MSG = """Subject: test
+Content-Type: multipart/alternative; boundary=001a1148e51c20e31305439a7bc2
+
+--001a1148e51c20e31305439a7bc2
+Content-Type: multipart/related
+
+Test Body
+
+--001a1148e51c20e31305439a7bc2
+Content-Type: test
+
+<div dir="ltr">Test Body</div>
+
+--001a1148e51c20e31305439a7bc2--
+"""
+        result = self.check_pad(MSG, debug=True)
+
+        self.check_report(result, 1, ['CHECK_MA_NON_TEXT'])
+
+    def test_check_for_ma_non_tex_random_content_type_first(self):
+        self.setup_conf(
+            config="""
+            body CHECK_MA_NON_TEXT  eval:check_ma_non_text()
+            """,
+            pre_config=PRE_CONFIG)
+
+        MSG = """Subject: test
+Content-Type: multipart/alternative; boundary=001a1148e51c20e31305439a7bc2
+
+--001a1148e51c20e31305439a7bc2
+Content-Type: ceva
+
+Test Body
+
+--001a1148e51c20e31305439a7bc2
+Content-Type: application/rtf
+
+<div dir="ltr">Test Body</div>
+
+--001a1148e51c20e31305439a7bc2--
+"""
+        result = self.check_pad(MSG, debug=True)
+
+        self.check_report(result, 1, ['CHECK_MA_NON_TEXT'])
+
+    def test_check_for_ma_non_tex_no_multipart_alternative(self):
+        self.setup_conf(
+            config="""
+            body CHECK_MA_NON_TEXT  eval:check_ma_non_text()
+            """,
+            pre_config=PRE_CONFIG)
+
+        MSG = """Subject: test
+Content-Type: multipart; boundary=001a1148e51c20e31305439a7bc2
+
+--001a1148e51c20e31305439a7bc2
+Content-Type: ceva
+
+Test Body
+
+--001a1148e51c20e31305439a7bc2
+"""
+        result = self.check_pad(MSG, debug=True)
+
+        self.check_report(result, 0, [])
 
 def suite():
     """Gather all the tests from this package in a test suite."""
