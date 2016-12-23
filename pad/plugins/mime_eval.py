@@ -147,7 +147,7 @@ class MIMEEval(pad.plugins.base.BasePlugin):
             if not charset or charset == r"us-ascii":
                 try:
                     payload.encode("ascii")
-                except UnicodeEncodeError:
+                except (UnicodeEncodeError, UnicodeDecodeError):
                     self.set_local(msg, "mime_ascii_text_illegal", True)
 
     def _update_mime_ma_non_text(self, msg, part):
