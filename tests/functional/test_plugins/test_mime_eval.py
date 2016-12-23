@@ -4,6 +4,10 @@
 from __future__ import absolute_import
 import unittest
 import tests.util
+import random
+
+from string import ascii_letters
+from string import digits
 
 PRE_CONFIG = """
 loadplugin     Mail::SpamAssassin::Plugin::MIMEEval
@@ -37,7 +41,7 @@ body CHECK_TRUNCATED_HEADERS                     eval:check_msg_parse_flags("tru
 body CHECK_MIME_EPILOGUE_EXISTS                  eval:check_msg_parse_flags("mime_epilogue_exists")
 
 body CHECK_FARAWAY_CHARSET                       eval:check_for_faraway_charset()
-body CHECK_UPPERCASE                             eval:check_for_uppercase()
+body CHECK_UPPERCASE                             eval:check_for_uppercase('min_length', 'max_length')
 body CHECK_MULTIPART_RATIO                       eval:check_mime_multipart_ratio('min_ration', 'max_ratio')
 body CHECK_BASE64_LENGTH                         eval:check_base64_length('min_length', 'max_length')
 body CHECK_MA_NON_TEXT                           eval:check_ma_non_text()
@@ -78,6 +82,19 @@ MSG_BASE64_LONG = """Content-Transfer-Encoding: base64
 aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa==
 """
 
+MSG_WITH_UPPERCASE = """Content-Type: text/plain
+
+%s
+%s%s
+"""
+
+MSG_WITH_MULTIPLE_LINES = """Content-Type: text/plain
+
+%s
+%s%s
+%s
+%s
+"""
 
 MSG_ABUNDANT_UNICODE = """Content-Type: text/plain
 abc&#x3030;
@@ -263,6 +280,138 @@ class TestFunctionalMIMEEval(tests.util.TestBase):
             pre_config=PRE_CONFIG)
         result = self.check_pad(MSG_PARSE_FLAGS, debug=True)
         self.check_report(result, 1.0, ["MIME_EPILOGUE_EXISTS"])
+
+    def test_check_for_uppercase_min_limit(self):
+        self.setup_conf(
+            config="""
+            body CHECK_UPPERCASE  eval:check_for_uppercase(50, 100)
+            """,
+            pre_config=PRE_CONFIG)
+
+        MSG = MSG_WITH_UPPERCASE % ('F'*1, 'a'*99, 'B'*98)
+        result = self.check_pad(MSG, debug=True)
+
+        self.check_report(result, 0, [])
+
+    def test_check_for_uppercase_min_limit_exceeded(self):
+        self.setup_conf(
+            config="""
+            body CHECK_UPPERCASE  eval:check_for_uppercase(49.9, 100)
+            """,
+            pre_config=PRE_CONFIG)
+
+        MSG = MSG_WITH_UPPERCASE % ('F'*1, 'a'*99, 'B'*98)
+        result = self.check_pad(MSG, debug=True)
+
+        self.check_report(result, 1, ['CHECK_UPPERCASE'])
+
+    def test_check_for_uppercase_max_limit_exceeded(self):
+        self.setup_conf(
+            config="""
+            body CHECK_UPPERCASE  eval:check_for_uppercase(50, 69.6)
+            """,
+            pre_config=PRE_CONFIG)
+
+        MSG = MSG_WITH_UPPERCASE % ('B'*1, 'a'*60, 'F'*137) 
+        result = self.check_pad(MSG, debug=True)
+
+        self.check_report(result, 0, [])
+
+    def test_check_for_uppercase_max_limit(self):
+        self.setup_conf(
+            config="""
+            body CHECK_UPPERCASE  eval:check_for_uppercase(50, 69.7)
+            """,
+            pre_config=PRE_CONFIG)
+
+        MSG = MSG_WITH_UPPERCASE % ('B'*1, 'a'*60, 'F'*137) 
+        result = self.check_pad(MSG, debug=True)
+
+        self.check_report(result, 1, ['CHECK_UPPERCASE'])
+
+    def test_check_for_uppercase_insufficient_characters(self):
+        self.setup_conf(
+            config="""
+            body CHECK_UPPERCASE  eval:check_for_uppercase(50, 100)
+            """,
+            pre_config=PRE_CONFIG)
+
+        MSG = MSG_WITH_UPPERCASE % ('F'*1, 'A'*100, 'B'*96)
+        result = self.check_pad(MSG, debug=True)   
+
+        self.check_report(result, 0, [])
+
+    def test_check_for_uppercase_just_enough_characters(self):
+        self.setup_conf(
+            config="""
+            body CHECK_UPPERCASE  eval:check_for_uppercase(50, 100)
+            """,
+            pre_config=PRE_CONFIG)
+
+        MSG = MSG_WITH_UPPERCASE % ('F'*1, 'A'*100, 'B'*97)
+        result = self.check_pad(MSG, debug=True)   
+
+        self.check_report(result, 1, ['CHECK_UPPERCASE'])
+
+    def test_check_for_uppercase_with_digit_char(self):
+        self.setup_conf(
+            config="""
+            body CHECK_UPPERCASE  eval:check_for_uppercase(40, 100)
+            """,
+            pre_config=PRE_CONFIG)
+
+        MSG = MSG_WITH_UPPERCASE % ('F'*2, 'A'*96, '1'*100)
+        result = self.check_pad(MSG, debug=True)
+ 
+        self.check_report(result, 1, ['CHECK_UPPERCASE'])
+
+    def test_check_for_uppercase_that_digit_are_low(self):
+        self.setup_conf(
+            config="""
+            body CHECK_UPPERCASE  eval:check_for_uppercase(50, 100)
+            """,
+            pre_config=PRE_CONFIG)
+
+        MSG = MSG_WITH_UPPERCASE % ('F'*2, 'A'*96, '1'*100)
+        result = self.check_pad(MSG, debug=True)
+ 
+        self.check_report(result, 0, [])
+
+    def test_check_for_uppercase_below_empty_line(self):
+        self.setup_conf(
+            config="""
+            body CHECK_UPPERCASE  eval:check_for_uppercase(50, 100)
+            """,
+            pre_config=PRE_CONFIG)
+
+        MSG = MSG_WITH_MULTIPLE_LINES % ('F'*1, 'a'*99, 'B'*98, '','B')
+        result = self.check_pad(MSG, debug=True)
+
+        self.check_report(result, 0, [])
+
+    def test_check_for_uppercase_below_empty_line(self):
+        self.setup_conf(
+            config="""
+            body CHECK_UPPERCASE  eval:check_for_uppercase(50, 100)
+            """,
+            pre_config=PRE_CONFIG)
+
+        MSG = MSG_WITH_MULTIPLE_LINES % ('F'*1, 'a'*99, 'B'*98, '','B')
+        result = self.check_pad(MSG, debug=True)
+
+        self.check_report(result, 0, [])
+
+    def test_check_for_uppercase_200c_below_empty_line(self):
+        self.setup_conf(
+            config="""
+            body CHECK_UPPERCASE  eval:check_for_uppercase(50, 100)
+            """,
+            pre_config=PRE_CONFIG)
+
+        MSG = MSG_WITH_MULTIPLE_LINES % ('F'*1, 'a'*99, 'B'*98, '',200*'B')
+        result = self.check_pad(MSG, debug=True)
+
+        self.check_report(result, 0, [])
 
 
 def suite():
