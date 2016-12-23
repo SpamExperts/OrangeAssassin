@@ -50,6 +50,8 @@ INVALID_CHARACTERS_RE = Regex(r'[^A-Z0-9]')
 
 
 def charset_ok_for_locales(charset, locales):
+    if not charset:
+        charset = ""
     clean_charset = charset.upper()
     clean_charset = INVALID_CHARACTERS_RE.sub("", clean_charset)
 

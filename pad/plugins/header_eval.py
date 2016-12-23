@@ -58,7 +58,7 @@ class HeaderEval(pad.plugins.base.BasePlugin):
         "util_rb_tld": ("append_split", []),
         "util_rb_2tld": ("append_split", []),
         "util_rb_3tld": ("append_split", []),
-        "ok_locales": ("string", "ALL"),
+        # "ok_locales": ("appe", [])
     }
 
     def check_start(self, msg):
@@ -67,6 +67,8 @@ class HeaderEval(pad.plugins.base.BasePlugin):
         self.set_local(msg, "date_received", None)
         self.set_local(msg, "received_header_times", None)
         self.set_local(msg, "received_fetchmail_time", None)
+        # if not self.get_global("ok_locales"):
+        #     self.set_global("ok_locales", "ALL")
 
     def check_for_fake_aol_relay_in_rcvd(self, msg, target=None):
         """Check for common AOL fake received header."""
@@ -86,7 +88,8 @@ class HeaderEval(pad.plugins.base.BasePlugin):
         This eval rule requires the ok_locales setting configured,
         and not set to ALL.
         """
-        ok_locales = self.get_global("ok_locales")
+
+        ok_locales = self.ctxt.conf.get_global("ok_locales")
         if not ok_locales or ok_locales.lower() == "all":
             return False
         ok_locales = ok_locales.split()
