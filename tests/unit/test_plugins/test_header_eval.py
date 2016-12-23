@@ -926,6 +926,60 @@ class TestRecipientsRules(TestHeaderEvalBase):
         self.assertEqual(ratio, 0.0)
         self.assertFalse(result)
 
+    def test_check_equal_from_domain(self):
+        from_addr = ["test@example.com"]
+        envfrom_addr = ["test@example.com"]
+        self.mock_msg.get_all_addr_header.side_effect = [from_addr,
+                                                         envfrom_addr]
+        result = self.plugin.check_equal_from_domains(self.mock_msg)
+        self.assertFalse(result)
+
+    def test_check_equal_from_domain_true(self):
+        from_addr = ["test@example.com"]
+        envfrom_addr = ["test@another.example.com"]
+        self.mock_msg.get_all_addr_header.side_effect = [from_addr,
+                                                         envfrom_addr]
+        result = self.plugin.check_equal_from_domains(self.mock_msg)
+        self.assertTrue(result)
+
+    def test_check_date_received(self):
+        date_header_time = datetime.datetime(2016, 11, 28, 12, 49, 22)
+        received_header_times = [datetime.datetime(2016, 11, 28, 2, 49, 35),
+                                 datetime.datetime(2016, 11, 28, 2, 49, 35),
+                                 datetime.datetime(2016, 11, 28, 2, 49, 35),
+                                 datetime.datetime(2016, 11, 28, 2, 49, 35),
+                                 datetime.datetime(2016, 11, 28, 11, 49, 35),
+                                 datetime.datetime(2016, 11, 28, 2, 49, 23),
+                                 datetime.datetime(2016, 11, 28, 2, 49, 22)]
+        received_fetchmail_time = None
+        date_diff = 3587.0
+        self.local_data = {"date_header_time": date_header_time,
+                           "received_header_times": received_header_times,
+                           "received_fetchmail_time": received_fetchmail_time,
+                           "date_diff": date_diff}
+        self.plugin._check_date_received(self.mock_msg)
+        date_received = self.local_data.get("date_received")
+        self.assertEqual(datetime.datetime(2016, 11, 28, 11, 49, 35),
+                         date_received)
+
+    def test_received_within_months(self):
+        current_date = datetime.datetime.utcnow()
+        date_received = current_date - datetime.timedelta(days=20)
+        self.local_data = {
+            "date_received": date_received
+        }
+        result = self.plugin.received_within_months(self.mock_msg, 1, 3)
+        self.assertFalse(result)
+
+    def test_received_within_months_true(self):
+        current_date = datetime.datetime.utcnow()
+        date_received = current_date - datetime.timedelta(days=60)
+        self.local_data = {
+            "date_received": date_received
+        }
+        result = self.plugin.received_within_months(self.mock_msg, 1, 3)
+        self.assertTrue(result)
+
 
 class TestForgedHotmailRcvd(TestHeaderEvalBase):
     def setUp(self):

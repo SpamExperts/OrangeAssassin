@@ -3,8 +3,11 @@
 from __future__ import absolute_import
 
 import unittest
-
+import random
 import tests.util
+
+from string import ascii_letters
+from string import digits
 
 # Load plugin and report matched RULES and SCORE
 PRE_CONFIG = """
@@ -23,6 +26,8 @@ body CHECK_URI_TRUNCATED          eval:check_uri_truncated()
 
 class TestFunctionalURIEval(tests.util.TestBase):
     """Class containing functional tests for the URI Plugin"""
+    mytext = [random.choice(ascii_letters + digits) for _ in range(8182)]
+    long_text = "".join(mytext)
 
     def test_check_for_http_redirector(self):
 
@@ -764,12 +769,138 @@ Content-Type: text/html
 \n<html>
 Dear user,
 Your account has been limited please follow the instructions on the next link:
-<a href="https://www.PAYPAL.com/login/account-unlock">It is a truncated uri https://www.PAYPAL.com/...</a>
+<a href="https://www.PAYPAL.com/login/account-unlock">https://www.PAYPAL.com/...</a>
 </html>""" 
 
         self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG)
         result = self.check_pad(email)
         self.check_report(result, 0, [])
+
+    def test_check_for_uri_truncated_superior_limit(self):
+
+        mytext1 = [random.choice(ascii_letters + digits) for _ in range(8181)]
+        long_text1 = "".join(mytext1)
+
+        email = """From: sender@example.com
+Content-Type: text/html
+\n<html>
+Dear user,
+Your account has been limited please follow the instructions on the next link:
+<a href="http://%s.com">https://test.com</a>
+</html>"""
+        email = email % (long_text1)
+
+        self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG)
+        result = self.check_pad(email)
+        self.check_report(result, 0, [])
+
+    def test_check_for_uri_truncated(self):
+
+        email = """From: sender@example.com
+Content-Type: text/html
+\n<html>
+Dear user,
+Your account has been limited please follow the instructions on the next link:
+<a href="http://%s.com">https://test.com</a>
+</html>"""
+        email = email % (self.long_text)
+
+        self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG)
+        result = self.check_pad(email)
+        self.check_report(result, 1, ['CHECK_URI_TRUNCATED'])
+
+    def test_check_for_uri_truncated_and_redirector_after(self):
+
+        email = """From: sender@example.com
+Content-Type: text/html
+\n<html>
+Dear user,
+Your account has been limited please follow the instructions on the next link:
+<a href="http://%s.com/https://ceva.com">https://test.com</a>
+</html>"""
+        email = email % (self.long_text)
+
+        self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG)
+        result = self.check_pad(email)
+        self.check_report(result, 2, ['CHECK_URI_TRUNCATED', 'CHECK_FOR_HTTP_REDIRECTOR'])
+
+    def test_check_for_uri_truncated_redirector_before_and_ip_mismatch(self):
+
+        email = """From: sender@example.com
+Content-Type: text/html
+\n<html>
+Dear user,
+Your account has been limited please follow the instructions on the next link:
+<a href="http://1.2.3.4/https://%s.com/">https://test.com</a>
+</html>"""
+        email = email % (self.long_text)
+
+        self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG)
+        result = self.check_pad(email)
+        self.check_report(result, 3, ['CHECK_URI_TRUNCATED', 'CHECK_FOR_HTTP_REDIRECTOR','CHECK_HTTPS_IP_MISMATCH'])
+
+    def test_check_for_uri_truncated_link_label(self):
+
+        email = """From: sender@example.com
+Content-Type: text/html
+\n<html>
+Dear user,
+Your account has been limited please follow the instructions on the next link:
+<link href="http://%s.com">
+</html>"""
+        email = email % (self.long_text)
+
+        self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG)
+        result = self.check_pad(email)
+        self.check_report(result, 1, ['CHECK_URI_TRUNCATED'])
+
+    def test_check_for_uri_truncated_superior_limit_link_label(self):
+
+        mytext1 = [random.choice(ascii_letters + digits) for _ in range(8181)]
+        long_text1 = "".join(mytext1)
+
+        email = """From: sender@example.com
+Content-Type: text/html
+\n<html>
+Dear user,
+Your account has been limited please follow the instructions on the next link:
+<link href="http://%s.com">
+</html>"""
+        email = email % (long_text1)
+
+        self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG)
+        result = self.check_pad(email)
+        self.check_report(result, 0, [])
+
+    def test_check_for_uri_truncated_and_redirector_after_link_label(self):
+
+        email = """From: sender@example.com
+Content-Type: text/html
+\n<html>
+Dear user,
+Your account has been limited please follow the instructions on the next link:
+<link href="http://%s.com/https://%s.com/https://ceva.com">
+</html>"""
+        email = email % (self.long_text, self.long_text)
+
+        self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG)
+        result = self.check_pad(email)
+        self.check_report(result, 2, ['CHECK_URI_TRUNCATED', 'CHECK_FOR_HTTP_REDIRECTOR'])
+
+    def test_check_for_uri_truncated_redirector_before_link_label(self):
+
+        email = """From: sender@example.com
+Content-Type: text/html
+\n<html>
+Dear user,
+Your account has been limited please follow the instructions on the next link:
+<link href="http://1.2.3.4/https://1.2.3.4/https://%s.com/">
+</html>"""
+        email = email % (self.long_text)
+
+        self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG)
+        result = self.check_pad(email)
+        self.check_report(result, 2, ['CHECK_URI_TRUNCATED', 'CHECK_FOR_HTTP_REDIRECTOR'])
 
 def suite():
     """Gather all the tests from this package in a test suite."""

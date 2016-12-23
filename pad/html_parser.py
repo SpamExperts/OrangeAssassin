@@ -22,6 +22,7 @@ class HTML(HTMLParser):
             HTMLParser.__init__(self)
         self.links = {}
         self.last_start_tag = None
+        self.last_link_details = {}
         self.current_link = None
         self.logger = logger
 
@@ -37,7 +38,15 @@ class HTML(HTMLParser):
                 if prop not in ("href", "src"):
                     continue
                 link = parse_link(value, tag)
-                self.links[value] = link
+                if value in self.links:
+                    if tag in self.links[value]:
+                        self.links[value][tag].update(link[tag])
+                        self.current_link = value
+                        continue
+                else:
+                    self.links[value] = {}
+                link[tag]['text'] = []
+                self.links[value][tag] = link[tag]
                 self.current_link = value
 
     def handle_endtag(self, tag):
@@ -49,19 +58,18 @@ class HTML(HTMLParser):
         if not all([data, self.last_start_tag, self.current_link]):
             return
         if self.last_start_tag in ("a", "link"):
-            self.links[self.current_link]["text"] = data
+            self.links[self.current_link][self.last_start_tag]["text"].\
+                append(data)
 
-
-def parse_link(value, linktype=""):
+def parse_link(value, linktype):
     """ Returns a dictionary with information for the link"""
     link = {}
-    link["raw"] = value
+    link[linktype] = {}
+    link[linktype]["raw"] = value
     urlp = urlparse(value)
-    link["scheme"] = urlp.scheme
-    link["cleaned"] = unquote(value)
-    if linktype:
-        link["type"] = linktype
-    link["domain"] = urlp.netloc
+    link[linktype]["scheme"] = urlp.scheme
+    link[linktype]["cleaned"] = unquote(value)
+    link[linktype]["domain"] = urlp.netloc
     return link
 
 
