@@ -5,16 +5,16 @@ from __future__ import division
 
 import datetime
 import email.header
+import email.header
 import email.utils
+import itertools
 import re
 import time
-import itertools
-import email.header
 
 import pad.locales
 import pad.plugins.base
-from pad.regex import Regex
 from pad.received_parser import IP_ADDRESS
+from pad.regex import Regex
 
 
 class HeaderEval(pad.plugins.base.BasePlugin):
@@ -57,7 +57,8 @@ class HeaderEval(pad.plugins.base.BasePlugin):
     options = {
         "util_rb_tld": ("append_split", []),
         "util_rb_2tld": ("append_split", []),
-        "util_rb_3tld": ("append_split", [])
+        "util_rb_3tld": ("append_split", []),
+        "ok_locales": ("string", "ALL"),
     }
 
     def check_start(self, msg):
