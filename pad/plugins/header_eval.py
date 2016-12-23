@@ -13,8 +13,8 @@ import email.header
 
 import pad.locales
 import pad.plugins.base
-from pad.received_parser import IP_ADDRESS
 from pad.regex import Regex
+from pad.received_parser import IP_ADDRESS
 
 
 class HeaderEval(pad.plugins.base.BasePlugin):
@@ -356,7 +356,7 @@ class HeaderEval(pad.plugins.base.BasePlugin):
             if relay.get('envfrom'):
                 envfrom = relay.get('envfrom')
                 break
-        return from_addr == envfrom
+        return envfrom in from_addr
 
     def _parse_rcpt(self, addr):
         user = addr[:self.tocc_similar_count]
@@ -591,8 +591,8 @@ class HeaderEval(pad.plugins.base.BasePlugin):
         """
         for subject in msg.get_decoded_header("Subject"):
             # Remove the Re/Fwd notations in the subject
-            subject = Regex(r"^(RE|FWD|FW|AW|ANTWORT|SV)"
-                            r":").sub("", subject.upper())
+            subject = Regex(r"^(Re|Fwd|Fw|Aw|Antwort|Sv):", re.I).sub("",
+                                                                     subject)
             subject = subject.strip()
             if len(subject) < 10:
                 # Don't match short subjects
@@ -684,7 +684,8 @@ class HeaderEval(pad.plugins.base.BasePlugin):
         :param maxr: the minimum number of headers with the same name
         :return: True if the header count is withing the range.
         """
-        return int(minr) <= len(msg.get_raw_header(header)) <= int(maxr)
+        raw_headers = set(msg.get_raw_header(header))
+        return int(minr) <= len(raw_headers) <= int(maxr)
 
     def check_unresolved_template(self, msg, target=None):
         message = msg.raw_msg
