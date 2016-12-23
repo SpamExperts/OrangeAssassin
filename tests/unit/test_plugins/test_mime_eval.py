@@ -55,29 +55,25 @@ class TestMIMEEval(unittest.TestCase):
         self.assertFalse(self.plugin.check_for_mime_html_only(self.mock_msg))
 
     def test_check_parse_flags_missing_head_body_separator(self):
-        self.mock_msg.msg.defects = [
-            email.errors.MissingHeaderBodySeparatorDefect()
-        ]
+        self.mock_msg.missing_header_body_separator = True
         self.assertTrue(self.plugin.check_msg_parse_flags(
             self.mock_msg, "missing_mime_head_body_separator"
         ))
 
     def test_check_parse_flags_missing_head_body_separator_false(self):
-        self.mock_msg.msg.defects = []
+        self.mock_msg.missing_header_body_separator = False
         self.assertFalse(self.plugin.check_msg_parse_flags(
             self.mock_msg, "missing_mime_head_body_separator"
         ))
 
     def test_check_parse_flags_missing_mime_headers(self):
-        self.mock_msg.msg.defects = [
-            pad.message.MissingBoundaryHeaderDefect()
-        ]
+        self.mock_msg.missing_boundary_header = True
         self.assertTrue(self.plugin.check_msg_parse_flags(
             self.mock_msg, "missing_mime_headers"
         ))
 
     def test_check_parse_flags_missing_mime_headers_false(self):
-        self.mock_msg.msg.defects = []
+        self.mock_msg.missing_boundary_header = False
         self.assertFalse(self.plugin.check_msg_parse_flags(
             self.mock_msg, "missing_mime_headers"
         ))
