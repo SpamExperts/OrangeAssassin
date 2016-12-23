@@ -511,7 +511,7 @@ class HeaderEval(pad.plugins.base.BasePlugin):
                     "eval: trying Received fetchmail "
                     "header date for real time: %s", date)
                 received_time = self._parse_rfc822_date(date)
-                current_time = datetime.datetime.utcfromtimestamp(time.time())
+                current_time = datetime.datetime.utcnow()
                 if received_time and current_time >= received_time:
                     self.ctxt.log.debug("eval: time_t from date=%s, rcvd=%s",
                                            received_time, date)
@@ -800,10 +800,10 @@ class HeaderEval(pad.plugins.base.BasePlugin):
             if not self.get_local(msg, "date_diff"):
                 self._check_date_diff(msg)
             dates_poss.append(self.get_local(msg, "date_header_time") -
-                              self.get_local(msg, "date_diff"))
+                              datetime.timedelta(seconds=self.get_local(msg, "date_diff")))
         if dates_poss:
             no_dates_poss = len(dates_poss)
-            date_received = sorted(dates_poss, reverse=True)[no_dates_poss/2]
+            date_received = sorted(dates_poss, reverse=True)[int(no_dates_poss/2)]
             self.set_local(msg, "date_received", date_received)
             self.ctxt.log.debug("eval: date chosen from message: %s",
                                 date_received)
@@ -828,7 +828,7 @@ class HeaderEval(pad.plugins.base.BasePlugin):
         if not self.get_local(msg, "date_received"):
             self._check_date_received(msg)
         date_received = self.get_local(msg, "date_received")
-        diff = datetime.datetime.utcfromtimestamp(time.time()) - date_received
+        diff = datetime.datetime.utcnow() - date_received
         diff = diff.total_seconds()
         # 365.2425 * 24 * 60 * 60 = 31556952 = seconds in year (including leap)
         if ((not min or diff >= (31556952 * (min/12))) and
