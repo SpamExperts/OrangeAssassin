@@ -17,6 +17,7 @@ import pad.plugins.base
 import pad.html_parser
 from pad.regex import Regex
 
+from pprint import pprint
 
 HTTP_REDIR = Regex(r'(^https?:\/\/[^\/:\?]+.+?)(https?:\/{0,2}?[^\/:\?]+.*)')
 
@@ -89,6 +90,7 @@ class URIEvalPlugin(pad.plugins.base.BasePlugin):
         """
         if not hasattr(msg, "uri_detail_links"):
             pad.html_parser.parsed_metadata(msg, self.ctxt)
+        pprint(msg.uri_detail_links)
         for key in msg.uri_detail_links:
             for type in msg.uri_detail_links[key]:
                 if type in ("a", "link"):
