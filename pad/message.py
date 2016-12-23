@@ -17,6 +17,7 @@ import email.header
 import email.errors
 import email.mime.base
 import email.mime.text
+import email.feedparser
 import email.mime.multipart
 
 from future.utils import PY3
@@ -27,9 +28,6 @@ import pad.context
 from pad.received_parser import ReceivedParser
 from pad.rules.ruleset import RuleSet
 from pad.regex import Regex
-
-class MissingBoundaryHeaderDefect(email.errors.MessageDefect):
-    """There are no headers after an opening boundary"""
 
 
 URL_RE = Regex(r"""
@@ -133,6 +131,8 @@ class Message(pad.context.MessageContext):
         """Parse the message, extracts and decode all headers and all
         text parts.
         """
+        self.missing_boundary_header = False
+        self.missing_header_body_separator = False
         super(Message, self).__init__(global_context)
         self.raw_msg = self.translate_line_breaks(raw_msg)
         self.msg = email.message_from_string(self.raw_msg)
@@ -427,6 +427,18 @@ class Message(pad.context.MessageContext):
         """Parse the message."""
         self._hook_check_start()
         # Dump the message raw headers
+
+        self.ctxt.log.debug("EMAIL %s", self.raw_msg)
+        for line in self.raw_msg:
+            self.ctxt.log.debug("LINE %s", line)
+            if not email.feedparser.headerRE.match(line):
+                # If we saw the RFC defined header/body separator
+                # (i.e. newline), just throw it away. Otherwise the line is
+                # part of the body so push it back.
+                if not email.feedparser.NLCRE.match(line):
+                    self.missing_header_body_separator = True
+                break
+
         for name, raw_value in self.msg._headers:
             self.raw_headers[name].append(raw_value)
 
@@ -436,7 +448,7 @@ class Message(pad.context.MessageContext):
         raw_body = list()
         for payload, part in self._iter_parts(self.msg):
             if not part._headers:
-                self.msg.defects.append(MissingBoundaryHeaderDefect())
+                self.missing_boundary_header = True
             # Extract any MIME headers
             for name, raw_value in part._headers:
                 self.raw_mime_headers[name].append(raw_value)
