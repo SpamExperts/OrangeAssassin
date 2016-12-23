@@ -220,7 +220,7 @@ class MIMEEval(pad.plugins.base.BasePlugin):
         self.ctxt.log.debug("Ascii characters count %s", ascii_count)
         if ascii_count:
             self.set_local(msg, "mime_text_unicode_ratio",
-                           unicode_count / ascii_count)
+                           unicode_count / float(ascii_count))
         chars = float(self.get_local(msg, "qp_chars"))
         bytes = float(self.get_local(msg, "qp_bytes"))
         if chars and bytes:
