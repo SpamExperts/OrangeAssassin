@@ -411,7 +411,7 @@ class TestFunctionalMIMEEval(tests.util.TestBase):
         MSG = MSG_WITH_MULTIPLE_LINES % ('F'*1, 'a'*99, 'B'*98, '',200*'B')
         result = self.check_pad(MSG, debug=True)
 
-        self.check_report(result, 0, [])
+        self.check_report(result, 1, ['CHECK_UPPERCASE'])
 
 
 def suite():
