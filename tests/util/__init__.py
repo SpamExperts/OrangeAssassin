@@ -5,6 +5,7 @@ from __future__ import absolute_import
 import os
 import sys
 import shutil
+import codecs
 import unittest
 import subprocess
 
@@ -34,6 +35,8 @@ class TestBase(unittest.TestCase):
     # Add this at the beginning of the report to
     # easily split the message from the report.
     report_start = "---=PAD report start=---"
+    debug_email = os.path.abspath("tests/data/debug.eml")
+    debug = False
 
     def setUp(self):
         unittest.TestCase.setUp(self)
@@ -50,6 +53,10 @@ class TestBase(unittest.TestCase):
         unittest.TestCase.tearDown(self)
         try:
             shutil.rmtree(self.test_conf, True)
+        except OSError:
+            pass
+        try:
+            shutil.rmtree(self.debug_email)
         except OSError:
             pass
 
@@ -75,8 +82,11 @@ class TestBase(unittest.TestCase):
         :param my_env: Used for setting environment variables to subprocess
         :return: The result of the script.
         """
+        debug = debug or self.debug
 
         if debug:
+            with codecs.open(self.debug_email, "w", encoding="utf-8") as f:
+                f.write(message)
             args = [self.match_script, "-D", "-t", "-C", self.test_conf,
                     "--siteconfigpath", self.test_conf]
         else:
