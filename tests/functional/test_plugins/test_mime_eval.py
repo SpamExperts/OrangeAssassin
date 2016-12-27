@@ -141,8 +141,6 @@ This is the epilogue.  It is also to be ignored.""" % ("a"*257, "b"*8193)
 class TestFunctionalMIMEEval(tests.util.TestBase):
     """Tests for the MIMEEval plugin."""
 
-    debug = True
-
     def test_check_html_only(self):
         """
         Test check_for_mime_html_only eval rule.
