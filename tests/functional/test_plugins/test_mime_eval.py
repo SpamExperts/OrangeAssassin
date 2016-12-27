@@ -77,9 +77,29 @@ Content-Type: text/html; charset=UTF-8
 --001a1148e51c20e31305439a7bc2--
 """
 
-MSG_BASE64_LONG = """Content-Transfer-Encoding: base64
 
-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa==
+MSG_BASE64_5_PER_LINE = """Content-Transfer-Encoding: base64
+
+VGhp
+cyBp
+cyBu
+b3Qg
+anVz
+dCBh
+IHNp
+bXBs
+ZSB0
+ZXN0
+IG1l
+c3Nh
+Z2Uu
+"""
+
+MSG_BASE64_50_PER_LINE = """Content-Transfer-Encoding: base64
+
+VGhpcyBpcyBub3QganVzdCBhIHNpbXBsZSB0ZXN0IG1lc3Nh
+Z2UuIFdlIHRlc3QgdGhlIEJBU0U2NCBNSU1FRXZhbCBydWxl
+Lg==
 """
 
 MSG_WITH_UPPERCASE = """Content-Type: text/plain
@@ -117,9 +137,19 @@ Test
 --sb--
 This is the epilogue.  It is also to be ignored.""" % ("a"*257, "b"*8193)
 
+
 class TestFunctionalMIMEEval(tests.util.TestBase):
+    """Tests for the MIMEEval plugin."""
+
+    debug = True
 
     def test_check_html_only(self):
+        """
+        Test check_for_mime_html_only eval rule.
+
+        Check message has only html parts and no text parts.
+        True if message has html parts and no text parts.
+        """
         self.setup_conf(
             config="""
             body MIME_HTML_ONLY		eval:check_for_mime_html_only()
@@ -128,7 +158,13 @@ class TestFunctionalMIMEEval(tests.util.TestBase):
         result = self.check_pad(MSG_HTML_ONLY)
         self.check_report(result, 1.0, ["MIME_HTML_ONLY"])
 
-    def test_check_html_only_negative(self):
+    def test_check_html_only_false(self):
+        """
+        Test check_for_mime_html_only eval rule.
+
+        False, because message has both html parts and text parts.
+        True if message has html parts and no text parts.
+        """
         self.setup_conf(
             config="""
             body MIME_HTML_ONLY     eval:check_for_mime_html_only()l
@@ -138,6 +174,12 @@ class TestFunctionalMIMEEval(tests.util.TestBase):
         self.check_report(result, 0, [])
 
     def test_check_html(self):
+        """
+        Test check_for_mime_html eval rule.
+
+        Check message has html parts.
+        True if at least one part of the message is text/html
+        """
         self.setup_conf(
             config="""
             body MIME_HTML		eval:check_for_mime_html()
@@ -147,6 +189,12 @@ class TestFunctionalMIMEEval(tests.util.TestBase):
         self.check_report(result, 1.0, ["MIME_HTML"])
 
     def test_check_html_negative(self):
+        """
+        Test check_for_mime_html eval rule.
+
+        False, because message has no html parts.
+        True if at least one part of the message is text/html.
+        """
         self.setup_conf(
             config="""
             body MIME_HTML      eval:check_for_mime_html()
@@ -156,6 +204,12 @@ class TestFunctionalMIMEEval(tests.util.TestBase):
         self.check_report(result, 0, [])
 
     def test_check_html_on_html_only_mess(self):
+        """
+        Test check_for_mime_html eval rule.
+
+        Check eval match on message with only html parts.
+        True if at least one part of the message is text/html.
+        """
         self.setup_conf(
             config="""
             body MIME_HTML      eval:check_for_mime_html()
@@ -165,6 +219,12 @@ class TestFunctionalMIMEEval(tests.util.TestBase):
         self.check_report(result, 1.0, ["MIME_HTML"])
 
     def test_check_mime_multipart_ratio(self):
+        """
+        Test check_mime_multipart_ratio eval rule.
+
+        Checks the ratio of text/plain characters to text/html characters.
+        Check eval match on message with min_ratio: 0.30 & max_ratio: 0.50
+        """
         self.setup_conf(
             config="""
             body MIME_HTML_MOSTLY eval:check_mime_multipart_ratio('0.30','0.50')
@@ -173,7 +233,58 @@ class TestFunctionalMIMEEval(tests.util.TestBase):
         result = self.check_pad(MSG_HTML_MOSTLY)
         self.check_report(result, 1.0, ["MIME_HTML_MOSTLY"])
 
+    def test_check_mime_multipart_ratio_no_match(self):
+        """
+        Test check_mime_multipart_ratio eval rule.
+
+        Checks the ratio of text/plain characters to text/html characters.
+        Check eval doens't match on message with min_ratio: 0.10 & max_ratio: 0.15
+        """
+        self.setup_conf(
+            config="""
+            body MIME_HTML_MOSTLY eval:check_mime_multipart_ratio('0.10','0.15')
+            """,
+            pre_config=PRE_CONFIG)
+        result = self.check_pad(MSG_HTML_MOSTLY)
+        self.check_report(result, 0, [])
+
+    def test_check_mime_multipart_max_ratio(self):
+        """
+        Test check_mime_multipart_ratio eval rule.
+
+        Checks the ratio of text/plain characters to text/html characters.
+        Check eval match on message max_ratio: 0.70
+        """
+        self.setup_conf(
+            config="""
+            body MIME_HTML_MOSTLY eval:check_mime_multipart_ratio('0.10','0.70')
+            """,
+            pre_config=PRE_CONFIG)
+        result = self.check_pad(MSG_HTML_MOSTLY)
+        self.check_report(result, 1.0, ["MIME_HTML_MOSTLY"])
+
+    def test_check_mime_multipart_min_ratio(self):
+        """
+        Test check_mime_multipart_ratio eval rule.
+
+        Checks the ratio of text/plain characters to text/html characters.
+        Check eval match on message min_ratio: 0.50
+        """
+        self.setup_conf(
+            config="""
+            body MIME_HTML_MOSTLY eval:check_mime_multipart_ratio('0.50','0.50')
+            """,
+            pre_config=PRE_CONFIG)
+        result = self.check_pad(MSG_HTML_MOSTLY)
+        self.check_report(result, 0, [])
+
     def test_abundant_unicode_ratio(self):
+        """
+        Test check_abundant_unicode_ratio eval rule.
+
+        Check eval match unicode characters on message min_ratio: 0.02
+        A message with a high density of such characters is likely spam
+        """
         self.setup_conf(
             config="""
             body ABUNDANT_UNICODE eval:check_abundant_unicode_ratio(0.02)
@@ -182,14 +293,60 @@ class TestFunctionalMIMEEval(tests.util.TestBase):
         result = self.check_pad(MSG_ABUNDANT_UNICODE)
         self.check_report(result, 1.0, ["ABUNDANT_UNICODE"])
 
-    def test_base64_length(self):
+    def test_base64_length_min_length(self):
+        """
+        Test check_base64_length eval rule.
+
+        min_length: Below this number they will return true
+        max_length: (Optional) above this number it will reutrn true
+
+        characters per line: 5
+        Check eval match for a message min_length: 5
+
+        """
         self.setup_conf(
             config="""
-            body BASE64_LENGTH eval:check_base64_length(79)
+            body BASE64_LENGTH eval:check_base64_length(4)
             """,
             pre_config=PRE_CONFIG)
-        result = self.check_pad(MSG_BASE64_LONG)
+        result = self.check_pad(MSG_BASE64_5_PER_LINE)
         self.check_report(result, 1.0, ["BASE64_LENGTH"])
+
+    def test_base64_length_max_length(self):
+        """
+        Test check_base64_length eval rule.
+
+        min_length: Below this number they will return true
+        max_length: (Optional) above this number it will reutrn true
+
+        characters per line: 5
+        Check eval match for a message max_length: 50
+        """
+        self.setup_conf(
+            config="""
+            body BASE64_LENGTH eval:check_base64_length(6, 49)
+            """,
+            pre_config=PRE_CONFIG)
+        result = self.check_pad(MSG_BASE64_50_PER_LINE)
+        self.check_report(result, 1.0, ["BASE64_LENGTH"])
+
+    def test_base64_length_no_match(self):
+        """
+        Test check_base64_length eval rule.
+
+        min_length: Below this number they will return true
+        max_length: (Optional) above this number it will reutrn true
+
+        characters per line: 5
+        Check eval doens't match for a message
+        """
+        self.setup_conf(
+            config="""
+            body BASE64_LENGTH eval:check_base64_length(2, 3)
+            """,
+            pre_config=PRE_CONFIG)
+        result = self.check_pad(MSG_BASE64_5_PER_LINE)
+        self.check_report(result, 0, [])
 
     def test_mime_ascii_text_illegal(self):
         self.setup_conf(
@@ -596,6 +753,7 @@ Test Body
         result = self.check_pad(MSG, debug=True)
 
         self.check_report(result, 0, [])
+
 
 def suite():
     """Gather all the tests from this package in a test suite."""
