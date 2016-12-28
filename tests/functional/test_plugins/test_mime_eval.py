@@ -135,15 +135,14 @@ Content-type: text/plain; charset=us-ascii
 Test
 
 --sb--
-This is the epilogue.  It is also to be ignored.""" % ("a"*257, "b"*8193)
+This is the epilogue.  It is also to be ignored.""" % ("a" * 257, "b" * 8193)
 
 
 class TestFunctionalMIMEEval(tests.util.TestBase):
     """Tests for the MIMEEval plugin."""
 
     def test_check_html_only(self):
-        """
-        Test check_for_mime_html_only eval rule.
+        """Test check_for_mime_html_only eval rule.
 
         Check message has only html parts and no text parts.
         True if message has html parts and no text parts.
@@ -157,8 +156,7 @@ class TestFunctionalMIMEEval(tests.util.TestBase):
         self.check_report(result, 1.0, ["MIME_HTML_ONLY"])
 
     def test_check_html_only_false(self):
-        """
-        Test check_for_mime_html_only eval rule.
+        """Test check_for_mime_html_only eval rule.
 
         False, because message has both html parts and text parts.
         True if message has html parts and no text parts.
@@ -172,8 +170,7 @@ class TestFunctionalMIMEEval(tests.util.TestBase):
         self.check_report(result, 0, [])
 
     def test_check_html(self):
-        """
-        Test check_for_mime_html eval rule.
+        """Test check_for_mime_html eval rule.
 
         Check message has html parts.
         True if at least one part of the message is text/html
@@ -187,8 +184,7 @@ class TestFunctionalMIMEEval(tests.util.TestBase):
         self.check_report(result, 1.0, ["MIME_HTML"])
 
     def test_check_html_negative(self):
-        """
-        Test check_for_mime_html eval rule.
+        """Test check_for_mime_html eval rule.
 
         False, because message has no html parts.
         True if at least one part of the message is text/html.
@@ -202,8 +198,7 @@ class TestFunctionalMIMEEval(tests.util.TestBase):
         self.check_report(result, 0, [])
 
     def test_check_html_on_html_only_mess(self):
-        """
-        Test check_for_mime_html eval rule.
+        """Test check_for_mime_html eval rule.
 
         Check eval match on message with only html parts.
         True if at least one part of the message is text/html.
@@ -217,8 +212,7 @@ class TestFunctionalMIMEEval(tests.util.TestBase):
         self.check_report(result, 1.0, ["MIME_HTML"])
 
     def test_check_mime_multipart_ratio(self):
-        """
-        Test check_mime_multipart_ratio eval rule.
+        """Test check_mime_multipart_ratio eval rule.
 
         Checks the ratio of text/plain characters to text/html characters.
         Check eval match on message with min_ratio: 0.30 & max_ratio: 0.50
@@ -232,8 +226,7 @@ class TestFunctionalMIMEEval(tests.util.TestBase):
         self.check_report(result, 1.0, ["MIME_HTML_MOSTLY"])
 
     def test_check_mime_multipart_ratio_no_match(self):
-        """
-        Test check_mime_multipart_ratio eval rule.
+        """Test check_mime_multipart_ratio eval rule.
 
         Checks the ratio of text/plain characters to text/html characters.
         Check eval doens't match on message with min_ratio: 0.10 & max_ratio: 0.15
@@ -247,8 +240,7 @@ class TestFunctionalMIMEEval(tests.util.TestBase):
         self.check_report(result, 0, [])
 
     def test_check_mime_multipart_max_ratio(self):
-        """
-        Test check_mime_multipart_ratio eval rule.
+        """Test check_mime_multipart_ratio eval rule.
 
         Checks the ratio of text/plain characters to text/html characters.
         Check eval match on message max_ratio: 0.70
@@ -262,8 +254,7 @@ class TestFunctionalMIMEEval(tests.util.TestBase):
         self.check_report(result, 1.0, ["MIME_HTML_MOSTLY"])
 
     def test_check_mime_multipart_min_ratio(self):
-        """
-        Test check_mime_multipart_ratio eval rule.
+        """Test check_mime_multipart_ratio eval rule.
 
         Checks the ratio of text/plain characters to text/html characters.
         Check eval match on message min_ratio: 0.50
@@ -277,8 +268,7 @@ class TestFunctionalMIMEEval(tests.util.TestBase):
         self.check_report(result, 0, [])
 
     def test_abundant_unicode_ratio(self):
-        """
-        Test check_abundant_unicode_ratio eval rule.
+        """Test check_abundant_unicode_ratio eval rule.
 
         Check eval match unicode characters on message min_ratio: 0.02
         A message with a high density of such characters is likely spam
@@ -292,8 +282,7 @@ class TestFunctionalMIMEEval(tests.util.TestBase):
         self.check_report(result, 1.0, ["ABUNDANT_UNICODE"])
 
     def test_base64_length_min_length(self):
-        """
-        Test check_base64_length eval rule.
+        """Test check_base64_length eval rule.
 
         min_length: Below this number they will return true
         max_length: (Optional) above this number it will reutrn true
@@ -311,8 +300,7 @@ class TestFunctionalMIMEEval(tests.util.TestBase):
         self.check_report(result, 1.0, ["BASE64_LENGTH"])
 
     def test_base64_length_max_length(self):
-        """
-        Test check_base64_length eval rule.
+        """Test check_base64_length eval rule.
 
         min_length: Below this number they will return true
         max_length: (Optional) above this number it will reutrn true
@@ -329,8 +317,7 @@ class TestFunctionalMIMEEval(tests.util.TestBase):
         self.check_report(result, 1.0, ["BASE64_LENGTH"])
 
     def test_base64_length_no_match(self):
-        """
-        Test check_base64_length eval rule.
+        """Test check_base64_length eval rule.
 
         min_length: Below this number they will return true
         max_length: (Optional) above this number it will reutrn true
@@ -347,6 +334,10 @@ class TestFunctionalMIMEEval(tests.util.TestBase):
         self.check_report(result, 0, [])
 
     def test_mime_ascii_text_illegal(self):
+        """Test check_for_mime: mime_ascii_text_illegal is True.
+
+        mime_ascii_text_illegal: us-ascii mail contains unicode characters.
+        """
         self.setup_conf(
             config="""
             body MIME_ILLEGAL_ASCII eval:check_for_mime("mime_ascii_text_illegal")
@@ -356,6 +347,10 @@ class TestFunctionalMIMEEval(tests.util.TestBase):
         self.check_report(result, 1.0, ["MIME_ILLEGAL_ASCII"])
 
     def test_mime_ascii_text_illegal_negative(self):
+        """Test check_for_mime: mime_ascii_text_illegal is False.
+
+        mime_ascii_text_illegal: us-ascii mail contains unicode characters.
+        """
         self.setup_conf(
             config="""
             body MIME_ILLEGAL_ASCII eval:check_for_mime("mime_ascii_text_illegal")
@@ -365,6 +360,7 @@ class TestFunctionalMIMEEval(tests.util.TestBase):
         self.check_report(result, 0, [])
 
     def test_ascii_text_illegal(self):
+        """Test check_for_ascii_text_illegal eval rule is True."""
         self.setup_conf(
             config="""
             body ILLEGAL_ASCII eval:check_for_ascii_text_illegal()
@@ -374,6 +370,7 @@ class TestFunctionalMIMEEval(tests.util.TestBase):
         self.check_report(result, 1.0, ["ILLEGAL_ASCII"])
 
     def test_ascii_text_illegal_negative(self):
+        """Test check_for_ascii_text_illegal eval rule is False."""
         self.setup_conf(
             config="""
             body ILLEGAL_ASCII eval:check_for_ascii_text_illegal()
@@ -383,6 +380,11 @@ class TestFunctionalMIMEEval(tests.util.TestBase):
         self.check_report(result, 0, [])
 
     def test_mime_body_html_count(self):
+        """Test check_for_mime: mime_body_html_count is True.
+
+        mime_body_html_count: Number of html parts
+        True if message has html parts
+        """
         self.setup_conf(
             config="""
             body HTML_COUNT eval:check_for_mime("mime_body_html_count")
@@ -392,6 +394,11 @@ class TestFunctionalMIMEEval(tests.util.TestBase):
         self.check_report(result, 1.0, ["HTML_COUNT"])
 
     def test_mime_body_text_count(self):
+        """Test check_for_mime: mime_body_text_count is True.
+
+        mime_body_text_count: Number of text parts
+        True if message has text parts
+        """
         self.setup_conf(
             config="""
             body TEXT_COUNT eval:check_for_mime("mime_body_text_count")
@@ -401,22 +408,34 @@ class TestFunctionalMIMEEval(tests.util.TestBase):
         self.check_report(result, 1.0, ["TEXT_COUNT"])
 
     def test_check_parse_flags_missing_headers_body_separator(self):
+        """
+        Test check_msg_parse_flags: missing_mime_head_body_separator is True.
+
+        Check there is a newline after the header.
+        """
         self.setup_conf(
             config="""
-            body MISSING_HB eval:check_msg_parse_flags("missing_mime_head_body_separator")
+            body        MISSING_HB    eval:check_msg_parse_flags("missing_mime_head_body_separator")
+            describe    MISSING_HB    Missing blank line between MIME header and body
             """,
             pre_config=PRE_CONFIG)
         result = self.check_pad(MSG_PARSE_FLAGS)
         self.check_report(result, 1.0, ["MISSING_HB"])
 
     def test_check_parse_flags_missing_headers_body_separator_negative(self):
+        """
+        Test check_msg_parse_flags: missing_mime_head_body_separator is False.
+
+        Check there is no newline after the header.
+        """
         self.setup_conf(
             config="""
-            body MISSING_HB eval:check_msg_parse_flags("missing_mime_head_body_separator")
+            body        MISSING_HB    eval:check_msg_parse_flags("missing_mime_head_body_separator")
+            describe    MISSING_HB    Missing blank line between MIME header and body
             """,
             pre_config=PRE_CONFIG)
 
-        MSG_PARSE = """Content-Type: multipart/mixed; boundary="sb"   
+        MSG_PARSE = """Content-Type: multipart/mixed; boundary="sb"
 From: test.com
 
 Test
@@ -428,7 +447,6 @@ Test
 --sb
 
 Content-type: text/plain; charset=us-ascii
-
 Test
 
 --sb--
@@ -438,9 +456,15 @@ This is the epilogue.  It is also to be ignored."""
         self.check_report(result, 0, [])
 
     def test_check_parse_flags_missing_headers_body_separator_after_header(self):
+        """
+        Test check_msg_parse_flags: missing_mime_head_body_separator is True.
+
+        Check there is a newline after the header.
+        """
         self.setup_conf(
             config="""
-            body MISSING_HB eval:check_msg_parse_flags("missing_mime_head_body_separator")
+            body        MISSING_HB    eval:check_msg_parse_flags("missing_mime_head_body_separator")
+            describe    MISSING_HB    Missing blank line between MIME header and body
             """,
             pre_config=PRE_CONFIG)
 
@@ -461,13 +485,19 @@ This is the epilogue.  It is also to be ignored."""
         self.check_report(result, 1, ["MISSING_HB"])
 
     def test_check_parse_flags_missing_headers_body_separator_after_separator(self):
+        """
+        Test check_msg_parse_flags: missing_mime_head_body_separator is True.
+
+        Check there is a newline after the header.
+        """
         self.setup_conf(
             config="""
-            body MISSING_HB eval:check_msg_parse_flags("missing_mime_head_body_separator")
+            body        MISSING_HB    eval:check_msg_parse_flags("missing_mime_head_body_separator")
+            describe    MISSING_HB    Missing blank line between MIME header and body
             """,
             pre_config=PRE_CONFIG)
 
-        MSG_PARSE = """Content-Type: multipart/mixed; boundary="sb"   
+        MSG_PARSE = """Content-Type: multipart/mixed; boundary="sb"
 From: test.com
 
 Test
@@ -484,9 +514,15 @@ This is the epilogue.  It is also to be ignored."""
         self.check_report(result, 1, ['MISSING_HB'])
 
     def test_check_parse_flags_missing_headers_body_separator_before_content_type(self):
+        """
+        Test check_msg_parse_flags: missing_mime_head_body_separator is True.
+
+        Check there is a newline after the header.
+        """
         self.setup_conf(
             config="""
-            body MISSING_HB eval:check_msg_parse_flags("missing_mime_head_body_separator")
+            body        MISSING_HB    eval:check_msg_parse_flags("missing_mime_head_body_separator")
+            describe    MISSING_HB    Missing blank line between MIME header and body
             """,
             pre_config=PRE_CONFIG)
 
@@ -510,24 +546,40 @@ This is the epilogue.  It is also to be ignored."""
         self.check_report(result, 1, ["MISSING_HB"])
 
     def test_check_parse_flags_missing_headers(self):
+        """
+        Test check_msg_parse_flags: missing_mime_headers is True.
+
+        Test we flag if the line after the opening boundary isn't a header.
+        """
         self.setup_conf(
             config="""
-            body MISSING_H eval:check_msg_parse_flags("missing_mime_headers")
+            body        MISSING_H eval:check_msg_parse_flags("missing_mime_headers")
             """,
             pre_config=PRE_CONFIG)
         result = self.check_pad(MSG_PARSE_FLAGS, debug=True)
         self.check_report(result, 1.0, ["MISSING_H"])
 
     def test_check_parse_flags_truncated_headers(self):
+        """
+        Test check_msg_parse_flags: truncated_headers is True.
+
+        Test if any header name is over 256 or any header value is over 8192.
+        """
         self.setup_conf(
             config="""
-            body TRUNCATED_H eval:check_msg_parse_flags("truncated_headers")
+            body     TRUNCATED_H eval:check_msg_parse_flags("truncated_headers")
+            describe TRUNCATED_H Message headers are very long
             """,
             pre_config=PRE_CONFIG)
         result = self.check_pad(MSG_PARSE_FLAGS, debug=True)
         self.check_report(result, 1.0, ["TRUNCATED_H"])
 
     def test_check_parse_flags_mime_epilogue_exists(self):
+        """
+        Test check_msg_parse_flags: mime_epilogue_exists is True.
+
+        Test if message has an epilogue.
+        """
         self.setup_conf(
             config="""
             body MIME_EPILOGUE_EXISTS eval:check_msg_parse_flags("mime_epilogue_exists")
@@ -537,138 +589,182 @@ This is the epilogue.  It is also to be ignored."""
         self.check_report(result, 1.0, ["MIME_EPILOGUE_EXISTS"])
 
     def test_check_for_uppercase_min_limit(self):
+        """
+        Test check_for_uppercase eval rule.
+
+        Checks the percent of uppercase letters is between desired limits
+        """
         self.setup_conf(
             config="""
             body CHECK_UPPERCASE  eval:check_for_uppercase(50, 100)
             """,
             pre_config=PRE_CONFIG)
 
-        MSG = MSG_WITH_UPPERCASE % ('F'*1, 'a'*99, 'B'*98)
-        result = self.check_pad(MSG, debug=True)
+        msg = MSG_WITH_UPPERCASE % ('F' * 1, 'a' * 99, 'B' * 98)
+        result = self.check_pad(msg, debug=True)
 
         self.check_report(result, 0, [])
 
     def test_check_for_uppercase_min_limit_exceeded(self):
+        """
+        Test check_for_uppercase eval rule.
+
+        Checks the percent of uppercase letters exceeded min limit
+        """
         self.setup_conf(
             config="""
             body CHECK_UPPERCASE  eval:check_for_uppercase(49.9, 100)
             """,
             pre_config=PRE_CONFIG)
 
-        MSG = MSG_WITH_UPPERCASE % ('F'*1, 'a'*99, 'B'*98)
-        result = self.check_pad(MSG, debug=True)
+        msg = MSG_WITH_UPPERCASE % ('F' * 1, 'a' * 99, 'B' * 98)
+        result = self.check_pad(msg, debug=True)
 
         self.check_report(result, 1, ['CHECK_UPPERCASE'])
 
     def test_check_for_uppercase_max_limit_exceeded(self):
+        """
+        Test check_for_uppercase eval rule.
+
+        Checks the percent of uppercase letters exceeded max limit
+        """
         self.setup_conf(
             config="""
             body CHECK_UPPERCASE  eval:check_for_uppercase(50, 69.6)
             """,
             pre_config=PRE_CONFIG)
 
-        MSG = MSG_WITH_UPPERCASE % ('B'*1, 'a'*60, 'F'*137) 
-        result = self.check_pad(MSG, debug=True)
+        msg = MSG_WITH_UPPERCASE % ('B' * 1, 'a' * 60, 'F' * 137)
+        result = self.check_pad(msg, debug=True)
 
         self.check_report(result, 0, [])
 
     def test_check_for_uppercase_max_limit(self):
+        """
+        Test check_for_uppercase eval rule.
+
+        Checks the percent of uppercase letters is between desired limits
+        """
         self.setup_conf(
             config="""
             body CHECK_UPPERCASE  eval:check_for_uppercase(50, 69.7)
             """,
             pre_config=PRE_CONFIG)
 
-        MSG = MSG_WITH_UPPERCASE % ('B'*1, 'a'*60, 'F'*137) 
-        result = self.check_pad(MSG, debug=True)
+        msg = MSG_WITH_UPPERCASE % ('B' * 1, 'a' * 60, 'F' * 137)
+        result = self.check_pad(msg, debug=True)
 
         self.check_report(result, 1, ['CHECK_UPPERCASE'])
 
     def test_check_for_uppercase_insufficient_characters(self):
+        """
+        Test check_for_uppercase eval rule.
+
+        Checks the percent of uppercase letters with insuficient chars.
+        """
         self.setup_conf(
             config="""
             body CHECK_UPPERCASE  eval:check_for_uppercase(50, 100)
             """,
             pre_config=PRE_CONFIG)
 
-        MSG = MSG_WITH_UPPERCASE % ('F'*1, 'A'*100, 'B'*96)
-        result = self.check_pad(MSG, debug=True)   
-
+        msg = MSG_WITH_UPPERCASE % ('a' * 1, 'A' * 100, 'C' * 96)
+        result = self.check_pad(msg, debug=True)
         self.check_report(result, 0, [])
 
     def test_check_for_uppercase_just_enough_characters(self):
+        """
+        Test check_for_uppercase eval rule.
+
+        Checks the percent of uppercase letters with just enough chars.
+        """
         self.setup_conf(
             config="""
             body CHECK_UPPERCASE  eval:check_for_uppercase(50, 100)
             """,
             pre_config=PRE_CONFIG)
 
-        MSG = MSG_WITH_UPPERCASE % ('F'*1, 'A'*100, 'B'*97)
-        result = self.check_pad(MSG, debug=True)   
+        msg = MSG_WITH_UPPERCASE % ('F' * 1, 'A' * 100, 'B' * 97)
+        result = self.check_pad(msg, debug=True)
 
         self.check_report(result, 1, ['CHECK_UPPERCASE'])
 
     def test_check_for_uppercase_with_digit_char(self):
+        """
+        Test check_for_uppercase eval rule.
+
+        Checks the percent of uppercase letters with multiples digit chars.
+        """
         self.setup_conf(
             config="""
             body CHECK_UPPERCASE  eval:check_for_uppercase(40, 100)
             """,
             pre_config=PRE_CONFIG)
 
-        MSG = MSG_WITH_UPPERCASE % ('F'*2, 'A'*96, '1'*100)
-        result = self.check_pad(MSG, debug=True)
- 
+        msg = MSG_WITH_UPPERCASE % ('F' * 2, 'A' * 96, '1' * 100)
+        result = self.check_pad(msg, debug=True)
+
         self.check_report(result, 1, ['CHECK_UPPERCASE'])
 
     def test_check_for_uppercase_that_digit_are_low(self):
+        """
+        Test check_for_uppercase eval rule.
+
+        Checks the percent of uppercase letters with low digit chars.
+        """
         self.setup_conf(
             config="""
             body CHECK_UPPERCASE  eval:check_for_uppercase(50, 100)
             """,
             pre_config=PRE_CONFIG)
 
-        MSG = MSG_WITH_UPPERCASE % ('F'*2, 'A'*96, '1'*100)
-        result = self.check_pad(MSG, debug=True)
- 
-        self.check_report(result, 0, [])
-
-    def test_check_for_uppercase_below_empty_line(self):
-        self.setup_conf(
-            config="""
-            body CHECK_UPPERCASE  eval:check_for_uppercase(50, 100)
-            """,
-            pre_config=PRE_CONFIG)
-
-        MSG = MSG_WITH_MULTIPLE_LINES % ('F'*1, 'a'*99, 'B'*98, '','B')
-        result = self.check_pad(MSG, debug=True)
+        msg = MSG_WITH_UPPERCASE % ('F' * 2, 'A' * 96, '1' * 100)
+        result = self.check_pad(msg, debug=True)
 
         self.check_report(result, 0, [])
 
     def test_check_for_uppercase_below_empty_line(self):
+        """
+        Test check_for_uppercase eval rule.
+
+        Max limit is not reached after empty line.
+        """
         self.setup_conf(
             config="""
             body CHECK_UPPERCASE  eval:check_for_uppercase(50, 100)
             """,
             pre_config=PRE_CONFIG)
 
-        MSG = MSG_WITH_MULTIPLE_LINES % ('F'*1, 'a'*99, 'B'*98, '','B')
-        result = self.check_pad(MSG, debug=True)
+        msg = MSG_WITH_MULTIPLE_LINES % ('F' * 1, 'a' * 99, 'B' * 98, '', 'B')
+        result = self.check_pad(msg, debug=True)
 
         self.check_report(result, 0, [])
 
     def test_check_for_uppercase_200c_below_empty_line(self):
+        """
+        Test check_for_uppercase eval rule.
+
+        Max limit is reached after empty line.
+        """
         self.setup_conf(
             config="""
             body CHECK_UPPERCASE  eval:check_for_uppercase(50, 100)
             """,
             pre_config=PRE_CONFIG)
 
-        MSG = MSG_WITH_MULTIPLE_LINES % ('F'*1, 'a'*99, 'B'*98, '',200*'B')
-        result = self.check_pad(MSG, debug=True)
+        msg = MSG_WITH_MULTIPLE_LINES % (
+            'F' * 1, 'a' * 99, 'B' * 98, '', 200 * 'B')
+        result = self.check_pad(msg, debug=True)
 
         self.check_report(result, 1, ['CHECK_UPPERCASE'])
 
     def test_check_for_ma_non_tex_negative(self):
+        """
+        Test check_ma_non_text eval rule return False.
+
+        Checks to see if an email with multipart alternative is missing a
+        text like alternative like application/rtf or text/*
+        """
         self.setup_conf(
             config="""
             body CHECK_MA_NON_TEXT  eval:check_ma_non_text()
@@ -680,13 +776,19 @@ This is the epilogue.  It is also to be ignored."""
         self.check_report(result, 0, [])
 
     def test_check_for_ma_non_tex_random_content_type(self):
+        """
+        Test check_ma_non_text eval rule return True.
+
+        Checks to see if an email with multipart alternative is missing a
+        text like alternative like application/rtf or text/*
+        """
         self.setup_conf(
             config="""
             body CHECK_MA_NON_TEXT  eval:check_ma_non_text()
             """,
             pre_config=PRE_CONFIG)
 
-        MSG = """Subject: test
+        msg = """Subject: test
 Content-Type: multipart/alternative; boundary=001a1148e51c20e31305439a7bc2
 
 --001a1148e51c20e31305439a7bc2
@@ -701,18 +803,24 @@ Content-Type: test
 
 --001a1148e51c20e31305439a7bc2--
 """
-        result = self.check_pad(MSG, debug=True)
+        result = self.check_pad(msg, debug=True)
 
         self.check_report(result, 1, ['CHECK_MA_NON_TEXT'])
 
     def test_check_for_ma_non_tex_random_content_type_first(self):
+        """
+        Test check_ma_non_text eval rule return True.
+
+        Checks to see if an email with multipart alternative is missing a
+        text like alternative like application/rtf or text/*
+        """
         self.setup_conf(
             config="""
             body CHECK_MA_NON_TEXT  eval:check_ma_non_text()
             """,
             pre_config=PRE_CONFIG)
 
-        MSG = """Subject: test
+        msg = """Subject: test
 Content-Type: multipart/alternative; boundary=001a1148e51c20e31305439a7bc2
 
 --001a1148e51c20e31305439a7bc2
@@ -727,18 +835,24 @@ Content-Type: application/rtf
 
 --001a1148e51c20e31305439a7bc2--
 """
-        result = self.check_pad(MSG, debug=True)
+        result = self.check_pad(msg, debug=True)
 
         self.check_report(result, 1, ['CHECK_MA_NON_TEXT'])
 
     def test_check_for_ma_non_tex_no_multipart_alternative(self):
+        """
+        Test check_ma_non_text eval rule return False.
+
+        Checks to see if an email with multipart alternative is missing a
+        text like alternative like application/rtf or text/*
+        """
         self.setup_conf(
             config="""
             body CHECK_MA_NON_TEXT  eval:check_ma_non_text()
             """,
             pre_config=PRE_CONFIG)
 
-        MSG = """Subject: test
+        msg = """Subject: test
 Content-Type: multipart; boundary=001a1148e51c20e31305439a7bc2
 
 --001a1148e51c20e31305439a7bc2
@@ -748,9 +862,30 @@ Test Body
 
 --001a1148e51c20e31305439a7bc2
 """
-        result = self.check_pad(MSG, debug=True)
+        result = self.check_pad(msg, debug=True)
 
         self.check_report(result, 0, [])
+
+    @unittest.skip("Not finished - need info")
+    def test_check_for_faraway_charset(self):
+        """
+        Test check_for_faraway_charset eval rule.
+
+        Checks if the message is in another locale than the users own.
+        """
+        self.setup_conf(
+            config="""
+            ok_locales en
+            body CHARSET_FARAWAY        eval:check_for_faraway_charset()
+            describe CHARSET_FARAWAY    Character set indicates a foreign language
+            """,
+            pre_config=PRE_CONFIG)
+
+        msg = """
+6L+Z5Y+q5piv5LiA5Liq566A5Y2V55qE5paH5pys5raI5oGv44CCDQrov5nph4zmt7vliqDnmoTku7vkvZXlhoXlrrnpg73nlKjkuo7mtYvor5XjgIIg5LiN5bqU6K+l5Lyk5a6z77yM
+        """
+        result = self.check_pad(msg, debug=True)
+        self.check_report(result, 1, ['CHARSET_FARAWAY'])
 
 
 def suite():
