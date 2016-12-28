@@ -428,14 +428,12 @@ class Message(pad.context.MessageContext):
         self._hook_check_start()
         # Dump the message raw headers
 
-        self.ctxt.log.debug("EMAIL %s", self.raw_msg)
-        for line in self.raw_msg:
-            self.ctxt.log.debug("LINE %s", line)
+        for line in self.raw_msg.splitlines():
             if not email.feedparser.headerRE.match(line):
                 # If we saw the RFC defined header/body separator
                 # (i.e. newline), just throw it away. Otherwise the line is
                 # part of the body so push it back.
-                if not email.feedparser.NLCRE.match(line):
+                if line.strip():
                     self.missing_header_body_separator = True
                 break
 
@@ -449,6 +447,7 @@ class Message(pad.context.MessageContext):
         for payload, part in self._iter_parts(self.msg):
             if not part._headers:
                 self.missing_boundary_header = True
+
             # Extract any MIME headers
             for name, raw_value in part._headers:
                 self.raw_mime_headers[name].append(raw_value)

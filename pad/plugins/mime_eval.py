@@ -299,15 +299,29 @@ class MIMEEval(pad.plugins.base.BasePlugin):
 
     def check_for_uppercase(self, msg, min_percent, max_percent, target=None):
         """Checks the percent of uppercase letters is between desired limits"""
-        text = re.sub(r"[\W_]", "", msg.text)
-        if len(text) < 200:
+
+        total_lower = 0
+        total_upper = 0
+        length = 0
+        for line in re.split("\n\n", msg.raw_text):
+            if " " not in line.strip("\n").replace("\n", " "):
+                continue
+            text = line.replace("\n", " ")
+            length += len(text)
+            text = re.sub(r"[\W_]", "", text)
+            count_lower = sum(
+                1 for a, b in zip(text, text.upper()) if a != b or a.isdigit()
+            )
+            total_upper += len(text) - count_lower
+            total_lower += count_lower
+        self.ctxt.log.debug("LENGTH %s", length)
+        if length < 200:
             return False
 
-        count_lower = sum(
-            1 for a, b in zip(text, text.upper()) if a != b or a.isdigit()
-        )
-        count_upper = len(text) - count_lower
-        return float(min_percent) <= (count_upper / float(len(text))) * 100 <= float(max_percent)
+        try:
+            return float(min_percent) < (total_upper / float(total_lower + total_upper)) * 100 <= float(max_percent)
+        except ZeroDivisionError:
+            return False
 
     def check_mime_multipart_ratio(self, msg, min_ratio, max_ratio,
                                    target=None):
