@@ -61,9 +61,10 @@ class MIMEEval(pad.plugins.base.BasePlugin):
 
         base64_length = self.get_local(msg, "base64_length")
         self.ctxt.log.debug("BASE 64 text %s", text)
-        self.set_local(
-            msg, "base64_length",
-            base64_length + max(len(line) for line in text.splitlines()))
+        if text:
+            self.set_local(
+                msg, "base64_length",
+                base64_length + max(len(line) for line in text.splitlines()))
 
         base64_count = self.get_local(msg, "mime_base64_count")
         self.set_local(msg, "mime_base64_count", base64_count + 1)
