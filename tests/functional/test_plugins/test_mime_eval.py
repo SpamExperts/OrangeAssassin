@@ -138,8 +138,30 @@ Test
 This is the epilogue.  It is also to be ignored.""" % ("a" * 257, "b" * 8193)
 
 
+MSG_CHECK_MIME = """Content-Type: multipart/alternative; boundary=boundary-limit
+
+
+--boundary-limit
+Content-Type: text/plain; charset=us-ascii
+
+Just some testing text.
+
+--boundary-limit
+Content-Type: text/richtext
+
+Richtext version of same message goes here ...
+--boundary-limit
+Content-Type: text/x-whatever
+
+Fanciest formatted version of same  message  goes  here
+
+--boundary-limit--
+"""
+
+
 class TestFunctionalMIMEEval(tests.util.TestBase):
     """Tests for the MIMEEval plugin."""
+
     debug = False
 
     def test_check_html_only(self):
@@ -347,10 +369,157 @@ class TestFunctionalMIMEEval(tests.util.TestBase):
         result = self.check_pad(MSG_ILLEGAL_ASCII)
         self.check_report(result, 1.0, ["MIME_ILLEGAL_ASCII"])
 
+    def test_mime_base64_count(self):
+        """Test check_for_mime: mime_base64_count is True.
+
+        mime_base64_count: Number of base64 parts in the email
+        """
+        self.setup_conf(
+            config="""
+            body      MIME_BASE_64  eval:check_for_mime("mime_base64_count")
+            describe  MIME_BASE_64  Includes a base64 attachment
+            """,
+            pre_config=PRE_CONFIG)
+        result = self.check_pad(MSG_BASE64_50_PER_LINE)
+        self.check_report(result, 1.0, ["MIME_BASE_64"])
+
+    def test_mime_base64_count_false(self):
+        """Test check_for_mime: mime_base64_count is False.
+
+        mime_base64_count: Number of base64 parts in the email
+        """
+        self.setup_conf(
+            config="""
+            body      MIME_BASE_64  eval:check_for_mime("mime_base64_count")
+            describe  MIME_BASE_64  Includes a base64 attachment
+            """,
+            pre_config=PRE_CONFIG)
+        msg = MSG_WITH_UPPERCASE % ('this' * 1, 'is' * 1, 'testing' * 1)
+        result = self.check_pad(msg)
+        self.check_report(result, 0, [])
+
+    def test_mime_base64_encoded_text(self):
+        """Test check_for_mime: mime_base64_encoded_text is True.
+
+        mime_base64_encoded_text: Number of base64 encoded text parts.
+        Check message contains base64 encoded text parts.
+        """
+        self.setup_conf(
+            config="""
+            body      MIME_BASE_64  eval:check_for_mime("mime_base64_encoded_text")
+            describe  MIME_BASE_64  Message text disguised using base64 encoding
+            """,
+            pre_config=PRE_CONFIG)
+
+        msg = """Content-Type: multipart/mixed; boundary="------------ss"
+
+--------------ss
+Content-Type: application/pdf; name="testfile.pdf"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename="testfile.pdf"
+
+--------------ss--
+        """
+        result = self.check_pad(msg)
+        self.check_report(result, 1.0, ["MIME_BASE_64"])
+
+    def test_mime_base64_encoded_text_false(self):
+        """Test check_for_mime: mime_base64_encoded_text is True.
+
+        mime_base64_encoded_text: Number of base64 encoded text parts.
+        Check message doens't contains base64 encoded text parts.
+        """
+        self.setup_conf(
+            config="""
+            body      MIME_BASE_64  eval:check_for_mime("mime_base64_encoded_text")
+            describe  MIME_BASE_64  Message text disguised using base64 encoding
+            """,
+            pre_config=PRE_CONFIG)
+
+        msg = MSG_WITH_UPPERCASE % ('this' * 1, 'is' * 1, 'testing' * 1)
+        result = self.check_pad(msg)
+        self.check_report(result, 0, [])
+
+    @unittest.skip("This need code fix. Spamassasin match.")
+    def test_mime_missing_boundary(self):
+        """Test check_for_mime: mime_missing_boundary is True.
+
+        mime_missing_boundary: Missing Boundary
+        Check message miss boundary
+        """
+        self.setup_conf(
+            config="""
+            body     MIME_MISSING_BOUNDARY  eval:check_for_mime("mime_missing_boundary")
+            describe MIME_MISSING_BOUNDARY  MIME section missing boundary
+            """,
+            pre_config=PRE_CONFIG)
+
+        msg = """Content-Type: multipart/alternative; boundary=boundary-limit
+
+
+--boundary-limit
+Content-Type: text/plain; charset=us-ascii
+
+Some plain text version of message goes here....
+
+--boundary-limit
+Content-Type: text/richtext
+
+.... richtext version of same [truncated here]
+        """
+        result = self.check_pad(msg)
+        self.check_report(result, 1.0, ["MIME_MISSING_BOUNDARY"])
+
+    def test_mime_missing_boundary_false(self):
+        """Test check_for_mime: mime_missing_boundary is True.
+
+        mime_missing_boundary: Missing Boundary
+        Check for a message that miss boundary
+        """
+        self.setup_conf(
+            config="""
+            body     MIME_MISSING_BOUNDARY  eval:check_for_mime("mime_missing_boundary")
+            describe MIME_MISSING_BOUNDARY  MIME section missing boundary
+            """,
+            pre_config=PRE_CONFIG)
+
+        result = self.check_pad(MSG_CHECK_MIME)
+        self.check_report(result, 0, [])
+
+    def test_mime_multipart_alternative(self):
+        """Test check_for_mime: mime_multipart_alternative is True.
+
+        mime_multipart_alternative: message type is "multipart/alternative"
+        """
+        self.setup_conf(
+            config="""
+            body  MIME_MULTIPLE_ALTERNATIVE  eval:check_for_mime("mime_multipart_alternative")
+            """,
+            pre_config=PRE_CONFIG)
+
+        result = self.check_pad(MSG_CHECK_MIME)
+        self.check_report(result, 1.0, ["MIME_MULTIPLE_ALTERNATIVE"])
+
+    def test_mime_multipart_alternative_false(self):
+        """Test check_for_mime: mime_multipart_alternative is False.
+
+        Check for a  message that is not type "multipart/alternative"
+        """
+        self.setup_conf(
+            config="""
+            body  MIME_MULTIPLE_ALTERNATIVE  eval:check_for_mime("mime_multipart_alternative")
+            """,
+            pre_config=PRE_CONFIG)
+
+        msg = MSG_WITH_MULTIPLE_LINES % ('t', 'e', 's', 't', '.')
+        result = self.check_pad(msg)
+        self.check_report(result, 0, [])
+
     def test_mime_ascii_text_illegal_negative(self):
         """Test check_for_mime: mime_ascii_text_illegal is False.
 
-        mime_ascii_text_illegal: us-ascii mail contains unicode characters.
+        mime_missing_boundary: Missing Boundary
+        Check for a message that doesn't miss boundary
         """
         self.setup_conf(
             config="""
@@ -775,7 +944,7 @@ This is the epilogue.  It is also to be ignored."""
 
         self.check_report(result, 0, [])
 
-    @unittest.skip("Spamassassin seems to give 0 for this test")
+    # @unittest.skip("Spamassassin seems to give 0 for this test")
     def test_check_for_uppercase_200c_below_empty_line(self):
         """
         Test check_for_uppercase eval rule.
