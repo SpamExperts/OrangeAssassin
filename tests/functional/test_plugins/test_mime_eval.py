@@ -944,7 +944,7 @@ This is the epilogue.  It is also to be ignored."""
 
         self.check_report(result, 0, [])
 
-    # @unittest.skip("Spamassassin seems to give 0 for this test")
+    @unittest.skip("Spamassassin seems to give 0 for this test")
     def test_check_for_uppercase_200c_below_empty_line(self):
         """
         Test check_for_uppercase eval rule.
