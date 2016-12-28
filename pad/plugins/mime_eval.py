@@ -1,10 +1,9 @@
 """ MIME Eval Plugin replacement """
 
 import re
-import email.errors
 
-import pad.message
 import pad.locales
+import pad.message
 import pad.plugins.base
 
 MAX_HEADER_KEY = 256
@@ -27,10 +26,6 @@ class MIMEEval(pad.plugins.base.BasePlugin):
         "check_base64_length",
         "check_qp_ratio",
     )
-
-    options = {
-        "ok_locales": ("string", "all"),
-    }
 
     parse_flags = {
         "missing_mime_head_body_separator",
@@ -118,7 +113,7 @@ class MIMEEval(pad.plugins.base.BasePlugin):
             self.set_local(msg, "mime_bad_iso_charset", True)
 
     def _update_faraway_charset(self, msg, charset):
-        locales = self.get_global("ok_locales")
+        locales = self.ctxt.conf.get_global("ok_locales")
         if charset and re.match("[a-z]", charset, re.IGNORECASE):
             faraway_charset = self.get_local(msg, "mime_faraway_charset")
             if not faraway_charset:
