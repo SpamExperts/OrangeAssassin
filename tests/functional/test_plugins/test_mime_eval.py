@@ -423,7 +423,6 @@ class TestFunctionalMIMEEval(tests.util.TestBase):
         result = self.check_pad(MSG_PARSE_FLAGS)
         self.check_report(result, 1.0, ["MISSING_HB"])
 
-    @unittest.skip("spamassassin return 0 for this test")
     def test_missing_mime_head_body_separator(self):
         """
         Test check_msg_parse_flags: missing_mime_head_body_separator is False.
@@ -456,7 +455,7 @@ Content-Disposition: attachment; filename="Holiday Season Locations -Winter Holi
 
         """
         result = self.check_pad(msg)
-        self.check_report(result, 1.0, ["MISSING_HB"])
+        self.check_report(result, 0.0, [])
 
     def test_check_parse_flags_missing_headers_body_separator_negative(self):
         """
