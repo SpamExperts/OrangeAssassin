@@ -422,6 +422,40 @@ class TestFunctionalMIMEEval(tests.util.TestBase):
         result = self.check_pad(MSG_PARSE_FLAGS)
         self.check_report(result, 1.0, ["MISSING_HB"])
 
+    def test_missing_mime_head_body_separator(self):
+        """
+        Test check_msg_parse_flags: missing_mime_head_body_separator is False.
+        """
+        self.setup_conf(
+            config="""
+            body        MISSING_HB    eval:check_msg_parse_flags("missing_mime_head_body_separator")
+            describe    MISSING_HB    Missing blank line between MIME header and body
+            """,
+            pre_config=PRE_CONFIG)
+
+        msg = """Content-Type: multipart/mixed; boundary="------------9F2120F9CF768F72EEFB81A1"
+
+--------------9F2120F9CF768F72EEFB81A1
+Content-Type: multipart/alternative; boundary="------------D8333379825190F7D7D34624"
+
+--------------D8333379825190F7D7D34624
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 8bit
+
+This is just a test message. No harm is intended! Regards.
+--
+
+--------------9F2120F9CF768F72EEFB81A1
+Content-Type: application/pdf; name="Holiday Season Locations -Winter Holidays.pdf"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename="Holiday Season Locations -Winter Holidays.pdf"
+
+--------------9F2120F9CF768F72EEFB81A1--
+
+        """
+        result = self.check_pad(msg)
+        self.check_report(result, 1.0, ["MISSING_HB"])
+
     def test_check_parse_flags_missing_headers_body_separator_negative(self):
         """
         Test check_msg_parse_flags: missing_mime_head_body_separator is False.
