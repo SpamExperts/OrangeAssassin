@@ -117,13 +117,13 @@ class TestMIMEEval(unittest.TestCase):
         ))
 
     def test_check_for_uppercase(self):
-        self.mock_msg.text = ("U" * 200) + ("l" * 200)
+        self.mock_msg.raw_text = ("U" * 200)  + " " + ("l" * 200)
         self.assertTrue(self.plugin.check_for_uppercase(
             self.mock_msg, 49, 51
         ))
 
     def test_check_for_uppercase_false(self):
-        self.mock_msg.text = ("U" * 200) + ("l" * 250)
+        self.mock_msg.raw_text = ("U" * 200) + " " + ("l" * 250)
         self.assertFalse(self.plugin.check_for_uppercase(
             self.mock_msg, "49", "51"
         ))
