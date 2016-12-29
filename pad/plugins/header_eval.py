@@ -180,6 +180,11 @@ class HeaderEval(pad.plugins.base.BasePlugin):
         # (non-ASCII + C0 controls except TAB, NL, CR)
 
         raw_str = ''.join([''.join(value) for value in raw_headers.values()])
+        try:
+            raw_str = raw_str.decode("utf-8")
+        except AttributeError:
+            # in Python 3 all string is unicode object
+            pass
         clean_hdr = ''.join([i if ord(i) < 128 else '' for i in raw_str])
         illegal = len(raw_str) - len(clean_hdr)
         if illegal > 0 and header.lower() == "subject":
