@@ -172,7 +172,7 @@ class TestFunctionalMIMEEval(tests.util.TestBase):
         """
         self.setup_conf(
             config="""
-            body MIME_HTML_ONLY		eval:check_for_mime_html_only()
+            body MIME_HTML_ONLY     eval:check_for_mime_html_only()
             """,
             pre_config=PRE_CONFIG)
         result = self.check_pad(MSG_HTML_ONLY)
@@ -200,7 +200,7 @@ class TestFunctionalMIMEEval(tests.util.TestBase):
         """
         self.setup_conf(
             config="""
-            body MIME_HTML		eval:check_for_mime_html()
+            body MIME_HTML      eval:check_for_mime_html()
             """,
             pre_config=PRE_CONFIG)
         result = self.check_pad(MSG_HTML_MOSTLY)
@@ -515,11 +515,80 @@ Content-Type: text/richtext
         result = self.check_pad(msg)
         self.check_report(result, 0, [])
 
+    def test_mime_qp_count(self):
+        """Test check_for_mime: mime_qp_count is True.
+
+        mime_qp_count: Quoted printable count
+        """
+        self.setup_conf(
+            config="""
+            body     MIME_QP  eval:check_for_mime("mime_qp_count")
+            describe MIME_QP  Includes a quoted-printable attachment
+            """,
+            pre_config=PRE_CONFIG)
+
+        MIME_QP_HEADERS = """MIME-Version: 1.0
+Content-Language: en-GB
+X-MS-Has-Attach:
+X-MS-TNEF-Correlator:
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
+MIME-Version: 1.0
+This is a test message.
+"""
+        result = self.check_pad(MIME_QP_HEADERS)
+        self.check_report(result, 1.0, ["MIME_QP"])
+
+    def test_mime_qp_count_false(self):
+        """Test check_for_mime: mime_qp_count is False.
+
+        mime_qp_count: Quoted printable count
+        """
+        self.setup_conf(
+            config="""
+            body     MIME_QP  eval:check_for_mime("mime_qp_count")
+            describe MIME_QP  Includes a quoted-printable attachment
+            """,
+            pre_config=PRE_CONFIG)
+
+        msg = MSG_WITH_MULTIPLE_LINES % ('t', 'e', 's', 't', '.')
+        result = self.check_pad(msg)
+        self.check_report(result, 0, [])
+
+    @unittest.skip("This need code fix. Spamassasin doens't match.")
+    def test_mime_qp_long_line_different_header(self):
+        """Test check_for_mime: mime_qp_long_line is False.
+
+        Test that only the Quoted printable line is checked for lenght.
+        """
+        self.setup_conf(
+            config="""
+            body     MIME_QP_LONG  eval:check_for_mime("mime_qp_long_line")
+            describe MIME_QP_LONG  Quoted printable line over 79 characters
+            """,
+            pre_config=PRE_CONFIG)
+
+        MIME_QP_LONG = """MIME-Version: 1.0
+Content-Language: en-GB
+X-MS-Has-Attach:
+X-MS-TNEF-Correlator:
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
+X-Custom-Long-Header: %s
+MIME-Version: 1.0
+This is a test message.
+"""
+        # XXX This seems to take in consideration the lenght for the header
+        # XXX name, too. Not sure how it should count. Total 79.
+        msg = MIME_QP_LONG % ("x" * 59)
+        result = self.check_pad(msg)
+        self.check_report(result, 0, [])
+
     def test_mime_ascii_text_illegal_negative(self):
         """Test check_for_mime: mime_ascii_text_illegal is False.
 
-        mime_missing_boundary: Missing Boundary
-        Check for a message that doesn't miss boundary
+        mime_ascii_text_illegal: us-ascii mail contains unicode characters
+        Check for a message that doesn't contains unicode characters
         """
         self.setup_conf(
             config="""
