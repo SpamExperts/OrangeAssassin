@@ -163,29 +163,29 @@ class TestHeaderEval(TestHeaderEvalBase):
         self.assertFalse(result)
 
     def test_illegal_chars(self):
-        self.mock_msg.get_raw_header.return_value = [u"ùTest"]
+        self.mock_msg.get_raw_header.return_value = ["ùTest"]
         result = self.plugin.check_illegal_chars(self.mock_msg, "Subject",
                                                  '0.1', '0')
         self.assertTrue(result)
 
     def test_illegal_chars_all(self):
-        self.mock_msg.raw_headers = {"From": [u"ùTùùesùùùùtù"],
-                                     "Subject": [u"ùTùùesùùùùtù"],
-                                     "Another": [u"Normal Text"]}
+        self.mock_msg.raw_headers = {"From": ["ùTùùesùùùùtù"],
+                                     "Subject": ["ùTùùesùùùùtù"],
+                                     "Another": ["Normal Text"]}
         result = self.plugin.check_illegal_chars(self.mock_msg, "ALL", '0.1',
                                                  '0')
         self.assertFalse(result)
 
     def test_illegal_chars_all_true(self):
-        self.mock_msg.raw_headers = {"From": [u"ùTùùesùùùùtù"],
-                                     "Subject": [u"ùTùùesùùùùtù"],
-                                     "Another": [u"ùùesùùù"]}
+        self.mock_msg.raw_headers = {"From": ["ùTùùesùùùùtù"],
+                                     "Subject": ["ùTùùesùùùùtù"],
+                                     "Another": ["ùùesùùù"]}
         result = self.plugin.check_illegal_chars(self.mock_msg, "ALL", '0.1',
                                                  '0')
         self.assertTrue(result)
 
     def test_illegal_chars_exempt(self):
-        self.mock_msg.get_raw_header.return_value = [u"Test\xa2"]
+        self.mock_msg.get_raw_header.return_value = ["Test\\xa2"]
         result = self.plugin.check_illegal_chars(self.mock_msg, "Subject",
                                                  '0.1', '0')
         self.assertFalse(result)
