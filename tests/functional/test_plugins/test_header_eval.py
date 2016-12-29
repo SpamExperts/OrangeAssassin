@@ -2,7 +2,9 @@
 """Tests the HeaderEval Plugin"""
 
 from __future__ import absolute_import
+
 import unittest
+
 import tests.util
 
 # Load plugin and report matched RULES and SCORE
@@ -685,7 +687,7 @@ class TestFunctionalSubjectIsAllCaps(tests.util.TestBase):
 
         self.setup_conf(config=config, pre_config=PRE_CONFIG)
         result = self.check_pad(email)
-        self.check_report(result, 0, [])
+        self.check_report(result, 1, ['TEST_RULE'])
 
     def test_subject_is_all_caps_strip_lowercase_notations_in_subject(self):
 
@@ -695,7 +697,7 @@ class TestFunctionalSubjectIsAllCaps(tests.util.TestBase):
 
         self.setup_conf(config=config, pre_config=PRE_CONFIG)
         result = self.check_pad(email)
-        self.check_report(result, 0, [])
+        self.check_report(result, 1, ['TEST_RULE'])
 
     def test_subject_is_all_caps_false(self):
 
@@ -896,7 +898,7 @@ class TestFunctionalCheckHeaderCountRange(tests.util.TestBase):
 
         self.setup_conf(config=config, pre_config=PRE_CONFIG)
         result = self.check_pad(email)
-        self.check_report(result, 0, [])
+        self.check_report(result, 1, ['TEST_RULE'])
 
     def test_check_header_count_same_edges(self):
 
@@ -1104,7 +1106,7 @@ class TestFunctionalCheckForMatchingEnvAndHdrFrom(tests.util.TestBase):
 
         self.setup_conf(config=config, pre_config=PRE_CONFIG)
         result = self.check_pad(email)
-        self.check_report(result, 1, ['TEST_RULE'])
+        self.check_report(result, 0, [])
 
     def test_check_for_matching_env_and_hdr_from_false(self):
 
