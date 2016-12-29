@@ -2,12 +2,10 @@
 """Functional tests for MIMEEval Plugin"""
 
 from __future__ import absolute_import
-import unittest
-import tests.util
-import random
 
-from string import ascii_letters
-from string import digits
+import unittest
+
+import tests.util
 
 PRE_CONFIG = """
 loadplugin     Mail::SpamAssassin::Plugin::MIMEEval
@@ -1140,7 +1138,7 @@ Test Body
 
         self.check_report(result, 0, [])
 
-    @unittest.skip("Not finished - need info")
+    # @unittest.skip("Not finished - need info")
     def test_check_for_faraway_charset(self):
         """
         Test check_for_faraway_charset eval rule.

@@ -1,6 +1,5 @@
 """Parser for fetching all links in a message"""
 
-import re
 from html.parser import HTMLParser
 
 try:
@@ -77,9 +76,6 @@ def parse_link(value, linktype):
 def parsed_metadata(msg, ctxt):
     """Goes through the URIs, parse them and store them locally in the
             message"""
-    HTMLParser.attrfind = re.compile(
-        r'\s*([a-zA-Z_][-.:a-zA-Z_0-9]*)(\s*=\s*'
-        r'(\'[^\']*\'|"[^"]*"|[^\s>^\[\]{}\|\'\"]*))?')
     parser = HTML(ctxt.log)
     parser.feed(msg.raw_text)
     for uri in msg.uri_list:
