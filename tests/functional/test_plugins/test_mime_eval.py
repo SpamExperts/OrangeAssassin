@@ -156,6 +156,42 @@ Fanciest formatted version of same  message  goes  here
 --boundary-limit--
 """
 
+MSG_QP_MIME = """MIME-Version: 1.0
+Content-Type: multipart/mixed; boundary=001a11466a4487c42005453246b0
+
+--001a11466a4487c42005453246b0
+Content-Type: multipart/alternative; boundary=001a11466a4487c41a05453246ae
+
+--001a11466a4487c41a05453246ae
+Content-Type: text/plain; charset=UTF-8
+
+---------- Forwarded message ---------
+From: sender <sender@example.net>
+Date: Tue, Jan 3, 2017 at 5:17 PM
+Subject: test
+To: test@example.com <test@example.com>
+
+
+test
+
+--001a11466a4487c41a05453246ae
+Content-Type: text/html; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
+
+test
+
+--001a11466a4487c41a05453246ae--
+--001a11466a4487c42005453246b0
+Content-Type: text/plain; charset=US-ASCII; name="nonasciiattachment.txt"
+Content-Disposition: attachment; filename="nonasciiattachment.txt"
+Content-Transfer-Encoding: base64
+Content-ID: <15964eef089b79488c91>
+X-Attachment-Id: 15964eef089b79488c91
+
+dGhpcyBoYXMgc29tZSDQlNC+0LHRgNGL0Lkg0LTQtdC90YwgdGV4dCAK
+--001a11466a4487c42005453246b0--
+"""
+
 
 class TestFunctionalMIMEEval(tests.util.TestBase):
     """Tests for the MIMEEval plugin."""
@@ -231,6 +267,21 @@ class TestFunctionalMIMEEval(tests.util.TestBase):
             pre_config=PRE_CONFIG)
         result = self.check_pad(MSG_HTML_ONLY)
         self.check_report(result, 1.0, ["MIME_HTML"])
+
+    def test_check_qp_ratio(self):
+        """Test check_qp_ratio eval rule.
+
+        Takes a min ratio to use in eval to see if there is an spamminess to
+        the ratio of quoted printable to total bytes in an email.
+        """
+        self.setup_conf(
+            config="""
+            body MIME_QP_RATION eval:check_qp_ratio(0)
+            """,
+            pre_config=PRE_CONFIG)
+
+        result = self.check_pad(MSG_QP_MIME)
+        self.check_report(result, 1, ["MIME_QP_RATION"])
 
     def test_check_mime_multipart_ratio(self):
         """Test check_mime_multipart_ratio eval rule.
@@ -577,6 +628,35 @@ This is a test message.
         # XXX This seems to take in consideration the lenght for the header
         # XXX name, too. Not sure how it should count. Total 79.
         msg = MIME_QP_LONG % ("x" * 59)
+        result = self.check_pad(msg)
+        self.check_report(result, 0, [])
+
+    def test_mime_text_unicode_ratio(self):
+        """Test check_for_mime: mime_text_unicode_ratio is True.
+
+        mime_text_unicode_ratio": number of unicode encoded chars / total chars
+        """
+        self.setup_conf(
+            config="""
+            body     ABUNDANT_UNICODE  eval:check_for_mime("mime_text_unicode_ratio")
+            """,
+            pre_config=PRE_CONFIG)
+
+        result = self.check_pad(MSG_ABUNDANT_UNICODE)
+        self.check_report(result, 1.0, ["ABUNDANT_UNICODE"])
+
+    def test_mime_text_unicode_ratio_false(self):
+        """Test check_for_mime: mime_text_unicode_ratio is False.
+
+        mime_text_unicode_ratio": number of unicode encoded chars / total chars
+        """
+        self.setup_conf(
+            config="""
+            body     ABUNDANT_UNICODE  eval:check_for_mime("mime_text_unicode_ratio")
+            """,
+            pre_config=PRE_CONFIG)
+
+        msg = MSG_WITH_MULTIPLE_LINES % ('t', 'e', 's', 't', '.')
         result = self.check_pad(msg)
         self.check_report(result, 0, [])
 
