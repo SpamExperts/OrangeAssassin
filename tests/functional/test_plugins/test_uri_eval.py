@@ -2,12 +2,13 @@
 
 from __future__ import absolute_import
 
-import unittest
 import random
-import tests.util
-
+import sys
+import unittest
 from string import ascii_letters
 from string import digits
+
+import tests.util
 
 # Load plugin and report matched RULES and SCORE
 PRE_CONFIG = """
@@ -52,6 +53,8 @@ Your account has been limited please follow the instructions on the next link:
         result = self.check_pad(email)
         self.check_report(result, 1, ['CHECK_FOR_HTTP_REDIRECTOR'])
 
+    @unittest.skipIf(sys.version_info.major == 3 and sys.version_info.minor < 3,
+                     'Incompatible with python 3.2.*')
     def test_check_for_http_redirector_in_a_label_no_commas(self):
 
         email = """From: sender@example.com
