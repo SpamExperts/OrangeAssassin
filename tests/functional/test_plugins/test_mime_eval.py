@@ -1,4 +1,4 @@
-#coding: utf-8
+# coding: utf-8
 """Functional tests for MIMEEval Plugin"""
 
 from __future__ import absolute_import
@@ -438,7 +438,6 @@ Content-Disposition: attachment; filename="testfile.pdf"
         result = self.check_pad(msg)
         self.check_report(result, 0, [])
 
-    @unittest.skip("This need code fix. Spamassasin match.")
     def test_mime_missing_boundary(self):
         """Test check_for_mime: mime_missing_boundary is True.
 
@@ -553,7 +552,6 @@ This is a test message.
         result = self.check_pad(msg)
         self.check_report(result, 0, [])
 
-    @unittest.skip("This need code fix. Spamassasin doens't match.")
     def test_mime_qp_long_line_different_header(self):
         """Test check_for_mime: mime_qp_long_line is False.
 
@@ -1138,7 +1136,7 @@ Test Body
 
         self.check_report(result, 0, [])
 
-    # @unittest.skip("Not finished - need info")
+    @unittest.skip("Not finished - need info")
     def test_check_for_faraway_charset(self):
         """
         Test check_for_faraway_charset eval rule.

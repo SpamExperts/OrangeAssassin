@@ -83,7 +83,8 @@ class MIMEEval(pad.plugins.base.BasePlugin):
         has_long_line = self.get_local(msg, "mime_qp_long_line")
         if not has_long_line:
             has_long_line = any(
-                len(line) > max_line_len and not line.startswith("SPAM")
+                len("".join(line.split(":")[1:])) > max_line_len and not
+                line.startswith("SPAM")
                 for line in raw.splitlines())
             self.set_local(msg, "mime_qp_long_line", has_long_line)
 
@@ -145,6 +146,8 @@ class MIMEEval(pad.plugins.base.BasePlugin):
                     payload.encode("ascii")
                 except (UnicodeEncodeError, UnicodeDecodeError):
                     self.set_local(msg, "mime_ascii_text_illegal", True)
+            if len(re.split("--", msg.raw_msg)) <= 4:
+                self.set_local(msg, "mime_missing_boundary", True)
 
     def _update_mime_ma_non_text(self, msg, part):
         if not self.get_local(msg, "mime_ma_non_text"):
@@ -165,7 +168,6 @@ class MIMEEval(pad.plugins.base.BasePlugin):
         self.set_local(msg, "unicode_count", 0)
         self.set_local(msg, "qp_chars", 0)
         self.set_local(msg, "qp_bytes", 0)
-
 
     def extract_metadata(self, msg, payload, text, part):
 
