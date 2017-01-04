@@ -167,3 +167,12 @@ Plugin :mod:`uri_eval`
     :members:
     :undoc-members:
     :show-inheritance:
+
+Plugin :mod:`relay-eval`
+------------------------
+
+.. automodule:: pad.plugins.relay_eval
+:members:
+        :undoc-members:
+        :show-inheritance:
+
