@@ -42,27 +42,27 @@ EVAL rules
 ==========
 
 .. automethod:: pad.plugins.relay_eval.RelayEval.check_for_numeric_helo
-:noindex:
+    :noindex:
 .. automethod:: pad.plugins.relay_eval.RelayEval.check_for_illegal_ip
-:noindex:
+    :noindex:
 .. automethod:: pad.plugins.relay_eval.RelayEval.check_all_trusted
-:noindex:
+    :noindex:
 .. automethod:: pad.plugins.relay_eval.RelayEval.check_no_relays
-:noindex:
+    :noindex:
 .. automethod:: pad.plugins.relay_eval.RelayEval.check_relays_unparseable
-:noindex:
+    :noindex:
 .. automethod:: pad.plugins.relay_eval.RelayEval.check_for_sender_no_reverse
-:noindex:
+    :noindex:
 .. automethod:: pad.plugins.relay_eval.RelayEval.check_for_from_domain_in_received_headers
-:noindex:
+    :noindex:
 .. automethod:: pad.plugins.relay_eval.RelayEval.check_for_forged_received_trail
-:noindex:
+    :noindex:
 .. automethod:: pad.plugins.relay_eval.RelayEval.check_for_forged_received_ip_helo
-:noindex:
+    :noindex:
 .. automethod:: pad.plugins.relay_eval.RelayEval.helo_ip_mismatch
-:noindex:
+    :noindex:
 .. automethod:: pad.plugins.relay_eval.RelayEval.check_for_no_rdns_dotcom_helo
-:noindex:
+    :noindex:
 
 Tags
 ====
