@@ -3,9 +3,14 @@
 
 from __future__ import absolute_import
 
+import sys
 import unittest
+import platform
 
 import tests.util
+
+IS_PYPY3 = ("pypy" in platform.python_implementation().lower() and
+            sys.version_info.major == 3)
 
 PRE_CONFIG = """
 loadplugin     Mail::SpamAssassin::Plugin::MIMEEval
@@ -405,6 +410,7 @@ class TestFunctionalMIMEEval(tests.util.TestBase):
         result = self.check_pad(MSG_BASE64_5_PER_LINE)
         self.check_report(result, 0, [])
 
+    @unittest.skipIf(IS_PYPY3, 'Fails on some configurations of pypy3')
     def test_mime_ascii_text_illegal(self):
         """Test check_for_mime: mime_ascii_text_illegal is True.
 
@@ -674,6 +680,7 @@ This is a test message.
         result = self.check_pad(MSG_PARSE_FLAGS)
         self.check_report(result, 0, [])
 
+    @unittest.skipIf(IS_PYPY3, 'Fails on some configurations of pypy3')
     def test_ascii_text_illegal(self):
         """Test check_for_ascii_text_illegal eval rule is True."""
         self.setup_conf(
