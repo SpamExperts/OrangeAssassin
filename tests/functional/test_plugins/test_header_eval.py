@@ -602,6 +602,255 @@ class TestFunctionalCheckForForgedEudoramailReceivedHeaders(tests.util.TestBase)
         result = self.check_pad(email)
         self.check_report(result, 1, ['TEST_RULE'])
 
+class TestFunctionalCheckForForgedYahooReceivedHeaders(tests.util.TestBase):
+
+    def test_check_for_forged_yahoo_received_headers_not_yahoo_domain_in_from(self):
+
+        config = "header TEST_RULE eval:check_for_forged_yahoo_received_headers()"
+
+        email = ("Received: from example1.com (example2.com [1.2.3.4])\n"
+                 "\tby example.com\n"
+                 "\t(envelope-from <test@example.com>\n"
+                 "From: test@google.com")
+
+        self.setup_conf(config=config, pre_config=PRE_CONFIG)
+        result = self.check_pad(email)
+        self.check_report(result, 0, [])
+
+    def test_check_for_forged_yahoo_received_headers_yahoo_domain_in_from(self):
+
+        config = "header TEST_RULE eval:check_for_forged_yahoo_received_headers()"
+
+        email = ("Received: from example1.com (example2.com [1.2.3.4])\n"
+                 "\tby example.com\n"
+                 "\t(envelope-from <test@example.com>\n"
+                 "From: test@yahoo.com")
+
+        self.setup_conf(config=config, pre_config=PRE_CONFIG)
+        result = self.check_pad(email)
+        self.check_report(result, 1, ['TEST_RULE'])
+
+    def test_check_for_forged_yahoo_received_headers_via_http(self):
+
+        config = "header TEST_RULE eval:check_for_forged_yahoo_received_headers()"
+
+        email = ("Received: from example1.com (example2.com [1.2.3.4])\n"
+                 "\tby web12ceva.mail77ceva.test123.yahoo.com via HTTPceva\n"
+                 "\t(envelope-from <test@example.com>\n"
+                 "From: test@yahoo.com")
+
+        self.setup_conf(config=config, pre_config=PRE_CONFIG)
+        result = self.check_pad(email)
+        self.check_report(result, 0, [])
+
+    def test_check_for_forged_yahoo_received_headers_via_http_negative(self):
+
+        config = "header TEST_RULE eval:check_for_forged_yahoo_received_headers()"
+
+        email = ("Received: from example1.com (example2.com [1.2.3.4])\n"
+                 "\tby web12ceva.mail77ceva.test123.yahoo.com with HTTP\n"
+                 "\t(envelope-from <test@example.com>\n"
+                 "From: test@yahoo.com")
+
+        self.setup_conf(config=config, pre_config=PRE_CONFIG)
+        result = self.check_pad(email)
+        self.check_report(result, 1, ['TEST_RULE'])
+
+    def test_check_for_forged_yahoo_received_headers_via_http_no_http(self):
+
+        config = "header TEST_RULE eval:check_for_forged_yahoo_received_headers()"
+
+        email = ("Received: from example1.com (example2.com [1.2.3.4])\n"
+                 "\tby web12ceva.mail77ceva.test123.yahoo.com with SMTP\n"
+                 "\t(envelope-from <test@example.com>\n"
+                 "From: test@yahoo.com")
+
+        self.setup_conf(config=config, pre_config=PRE_CONFIG)
+        result = self.check_pad(email)
+        self.check_report(result, 1, ['TEST_RULE'])
+
+    def test_check_for_forged_yahoo_received_headers_with_smtp(self):
+
+        config = "header TEST_RULE eval:check_for_forged_yahoo_received_headers()"
+
+        email = ("Received: from example1.com (example2.com [1.2.3.4])\n"
+                 "\tby smtpceva12.test123.yahoo.com with SMTPceva\n"
+                 "\t(envelope-from <test@example.com>\n"
+                 "From: test@yahoo.com")
+
+        self.setup_conf(config=config, pre_config=PRE_CONFIG)
+        result = self.check_pad(email)
+        self.check_report(result, 0, [])
+
+    def test_check_for_forged_yahoo_received_headers_with_smtp_negative(self):
+
+        config = "header TEST_RULE eval:check_for_forged_yahoo_received_headers()"
+
+        email = ("Received: from example1.com (example2.com [1.2.3.4])\n"
+                 "\tby smttpceva12.smtptest123.yahoo.com with SMTP\n"
+                 "\t(envelope-from <test@example.com>\n"
+                 "From: test@yahoo.com")
+
+        self.setup_conf(config=config, pre_config=PRE_CONFIG)
+        result = self.check_pad(email)
+        self.check_report(result, 1, ['TEST_RULE'])
+
+    def test_check_for_forged_yahoo_received_headers_with_nnfmp_groups(self):
+
+        config = "header TEST_RULE eval:check_for_forged_yahoo_received_headers()"
+
+        email = ("Received: from [1.2.3.4]\n"
+                 "\tby test123.groups.yahoo.com with NNFMPceva\n"
+                 "\t(envelope-from <test@example.com>\n"
+                 "From: test@yahoo.com")
+
+        self.setup_conf(config=config, pre_config=PRE_CONFIG)
+        result = self.check_pad(email)
+        self.check_report(result, 0, [])
+
+    def test_check_for_forged_yahoo_received_headers_with_nnfmp_groups_negative(self):
+
+        config = "header TEST_RULE eval:check_for_forged_yahoo_received_headers()"
+
+        email = ("Received: from (ceva.com [1.2.3.4])\n"
+                 "\tby test123.groups.yahoo.com with NNFMPceva\n"
+                 "\t(envelope-from <test@example.com>\n"
+                 "From: test@yahoo.com")
+
+        self.setup_conf(config=config, pre_config=PRE_CONFIG)
+        result = self.check_pad(email)
+        self.check_report(result, 1, ['TEST_RULE'])
+
+    def test_check_for_forged_yahoo_received_headers_with_nnfmp_scd(self):
+
+        config = "header TEST_RULE eval:check_for_forged_yahoo_received_headers()"
+
+        email = ("Received: from [1.2.3.4]\n"
+                 "\tby test123.scd.yahoo.com with NNFMPceva\n"
+                 "\t(envelope-from <test@example.com>\n"
+                 "From: test@yahoo.com")
+
+        self.setup_conf(config=config, pre_config=PRE_CONFIG)
+        result = self.check_pad(email)
+        self.check_report(result, 0, [])
+
+    def test_check_for_forged_yahoo_received_headers_with_nnfmp_dcn(self):
+
+        config = "header TEST_RULE eval:check_for_forged_yahoo_received_headers()"
+
+        email = ("Received: from [1.2.3.4]\n"
+                 "\tby test123.dcn.yahoo.com with NNFMPceva\n"
+                 "\t(envelope-from <test@example.com>\n"
+                 "From: test@yahoo.com")
+
+        self.setup_conf(config=config, pre_config=PRE_CONFIG)
+        result = self.check_pad(email)
+        self.check_report(result, 0, [])
+
+    def test_check_for_forged_yahoo_received_headers_with_nnfmp_other(self):
+
+        config = "header TEST_RULE eval:check_for_forged_yahoo_received_headers()"
+
+        email = ("Received: from [1.2.3.4]\n"
+                 "\tby test123.other.yahoo.com with NNFMPceva\n"
+                 "\t(envelope-from <test@example.com>\n"
+                 "From: test@yahoo.com")
+
+        self.setup_conf(config=config, pre_config=PRE_CONFIG)
+        result = self.check_pad(email)
+        self.check_report(result, 1, ['TEST_RULE'])
+
+    def test_check_for_forged_yahoo_received_headers_gated_through_received_hdr_remover(self):
+
+        config = "header TEST_RULE eval:check_for_forged_yahoo_received_headers()"
+
+        email = ("Mailing-List: contact test@example.com; run by ezmlm\n"
+                 "Received: (qmail 47240 invoked by uid 33); 01 Oct 2010 20:35:23 +0000\n"
+                 "Delivered-To: mailing list test@example.com\n"
+                 "From: test@yahoo.com")
+
+        self.setup_conf(config=config, pre_config=PRE_CONFIG)
+        result = self.check_pad(email)
+        self.check_report(result, 0, [])
+
+    def test_check_for_forged_yahoo_received_headers_bulk_scd_negative(self):
+
+        config = "header TEST_RULE eval:check_for_forged_yahoo_received_headers()"
+
+        email = ("Received: from mailer123.bulk.scd.yahoo.com\n"
+                 "\tby example.com\n"
+                 "\t(envelope-from <test@example.com>\n"
+                 "From: test@reply.test.yahoo.com")
+
+        self.setup_conf(config=config, pre_config=PRE_CONFIG)
+        result = self.check_pad(email)
+        self.check_report(result, 1, ['TEST_RULE'])
+
+    def test_check_for_forged_yahoo_received_headers_bulk_scd_diff_domain(self):
+
+        config = "header TEST_RULE eval:check_for_forged_yahoo_received_headers()"
+
+        email = ("Received: from mailer123.bulk.scd.yahoo.com\n"
+                 "\tby example.com\n"
+                 "\t(envelope-from <test@example.com>\n"
+                 "From: test@ceva.reply.yahoo.com")
+
+        self.setup_conf(config=config, pre_config=PRE_CONFIG)
+        result = self.check_pad(email)
+        self.check_report(result, 1, ['TEST_RULE'])
+
+    def test_check_for_forged_yahoo_received_headers_bulk_scd(self):
+
+        config = "header TEST_RULE eval:check_for_forged_yahoo_received_headers()"
+
+        email = ("Received: from mailer123.bulk.scd.yahoo.com\n"
+                 "\tby example.com\n"
+                 "\t(envelope-from <test@example.com>\n"
+                 "From: test@reply.yahoo.com")
+
+        self.setup_conf(config=config, pre_config=PRE_CONFIG)
+        result = self.check_pad(email)
+        self.check_report(result, 0, [])
+
+    def test_check_for_forged_yahoo_received_headers_with_id(self):
+
+        config = "header TEST_RULE eval:check_for_forged_yahoo_received_headers()"
+
+        email = ("Received: from (ceva.com [1.2.3.4])\n"
+                 "\tby ceva12.ceva123.yahoo.com (1.2.3/2.2.2) id w5si53504623wjf.107.2017.01.04.05.05.55\n"
+                 "\t(envelope-from <test@example.com>\n"
+                 "From: test@yahoo.com")
+
+        self.setup_conf(config=config, pre_config=PRE_CONFIG)
+        result = self.check_pad(email)
+        self.check_report(result, 0, [])
+
+    def test_check_for_forged_yahoo_received_headers_with_esmtp(self):
+
+        config = "header TEST_RULE eval:check_for_forged_yahoo_received_headers()"
+
+        email = ("Received: from (ceva.com [1.2.3.4])\n"
+                 "\tby ceva12.ceva123.yahoo.com (1.2.3/2.2.2) with ESMTP id w5si53504623wjf.107.2017.01.04.05.05.55\n"
+                 "\tfor <testers@spamexperts.com>; Wed, 04 Jan 2017 05:04:48 -0800 (PST)\n"
+                 "\t(envelope-from <test@example.com>\n"
+                 "From: test@yahoo.com")
+
+        self.setup_conf(config=config, pre_config=PRE_CONFIG)
+        result = self.check_pad(email)
+        self.check_report(result, 0, [])
+
+    def test_check_for_forged_yahoo_received_headers_with_id_negative(self):
+
+        config = "header TEST_RULE eval:check_for_forged_yahoo_received_headers()"
+
+        email = ("Received: from (ceva.com [1.2.3.4])\n"
+                 "\tby ceva12.ceva123.yahoo.com (1.2.3/2.2.2) with ESMTPS id w5si53504623wjf.107.2017.01.04.05.05.55\n"
+                 "\t(envelope-from <test@example.com>\n"
+                 "From: test@yahoo.com")
+
+        self.setup_conf(config=config, pre_config=PRE_CONFIG)
+        result = self.check_pad(email)
+        self.check_report(result, 1, ['TEST_RULE'])
 
 class TestFunctionalCheckForMissingToHeader(tests.util.TestBase):
 
@@ -1151,6 +1400,7 @@ def suite():
     test_suite.addTest(unittest.makeSuite(TestFunctionalCheckForMsnGroupsHeaders, "test"))
     test_suite.addTest(unittest.makeSuite(TestFunctionalGatedThroughReceivedHdrRemover, "test"))
     test_suite.addTest(unittest.makeSuite(TestFunctionalCheckForForgedEudoramailReceivedHeaders, "test"))
+    test_suite.addTest(unittest.makeSuite(TestFunctionalCheckForForgedYahooReceivedHeaders, "test"))
     test_suite.addTest(unittest.makeSuite(TestFunctionalCheckForMissingToHeader, "test"))
     test_suite.addTest(unittest.makeSuite(TestFunctionalSubjectIsAllCaps, "test"))
     test_suite.addTest(unittest.makeSuite(TestFunctionalCheckForToInSubject, "test"))
