@@ -45,6 +45,7 @@ Available plugins
     pad.plugins.dkim
     pad.plugins.uri_eval
     pad.plugins.mime_eval
+    pad.plugins.relay_eval
 
 
 Plugin reference
