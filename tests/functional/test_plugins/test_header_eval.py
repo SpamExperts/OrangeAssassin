@@ -1106,6 +1106,32 @@ class TestFunctionalCheckForForgedJunoReceivedHeaders(tests.util.TestBase):
         result = self.check_pad(email)
         self.check_report(result, 1, ['TEST_RULE'])
 
+    def test_check_for_forged_juno_received_headers_from_webmail(self):
+
+        config = "header TEST_RULE eval:check_for_forged_juno_received_headers()"
+
+        email = ("Received: from webmailceva123.untd.com (webmailceva123.untd.com [1.2.3.4]) test\n"
+                 "\tby example.com\n"
+                 "\t(envelope-from <test@example.com>\n"
+                 "From: test@juno.com")
+
+        self.setup_conf(config=config, pre_config=PRE_CONFIG)
+        result = self.check_pad(email)
+        self.check_report(result, 1, ['TEST_RULE'])
+
+    def test_check_for_forged_juno_received_headers_from_webmail_diff_helo(self):
+
+        config = "header TEST_RULE eval:check_for_forged_juno_received_headers()"
+
+        email = ("Received: from webmailceva123.untd.com (test.com [1.2.3.4]) test\n"
+                 "\tby example.com\n"
+                 "\t(envelope-from <test@example.com>\n"
+                 "From: test@juno.com")
+
+        self.setup_conf(config=config, pre_config=PRE_CONFIG)
+        result = self.check_pad(email)
+        self.check_report(result, 1, ['TEST_RULE'])
+
 class TestFunctionalCheckForMissingToHeader(tests.util.TestBase):
 
     def test_check_for_missing_to_header(self):
