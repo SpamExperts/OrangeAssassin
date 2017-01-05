@@ -344,8 +344,9 @@ class HeaderEval(pad.plugins.base.BasePlugin):
         else:
             mail_com_re = Regex(r"from.*\bmail\.com.*\[{}\].*by".format(
                 IP_ADDRESS.pattern), re.X)
-            untd_com_re = Regex(r"from (webmail\S+\.untd"
-                                r"\.com) \(\1 \[\d+.\d+.\d+.\d+\]\) by")
+            untd_com_re = Regex(r"from\s+(webmail\S+\.untd"
+                                r"\.com)\s+\(\1\s+\[{}\]\)\s+by".format(
+                IP_ADDRESS.pattern), re.X)
             if mail_com_re.search(rcvd) and not Regex(r"\bmail\.com").search(
                     xmailer):
                 return True
