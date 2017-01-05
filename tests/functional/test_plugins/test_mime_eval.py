@@ -1111,7 +1111,7 @@ This is the epilogue.  It is also to be ignored."""
         msg = MSG_WITH_MULTIPLE_LINES % (
             'F' * 1, 'a' * 99, 'B' * 98, '\na', 200 * 'B') 
         result = self.check_pad(msg, debug=True)
-        import pdb; pdb.set_trace() 
+
         self.check_report(result, 1, ['CHECK_UPPERCASE'])
 
     def test_check_for_ma_non_tex_negative(self):
