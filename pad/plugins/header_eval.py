@@ -331,7 +331,7 @@ class HeaderEval(pad.plugins.base.BasePlugin):
         if self.gated_through_received_hdr_remover(msg):
             return False
         xorig = ''.join(msg.get_decoded_header("X-Originating-IP"))
-        xmailer = ''.join(msg.get_decoded_header(""))
+        xmailer = ''.join(msg.get_decoded_header("X-Mailer"))
         rcvd = ''.join(msg.get_decoded_header("Received"))
         if xorig != "":
             juno_re = Regex(r"from.*\b(?:juno|untd)\.com.*"
