@@ -293,7 +293,7 @@ class HeaderEval(pad.plugins.base.BasePlugin):
         """Check for forged yahoo received headers"""
         from_addr = ''.join(msg.get_all_addr_header("From"))
         rcvd = ''.join(msg.get_decoded_header("Received"))
-        if from_addr.rsplit("@", 1)[-1] != "yahoo.com":
+        if "yahoo.com" not in from_addr:
             return False
         if (msg.get_decoded_header("Resent-From") and
                 msg.get_decoded_header("Resent-To")):
@@ -311,8 +311,8 @@ class HeaderEval(pad.plugins.base.BasePlugin):
         if Regex(r"by smtp\S+\.yahoo\.com with SMTP").search(rcvd):
             return False
         yahoo_ip_re = Regex(
-            r"from \[{}\] by \S+\."
-            r"(?:groups|scd|dcn)\.yahoo\.com with NNFMP".format(
+            r"from\s+\[{}\]\s+by\s+\S+\."
+            r"(?:groups|scd|dcn)\.yahoo\.com\s+with\s+NNFMP".format(
                 IP_ADDRESS.pattern), re.X)
         if yahoo_ip_re.search(rcvd):
             return False
