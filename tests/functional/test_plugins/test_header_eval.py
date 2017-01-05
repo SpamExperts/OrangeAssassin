@@ -1065,6 +1065,47 @@ class TestFunctionalCheckForForgedYahooReceivedHeaders(tests.util.TestBase):
         result = self.check_pad(email)
         self.check_report(result, 0, [])
 
+class TestFunctionalCheckForForgedJunoReceivedHeaders(tests.util.TestBase):
+
+    def test_check_for_forged_juno_received_headers_not_juno_domain_in_from(self):
+
+        config = "header TEST_RULE eval:check_for_forged_juno_received_headers()"
+
+        email = ("Received: from ceva123.mail.com (example.com [1.2.3.4])\n"
+                 "\tby example.com\n"
+                 "\t(envelope-from <test@example.com>\n"
+                 "From: test@google.com")
+
+        self.setup_conf(config=config, pre_config=PRE_CONFIG)
+        result = self.check_pad(email)
+        self.check_report(result, 0, [])
+
+    def test_check_for_forged_juno_received_headers_juno_subdomain_in_from(self):
+
+        config = "header TEST_RULE eval:check_for_forged_juno_received_headers()"
+
+        email = ("Received: from ceva123.mail.com (example.com [1.2.3.4])\n"
+                 "\tby example.com\n"
+                 "\t(envelope-from <test@example.com>\n"
+                 "From: test@ceva.juno.com")
+
+        self.setup_conf(config=config, pre_config=PRE_CONFIG)
+        result = self.check_pad(email)
+        self.check_report(result, 1, ['TEST_RULE'])
+
+    def test_check_for_forged_juno_received_headers_juno_domain_in_from(self):
+
+        config = "header TEST_RULE eval:check_for_forged_juno_received_headers()"
+
+        email = ("Received: from ceva123.mail.com (example.com [1.2.3.4])\n"
+                 "\tby example.com\n"
+                 "\t(envelope-from <test@example.com>\n"
+                 "From: test@juno.com")
+
+        self.setup_conf(config=config, pre_config=PRE_CONFIG)
+        result = self.check_pad(email)
+        self.check_report(result, 1, ['TEST_RULE'])
+
 class TestFunctionalCheckForMissingToHeader(tests.util.TestBase):
 
     def test_check_for_missing_to_header(self):
@@ -1631,6 +1672,7 @@ def suite():
     test_suite.addTest(unittest.makeSuite(TestFunctionalGatedThroughReceivedHdrRemover, "test"))
     test_suite.addTest(unittest.makeSuite(TestFunctionalCheckForForgedEudoramailReceivedHeaders, "test"))
     test_suite.addTest(unittest.makeSuite(TestFunctionalCheckForForgedYahooReceivedHeaders, "test"))
+    test_suite.addTest(unittest.makeSuite(TestFunctionalCheckForForgedJunoReceivedHeaders, "test"))
     test_suite.addTest(unittest.makeSuite(TestFunctionalCheckForMissingToHeader, "test"))
     test_suite.addTest(unittest.makeSuite(TestFunctionalSubjectIsAllCaps, "test"))
     test_suite.addTest(unittest.makeSuite(TestFunctionalCheckForToInSubject, "test"))
