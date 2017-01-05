@@ -1600,6 +1600,23 @@ class TestFunctionalCheckForMatchingEnvAndHdrFrom(tests.util.TestBase):
         self.check_report(result, 0, [])
 
 
+class TestFunctionalHeaderEvalRecipietsRules(tests.util.TestBase):
+      """Test cases for sorted_recipients and similar_recipients eval rules."""
+
+      def test_sorted_recipients(self):
+        """Test for case when rcpts are sorted sorted_recipients."""
+        config = "header SORTED_RCPT eval:sorted_recipients()"
+
+        email = """From: Sorted rcpts <sorted@example.com>
+Date: Wed, 4 Jan 2017 15:04:47 +0200
+Subject: These recipients are sordet alphabetically 
+To: alpha <alpha@example.com>, beta <beta@example.net>
+"""
+
+        self.setup_conf(config=config, pre_config=PRE_CONFIG)
+        result = self.check_pad(email)
+        self.check_report(result, 1, ['SORTED_RCPT'])
+
 
 
 def suite():
@@ -1625,6 +1642,7 @@ def suite():
     test_suite.addTest(unittest.makeSuite(TestFunctionalCheckRatwareEnvelopeFrom, "test"))
     test_suite.addTest(unittest.makeSuite(TestFunctionalCheckForForgedGw05ReceivedHeaders, "test"))
     test_suite.addTest(unittest.makeSuite(TestFunctionalCheckForMatchingEnvAndHdrFrom, "test"))
+    test_suite.addTest(unittest.makeSuite(TestFunctionalHeaderEvalRecipietsRules, "test"))
     return test_suite
 
 
