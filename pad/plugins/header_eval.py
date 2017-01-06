@@ -337,7 +337,7 @@ class HeaderEval(pad.plugins.base.BasePlugin):
             juno_re = Regex(r"from.*\b(?:juno|untd)\.com.*"
                             r"[\[\(]{0}[\]\)].*by".format(IP_ADDRESS.pattern), re.X)
             cookie_re = Regex(r" cookie\.(?:juno|untd)\.com ")
-            if not juno_re.search(rcvd) and cookie_re.search(rcvd):
+            if not juno_re.search(rcvd) and not cookie_re.search(rcvd):
                 return True
             if "Juno " not in xmailer:
                 return True
@@ -352,6 +352,8 @@ class HeaderEval(pad.plugins.base.BasePlugin):
                 return True
             elif untd_com_re.search(rcvd) and not Regex(
                     r"^Webmail Version \d").search(xmailer):
+                return True
+            else:
                 return True
         return False
 
