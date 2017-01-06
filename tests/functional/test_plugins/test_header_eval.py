@@ -1673,16 +1673,103 @@ class TestFunctionalHeaderEvalRecipietsRules(tests.util.TestBase):
       def test_sorted_recipients(self):
         """Test for case when rcpts are sorted sorted_recipients."""
         config = "header SORTED_RCPT eval:sorted_recipients()"
-
-        email = """From: Sorted rcpts <sorted@example.com>
-Date: Wed, 4 Jan 2017 15:04:47 +0200
-Subject: These recipients are sordet alphabetically 
-To: alpha <alpha@example.com>, beta <beta@example.net>
-"""
+        email = "To: alpha <alpha@example.com>, beta <beta@example.net>"
 
         self.setup_conf(config=config, pre_config=PRE_CONFIG)
         result = self.check_pad(email)
         self.check_report(result, 1, ['SORTED_RCPT'])
+
+      def test_sorted_recipients_simple(self):
+        """Test for case when rcpts are sorted sorted_recipients."""
+        config = "header SORTED_RCPT eval:sorted_recipients()"
+        email = "To: alpha@simplyspamfree.com,beta@simplyspamfree.com"
+
+        self.setup_conf(config=config, pre_config=PRE_CONFIG)
+        result = self.check_pad(email)
+        self.check_report(result, 1, ['SORTED_RCPT'])
+
+      def test_sorted_recipients_same(self):
+        """Test for case when rcpts are sorted sorted_recipients."""
+        config = "header SORTED_RCPT eval:sorted_recipients()"
+        email = "To: alpha <alpha@example.com>, alpha <alpha@example.com>"
+
+        self.setup_conf(config=config, pre_config=PRE_CONFIG)
+        result = self.check_pad(email)
+        self.check_report(result, 1, ['SORTED_RCPT'])
+
+      def test_sorted_recipients_case_sorted(self):
+        """Test when rcpts are sorted but case involded."""
+        config = "header SORTED_RCPT eval:sorted_recipients()"
+        email = "To: Alpha <alpha@example.com>, Beta <Beta@example.com>"
+
+        self.setup_conf(config=config, pre_config=PRE_CONFIG)
+        result = self.check_pad(email)
+        self.check_report(result, 1, ['SORTED_RCPT'])
+
+      def test_sorted_recipients_case_first(self):
+        """Test for case when rcpts are sorted but using case for first."""
+        config = "header SORTED_RCPT eval:sorted_recipients()"
+        email = "To: <CHARLIE@example.com>,<charlie@example.com>"
+
+        self.setup_conf(config=config, pre_config=PRE_CONFIG)
+        result = self.check_pad(email)
+        self.check_report(result, 1, ['SORTED_RCPT'])
+
+      def test_sorted_recipients_case_second(self):
+        """Test for case when rcpts are sorted but using case for second."""
+        config = "header SORTED_RCPT eval:sorted_recipients()"
+        email = "To: <charlie@example.com>,<CHARLIE@example.com>"
+
+        self.setup_conf(config=config, pre_config=PRE_CONFIG)
+        result = self.check_pad(email)
+        self.check_report(result, 1, ['SORTED_RCPT'])
+
+      def test_sorted_recipients_multiple(self):
+        """Test for case when rcpts are sorted on multiple headers."""
+        # The order of the headers: ("To", "Cc", "Bcc", "ToCc")
+        config = "header SORTED_RCPT eval:sorted_recipients()"
+        email = """Bcc: e@example.com, f@example.com
+To: First To <a@seinternal.com>, Second To <b@seinternal.com>
+Cc: c@example.com, d@example.com
+"""
+
+        self.setup_conf(config=config, pre_config=PRE_CONFIG)
+        result = self.check_pad(email)
+        self.check_report(result, 1.0, ['SORTED_RCPT'])
+
+      def test_no_sorted_recipients(self):
+        """Test for case when rcpts are not sorted."""
+        config = "header SORTED_RCPT eval:sorted_recipients()"
+        email = "To: charlie <charlie@example.com>, beta <beta@example.com>"
+
+        self.setup_conf(config=config, pre_config=PRE_CONFIG)
+        result = self.check_pad(email)
+        self.check_report(result, 0, [])
+
+      def test_no_sorted_recipients_simple(self):
+        """Test for case when rcpts are not sorted."""
+        config = "header SORTED_RCPT eval:sorted_recipients()"
+        email = """Bcc: bcc@example.com, ww@example.com
+To: Test User <accept@example.com>
+Cc: zz@example.com, cc@example.com
+"""
+
+        self.setup_conf(config=config, pre_config=PRE_CONFIG)
+        result = self.check_pad(email)
+        self.check_report(result, 0, [])
+
+      def test_not_sorted_recipients_multiple(self):
+        """Test for case when rcpts are not sorted on multiple headers."""
+        # The order of the headers: ("To", "Cc", "Bcc", "ToCc")
+        config = "header SORTED_RCPT eval:sorted_recipients()"
+        email = """Bcc: a@example.com, b@example.com
+To: First To <c@seinternal.com>, Second To <d@seinternal.com>
+Cc: e@example.com, f@example.com
+"""
+
+        self.setup_conf(config=config, pre_config=PRE_CONFIG)
+        result = self.check_pad(email)
+        self.check_report(result, 0, [])
 
 
 
