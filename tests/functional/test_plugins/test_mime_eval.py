@@ -198,6 +198,13 @@ dGhpcyBoYXMgc29tZSDQlNC+0LHRgNGL0Lkg0LTQtdC90YwgdGV4dCAK
 """
 
 
+MSG_CHECK_FARAWAY = """Content-Type: text/plain; charset=ja_EUC-JP
+Content-Transfer-Encoding: base64
+
+z4TOtc+Dz4Q=
+"""
+
+
 class TestFunctionalMIMEEval(tests.util.TestBase):
     """Tests for the MIMEEval plugin."""
 
@@ -1222,7 +1229,7 @@ Test Body
 
         self.check_report(result, 0, [])
 
-    @unittest.skip("Not finished - need info")
+    # @unittest.skip("Not finished - need info")
     def test_check_for_faraway_charset(self):
         """
         Test check_for_faraway_charset eval rule.
@@ -1237,10 +1244,11 @@ Test Body
             """,
             pre_config=PRE_CONFIG)
 
-        msg = """
-6L+Z5Y+q5piv5LiA5Liq566A5Y2V55qE5paH5pys5raI5oGv44CCDQrov5nph4zmt7vliqDnmoTku7vkvZXlhoXlrrnpg73nlKjkuo7mtYvor5XjgIIg5LiN5bqU6K+l5Lyk5a6z77yM
-        """
-        result = self.check_pad(msg, debug=True)
+#         msg = """
+# 6L+Z5Y+q5piv5LiA5Liq566A5Y2V55qE5paH5pys5raI5oGv44CCDQrov5nph4zmt7vliqDnmoTku7vkvZXlhoXlrrnpg73nlKjkuo7mtYvor5XjgIIg5LiN5bqU6K+l5Lyk5a6z77yM
+#         """
+
+        result = self.check_pad(MSG_CHECK_FARAWAY, debug=True)
         self.check_report(result, 1, ['CHARSET_FARAWAY'])
 
 

@@ -114,14 +114,15 @@ class MIMEEval(pad.plugins.base.BasePlugin):
             self.set_local(msg, "mime_bad_iso_charset", True)
 
     def _update_faraway_charset(self, msg, charset):
-        locales = self.ctxt.conf.get_global("ok_locales")
+        locales = self.ctxt.conf.get_global("ok_locales").split()
         if charset and re.match("[a-z]", charset, re.IGNORECASE):
             faraway_charset = self.get_local(msg, "mime_faraway_charset")
             if not faraway_charset:
                 if "all" not in locales:
-                    result = pad.locales.charset_ok_for_locales(charset,
+                    ok_for_locale = pad.locales.charset_ok_for_locales(charset,
                                                                 locales)
-                    self.set_local(msg, "mime_faraway_charset", result)
+                    self.set_local(msg, "mime_faraway_charset",
+                                   not ok_for_locale)
 
     def _update_mime_text_info(self, msg, payload, part, text):
         charset = part.get_charset()
@@ -168,14 +169,19 @@ class MIMEEval(pad.plugins.base.BasePlugin):
         self.set_local(msg, "unicode_count", 0)
         self.set_local(msg, "qp_chars", 0)
         self.set_local(msg, "qp_bytes", 0)
+        self.set_local(msg, "more_high_bits_than_low", False)
 
     def extract_metadata(self, msg, payload, text, part):
+        content = part.get_payload(decode=True)
+        low = len(content.decode("ascii", errors="ignore"))
+        high = len(content)
+        if high>low and high*2>3:
+            self.set_local(msg, "more_high_bits_than_low", True)
 
         content_type = part.get_content_type()
         charset = part.get_content_charset()
 
-        content_transfer_encoding = part.get("Content-Transfer-Encoding",
-                                             "")
+        content_transfer_encoding = part.get("Content-Transfer-Encoding", "")
         content_disposition = part.get("Content-Disposition", "")
 
         if part.get_content_type() == "multipart/alternative":
@@ -292,8 +298,12 @@ class MIMEEval(pad.plugins.base.BasePlugin):
     def check_for_faraway_charset(self, msg, target=None):
         """ Checks if the message is in another locale than the users own and a
         list of preapproved locales.
+        This check is only evaluated if a part of a message has more non-ascii
+        than ascii characters
         """
-        return bool(self.get_local(msg, "mime_faraway_charset"))
+        if self.get_local(msg, "more_high_bits_than_low"):
+            return bool(self.get_local(msg, "mime_faraway_charset"))
+        return False
 
     def check_for_uppercase(self, msg, min_percent, max_percent, target=None):
         """Checks the percent of uppercase letters is between desired limits"""
