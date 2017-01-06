@@ -106,12 +106,14 @@ class TestMIMEEval(unittest.TestCase):
 
     def test_check_for_faraway_charset(self):
         self.plugin.set_local(self.mock_msg, "mime_faraway_charset", 1)
+        self.plugin.set_local(self.mock_msg, "more_high_bits_than_low", 1)
         self.assertTrue(self.plugin.check_for_faraway_charset(
             self.mock_msg
         ))
 
     def test_check_for_faraway_charset_false(self):
         self.plugin.set_local(self.mock_msg, "mime_faraway_charset", 0)
+        self.plugin.set_local(self.mock_msg, "more_high_bits_than_low", 1)
         self.assertFalse(self.plugin.check_for_faraway_charset(
             self.mock_msg
         ))
