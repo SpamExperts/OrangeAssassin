@@ -326,7 +326,7 @@ class HeaderEval(pad.plugins.base.BasePlugin):
 
     def check_for_forged_juno_received_headers(self, msg, target=None):
         from_addr = ''.join(msg.get_all_addr_header("From"))
-        if from_addr.rsplit("@", 1)[-1] != "juno.com":
+        if not from_addr.rsplit("@", 1)[-1].endswith("juno.com"):
             return False
         if self.gated_through_received_hdr_remover(msg):
             return False
