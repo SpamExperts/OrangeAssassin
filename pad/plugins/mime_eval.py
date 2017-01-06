@@ -173,10 +173,11 @@ class MIMEEval(pad.plugins.base.BasePlugin):
 
     def extract_metadata(self, msg, payload, text, part):
         content = part.get_payload(decode=True)
-        low = len(content.decode("ascii", errors="ignore"))
-        high = len(content)
-        if high>low and high*2>3:
-            self.set_local(msg, "more_high_bits_than_low", True)
+        if content:
+            low = len(content.decode("ascii", errors="ignore"))
+            high = len(content)
+            if high>low and high*2>3:
+                self.set_local(msg, "more_high_bits_than_low", True)
 
         content_type = part.get_content_type()
         charset = part.get_content_charset()
