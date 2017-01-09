@@ -777,7 +777,9 @@ class HeaderEval(pad.plugins.base.BasePlugin):
         """Check if the domain from `From` header and `EnvelopeFrom` header
         are different."""
         from_addr = ''.join(msg.get_all_addr_header("From"))
-        envfrom = ''.join(msg.get_all_addr_header("EnvelopeFrom"))
+        envfrom = msg.sender_address
+        if not envfrom or not from_addr:
+            return False
         try:
             fromdomain = from_addr.rsplit("@", 1)[-1]
         except (IndexError, AttributeError):
@@ -789,7 +791,7 @@ class HeaderEval(pad.plugins.base.BasePlugin):
         self.ctxt.log.debug("eval: From 2nd level domain: %s, "
                             "EnvelopeFrom 2nd level domain: %s", fromdomain,
                             envfromdomain)
-        if fromdomain.lower() != envfromdomain.lower():
+        if envfromdomain.lower() not in fromdomain.lower():
             return True
         return False
 
