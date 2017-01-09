@@ -29,6 +29,8 @@ Available plugins
     pad.plugins.dump_text
     pad.plugins.dns_eval
     pad.plugins.image_info
+    pad.plugins.header_eval
+    pad.plugins.mime_eval
     pad.plugins.pdf_info
     pad.plugins.pyzor
     pad.plugins.relay_country

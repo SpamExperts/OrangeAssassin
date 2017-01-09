@@ -1,4 +1,4 @@
-""" MIME Eval Plugin replacement """
+"""Expose some eval rules that do checks on the MIME headers."""
 
 import re
 

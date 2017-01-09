@@ -49,6 +49,22 @@ Plugin :mod:`image_info`
     :undoc-members:
     :show-inheritance:
 
+Plugin :mod:`header_eval`
+-------------------------
+
+.. automodule:: pad.plugins.header_eval
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+Plugin :mod:`mime_eval`
+-----------------------
+
+.. automodule:: pad.plugins.mime_eval
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 Plugin :mod:`pdf_info`
 ----------------------
 
