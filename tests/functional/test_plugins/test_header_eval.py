@@ -3,8 +3,8 @@
 
 from __future__ import absolute_import
 
+import datetime
 import unittest
-
 import tests.util
 
 # Load plugin and report matched RULES and SCORE
@@ -1777,7 +1777,7 @@ Cc: e@example.com, f@example.com
         self.check_report(result, 0, [])
 
 
-class TestCheckEqualFromDomains(tests.util.TestBase):
+class TestFunctionalCheckEqualFromDomains(tests.util.TestBase):
 
     def test_check_equal_from_domains_true(self):
 
@@ -1842,6 +1842,184 @@ class TestCheckEqualFromDomains(tests.util.TestBase):
         self.check_report(result, 0, [])
 
 
+class TestFunctionalReceivedWithinMonths(tests.util.TestBase):
+
+
+    def test_received_within_months_no_received_header_times(self):
+
+        config = "header TEST_RULE eval:received_within_months(1, 2)"
+
+        older_date = datetime.datetime.utcnow() -  datetime.timedelta(days=35)
+        day = older_date.day
+        month = older_date.strftime("%B")[0:3]
+        year = older_date.year
+
+        email = ("Date: Tue, %s %s %s 12:45:03 +0000" % (day, month, year))
+
+        print(email)
+
+        self.setup_conf(config=config, pre_config=PRE_CONFIG)
+        result = self.check_pad(email)
+        self.check_report(result, 1, ['TEST_RULE'])
+
+
+    def test_received_within_one_month(self):
+
+        config = "header TEST_RULE eval:received_within_months(1, 2)"
+
+        older_date = datetime.datetime.utcnow() -  datetime.timedelta(days=35)
+        day = older_date.day
+        month = older_date.strftime("%B")[0:3]
+        year = older_date.year
+
+        email = ("Received: by 1.1.1.1 with SMTP id g81csp351734otg;\n"
+                 "\tTue, %s %s %s 12:45:15 -0800 (PST)\n"
+                 "Date: Tue, %s %s %s 12:45:03 +0000" %
+                 (day, month, year, day, month, year))
+
+        self.setup_conf(config=config, pre_config=PRE_CONFIG)
+        result = self.check_pad(email)
+        self.check_report(result, 1, ['TEST_RULE'])
+
+
+    def test_received_within_one_month_fail(self):
+
+        config = "header TEST_RULE eval:received_within_months(1, 2)"
+
+        older_date = datetime.datetime.utcnow() -  datetime.timedelta(days=65)
+        day = older_date.day
+        month = older_date.strftime("%B")[0:3]
+        year = older_date.year
+
+        email = ("Received: by 1.1.1.1 with SMTP id g81csp351734otg;\n"
+                 "\tTue, %s %s %s 12:45:15 -0800 (PST)\n"
+                 "Date: Tue, %s %s %s 12:45:03 +0000" %
+                 (day, month, year, day, month, year))
+
+        self.setup_conf(config=config, pre_config=PRE_CONFIG)
+        result = self.check_pad(email)
+        self.check_report(result, 0, [])
+
+    def test_received_within_less_than_one_month(self):
+
+        config = "header TEST_RULE eval:received_within_months(0, 1)"
+
+        older_date = datetime.datetime.utcnow() -  datetime.timedelta(days=25)
+        day = older_date.day
+        month = older_date.strftime("%B")[0:3]
+        year = older_date.year
+
+        email = ("Received: by 1.1.1.1 with SMTP id g81csp351734otg;\n"
+                 "\tTue, %s %s %s 12:45:15 -0800 (PST)\n"
+                 "Date: Tue, %s %s %s 12:45:03 +0000" %
+                 (day, month, year, day, month, year))
+
+        self.setup_conf(config=config, pre_config=PRE_CONFIG)
+        result = self.check_pad(email)
+        self.check_report(result, 1, ['TEST_RULE'])
+
+
+    def test_received_within_one_two_months_pass(self):
+
+        config = "header TEST_RULE eval:received_within_months(1, 2)"
+
+        older_date = datetime.datetime.utcnow() -  datetime.timedelta(days=35)
+        day = older_date.day
+        month = older_date.strftime("%B")[0:3]
+        year = older_date.year
+
+        older_date2 = datetime.datetime.utcnow() -  datetime.timedelta(days=65)
+        day2 = older_date2.day
+        month2 = older_date2.strftime("%B")[0:3]
+        year2 = older_date2.year
+
+        email = ("Received: by 1.1.1.1 with SMTP id g81csp351734otg;\n"
+                 "\tTue, %s %s %s 12:45:15 -0800 (PST)\n"
+                 "Received: by 1.1.1.1 with SMTP id g81csp351734otg;\n"
+                 "\tTue, %s %s %s 12:45:15 -0800 (PST)\n"
+                 "Date: Tue, %s %s %s 12:45:15 +0000" %
+                 (day2, month2, year2, day, month, year, day, month, year))
+
+        self.setup_conf(config=config, pre_config=PRE_CONFIG)
+        result = self.check_pad(email)
+        self.check_report(result, 1, ['TEST_RULE'])
+
+    def test_received_within_one_two_months_pass_switch_received_header_times(self):
+
+        config = "header TEST_RULE eval:received_within_months(1, 2)"
+
+        older_date = datetime.datetime.utcnow() -  datetime.timedelta(days=35)
+        day = older_date.day
+        month = older_date.strftime("%B")[0:3]
+        year = older_date.year
+
+        older_date2 = datetime.datetime.utcnow() -  datetime.timedelta(days=65)
+        day2 = older_date2.day
+        month2 = older_date2.strftime("%B")[0:3]
+        year2 = older_date2.year
+
+        email = ("Received: by 1.1.1.1 with SMTP id g81csp351734otg;\n"
+                 "\tTue, %s %s %s 12:45:15 -0800 (PST)\n"
+                 "Received: by 1.1.1.1 with SMTP id g81csp351734otg;\n"
+                 "\tTue, %s %s %s 12:45:15 -0800 (PST)\n"
+                 "Date: Tue, %s %s %s 12:45:15 +0000" %
+                 (day, month, year, day2, month2, year2, day, month, year))
+
+        self.setup_conf(config=config, pre_config=PRE_CONFIG)
+        result = self.check_pad(email)
+        self.check_report(result, 1, ['TEST_RULE'])
+
+    def test_received_within_two_three_months_fail(self):
+
+        config = "header TEST_RULE eval:received_within_months(2, 3)"
+
+        older_date = datetime.datetime.utcnow() -  datetime.timedelta(days=35)
+        day = older_date.day
+        month = older_date.strftime("%B")[0:3]
+        year = older_date.year
+
+        older_date2 = datetime.datetime.utcnow() -  datetime.timedelta(days=65)
+        day2 = older_date2.day
+        month2 = older_date2.strftime("%B")[0:3]
+        year2 = older_date2.year
+
+        email = ("Received: by 1.1.1.1 with SMTP id g81csp351734otg;\n"
+                 "\tTue, %s %s %s 12:45:15 -0800 (PST)\n"
+                 "Received: by 1.1.1.1 with SMTP id g81csp351734otg;\n"
+                 "\tTue, %s %s %s 12:45:15 -0800 (PST)\n"
+                 "Date: Tue, %s %s %s 12:45:15 +0000" %
+                 (day2, month2, year2, day, month, year, day, month, year))
+
+        self.setup_conf(config=config, pre_config=PRE_CONFIG)
+        result = self.check_pad(email)
+        self.check_report(result, 0, [])
+
+    def test_received_within_two_three_months_fail_switch_received_header_times(self):
+
+        config = "header TEST_RULE eval:received_within_months(2, 3)"
+
+        older_date = datetime.datetime.utcnow() -  datetime.timedelta(days=35)
+        day = older_date.day
+        month = older_date.strftime("%B")[0:3]
+        year = older_date.year
+
+        older_date2 = datetime.datetime.utcnow() -  datetime.timedelta(days=65)
+        day2 = older_date2.day
+        month2 = older_date2.strftime("%B")[0:3]
+        year2 = older_date2.year
+
+        email = ("Received: by 1.1.1.1 with SMTP id g81csp351734otg;\n"
+                 "\tTue, %s %s %s 12:45:15 -0800 (PST)\n"
+                 "Received: by 1.1.1.1 with SMTP id g81csp351734otg;\n"
+                 "\tTue, %s %s %s 12:45:15 -0800 (PST)\n"
+                 "Date: Tue, %s %s %s 12:45:15 +0000" %
+                 (day, month, year, day2, month2, year2, day, month, year))
+
+        self.setup_conf(config=config, pre_config=PRE_CONFIG)
+        result = self.check_pad(email)
+        self.check_report(result, 0, [])
+
+
 def suite():
     """Gather all the tests from this package in a test suite."""
     test_suite = unittest.TestSuite()
@@ -1867,6 +2045,8 @@ def suite():
     test_suite.addTest(unittest.makeSuite(TestFunctionalCheckForForgedGw05ReceivedHeaders, "test"))
     test_suite.addTest(unittest.makeSuite(TestFunctionalCheckForMatchingEnvAndHdrFrom, "test"))
     test_suite.addTest(unittest.makeSuite(TestFunctionalHeaderEvalRecipietsRules, "test"))
+    test_suite.addTest(unittest.makeSuite(TestFunctionalCheckEqualFromDomains, "test"))
+    test_suite.addTest(unittest.makeSuite(TestFunctionalReceivedWithinMonths, "test"))
     return test_suite
 
 
