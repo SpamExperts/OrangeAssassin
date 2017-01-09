@@ -2083,6 +2083,7 @@ def suite():
     test_suite.addTest(unittest.makeSuite(TestFunctionalHeaderEvalRecipietsRules, "test"))
     test_suite.addTest(unittest.makeSuite(TestFunctionalCheckEqualFromDomains, "test"))
     test_suite.addTest(unittest.makeSuite(TestFunctionalReceivedWithinMonths, "test"))
+    test_suite.addTest(unittest.makeSuite(TestFunctionalCheckForShiftedDate, "test"))
     return test_suite
 
 
