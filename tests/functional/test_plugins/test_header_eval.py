@@ -1069,6 +1069,45 @@ class TestFunctionalCheckForForgedYahooReceivedHeaders(tests.util.TestBase):
 
 class TestFunctionalCheckForForgedJunoReceivedHeaders(tests.util.TestBase):
 
+
+    def test_check_for_forged_juno_received_headers_not_juno_in_xmailer(self):
+
+        config =  "header TEST_RULE eval:check_for_forged_juno_received_headers()"
+
+        email = ("From: test@juno.com\n"
+                 "X-Originating-IP: 8.8.8.8\n"
+                 "X-Mailer: Test\n"
+                 "Received: from untd.com[5.6.7.8] by cookie.juno.com\n" )
+
+        self.setup_conf(config=config, pre_config=PRE_CONFIG)
+        result = self.check_pad(email)
+        self.check_report(result, 1, ['TEST_RULE'])
+
+    def test_check_for_forged_juno_received_headers_juno_in_xmailer(self):
+
+        config =  "header TEST_RULE eval:check_for_forged_juno_received_headers()"
+
+        email = ("From: test@juno.com\n"
+                 "X-Originating-IP: 8.8.8.8\n"
+                 "X-Mailer: Juno Test\n"
+                 "Received: from untd.com[5.6.7.8] by cookie.juno.com\n" )
+
+        self.setup_conf(config=config, pre_config=PRE_CONFIG)
+        result = self.check_pad(email)
+        self.check_report(result, 0, [])
+
+    def test_check_for_forged_juno_received_headers_x_originating_ip_and_incorrect_rcvd(self):
+
+        config =  "header TEST_RULE eval:check_for_forged_juno_received_headers()"
+
+        email = ("From: test@juno.com\n"
+                 "X-Originating-IP: 8.8.8.8\n"
+                 "Received: from example.com [5.6.7.8] by example.com\n" )
+
+        self.setup_conf(config=config, pre_config=PRE_CONFIG)
+        result = self.check_pad(email)
+        self.check_report(result, 1, ['TEST_RULE'])
+
     def test_check_for_forged_juno_received_headers_not_juno_domain_in_from(self):
 
         config = "header TEST_RULE eval:check_for_forged_juno_received_headers()"
