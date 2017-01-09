@@ -803,7 +803,7 @@ for ; Sat, 18 Jun 2016 05:00:14 GMT"""]
     def test_check_date_diff_none(self):
         self.local_data = {"date_header_time": -1}
         result = self.plugin._check_date_diff(self.mock_msg)
-        self.assertIsNone(result)
+        self.assertEqual(result, 0)
 
     def test_check_date_diff(self):
         date_header_time = datetime.datetime(2016, 10, 10, 15, 0, 0)
@@ -812,7 +812,8 @@ for ; Sat, 18 Jun 2016 05:00:14 GMT"""]
                            "received_header_times": received_header_times}
         self.plugin._check_date_diff(self.mock_msg)
         self.assertIsNotNone(self.local_data.get("date_diff"))
-        self.assertEqual(3600, self.local_data.get("date_diff"))
+        self.assertEqual(datetime.timedelta(0, 3600),
+                         self.local_data.get("date_diff"))
 
     def test_check_date_diff_many_dates(self):
         date_header_time = datetime.datetime(2016, 10, 10, 15, 0, 0)
@@ -823,7 +824,8 @@ for ; Sat, 18 Jun 2016 05:00:14 GMT"""]
                            "received_header_times": received_header_times}
         self.plugin._check_date_diff(self.mock_msg)
         self.assertIsNotNone(self.local_data.get("date_diff"))
-        self.assertEqual(3600, self.local_data.get("date_diff"))
+        self.assertEqual(datetime.timedelta(0, 3600),
+                         self.local_data.get("date_diff"))
 
     def test_check_for_shifted_date(self):
         """Date is 3 to 6 hours before Received: date"""
