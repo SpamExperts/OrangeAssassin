@@ -795,9 +795,7 @@ for ; Sat, 18 Jun 2016 05:00:14 GMT"""]
         ]
         self.mock_msg.get_decoded_header.side_effect = [received]
         self.plugin._get_received_header_times(self.mock_msg)
-        fetchmail_times = self.local_data.get("received_fetchmail_time", None)
         header_times = self.local_data.get("received_header_times", None)
-        self.assertIsNotNone(fetchmail_times)
         self.assertTrue(header_times)
 
     def test_check_date_diff_none(self):
@@ -829,7 +827,7 @@ for ; Sat, 18 Jun 2016 05:00:14 GMT"""]
 
     def test_check_for_shifted_date(self):
         """Date is 3 to 6 hours before Received: date"""
-        self.local_data = {"date_diff": -14400}
+        self.local_data = {"date_diff": datetime.timedelta(0, -14400)}
         result = self.plugin.check_for_shifted_date(self.mock_msg, min="-6",
                                                     max="-3")
         self.assertTrue(result)
@@ -976,7 +974,7 @@ class TestRecipientsRules(TestHeaderEvalBase):
                            "date_diff": date_diff}
         self.plugin._check_date_received(self.mock_msg)
         date_received = self.local_data.get("date_received")
-        self.assertEqual(datetime.datetime(2016, 11, 28, 11, 49, 35),
+        self.assertEqual(datetime.datetime(2016, 11, 28, 2, 49, 35),
                          date_received)
 
     def test_received_within_months(self):
