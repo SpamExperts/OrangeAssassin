@@ -1897,57 +1897,45 @@ class TestFunctionalCheckEqualFromDomains(tests.util.TestBase):
 
 class TestFunctionalReceivedWithinMonths(tests.util.TestBase):
 
-
     def test_received_within_months_no_received_header_times(self):
 
         config = "header TEST_RULE eval:received_within_months(1, 2)"
 
         older_date = datetime.datetime.utcnow() -  datetime.timedelta(days=35)
-        day = older_date.day
-        month = older_date.strftime("%B")[0:3]
-        year = older_date.year
+        date_str = older_date.strftime("%a, %d %b %Y %H:%M:%S")
 
-        email = ("Date: Tue, %s %s %s 12:45:03 +0000" % (day, month, year))
-
-        print(email)
+        email = ("Date: %s +0000" % (date_str))
 
         self.setup_conf(config=config, pre_config=PRE_CONFIG)
         result = self.check_pad(email)
         self.check_report(result, 1, ['TEST_RULE'])
-
 
     def test_received_within_one_month(self):
 
         config = "header TEST_RULE eval:received_within_months(1, 2)"
 
         older_date = datetime.datetime.utcnow() -  datetime.timedelta(days=35)
-        day = older_date.day
-        month = older_date.strftime("%B")[0:3]
-        year = older_date.year
+        date_str = older_date.strftime("%a, %d %b %Y %H:%M:%S")
+
 
         email = ("Received: by 1.1.1.1 with SMTP id g81csp351734otg;\n"
-                 "\tTue, %s %s %s 12:45:15 -0800 (PST)\n"
-                 "Date: Tue, %s %s %s 12:45:03 +0000" %
-                 (day, month, year, day, month, year))
+                 "\t%s +0000 (UTC)\n"
+                 "Date: %s +0000" % (date_str, date_str))
 
         self.setup_conf(config=config, pre_config=PRE_CONFIG)
         result = self.check_pad(email)
         self.check_report(result, 1, ['TEST_RULE'])
-
 
     def test_received_within_one_month_fail(self):
 
         config = "header TEST_RULE eval:received_within_months(1, 2)"
 
         older_date = datetime.datetime.utcnow() -  datetime.timedelta(days=65)
-        day = older_date.day
-        month = older_date.strftime("%B")[0:3]
-        year = older_date.year
+        date_str = older_date.strftime("%a, %d %b %Y %H:%M:%S")
 
         email = ("Received: by 1.1.1.1 with SMTP id g81csp351734otg;\n"
-                 "\tTue, %s %s %s 12:45:15 -0800 (PST)\n"
-                 "Date: Tue, %s %s %s 12:45:03 +0000" %
-                 (day, month, year, day, month, year))
+                 "\t%s +0000 (UTC)\n"
+                 "Date: %s +0000" % (date_str, date_str))
 
         self.setup_conf(config=config, pre_config=PRE_CONFIG)
         result = self.check_pad(email)
@@ -1958,40 +1946,32 @@ class TestFunctionalReceivedWithinMonths(tests.util.TestBase):
         config = "header TEST_RULE eval:received_within_months(0, 1)"
 
         older_date = datetime.datetime.utcnow() -  datetime.timedelta(days=25)
-        day = older_date.day
-        month = older_date.strftime("%B")[0:3]
-        year = older_date.year
+        date_str = older_date.strftime("%a, %d %b %Y %H:%M:%S")
 
         email = ("Received: by 1.1.1.1 with SMTP id g81csp351734otg;\n"
-                 "\tTue, %s %s %s 12:45:15 -0800 (PST)\n"
-                 "Date: Tue, %s %s %s 12:45:03 +0000" %
-                 (day, month, year, day, month, year))
+                 "\t%s +0000 (UTC)\n"
+                 "Date: %s +0000" % (date_str, date_str))
 
         self.setup_conf(config=config, pre_config=PRE_CONFIG)
         result = self.check_pad(email)
         self.check_report(result, 1, ['TEST_RULE'])
-
 
     def test_received_within_one_two_months_pass(self):
 
         config = "header TEST_RULE eval:received_within_months(1, 2)"
 
         older_date = datetime.datetime.utcnow() -  datetime.timedelta(days=35)
-        day = older_date.day
-        month = older_date.strftime("%B")[0:3]
-        year = older_date.year
+        date_str = older_date.strftime("%a, %d %b %Y %H:%M:%S")
 
         older_date2 = datetime.datetime.utcnow() -  datetime.timedelta(days=65)
-        day2 = older_date2.day
-        month2 = older_date2.strftime("%B")[0:3]
-        year2 = older_date2.year
+        date_str2 = older_date2.strftime("%a, %d %b %Y %H:%M:%S")
 
         email = ("Received: by 1.1.1.1 with SMTP id g81csp351734otg;\n"
-                 "\tTue, %s %s %s 12:45:15 -0800 (PST)\n"
+                 "\t%s -0800 (PST)\n"
                  "Received: by 1.1.1.1 with SMTP id g81csp351734otg;\n"
-                 "\tTue, %s %s %s 12:45:15 -0800 (PST)\n"
-                 "Date: Tue, %s %s %s 12:45:15 +0000" %
-                 (day2, month2, year2, day, month, year, day, month, year))
+                 "\t%s -0800 (PST)\n"
+                 "Date: %s +0000" %
+                 (date_str2, date_str, date_str))
 
         self.setup_conf(config=config, pre_config=PRE_CONFIG)
         result = self.check_pad(email)
@@ -2002,21 +1982,17 @@ class TestFunctionalReceivedWithinMonths(tests.util.TestBase):
         config = "header TEST_RULE eval:received_within_months(1, 2)"
 
         older_date = datetime.datetime.utcnow() -  datetime.timedelta(days=35)
-        day = older_date.day
-        month = older_date.strftime("%B")[0:3]
-        year = older_date.year
+        date_str = older_date.strftime("%a, %d %b %Y %H:%M:%S")
 
         older_date2 = datetime.datetime.utcnow() -  datetime.timedelta(days=65)
-        day2 = older_date2.day
-        month2 = older_date2.strftime("%B")[0:3]
-        year2 = older_date2.year
+        date_str2 = older_date2.strftime("%a, %d %b %Y %H:%M:%S")
 
         email = ("Received: by 1.1.1.1 with SMTP id g81csp351734otg;\n"
-                 "\tTue, %s %s %s 12:45:15 -0800 (PST)\n"
+                 "\t%s -0800 (PST)\n"
                  "Received: by 1.1.1.1 with SMTP id g81csp351734otg;\n"
-                 "\tTue, %s %s %s 12:45:15 -0800 (PST)\n"
-                 "Date: Tue, %s %s %s 12:45:15 +0000" %
-                 (day, month, year, day2, month2, year2, day, month, year))
+                 "\t%s -0800 (PST)\n"
+                 "Date: %s +0000" %
+                 (date_str, date_str2, date_str))
 
         self.setup_conf(config=config, pre_config=PRE_CONFIG)
         result = self.check_pad(email)
@@ -2027,21 +2003,17 @@ class TestFunctionalReceivedWithinMonths(tests.util.TestBase):
         config = "header TEST_RULE eval:received_within_months(2, 3)"
 
         older_date = datetime.datetime.utcnow() -  datetime.timedelta(days=35)
-        day = older_date.day
-        month = older_date.strftime("%B")[0:3]
-        year = older_date.year
+        date_str = older_date.strftime("%a, %d %b %Y %H:%M:%S")
 
         older_date2 = datetime.datetime.utcnow() -  datetime.timedelta(days=65)
-        day2 = older_date2.day
-        month2 = older_date2.strftime("%B")[0:3]
-        year2 = older_date2.year
+        date_str2 = older_date2.strftime("%a, %d %b %Y %H:%M:%S")
 
         email = ("Received: by 1.1.1.1 with SMTP id g81csp351734otg;\n"
-                 "\tTue, %s %s %s 12:45:15 -0800 (PST)\n"
+                 "\t%s -0800 (PST)\n"
                  "Received: by 1.1.1.1 with SMTP id g81csp351734otg;\n"
-                 "\tTue, %s %s %s 12:45:15 -0800 (PST)\n"
-                 "Date: Tue, %s %s %s 12:45:15 +0000" %
-                 (day2, month2, year2, day, month, year, day, month, year))
+                 "\t%s -0800 (PST)\n"
+                 "Date: %s +0000" %
+                 (date_str2, date_str, date_str))
 
         self.setup_conf(config=config, pre_config=PRE_CONFIG)
         result = self.check_pad(email)
@@ -2052,21 +2024,85 @@ class TestFunctionalReceivedWithinMonths(tests.util.TestBase):
         config = "header TEST_RULE eval:received_within_months(2, 3)"
 
         older_date = datetime.datetime.utcnow() -  datetime.timedelta(days=35)
-        day = older_date.day
-        month = older_date.strftime("%B")[0:3]
-        year = older_date.year
+        date_str = older_date.strftime("%a, %d %b %Y %H:%M:%S")
 
         older_date2 = datetime.datetime.utcnow() -  datetime.timedelta(days=65)
-        day2 = older_date2.day
-        month2 = older_date2.strftime("%B")[0:3]
-        year2 = older_date2.year
+        date_str2 = older_date2.strftime("%a, %d %b %Y %H:%M:%S")
 
         email = ("Received: by 1.1.1.1 with SMTP id g81csp351734otg;\n"
-                 "\tTue, %s %s %s 12:45:15 -0800 (PST)\n"
+                 "\t%s -0800 (PST)\n"
                  "Received: by 1.1.1.1 with SMTP id g81csp351734otg;\n"
-                 "\tTue, %s %s %s 12:45:15 -0800 (PST)\n"
-                 "Date: Tue, %s %s %s 12:45:15 +0000" %
-                 (day, month, year, day2, month2, year2, day, month, year))
+                 "\t%s -0800 (PST)\n"
+                 "Date: %s +0000" %
+                 (date_str, date_str2, date_str))
+
+        self.setup_conf(config=config, pre_config=PRE_CONFIG)
+        result = self.check_pad(email)
+        self.check_report(result, 0, [])
+
+
+class TestFunctionalCheckForShiftedDate(tests.util.TestBase):
+
+    def test_check_for_shifted_date_pass(self):
+
+        config = "header TEST_RULE eval:check_for_shifted_date(1, 2)"
+
+        older_date = datetime.datetime.utcnow()
+        date_str = older_date.strftime("%a, %d %b %Y %H:%M:%S")
+
+        older_date2 = datetime.datetime.utcnow() -  datetime.timedelta(hours=1)
+        date_str2 = older_date2.strftime("%a, %d %b %Y %H:%M:%S")
+
+        email = ("Received: by 1.1.1.1 with SMTP id g81csp351734otg;\n"
+                 "\t%s +0000 (UTC)\n"
+                 "Received: by 1.1.1.1 with SMTP id g81csp351734otg;\n"
+                 "\t%s +0000 (UTC)\n"
+                 "Date: %s +0000" %
+                 (date_str2, date_str, date_str))
+
+        self.setup_conf(config=config, pre_config=PRE_CONFIG)
+        result = self.check_pad(email)
+        self.check_report(result, 1, ['TEST_RULE'])
+
+
+    def test_check_for_shifted_date_fail_greater(self):
+
+        config = "header TEST_RULE eval:check_for_shifted_date(1, 2)"
+
+        older_date = datetime.datetime.utcnow()
+        date_str = older_date.strftime("%a, %d %b %Y %H:%M:%S")
+
+        older_date2 = datetime.datetime.utcnow() -  datetime.timedelta(hours=2)
+        date_str2 = older_date2.strftime("%a, %d %b %Y %H:%M:%S")
+
+        email = ("Received: by 1.1.1.1 with SMTP id g81csp351734otg;\n"
+                 "\t%s +0000 (UTC)\n"
+                 "Received: by 1.1.1.1 with SMTP id g81csp351734otg;\n"
+                 "\t%s +0000 (UTC)\n"
+                 "Date: %s +0000" %
+                 (date_str2, date_str, date_str))
+
+        self.setup_conf(config=config, pre_config=PRE_CONFIG)
+        result = self.check_pad(email)
+        self.check_report(result, 0, [])
+
+
+    def test_check_for_shifted_date_fail_lower(self):
+
+        config = "header TEST_RULE eval:check_for_shifted_date(2, 3)"
+
+        older_date = datetime.datetime.utcnow()
+        date_str = older_date.strftime("%a, %d %b %Y %H:%M:%S")
+
+        older_date2 = datetime.datetime.utcnow() -  datetime.timedelta(hours=1)
+        date_str2 = older_date2.strftime("%a, %d %b %Y %H:%M:%S")
+
+        email = ("Received: by 1.1.1.1 with SMTP id g81csp351734otg;\n"
+                 "\t%s +0000 (UTC)\n"
+                 "Received: by 1.1.1.1 with SMTP id g81csp351734otg;\n"
+                 "\t%s +0000 (UTC)\n"
+                 "Date: %s +0000" %
+                 (date_str2, date_str, date_str))
 
         self.setup_conf(config=config, pre_config=PRE_CONFIG)
         result = self.check_pad(email)
@@ -2100,6 +2136,7 @@ def suite():
     test_suite.addTest(unittest.makeSuite(TestFunctionalHeaderEvalRecipietsRules, "test"))
     test_suite.addTest(unittest.makeSuite(TestFunctionalCheckEqualFromDomains, "test"))
     test_suite.addTest(unittest.makeSuite(TestFunctionalReceivedWithinMonths, "test"))
+    test_suite.addTest(unittest.makeSuite(TestFunctionalCheckForShiftedDate, "test"))
     return test_suite
 
 
