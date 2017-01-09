@@ -8,6 +8,7 @@ Contents:
 
    intro
    configuration
+   daemon
    rules
    rule.types
    plugins
