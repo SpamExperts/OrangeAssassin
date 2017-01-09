@@ -932,17 +932,17 @@ class TestRecipientsRules(TestHeaderEvalBase):
 
     def test_check_equal_from_domain(self):
         from_addr = ["test@example.com"]
-        envfrom_addr = ["test@example.com"]
-        self.mock_msg.get_all_addr_header.side_effect = [from_addr,
-                                                         envfrom_addr]
+        envfrom_addr = "test@example.com"
+        self.mock_msg.get_all_addr_header.side_effect = [from_addr]
+        self.mock_msg.sender_address = envfrom_addr
         result = self.plugin.check_equal_from_domains(self.mock_msg)
         self.assertFalse(result)
 
     def test_check_equal_from_domain_true(self):
         from_addr = ["test@example.com"]
-        envfrom_addr = ["test@another.example.com"]
-        self.mock_msg.get_all_addr_header.side_effect = [from_addr,
-                                                         envfrom_addr]
+        envfrom_addr = "test@another.example.com"
+        self.mock_msg.get_all_addr_header.side_effect = [from_addr]
+        self.mock_msg.sender_address = envfrom_addr
         result = self.plugin.check_equal_from_domains(self.mock_msg)
         self.assertTrue(result)
 
