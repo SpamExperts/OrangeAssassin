@@ -897,6 +897,17 @@ class TestRecipientsRules(TestHeaderEvalBase):
         self.assertEqual(ratio, 0.0)
         self.assertFalse(result)
 
+    def test_similar_rcpt_diff_domains(self):
+        self.headers["To"] = [
+            "alex@example.com", "bob@example.com", "alex@example.net",
+            "david@example.com", "alex@example.org", "frank@example.com"
+        ]
+        result = self.plugin.similar_recipients(self.mock_msg,
+                                                0, 1)
+        ratio = self.local_data["tocc_similar"]
+        self.assertEqual(ratio, 0.8)
+        self.assertTrue(result)
+
     def test_similar_rcpt_no_match_dupes(self):
         self.headers["To"] = [
             "alex@example.com", "alex@example.com", "carol@example.com",

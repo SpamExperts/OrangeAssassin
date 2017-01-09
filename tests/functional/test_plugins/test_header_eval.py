@@ -1673,6 +1673,7 @@ class TestFunctionalCheckForMatchingEnvAndHdrFrom(tests.util.TestBase):
 class TestFunctionalHeaderEvalRecipietsRules(tests.util.TestBase):
       """Test cases for sorted_recipients and similar_recipients eval rules."""
 
+      # Test cases for sorted_recipients
       def test_sorted_recipients(self):
         """Test for case when rcpts are sorted sorted_recipients."""
         config = "header SORTED_RCPT eval:sorted_recipients()"
@@ -1700,7 +1701,6 @@ class TestFunctionalHeaderEvalRecipietsRules(tests.util.TestBase):
         result = self.check_pad(email)
         self.check_report(result, 1, ['SORTED_RCPT'])
 
-      @unittest.skip("The result should be 0")
       def test_sorted_recipients_case_sorted(self):
         """Test when rcpts are sorted but case involded."""
         config = "header SORTED_RCPT eval:sorted_recipients()"
@@ -1708,7 +1708,7 @@ class TestFunctionalHeaderEvalRecipietsRules(tests.util.TestBase):
 
         self.setup_conf(config=config, pre_config=PRE_CONFIG)
         result = self.check_pad(email)
-        self.check_report(result, 1, ['SORTED_RCPT'])
+        self.check_report(result, 0, [])
 
       def test_sorted_recipients_case_first(self):
         """Test for case when rcpts are sorted but using case for first."""
@@ -1719,7 +1719,6 @@ class TestFunctionalHeaderEvalRecipietsRules(tests.util.TestBase):
         result = self.check_pad(email)
         self.check_report(result, 1, ['SORTED_RCPT'])
 
-      @unittest.skip("The result should be 0")
       def test_sorted_recipients_case_second(self):
         """Test for case when rcpts are sorted but using case for second."""
         config = "header SORTED_RCPT eval:sorted_recipients()"
@@ -1727,7 +1726,7 @@ class TestFunctionalHeaderEvalRecipietsRules(tests.util.TestBase):
 
         self.setup_conf(config=config, pre_config=PRE_CONFIG)
         result = self.check_pad(email)
-        self.check_report(result, 1, ['SORTED_RCPT'])
+        self.check_report(result, 0, [])
 
       def test_sorted_recipients_multiple(self):
         """Test for case when rcpts are sorted on multiple headers."""
@@ -1775,6 +1774,60 @@ Cc: e@example.com, f@example.com
         self.setup_conf(config=config, pre_config=PRE_CONFIG)
         result = self.check_pad(email)
         self.check_report(result, 0, [])
+
+      # Test cases for similar_recipients
+      def test_similar_recipients_match(self):
+        """Test for case when similar recipietnts ratio match."""
+        config = "header SIMILAR_RCPT eval:similar_recipients(0.1,1)"
+        email = """To: <a@example.com>, <b@example.com>, <a@example.com>, 
+        <c@example.com>, <a@example.com>, <d@example.com>"""
+
+        self.setup_conf(config=config, pre_config=PRE_CONFIG)
+        result = self.check_pad(email)
+        self.check_report(result, 1.0, ['SIMILAR_RCPT'])
+
+      def test_no_similar_recipients(self):
+        """Test for case when there are no similar recipietnts."""
+        config = "header SIMILAR_RCPT eval:similar_recipients(0.1,1)"
+        email = """To: <a@example.com>, <b@example.com>, <c@example.com>, 
+        <d@example.com>, <e@example.com>"""
+
+        self.setup_conf(config=config, pre_config=PRE_CONFIG)
+        result = self.check_pad(email)
+        self.check_report(result, 0, [])
+
+      def test_similar_recipients_consecutive(self):
+        """Test for case when there are duplicate consecutive recipietnts."""
+        config = "header SIMILAR_RCPT eval:similar_recipients(0.1,1)"
+        email = """To: <a@example.com>, <a@example.com>, <c@example.com>, 
+        <d@example.com>, <e@example.com>"""
+
+        self.setup_conf(config=config, pre_config=PRE_CONFIG)
+        result = self.check_pad(email)
+        self.check_report(result, 0, [])
+
+      def test_similar_recipients_consecutive(self):
+        """Test for case when there are duplicate consecutive recipietnts."""
+        config = "header SIMILAR_RCPT eval:similar_recipients(0.1,1)"
+        email = """To: <a@example.com>, <a@example.com>, <c@example.com>, 
+        <d@example.com>, <e@example.com>"""
+
+        self.setup_conf(config=config, pre_config=PRE_CONFIG)
+        result = self.check_pad(email)
+        self.check_report(result, 0, [])
+
+      def test_similar_recipients_match_different_headers(self):
+        """Test for similar rcpts check on multiple headers."""
+        # The order of the headers: ("To", "Cc", "Bcc", "ToCc")
+        config = "header SIMILAR_RCPT eval:similar_recipients(0.1,1)"
+        email = """To: First To <a@example.com>, Second To <b@seinternal.com>
+Cc: a@example.com, d@example.com
+Bcc: a@example.com, e@example.com
+"""
+
+        self.setup_conf(config=config, pre_config=PRE_CONFIG)
+        result = self.check_pad(email)
+        self.check_report(result, 1.0, ['SIMILAR_RCPT'])
 
 
 class TestFunctionalCheckEqualFromDomains(tests.util.TestBase):
