@@ -115,9 +115,8 @@ class TestBase(unittest.TestCase):
                                 stdout=subprocess.PIPE,
                                 stderr=subprocess.PIPE,
                                 env=env)
-
         stdout, stderr = proc.communicate(message.encode("utf8"))
-
+        # print(stderr.decode("utf8"))
 
         if not debug and not expect_failure and stderr:
             self.fail(stderr)

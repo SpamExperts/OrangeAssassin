@@ -3,13 +3,14 @@
 from __future__ import absolute_import
 from __future__ import division
 
-import datetime
-import email.header
-import email.header
-import email.utils
-import itertools
 import re
 import time
+import datetime
+import itertools
+import email.utils
+import email.header
+
+from dateutil import relativedelta
 
 import pad.locales
 import pad.plugins.base
@@ -59,13 +60,6 @@ class HeaderEval(pad.plugins.base.BasePlugin):
         "util_rb_2tld": ("append_split", []),
         "util_rb_3tld": ("append_split", []),
     }
-
-    def check_start(self, msg):
-        self.set_local(msg, "date_diff", None)
-        self.set_local(msg, "date_header_time", None)
-        self.set_local(msg, "date_received", None)
-        self.set_local(msg, "received_header_times", None)
-        self.set_local(msg, "received_fetchmail_time", None)
 
     def check_for_fake_aol_relay_in_rcvd(self, msg, target=None):
         """Check for common AOL fake received header."""
@@ -475,6 +469,11 @@ class HeaderEval(pad.plugins.base.BasePlugin):
         return date_time
 
     def _get_date_header_time(self, msg):
+        try:
+            return self.get_local(msg, "date_header_time")
+        except KeyError:
+            pass
+
         date_time = None
         for header in ["Resent-Date", "Date"]:
             dates = msg.get_decoded_header(header)
@@ -486,49 +485,19 @@ class HeaderEval(pad.plugins.base.BasePlugin):
             self.set_local(msg, "date_header_time", date_time)
         else:
             self.set_local(msg, "date_header_time", -1)
+        return date_time
 
     def _get_received_header_times(self, msg):
-        self.set_local(msg, "received_header_times", list())
-        received = msg.get_decoded_header("Received")
-        if not len(received):
-            return
-        # handle fetchmail headers
-        local = []
-        from_local_re = Regex(r"\bfrom (?:localhost\s|(?:\S+ ){1,2}\S*\b127\.0\.0\.1\b)")
-        qmail_re = Regex(r"qmail \d+ invoked by uid \d+")
-        if from_local_re.search(received[0]) or qmail_re.search(received[0]):
-            local.append(received[0])
-            del received[0]
-        local_with_fetch_re = Regex(r"\bby localhost with \w+ \(fetchmail-[\d.]+")
-        if received and local_with_fetch_re.search(received[0]):
-            local.append(received[0])
-            del received[0]
-        elif local:
-            received.insert(0, local[0])
-            del local[0]
+        try:
+            return self.get_local(msg, "received_header_times")
+        except KeyError:
+            pass
 
-        fetchmail_times = []
+        received_times = []
+        self.set_local(msg, "received_header_times", received_times)
+
         date_re = Regex(r"(\s.?\d+ \S\S\S \d+ \d+:\d+:\d+ \S+)")
-        for rcvd in local:
-            try:
-                date = date_re.search(rcvd).group()
-            except TypeError:
-                date = None
-            if date:
-                self.ctxt.log.debug(
-                    "eval: trying Received fetchmail "
-                    "header date for real time: %s", date)
-                received_time = self._parse_rfc822_date(date)
-                current_time = datetime.datetime.utcnow()
-                if received_time and current_time >= received_time:
-                    self.ctxt.log.debug("eval: time_t from date=%s, rcvd=%s",
-                                           received_time, date)
-                    fetchmail_times.append(received_time)
-        if len(fetchmail_times) > 1:
-            self.set_local(msg, "received_fetchmail_time",
-                           sorted(fetchmail_times, reverse=True)[0])
-        header_times = []
-        for rcvd in received:
+        for rcvd in msg.get_decoded_header("Received"):
             try:
                 date = date_re.search(rcvd).group()
             except (AttributeError, TypeError):
@@ -536,63 +505,37 @@ class HeaderEval(pad.plugins.base.BasePlugin):
             if not date:
                 continue
             self.ctxt.log.debug("eval: trying Received header date for "
-                                   "real time: %s", date)
+                                "real time: %s", date)
             received_time = self._parse_rfc822_date(date)
             if received_time:
-                header_times.append(received_time)
-        if header_times:
-            self.set_local(msg, "received_header_times", header_times)
-        else:
-            self.ctxt.log.debug("eval: no dates found in Received headers")
+                received_times.append(received_time)
+        return received_times
 
     def _check_date_diff(self, msg):
-        self.set_local(msg, "date_diff", 0)
-        if not self.get_local(msg, "date_header_time"):
-            self._get_date_header_time(msg)
-        if self.get_local(msg, "date_header_time") == -1:
-            return
-        if not self.get_local(msg, "received_header_times"):
-            self._get_received_header_times(msg)
-        header_times = self.get_local(msg, "received_header_times")
-        if not header_times:
-            return
-        diffs = []
-        for hdr_time in header_times:
-            diff = self.get_local(msg, "date_header_time") - hdr_time
-            diff_seconds = diff.total_seconds()
-            if diff_seconds != 0:
-                diffs.append(diff_seconds)
         try:
-            self.set_local(msg, "date_diff", sorted(diffs)[0])
+            return self.get_local(msg, "date_diff")
+        except KeyError:
+            pass
+
+        self.set_local(msg, "date_diff", 0)
+
+        date_header_time = self._get_date_header_time(msg)
+        received_header_times = self._get_received_header_times(msg)
+
+        diffs = []
+        for received_header_time in received_header_times:
+            diff = abs(received_header_time - date_header_time)
+            if diff:
+                diffs.append(diff)
+
+
+        try:
+            date_diff = sorted(diffs)[0]
+            self.set_local(msg, "date_diff", date_diff)
+            return date_diff
         except IndexError:
             self.set_local(msg, "date_diff", 0)
-
-    def check_for_shifted_date(self, msg, min=None, max=None, target=None):
-        """Check if the difference between Date header and date from received
-        headers its between min,max interval
-
-        * min: minimum time express in hours
-        * max: maximum time express in hours"""
-        if min == "undef":
-            min = None
-        if max == "undef":
-            max = None
-        try:
-            if min:
-                min = int(min)
-            if max:
-                max = int(max)
-        except ValueError:
-            self.ctxt.log.warn("HeaderEval::Plugin check_for_shifted_date "
-                               "min and max should be integer values")
-            return False
-        if not self.get_local(msg, "date_diff"):
-            self._check_date_diff(msg)
-        ret_val_min = (not min or
-                       self.get_local(msg, "date_diff") >= (3600 * min))
-        ret_val_max = (not max or
-                       self.get_local(msg, "date_diff") < (3600 * max))
-        return ret_val_min and ret_val_max
+            return 0
 
     def subject_is_all_caps(self, msg, target=None):
         """Checks if the subject is all capital letters.
@@ -799,32 +742,18 @@ class HeaderEval(pad.plugins.base.BasePlugin):
         return False
 
     def _check_date_received(self, msg):
-        dates_poss = []
-        if not self.get_local(msg, "date_header_time"):
-            self._get_date_header_time(msg)
-        dates_poss.append(self.get_local(msg, "date_header_time"))
-        if not self.get_local(msg, "received_header_times"):
-            self._get_received_header_times(msg)
-        received_header_times = self.get_local(msg, "received_header_times")
         try:
-            dates_poss.append(received_header_times[0])
-        except IndexError:
+            return self.get_local(msg, "date_received")
+        except KeyError:
             pass
-        if self.get_local(msg, "received_fetchmail_time"):
-            dates_poss.append(self.get_local(msg, "received_fetchmail_time"))
-        if self.get_local(msg, "date_header_time") and received_header_times:
-            if not self.get_local(msg, "date_diff"):
-                self._check_date_diff(msg)
-            dates_poss.append(self.get_local(msg, "date_header_time") -
-                              datetime.timedelta(seconds=self.get_local(msg, "date_diff")))
-        if dates_poss:
-            no_dates_poss = len(dates_poss)
-            date_received = sorted(dates_poss, reverse=True)[int(no_dates_poss/2)]
-            self.set_local(msg, "date_received", date_received)
-            self.ctxt.log.debug("eval: date chosen from message: %s",
-                                date_received)
-        else:
-            self.ctxt.log.debug("eval: no dates found in message")
+
+        all_times = self._get_received_header_times(msg) + [
+            self._get_date_header_time(msg)
+        ]
+        median = int(len(all_times)/2)
+        date_received = sorted(all_times, reverse=True)[median]
+        self.set_local(msg, "date_received", date_received)
+        return date_received
 
     def received_within_months(self, msg, min, max, target=None):
         """Check if the date from received is in past"""
@@ -841,13 +770,41 @@ class HeaderEval(pad.plugins.base.BasePlugin):
             self.ctxt.log.warn("HeaderEval::Plugin received_within_months "
                                "min and max should be integer values")
             return False
-        if not self.get_local(msg, "date_received"):
+
+        diff = relativedelta.relativedelta(
+            datetime.datetime.utcnow(),
             self._check_date_received(msg)
-        date_received = self.get_local(msg, "date_received")
-        diff = datetime.datetime.utcnow() - date_received
-        diff = diff.total_seconds()
-        # 365.2425 * 24 * 60 * 60 = 31556952 = seconds in year (including leap)
-        if ((not min or diff >= (31556952 * (min/12))) and
-                (not max or diff < (31556952 * (max/12)))):
+        )
+
+        number_months = (diff.year or 0) * 12 + (diff.months or 0)
+
+        if ((not min or number_months >= min) and
+                (not max or number_months < max)):
+            return True
+        return False
+
+    def check_for_shifted_date(self, msg, min=None, max=None, target=None):
+        """Check if the difference between Date header and date from received
+        headers its between min,max interval
+
+        * min: minimum time express in hours
+        * max: maximum time express in hours
+        """
+        if min == "undef":
+            min = None
+        if max == "undef":
+            max = None
+        try:
+            if min:
+                min = int(min)
+            if max:
+                max = int(max)
+        except ValueError:
+            self.ctxt.log.warn("HeaderEval::Plugin check_for_shifted_date "
+                               "min and max should be integer values")
+            return False
+        diff = int(self._check_date_diff(msg).total_seconds() / 3600)
+        if ((not min or diff >= min) and
+                (not max or diff < max)):
             return True
         return False

@@ -2004,7 +2004,7 @@ class TestFunctionalReceivedWithinMonths(tests.util.TestBase):
                  (date_str2, date_str, date_str))
 
         self.setup_conf(config=config, pre_config=PRE_CONFIG)
-        result = self.check_pad(email)
+        result = self.check_pad(email, debug=True)
         self.check_report(result, 1, ['TEST_RULE'])
 
     def test_received_within_one_two_months_pass_switch_received_header_times(self):
