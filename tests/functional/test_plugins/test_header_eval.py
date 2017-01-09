@@ -602,6 +602,7 @@ class TestFunctionalCheckForForgedEudoramailReceivedHeaders(tests.util.TestBase)
         result = self.check_pad(email)
         self.check_report(result, 1, ['TEST_RULE'])
 
+
 class TestFunctionalCheckForForgedYahooReceivedHeaders(tests.util.TestBase):
 
     def test_check_for_forged_yahoo_received_headers_not_yahoo_domain_in_from(self):
@@ -1065,6 +1066,7 @@ class TestFunctionalCheckForForgedYahooReceivedHeaders(tests.util.TestBase):
         result = self.check_pad(email)
         self.check_report(result, 0, [])
 
+
 class TestFunctionalCheckForForgedJunoReceivedHeaders(tests.util.TestBase):
 
     def test_check_for_forged_juno_received_headers_not_juno_domain_in_from(self):
@@ -1131,6 +1133,7 @@ class TestFunctionalCheckForForgedJunoReceivedHeaders(tests.util.TestBase):
         self.setup_conf(config=config, pre_config=PRE_CONFIG)
         result = self.check_pad(email)
         self.check_report(result, 1, ['TEST_RULE'])
+
 
 class TestFunctionalCheckForMissingToHeader(tests.util.TestBase):
 
@@ -1773,6 +1776,70 @@ Cc: e@example.com, f@example.com
         result = self.check_pad(email)
         self.check_report(result, 0, [])
 
+
+class TestCheckEqualFromDomains(tests.util.TestBase):
+
+    def test_check_equal_from_domains_true(self):
+
+        config = "header TEST_RULE eval:check_equal_from_domains()"
+
+        email = ("Received: from example.com (example.com [1.2.3.4])\n"
+                 "\tby example.com\n"
+                 "\t(envelope-from <test@example.com>\n"
+                 "From: test@example.net")
+
+        self.setup_conf(config=config, pre_config=PRE_CONFIG)
+        result = self.check_pad(email)
+        self.check_report(result, 1, ['TEST_RULE'])
+
+    def test_check_equal_from_domains_false(self):
+
+        config = "header TEST_RULE eval:check_equal_from_domains()"
+
+        email = ("Received: from example.com (example.com [1.2.3.4])\n"
+                 "\tby example.com\n"
+                 "\t(envelope-from <test@example.com>\n"
+                 "From: test@example.com")
+
+        self.setup_conf(config=config, pre_config=PRE_CONFIG)
+        result = self.check_pad(email)
+        self.check_report(result, 0, [])
+
+    def test_check_equal_from_domains_false(self):
+
+        config = "header TEST_RULE eval:check_equal_from_domains()"
+
+        email = ("Received: from example.com (example.com [1.2.3.4])\n"
+                 "\tby example.com\n"
+                 "\t(envelope-from <test@example.com>\n"
+                 "From: test@another.example.com")
+
+        self.setup_conf(config=config, pre_config=PRE_CONFIG)
+        result = self.check_pad(email)
+        self.check_report(result, 0, [])
+
+
+    def test_check_equal_from_domains_no_envfrom(self):
+
+        config = "header TEST_RULE eval:check_equal_from_domains()"
+
+        email = ("From: test@another.example.com")
+
+        self.setup_conf(config=config, pre_config=PRE_CONFIG)
+        result = self.check_pad(email)
+        self.check_report(result, 0, [])
+
+    def test_check_equal_from_domains_no_from(self):
+
+        config = "header TEST_RULE eval:check_equal_from_domains()"
+
+        email = ("Received: from example.com (example.com [1.2.3.4])\n"
+                 "\tby example.com\n"
+                 "\t(envelope-from <test@example.com>")
+
+        self.setup_conf(config=config, pre_config=PRE_CONFIG)
+        result = self.check_pad(email)
+        self.check_report(result, 0, [])
 
 
 def suite():
