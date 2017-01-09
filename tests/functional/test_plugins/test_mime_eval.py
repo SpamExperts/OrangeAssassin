@@ -872,7 +872,7 @@ Test
 
 --sb--
 This is the epilogue.  It is also to be ignored."""
-        result = self.check_pad(MSG_PARSE, debug=True)
+        result = self.check_pad(MSG_PARSE)
         self.check_report(result, 1, ['MISSING_HB'])
 
     @unittest.skip("python3 and spamassassin don't check for this either")
@@ -919,7 +919,7 @@ This is the epilogue.  It is also to be ignored."""
             body        MISSING_H eval:check_msg_parse_flags("missing_mime_headers")
             """,
             pre_config=PRE_CONFIG)
-        result = self.check_pad(MSG_PARSE_FLAGS, debug=True)
+        result = self.check_pad(MSG_PARSE_FLAGS)
         self.check_report(result, 1.0, ["MISSING_H"])
 
     def test_check_parse_flags_truncated_headers(self):
@@ -934,7 +934,7 @@ This is the epilogue.  It is also to be ignored."""
             describe TRUNCATED_H Message headers are very long
             """,
             pre_config=PRE_CONFIG)
-        result = self.check_pad(MSG_PARSE_FLAGS, debug=True)
+        result = self.check_pad(MSG_PARSE_FLAGS)
         self.check_report(result, 1.0, ["TRUNCATED_H"])
 
     def test_check_parse_flags_mime_epilogue_exists(self):
@@ -948,7 +948,7 @@ This is the epilogue.  It is also to be ignored."""
             body MIME_EPILOGUE_EXISTS eval:check_msg_parse_flags("mime_epilogue_exists")
             """,
             pre_config=PRE_CONFIG)
-        result = self.check_pad(MSG_PARSE_FLAGS, debug=True)
+        result = self.check_pad(MSG_PARSE_FLAGS)
         self.check_report(result, 1.0, ["MIME_EPILOGUE_EXISTS"])
 
     def test_check_for_uppercase_min_limit(self):
@@ -964,7 +964,7 @@ This is the epilogue.  It is also to be ignored."""
             pre_config=PRE_CONFIG)
 
         msg = MSG_WITH_UPPERCASE % ('F' * 1, 'a' * 99, 'B' * 98)
-        result = self.check_pad(msg, debug=True)
+        result = self.check_pad(msg)
 
         self.check_report(result, 0, [])
 
@@ -981,7 +981,7 @@ This is the epilogue.  It is also to be ignored."""
             pre_config=PRE_CONFIG)
 
         msg = MSG_WITH_UPPERCASE % ('F' * 1, 'a' * 99, 'B' * 98)
-        result = self.check_pad(msg, debug=True)
+        result = self.check_pad(msg)
 
         self.check_report(result, 1, ['CHECK_UPPERCASE'])
 
@@ -998,7 +998,7 @@ This is the epilogue.  It is also to be ignored."""
             pre_config=PRE_CONFIG)
 
         msg = MSG_WITH_UPPERCASE % ('B' * 1, 'a' * 60, 'F' * 137)
-        result = self.check_pad(msg, debug=True)
+        result = self.check_pad(msg)
 
         self.check_report(result, 0, [])
 
@@ -1015,7 +1015,7 @@ This is the epilogue.  It is also to be ignored."""
             pre_config=PRE_CONFIG)
 
         msg = MSG_WITH_UPPERCASE % ('B' * 1, 'a' * 60, 'F' * 137)
-        result = self.check_pad(msg, debug=True)
+        result = self.check_pad(msg)
 
         self.check_report(result, 1, ['CHECK_UPPERCASE'])
 
@@ -1032,7 +1032,7 @@ This is the epilogue.  It is also to be ignored."""
             pre_config=PRE_CONFIG)
 
         msg = MSG_WITH_UPPERCASE % ('a' * 1, 'A' * 100, 'C' * 96)
-        result = self.check_pad(msg, debug=True)
+        result = self.check_pad(msg)
         self.check_report(result, 0, [])
 
     def test_check_for_uppercase_just_enough_characters(self):
@@ -1048,7 +1048,7 @@ This is the epilogue.  It is also to be ignored."""
             pre_config=PRE_CONFIG)
 
         msg = MSG_WITH_UPPERCASE % ('F' * 1, 'A' * 100, 'B' * 97)
-        result = self.check_pad(msg, debug=True)
+        result = self.check_pad(msg)
 
         self.check_report(result, 1, ['CHECK_UPPERCASE'])
 
@@ -1065,7 +1065,7 @@ This is the epilogue.  It is also to be ignored."""
             pre_config=PRE_CONFIG)
 
         msg = MSG_WITH_UPPERCASE % ('F' * 2, 'A' * 96, '1' * 100)
-        result = self.check_pad(msg, debug=True)
+        result = self.check_pad(msg)
 
         self.check_report(result, 1, ['CHECK_UPPERCASE'])
 
@@ -1082,7 +1082,7 @@ This is the epilogue.  It is also to be ignored."""
             pre_config=PRE_CONFIG)
 
         msg = MSG_WITH_UPPERCASE % ('F' * 2, 'A' * 96, '1' * 100)
-        result = self.check_pad(msg, debug=True)
+        result = self.check_pad(msg)
 
         self.check_report(result, 0, [])
 
@@ -1099,7 +1099,7 @@ This is the epilogue.  It is also to be ignored."""
             pre_config=PRE_CONFIG)
 
         msg = MSG_WITH_MULTIPLE_LINES % ('F' * 1, 'a' * 99, 'B' * 98, '', 'B')
-        result = self.check_pad(msg, debug=True)
+        result = self.check_pad(msg)
 
         self.check_report(result, 0, [])
 
@@ -1117,7 +1117,7 @@ This is the epilogue.  It is also to be ignored."""
 
         msg = MSG_WITH_MULTIPLE_LINES % (
             'F' * 1, 'a' * 99, 'B' * 98, '\na', 200 * 'B') 
-        result = self.check_pad(msg, debug=True)
+        result = self.check_pad(msg)
 
         self.check_report(result, 1, ['CHECK_UPPERCASE'])
 
@@ -1134,7 +1134,7 @@ This is the epilogue.  It is also to be ignored."""
             """,
             pre_config=PRE_CONFIG)
 
-        result = self.check_pad(MSG_HTML_MOSTLY, debug=True)
+        result = self.check_pad(MSG_HTML_MOSTLY)
 
         self.check_report(result, 0, [])
 
@@ -1166,7 +1166,7 @@ Content-Type: test
 
 --001a1148e51c20e31305439a7bc2--
 """
-        result = self.check_pad(msg, debug=True)
+        result = self.check_pad(msg)
 
         self.check_report(result, 1, ['CHECK_MA_NON_TEXT'])
 
@@ -1198,7 +1198,7 @@ Content-Type: application/rtf
 
 --001a1148e51c20e31305439a7bc2--
 """
-        result = self.check_pad(msg, debug=True)
+        result = self.check_pad(msg)
 
         self.check_report(result, 1, ['CHECK_MA_NON_TEXT'])
 
@@ -1225,11 +1225,10 @@ Test Body
 
 --001a1148e51c20e31305439a7bc2
 """
-        result = self.check_pad(msg, debug=True)
+        result = self.check_pad(msg)
 
         self.check_report(result, 0, [])
 
-    # @unittest.skip("Not finished - need info")
     def test_check_for_faraway_charset(self):
         """
         Test check_for_faraway_charset eval rule.
@@ -1244,12 +1243,25 @@ Test Body
             """,
             pre_config=PRE_CONFIG)
 
-#         msg = """
-# 6L+Z5Y+q5piv5LiA5Liq566A5Y2V55qE5paH5pys5raI5oGv44CCDQrov5nph4zmt7vliqDnmoTku7vkvZXlhoXlrrnpg73nlKjkuo7mtYvor5XjgIIg5LiN5bqU6K+l5Lyk5a6z77yM
-#         """
-
-        result = self.check_pad(MSG_CHECK_FARAWAY, debug=True)
+        result = self.check_pad(MSG_CHECK_FARAWAY)
         self.check_report(result, 1, ['CHARSET_FARAWAY'])
+
+    def test_check_for_faraway_charset_all(self):
+        """
+        Test check_for_faraway_charset eval rule.
+
+        Checks eval rul doesn't match when ok_locales is all.
+        """
+        self.setup_conf(
+            config="""
+            ok_locales all
+            body CHARSET_FARAWAY        eval:check_for_faraway_charset()
+            describe CHARSET_FARAWAY    Character set indicates a foreign language
+            """,
+            pre_config=PRE_CONFIG)
+
+        result = self.check_pad(MSG_CHECK_FARAWAY)
+        self.check_report(result, 0, [])
 
 
 def suite():
