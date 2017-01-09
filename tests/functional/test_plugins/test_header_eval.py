@@ -560,7 +560,6 @@ class TestFunctionalCheckForForgedEudoramailReceivedHeaders(tests.util.TestBase)
         result = self.check_pad(email)
         self.check_report(result, 0, [])
 
-
     def test_check_for_forged_eudoramail_received_headers_rcvd_from_msngroups(self):
 
         config = "header TEST_RULE eval:check_for_forged_eudoramail_received_headers()"
@@ -1069,7 +1068,6 @@ class TestFunctionalCheckForForgedYahooReceivedHeaders(tests.util.TestBase):
 
 class TestFunctionalCheckForForgedJunoReceivedHeaders(tests.util.TestBase):
 
-
     def test_check_for_forged_juno_received_headers_not_juno_in_xmailer(self):
 
         config =  "header TEST_RULE eval:check_for_forged_juno_received_headers()"
@@ -1209,7 +1207,6 @@ class TestFunctionalCheckForMissingToHeader(tests.util.TestBase):
 
 class TestFunctionalSubjectIsAllCaps(tests.util.TestBase):
 
-
     def test_subject_is_all_caps_but_single_word(self):
 
         config = "header TEST_RULE eval:subject_is_all_caps()"
@@ -1318,7 +1315,6 @@ class TestFunctionalCheckForToInSubject(tests.util.TestBase):
         self.setup_conf(config=config, pre_config=PRE_CONFIG)
         result = self.check_pad(email)
         self.check_report(result, 1, ['TEST_RULE2'])
-
 
     def test_check_for_to_in_subject_user_dont_match(self):
 
@@ -1518,7 +1514,6 @@ class TestFunctionalCheckUnresolvedTemplate(tests.util.TestBase):
 
 class TestFunctionalCheckRatwareNameId(tests.util.TestBase):
 
-
     def test_check_ratware_name_id_match(self):
 
         config = "header TEST_RULE eval:check_ratware_name_id()"
@@ -1530,9 +1525,7 @@ class TestFunctionalCheckRatwareNameId(tests.util.TestBase):
         result = self.check_pad(email)
         self.check_report(result, 1, ['TEST_RULE'])
 
-
     def test_check_ratware_name_id_dont_match(self):
-
 
         config = "header TEST_RULE eval:check_ratware_name_id()"
 
@@ -1661,7 +1654,6 @@ class TestFunctionalCheckForMatchingEnvAndHdrFrom(tests.util.TestBase):
         self.setup_conf(config=config, pre_config=PRE_CONFIG)
         result = self.check_pad(email)
         self.check_report(result, 1, ['TEST_RULE'])
-
 
     def test_check_for_matching_env_and_hdr_from_true_multi_relays(self):
 
@@ -1818,7 +1810,7 @@ Cc: e@example.com, f@example.com
       def test_similar_recipients_match(self):
         """Test for case when similar recipietnts ratio match."""
         config = "header SIMILAR_RCPT eval:similar_recipients(0.1,1)"
-        email = """To: <a@example.com>, <b@example.com>, <a@example.com>, 
+        email = """To: <a@example.com>, <b@example.com>, <a@example.com>,
         <c@example.com>, <a@example.com>, <d@example.com>"""
 
         self.setup_conf(config=config, pre_config=PRE_CONFIG)
@@ -1828,7 +1820,7 @@ Cc: e@example.com, f@example.com
       def test_no_similar_recipients(self):
         """Test for case when there are no similar recipietnts."""
         config = "header SIMILAR_RCPT eval:similar_recipients(0.1,1)"
-        email = """To: <a@example.com>, <b@example.com>, <c@example.com>, 
+        email = """To: <a@example.com>, <b@example.com>, <c@example.com>,
         <d@example.com>, <e@example.com>"""
 
         self.setup_conf(config=config, pre_config=PRE_CONFIG)
@@ -1838,7 +1830,7 @@ Cc: e@example.com, f@example.com
       def test_similar_recipients_consecutive(self):
         """Test for case when there are duplicate consecutive recipietnts."""
         config = "header SIMILAR_RCPT eval:similar_recipients(0.1,1)"
-        email = """To: <a@example.com>, <a@example.com>, <c@example.com>, 
+        email = """To: <a@example.com>, <a@example.com>, <c@example.com>,
         <d@example.com>, <e@example.com>"""
 
         self.setup_conf(config=config, pre_config=PRE_CONFIG)
@@ -1848,7 +1840,7 @@ Cc: e@example.com, f@example.com
       def test_similar_recipients_consecutive(self):
         """Test for case when there are duplicate consecutive recipietnts."""
         config = "header SIMILAR_RCPT eval:similar_recipients(0.1,1)"
-        email = """To: <a@example.com>, <a@example.com>, <c@example.com>, 
+        email = """To: <a@example.com>, <a@example.com>, <c@example.com>,
         <d@example.com>, <e@example.com>"""
 
         self.setup_conf(config=config, pre_config=PRE_CONFIG)
@@ -1909,7 +1901,6 @@ class TestFunctionalCheckEqualFromDomains(tests.util.TestBase):
         self.setup_conf(config=config, pre_config=PRE_CONFIG)
         result = self.check_pad(email)
         self.check_report(result, 0, [])
-
 
     def test_check_equal_from_domains_no_envfrom(self):
 
@@ -2103,7 +2094,6 @@ class TestFunctionalCheckForShiftedDate(tests.util.TestBase):
         result = self.check_pad(email)
         self.check_report(result, 1, ['TEST_RULE'])
 
-
     def test_check_for_shifted_date_fail_greater(self):
 
         config = "header TEST_RULE eval:check_for_shifted_date(1, 2)"
@@ -2124,7 +2114,6 @@ class TestFunctionalCheckForShiftedDate(tests.util.TestBase):
         self.setup_conf(config=config, pre_config=PRE_CONFIG)
         result = self.check_pad(email)
         self.check_report(result, 0, [])
-
 
     def test_check_for_shifted_date_fail_lower(self):
 
