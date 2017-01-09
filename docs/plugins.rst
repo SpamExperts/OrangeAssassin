@@ -46,7 +46,6 @@ Available plugins
     pad.plugins.free_mail
     pad.plugins.dkim
     pad.plugins.uri_eval
-    pad.plugins.mime_eval
     pad.plugins.relay_eval
 
 
