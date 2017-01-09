@@ -562,7 +562,10 @@ class HeaderEval(pad.plugins.base.BasePlugin):
             diff_seconds = diff.total_seconds()
             if diff_seconds != 0:
                 diffs.append(diff_seconds)
-        self.set_local(msg, "date_diff", sorted(diffs)[0])
+        try:
+            self.set_local(msg, "date_diff", sorted(diffs)[0])
+        except IndexError:
+            self.set_local(msg, "date_diff", 0)
 
     def check_for_shifted_date(self, msg, min=None, max=None, target=None):
         """Check if the difference between Date header and date from received
@@ -803,7 +806,10 @@ class HeaderEval(pad.plugins.base.BasePlugin):
         if not self.get_local(msg, "received_header_times"):
             self._get_received_header_times(msg)
         received_header_times = self.get_local(msg, "received_header_times")
-        dates_poss.append(received_header_times[0])
+        try:
+            dates_poss.append(received_header_times[0])
+        except IndexError:
+            pass
         if self.get_local(msg, "received_fetchmail_time"):
             dates_poss.append(self.get_local(msg, "received_fetchmail_time"))
         if self.get_local(msg, "date_header_time") and received_header_times:
