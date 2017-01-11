@@ -6,7 +6,7 @@ raven==5.32.0
 pyzor==1.0.0
 Pillow==4.0.0
 pygeoip==0.3.2
-langdetect==1.0.6
+langdetect==1.0.7
 PyPDF2==1.26.0
 PyMySQL==0.7.9
 mysqlclient==1.3.9
