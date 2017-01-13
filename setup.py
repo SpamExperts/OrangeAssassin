@@ -18,7 +18,7 @@ elif sys.version_info.major == 2:
         requirements.extend(py2.readlines())
 
 with open("requirements/tests.txt") as test:
-test_requirements = test.readlines()
+    test_requirements = test.readlines()
 
 distutils.core.setup(
     name='SpamPAD',
