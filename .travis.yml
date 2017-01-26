@@ -12,15 +12,8 @@ python:
 - pypy
 - pypy3
 install:
-- pip install -r requirements/base.txt;
 - if [[ $USE_SQLALCHEMY == false ]]; then pip install pymysql; fi
 - if [[ $USE_SQLALCHEMY == true ]]; then pip install sqlalchemy; fi
-- if [[ $TRAVIS_PYTHON_VERSION == 2.* ]]; then pip install -r requirements/python2.txt; fi
-- if [[ $TRAVIS_PYTHON_VERSION == 3.* ]]; then pip install -r requirements/python3.txt; fi
-- if [[ $TRAVIS_PYTHON_VERSION == pypy ]]; then pip install -r requirements/pypy2.txt; fi
-- if [[ $TRAVIS_PYTHON_VERSION == 3.2 ]]; then pip install -r requirements/pypy3-build-requirements.txt;pip install -r requirements/pypy3.txt; fi
-- if [[ $TRAVIS_PYTHON_VERSION == pypy3 ]]; then pip install -r requirements/pypy3-build-requirements.txt;pip install -r requirements/pypy3.txt; fi
-- pip install -r requirements/tests.txt
 - python setup.py install
 - wget http://geolite.maxmind.com/download/geoip/database/GeoLiteCountry/GeoIP.dat.gz
 - gunzip GeoIP.dat.gz
