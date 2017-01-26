@@ -9,6 +9,7 @@ from collections import defaultdict
 import dkim
 
 import pad.plugins.base
+from pad.regex import Regex
 
 FROM_HEADERS = ('From', "Envelope-Sender", 'Resent-From', 'X-Envelope-From',
                 'EnvelopeFrom')
@@ -132,7 +133,7 @@ class DKIMPlugin(pad.plugins.base.BasePlugin):
                 return True
             try:
                 for key in parsed_adsp_override.keys():
-                    if re.search(key, author) and parsed_adsp_override[key]:
+                    if Regex(key).search(author) and parsed_adsp_override[key]:
                         if self.adsp_options[adsp_char] == \
                                 parsed_adsp_override[key].lower():
                             self.match_adsp = 1
@@ -225,7 +226,7 @@ class DKIMPlugin(pad.plugins.base.BasePlugin):
     def _get_authors(self, msg):
         self.author_addresses = msg.get_addr_header("From")
         for header in self.author_addresses:
-            match_domain = re.search("@([^@]+?)[ \t]*$", header)
+            match_domain = Regex("@([^@]+?)[ \t]*$").search(header)
             if match_domain:
                 domain = match_domain.group(1)
                 self.author_domains.append(domain.encode())

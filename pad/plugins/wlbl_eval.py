@@ -7,6 +7,7 @@ from collections import defaultdict
 import ipaddress
 
 import pad.plugins.base
+from pad.regex import Regex
 from pad.networks import _format_network_str
 
 
@@ -203,7 +204,7 @@ class WLBLEvalPlugin(pad.plugins.base.BasePlugin):
         param = "from_in_whitelist"
         for address in addresses:
             for regex in self[list_name]:
-                if re.search(regex, address):
+                if Regex(regex).search(address):
                     self.set_local(msg, param, 1)
                     return True
             wh = self.check_whitelist_rcvd(msg, "parsed_whitelist_from_rcvd",
@@ -220,7 +221,7 @@ class WLBLEvalPlugin(pad.plugins.base.BasePlugin):
         """
         for address in addresses:
             for regex in self[list_name]:
-                if re.search(regex, address):
+                if Regex(regex).search(address):
                     return True
         return False
 
@@ -434,7 +435,7 @@ class WLBLEvalPlugin(pad.plugins.base.BasePlugin):
         for white_addr in self[list_name]:
             regexp = white_addr.replace("*", ".*")
             for domain in self[list_name][white_addr]:
-                if re.search(regexp, address):
+                if Regex(regexp).search(address):
                     match = self.check_rcvd(domain, relays)
                     if match == 1:
                         return 1
@@ -468,7 +469,7 @@ class WLBLEvalPlugin(pad.plugins.base.BasePlugin):
         if found_forged:
             wlist = self['parsed_whitelist_allow_relays']
             for addr in wlist:
-                if re.search(addr, address):
+                if Regex(addr).search(address):
                     found_forged = 0
                     break
         return found_forged

@@ -13,6 +13,7 @@ import email.utils
 from email.mime import multipart, text, base
 
 import pad.plugins.base
+from pad.regex import Regex
 
 
 class SpamCopPlugin(pad.plugins.base.BasePlugin):
@@ -62,7 +63,7 @@ class SpamCopPlugin(pad.plugins.base.BasePlugin):
         :param message:
         """
         try:
-            regex = re.search(".*@.*", receiver)
+            regex = Regex(".*@.*").search(receiver)
             domain = regex.group().split('@')[1]
             # return value like '0 mail.domain.com.'
             mx_domain = self.ctxt.dns.query(domain, 'MX')[0].to_text()
