@@ -3,19 +3,27 @@
 from __future__ import absolute_import
 
 import sys
+import platform
 
 import pad
 import distutils.core
 
-# TODO: adjust this for CPython/PyPy
 with open("requirements/base.txt") as base:
     requirements = base.readlines()
-if sys.version_info.major == 3:
-    with open("requirements/python3.txt") as py3:
-        requirements.extend(py3.readlines())
-elif sys.version_info.major == 2:
-    with open("requirements/python2.txt") as py2:
-        requirements.extend(py2.readlines())
+if "pypy" in platform.python_implementation().lower():
+    if sys.version_info.major == 3:
+        with open("requirements/pypy3.txt") as py3:
+            requirements.extend(py3.readlines())
+    elif sys.version_info.major == 2:
+        with open("requirements/pypy2.txt") as py2:
+            requirements.extend(py2.readlines())
+else:
+    if sys.version_info.major == 3:
+        with open("requirements/python3.txt") as py3:
+            requirements.extend(py3.readlines())
+    elif sys.version_info.major == 2:
+        with open("requirements/python2.txt") as py2:
+            requirements.extend(py2.readlines())
 
 with open("requirements/tests.txt") as test:
     test_requirements = test.readlines()
