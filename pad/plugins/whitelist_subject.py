@@ -27,7 +27,7 @@ class WhiteListSubjectPlugin(pad.plugins.base.BasePlugin):
         # Need to check if the option is a valid regular expression.
         if key in self.options:
             try:
-                Regex(value.strip())
+                Regex(value.strip()).compile()
             except re.error:
                 return
             self.set_append_option(key, value)

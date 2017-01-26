@@ -247,7 +247,7 @@ class FreeMail(pad.plugins.base.BasePlugin):
             return False
         if regex:
             try:
-                check_re = Regex(regex)
+                check_re = Regex(regex).compile()
             except re.error:
                 self.ctxt.log.warn("FreeMail::Plugin check_freemail_header"
                                    " regex error")
@@ -300,7 +300,7 @@ class FreeMail(pad.plugins.base.BasePlugin):
             return False
         if regex:
             try:
-                check_re = Regex(regex)
+                check_re = Regex(regex).compile()
             except re.error:
                 self.ctxt.log.warn("FreeMail::Plugin check_freemail_from"
                                    " regex error")
