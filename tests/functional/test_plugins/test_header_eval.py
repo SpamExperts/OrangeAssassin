@@ -5,6 +5,7 @@ from __future__ import absolute_import
 
 import datetime
 import unittest
+
 import tests.util
 
 # Load plugin and report matched RULES and SCORE
@@ -2032,10 +2033,10 @@ class TestFunctionalReceivedWithinMonths(tests.util.TestBase):
 
         config = "header TEST_RULE eval:received_within_months(2, 3)"
 
-        older_date = datetime.datetime.utcnow() -  datetime.timedelta(days=35)
+        older_date = datetime.datetime.utcnow() - datetime.timedelta(days=35)
         date_str = older_date.strftime("%a, %d %b %Y %H:%M:%S")
 
-        older_date2 = datetime.datetime.utcnow() -  datetime.timedelta(days=65)
+        older_date2 = datetime.datetime.utcnow() - datetime.timedelta(days=65)
         date_str2 = older_date2.strftime("%a, %d %b %Y %H:%M:%S")
 
         email = ("Received: by 1.1.1.1 with SMTP id g81csp351734otg;\n"
@@ -2053,10 +2054,10 @@ class TestFunctionalReceivedWithinMonths(tests.util.TestBase):
 
         config = "header TEST_RULE eval:received_within_months(2, 3)"
 
-        older_date = datetime.datetime.utcnow() -  datetime.timedelta(days=35)
+        older_date = datetime.datetime.utcnow() - datetime.timedelta(days=35)
         date_str = older_date.strftime("%a, %d %b %Y %H:%M:%S")
 
-        older_date2 = datetime.datetime.utcnow() -  datetime.timedelta(days=65)
+        older_date2 = datetime.datetime.utcnow() - datetime.timedelta(days=65)
         date_str2 = older_date2.strftime("%a, %d %b %Y %H:%M:%S")
 
         email = ("Received: by 1.1.1.1 with SMTP id g81csp351734otg;\n"
