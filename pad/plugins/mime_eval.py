@@ -5,6 +5,8 @@ import re
 import pad.locales
 import pad.message
 import pad.plugins.base
+from pad.regex import Regex
+
 
 MAX_HEADER_KEY = 256
 MAX_HEADER_VALUE = 8192
@@ -69,10 +71,8 @@ class MIMEEval(pad.plugins.base.BasePlugin):
         qp_count = self.get_local(msg, "mime_qp_count")
         qp_bytes = self.get_local(msg, "qp_bytes")
         qp_chars = self.get_local(msg, "qp_chars")
-        quoted_printables = re.search(
-            r"=(?:09|3[0-9ABCEF]|[2456][0-9A-F]|7[0-9A-E])",
-            part.get_payload()
-        )
+        quoted_printables = Regex(r"=(?:09|3[0-9ABCEF]|[2456][0-9A-F]|7["
+                                  r"0-9A-E])").search(part.get_payload())
         qp_bytes += len(part.get_payload())
         self.set_local(msg, "qp_bytes", qp_bytes)
         if quoted_printables:
@@ -92,10 +92,10 @@ class MIMEEval(pad.plugins.base.BasePlugin):
                                   content_transfer_encoding,
                                   content_disposition, charset):
 
-        text_charset_re = re.compile(r"(us-ascii|ansi_x3\.4-1968|iso-ir-6|"
-                                     r"ansi_x3\.4-1986|iso_646\.irv:1991|"
-                                     r"ascii|iso646-us|us|ibm367|cp367|"
-                                     r"csascii)")
+        text_charset_re = Regex(r"(us-ascii|ansi_x3\.4-1968|iso-ir-6|"
+                                r"ansi_x3\.4-1986|iso_646\.irv:1991|"
+                                r"ascii|iso646-us|us|ibm367|cp367|"
+                                r"csascii)")
 
         charset_check = not charset or text_charset_re.search(charset)
         cdisposition_check = not(
@@ -108,8 +108,8 @@ class MIMEEval(pad.plugins.base.BasePlugin):
             self.set_local(msg, "mime_base64_encoded_text", True)
 
     def _update_mime_bad_iso_charset(self, msg, charset):
-        is_iso_re = re.compile(r"iso-.*-.*\b")
-        good_iso_re = re.compile(r"iso-(?:8859-\d{1,2}|2022-(?:jp|kr))\b")
+        is_iso_re = Regex(r"iso-.*-.*\b")
+        good_iso_re = Regex(r"iso-(?:8859-\d{1,2}|2022-(?:jp|kr))\b")
         if is_iso_re.search(charset) and not good_iso_re.search(charset):
             self.set_local(msg, "mime_bad_iso_charset", True)
 
@@ -135,7 +135,7 @@ class MIMEEval(pad.plugins.base.BasePlugin):
             ascii_count = self.get_local(msg, "ascii_count")
             ascii_count += len(text)
             self.set_local(msg, "ascii_count", ascii_count)
-            unicode_chars = re.search(r"(&\#x[0-9A-F]{4};)", text, re.X)
+            unicode_chars = Regex(r"(&\#x[0-9A-F]{4};)", re.X).search(text)
             unicode_count = 0
             if unicode_chars:
                 unicode_count = self.get_local(msg, "unicode_count")

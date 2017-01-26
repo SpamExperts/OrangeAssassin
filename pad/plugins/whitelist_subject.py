@@ -4,8 +4,8 @@ from __future__ import absolute_import
 
 import re
 
-import pad.regex
 import pad.plugins.base
+from pad.regex import Regex
 
 
 class WhiteListSubjectPlugin(pad.plugins.base.BasePlugin):
@@ -27,7 +27,7 @@ class WhiteListSubjectPlugin(pad.plugins.base.BasePlugin):
         # Need to check if the option is a valid regular expression.
         if key in self.options:
             try:
-                re.compile(value.strip())
+                Regex(value.strip())
             except re.error:
                 return
             self.set_append_option(key, value)

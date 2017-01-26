@@ -57,7 +57,7 @@ class FreeMail(pad.plugins.base.BasePlugin):
     def check_start(self, msg):
         """Verify that the domains are valid and separate wildcard
         domains from the rest."""
-        domain_re = re.compile(r'^[a-z0-9.*?-]+$')
+        domain_re = Regex(r'^[a-z0-9.*?-]+$')
         freemail_domains = self.get_global('freemail_domains')
         freemail_temp_wc = []
         for domain in freemail_domains[:]:
@@ -247,7 +247,7 @@ class FreeMail(pad.plugins.base.BasePlugin):
             return False
         if regex:
             try:
-                check_re = re.compile(regex)
+                check_re = Regex(regex)
             except re.error:
                 self.ctxt.log.warn("FreeMail::Plugin check_freemail_header"
                                    " regex error")
@@ -300,7 +300,7 @@ class FreeMail(pad.plugins.base.BasePlugin):
             return False
         if regex:
             try:
-                check_re = re.compile(regex)
+                check_re = Regex(regex)
             except re.error:
                 self.ctxt.log.warn("FreeMail::Plugin check_freemail_from"
                                    " regex error")

@@ -208,8 +208,9 @@ class HeaderEval(pad.plugins.base.BasePlugin):
         self.hotmail_addr_but_no_hotmail_received = 0
         self.hotmail_addr_with_forged_hotmail_received = 0
         rcvd = msg.msg.get("Received")
-        if re.search(r"from mail pickup service by hotmail"
-                     r"\.com with Microsoft SMTPSVC;", rcvd):
+        pickup_service_regex = Regex(r"from mail pickup service by hotmail"
+                                     r"\.com with Microsoft SMTPSVC;")
+        if pickup_service_regex.search(rcvd):
             return False
         if self.check_for_msn_groups_headers(msg):
             return False
@@ -228,13 +229,14 @@ class HeaderEval(pad.plugins.base.BasePlugin):
         if self.gated_through_received_hdr_remover(msg):
             return False
 
-        if re.search(r"(?:from |HELO |helo=)\S*hotmail\.com\b", rcvd):
+        helo_hotmail_regex = Regex(r"(?:from |HELO |helo=)\S*hotmail\.com\b")
+        if helo_hotmail_regex.search(rcvd):
             self.hotmail_addr_with_forged_hotmail_received = 1
         else:
             from_address = msg.msg.get("From")
             if not from_address:
                 from_address = ""
-            if not re.search(r"\bhotmail\.com$", from_address):
+            if "hotmail.com" not in from_address:
                 return False
             self.hotmail_addr_but_no_hotmail_received = 1
 
@@ -571,8 +573,8 @@ class HeaderEval(pad.plugins.base.BasePlugin):
         subject = msg.msg.get('Subject', "")
         for to in full_to:
             if test == "address":
-                my_regex = r".*" + re.escape(to) + r".*"
-                if re.search(my_regex, subject, re.IGNORECASE):
+                subject_regex = Regex(r".*" + re.escape(to) + r".*", re.I)
+                if subject_regex.search(subject):
                     return True
             elif test == "user":
                 regex = re.match("(\S+)@.*", to)
@@ -593,8 +595,9 @@ class HeaderEval(pad.plugins.base.BasePlugin):
 
     def check_outlook_message_id(self, msg, target=None):
         message_id = msg.msg.get("Message-ID")
-        msg_regex = r"^<[0-9a-f]{4}([0-9a-f]{8})\$[0-9a-f]{8}\$[0-9a-f]{8}\@"
-        regex = re.search(msg_regex, message_id)
+        msg_regex = Regex(r"^<[0-9a-f]{4}([0-9a-f]{8})\$[0-9a-f]{8}\$["
+                          r"0-9a-f]{8}\@")
+        regex = msg_regex.search(message_id)
         if not regex:
             return False
         timetocken = int(regex.group(1), 16)
@@ -607,7 +610,8 @@ class HeaderEval(pad.plugins.base.BasePlugin):
         if abs(timetocken - expected) < 250:
             return False
         received = msg.msg.get("Received")
-        regex = re.search(r"(\s.?\d+ \S\S\S \d+ \d+:\d+:\d+ \S+).*?$", received)
+        received_regex = Regex(r"(\s.?\d+ \S\S\S \d+ \d+:\d+:\d+ \S+).*?$")
+        regex = received_regex.search(received)
         received_date = 0
         if regex:
             received_date = time.mktime(email.utils.parsedate(regex.group()))
@@ -617,15 +621,15 @@ class HeaderEval(pad.plugins.base.BasePlugin):
     def check_messageid_not_usable(self, msg, target=None):
         list_unsubscribe = msg.msg.get("List-Unsubscribe")
         if list_unsubscribe:
-            if re.search(r"<mailto:(?:leave-\S+|\S+-unsubscribe)\@\S+>$",
-                         list_unsubscribe):
+            if Regex(r"<mailto:(?:leave-\S+|\S+-unsubscribe)\@\S+>$").search(
+                    list_unsubscribe):
                 return True
         if self.gated_through_received_hdr_remover(msg):
             return True
         received = msg.msg.get("Received")
-        if re.search(r"/CWT/DCE\)", received):
+        if Regex(r"/CWT/DCE\)").search(received):
             return True
-        if re.search(r"iPlanet Messaging Server", received):
+        if Regex(r"iPlanet Messaging Server").search(received):
             return True
         return False
 
@@ -645,10 +649,10 @@ class HeaderEval(pad.plugins.base.BasePlugin):
         message = msg.raw_msg
         headers = message.split("\n")
         for header in headers:
-            if re.search(r"%[A-Z][A-Z_-]", header) and not \
-                    re.search(r"^(?:x-vms-to|x-uidl|x-face|to|cc|from|subject|"
-                              r"references|in-reply-to|(?:x-|resent-|"
-                              r"x-original-)?message-id):", header.lower()):
+            if Regex(r"%[A-Z][A-Z_-]").search(header) and not \
+                    Regex(r"^(?:x-vms-to|x-uidl|x-face|to|cc|from|subject|"
+                          r"references|in-reply-to|(?:x-|resent-|"
+                          r"x-original-)?message-id):").search(header.lower()):
                 return True
         return False
 
@@ -658,9 +662,10 @@ class HeaderEval(pad.plugins.base.BasePlugin):
         from_header = msg.msg.get("From")
         if not message_id and not from_header:
             return False
-        regex = re.search(r"<[A-Z]{28}\.([^>]+?)>", message_id)
+        regex = Regex(r"<[A-Z]{28}\.([^>]+?)>").search(message_id)
         if regex:
-            if re.search(r"\"[^\"]+\"\s*<" + regex.group(1) + ">", from_header):
+            if Regex(r"\"[^\"]+\"\s*<" + regex.group(1) + ">").search(
+                    from_header):
                 return True
         return False
 
@@ -675,7 +680,7 @@ class HeaderEval(pad.plugins.base.BasePlugin):
 
     def is_domain_valid(self, domain):
         domain = domain.lower()
-        if re.search(r"\s", domain):
+        if " " in domain:
             return False
         parts = domain.split(".")
         if len(parts) <= 1:
@@ -690,15 +695,15 @@ class HeaderEval(pad.plugins.base.BasePlugin):
         envelope_from = msg.sender_address
         if not to_header or not envelope_from:
             return False
-        if re.search(r"^SRS\d=", envelope_from):
+        if Regex(r"^SRS\d=").search(envelope_from):
             return False
-        regex = re.search(r"^([^@]+)@(.+)$", to_header)
+        regex = Regex(r"^([^@]+)@(.+)$").search(to_header)
         if regex:
             user = regex.group(1)
             dom = regex.group(2)
             if not self.is_domain_valid(dom):
                 return False
-            if re.search(r"\b" + dom + "." + user + "@", envelope_from):
+            if Regex(r"\b" + dom + "." + user + "@").search(envelope_from):
                 return True
         return False
 

@@ -6,6 +6,7 @@ import re
 
 import pad.errors
 import pad.rules.base
+from pad.regex import Regex
 
 # Syntax differences between Perl and Python.
 CONVERT = (
@@ -17,7 +18,7 @@ CONVERT = (
 # Simple protection against recursion, or infinite loops with the meta rules.
 MAX_RECURSION = 10
 
-_SUBRULE_P = re.compile(r"([_a-zA-Z]\w*)(?=\W|$)")
+_SUBRULE_P = Regex(r"([_a-zA-Z]\w*)(?=\W|$)")
 
 
 class MetaRule(pad.rules.base.BaseRule):
