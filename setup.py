@@ -12,6 +12,8 @@ with open("requirements/base.txt") as base:
     requirements = base.readlines()
 if "pypy" in platform.python_implementation().lower():
     if sys.version_info.major == 3:
+        with open("requirements/pypy3-build-requirements.txt") as py3build:
+            requirements.extend(py3build.readlines())
         with open("requirements/pypy3.txt") as py3:
             requirements.extend(py3.readlines())
     elif sys.version_info.major == 2:
@@ -21,6 +23,11 @@ else:
     if sys.version_info.major == 3:
         with open("requirements/python3.txt") as py3:
             requirements.extend(py3.readlines())
+        if sys.version_info.minor == 2:
+            with open("requirements/pypy3-build-requirements.txt") as py3build:
+                requirements.extend(py3build.readlines())
+            with open("requirements/pypy3.txt") as py3:
+                requirements.extend(py3.readlines())
     elif sys.version_info.major == 2:
         with open("requirements/python2.txt") as py2:
             requirements.extend(py2.readlines())
