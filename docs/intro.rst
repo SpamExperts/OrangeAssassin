@@ -2,7 +2,7 @@
 Introduction
 ************
 
-SpamPAD is a open-source drop-in replacement for SpamAssassin.
+SpamPAD is an open-source drop-in replacement for SpamAssassin.
 
 Compatibility
 =============
