@@ -131,7 +131,7 @@ check is performed. For a header like::
 
 The check will be performed on `chirila@example.com`
 
-* The **NAME** is similar to the addr modifier, but rather then checking the
+* The **NAME** is similar to the addr modifier, but rather than checking the
   email address, the name of the user will be used. Example::
 
     header      EXAMPLE_COM_SENDER   From:name =~ /Alex/
