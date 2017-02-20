@@ -1075,44 +1075,6 @@ class BayesPlugin(pad.plugins.base.BasePlugin):
         # If our caller won't untie the db, we need to do it.
         if not caller_untie:
             self.store.untie_db()
-        
-        # XXX Finish this    
-        permsgstatus.set_tag(u"BAYESTCHAMMY",
-                        ($tinfo_hammy ? scalar @{$tinfo_hammy} : 0))
-        permsgstatus.set_tag(u"BAYESTCSPAMMY",
-                        ($tinfo_spammy ? scalar @{$tinfo_spammy} : 0))
-        permsgstatus.set_tag(u"BAYESTCLEARNED", tcount_learned)
-        permsgstatus.set_tag(u"BAYESTC", tcount_total)
-
-        permsgstatus.set_tag(u"HAMMYTOKENS", sub {
-              my $pms = shift;
-              $self->bayes_report_make_list
-                ($pms, $pms->{bayes_token_info_hammy}, shift);
-            })
-
-        permsgstatus.set_tag(u"SPAMMYTOKENS", sub {
-              my $pms = shift;
-              $self->bayes_report_make_list
-                ($pms, $pms->{bayes_token_info_spammy}, shift);
-            })
-
-        permsgstatus.set_tag(u"TOKENSUMMARY", sub {
-              my $pms = shift;
-              if ( defined $pms->{tag_data}{BAYESTC} )
-                {
-                  my $tcount_neutral = $pms->{tag_data}{BAYESTCLEARNED}
-                                     - $pms->{tag_data}{BAYESTCSPAMMY}
-                                     - $pms->{tag_data}{BAYESTCHAMMY};
-                  my $tcount_new = $pms->{tag_data}{BAYESTC}
-                                 - $pms->{tag_data}{BAYESTCLEARNED};
-                  "Tokens: new, $tcount_new; "
-                    ."hammy, $pms->{tag_data}{BAYESTCHAMMY}; "
-                    ."neutral, $tcount_neutral; "
-                    ."spammy, $pms->{tag_data}{BAYESTCSPAMMY}."
-                } else {
-                  "Bayes not run.";
-                }
-            });
         return score
 
     def scan(self, permsgstatus, msg):
