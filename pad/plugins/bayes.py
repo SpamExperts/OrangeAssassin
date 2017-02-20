@@ -430,13 +430,28 @@ class Store(object):
     def __init__(self, session):
         self.session = session
         
-    def untie_db():
+    def untie_db(self):
         pass
 
-    def tie_db_readonly():
+    def tie_db_readonly(self):
         pass
         
-    def tie_db_writeable():
+    def tie_db_writeable(self):
+        pass
+
+    def seen_get(self, msg):
+        pass
+
+    def seen_put(self, msgid, value):
+        pass
+        
+    def cleanup(self):
+        pass
+
+    def nspam_nham_change(self, spam, ham):
+        pass
+        
+    def multi_tok_count_change(self, spam, ham, tokens, msgatime):
         pass
 
 
@@ -451,6 +466,9 @@ class BayesPlugin(pad.plugins.base.BasePlugin):
     def __init__(self, *args, **kwargs):
         super(BayesPlugin, self).__init__(*args, **kwargs)
         self.store = Store(self.get_session())
+        # XXX Should these be exposed somewhere?
+        self.learn_caller_will_untie = False
+        self.learn_no_relearn = False
     
     def finish(self):
         if self.store:
@@ -498,16 +516,21 @@ class BayesPlugin(pad.plugins.base.BasePlugin):
     def plugin_report(self, msg):
         """Train the message as spam."""
         super(BayesPlugin, self).plugin_report(msg)
-        self.learn_message(msg, self.get_msgid(msg), True)
+        self.learn_message(msg, True)
         
-    def learn_message(self, msg, msgid, isspam):
+    def plugin_revoke(self, msg):
+        """Train the message as ham."""
+        super(BayesPlugin, self).plugin_revoke(msg)
+        self.learn_message(msg, False)
+
+    def learn_message(self, msg, isspam, msgid=None):
         if not self["use_bayes"]:
             return
         msgdata = self.get_body_from_msg(msg)
         # XXX In SA, there is a time limit set here.
         if self.store.tie_db_writable():
             ret = self._learn_trapped(isspam, msg, msgdata, msgid)
-            if not self.main.learn_caller_will_untie:
+            if not self.learn_caller_will_untie:
                 self.store.untie_db()
             return ret
         return None
@@ -526,18 +549,18 @@ class BayesPlugin(pad.plugins.base.BasePlugin):
                 # Bug 3704: If the message was already learned, don't try learning it again.
                 # this prevents, for instance, manually learning as spam, then autolearning
                 # as ham, or visa versa.
-                if self.main.learn_no_relearn:
+                if self.learn_no_relearn:
                     self.ctxt.log.debug("bayes: %s already learnt as opposite, not re-learning", msgid)
                     return False
             self.ctxt.log.debug("bayes: %s already learnt as opposite, forgetting first", msgid)
             # Kluge so that forget() won't untie the db on us ...
-            orig = self.main.learn_caller_will_untie
+            orig = self.learn_caller_will_untie
             try:
-                self.main.learn_caller_will_untie = True
-                fatal = self.main.bayes_scanner.forget(msg)
+                self.learn_caller_will_untie = True
+                fatal = self.forget_message(msg, msgdata, msgid)
             finally:
                 # Reset the value post-forget() ...
-                self.main.learn_caller_will_untie = org
+                self.learn_caller_will_untie = orig
             
             # Forget() gave us a fatal error, so propagate that up.
             if fatal is None:
@@ -545,6 +568,7 @@ class BayesPlugin(pad.plugins.base.BasePlugin):
                 return
 
         # Now that we're sure we haven't seen this message before ...
+        # TODO: Find the implementation of this.
         msgatime = msg.receive_date()
         # If the message atime comes back as being more than 1 day in the
         # future, something's messed up and we should revert to current time as
@@ -562,23 +586,16 @@ class BayesPlugin(pad.plugins.base.BasePlugin):
         self.store.seen_put(msgid, "s" if isspam else "h")
         self.store.cleanup()
         
-        self.main.call_plugins("bayes_learn", toksref=tokens, isspam=isspam, msgid=msgid, msgatime=msgatime)
         self.ctxt.log.debug("bayes: learned '%s', atime: %s", msgid, msgatime)
         return True
-            
-    def plugin_revoke(self, msg):
-        """Train the message as ham."""
-        super(BayesPlugin, self).plugin_revoke(msg)
 
-    def forget_message(self, params):
+    def forget_message(self, msg, msgdata, msgid):
         if not self["use_bayes"]:
             return
-        msg = params.msg
-        msgdata = self.get_body_from_msg(msg)
         # XXX SA wraps this in a timer.
         if self.store.tie_db_writable():
-            ret = self._forget_trapped(msg, msgdata, params.id)
-            if not self.main.learn_caller_will_untie:
+            ret = self._forget_trapped(msg, msgdata, msgid)
+            if not self.learn_caller_will_untie:
                 self.store.untie_db()
             return ret
         return None
@@ -607,7 +624,6 @@ class BayesPlugin(pad.plugins.base.BasePlugin):
             self.store.multi_tok_count_change(0, -1, tokens)
         self.store.seen_delete(msgid)
         self.store.cleanup()
-        self.main.call_plugins("bayes_forget", toksref=tokens, isspam=isspam, msgid=msgid)
         return True
 
     def learner_sync(self, params):
