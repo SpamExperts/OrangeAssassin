@@ -738,6 +738,7 @@ class BayesPlugin(pad.plugins.base.BasePlugin):
                 # XXX I don't think this can be done in a Python regular expression.
                 # XXX We should evaluate whether it's worth the complexity of doing
                 # XXX this.
+                pass
     
         magic_re = self.store.get_magic_re()
     
