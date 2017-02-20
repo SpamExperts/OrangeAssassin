@@ -402,9 +402,6 @@ HEADER_NAME_COMPRESSION = {
     u"x-spam-relays-untrusted": u"*RU",
 }
 
-# How many seconds should the opportunistic_expire lock be valid?
-OPPORTUNISTIC_LOCK_VALID = 300
-
 # Should we use the Robinson f(w) equation from
 # http://radio.weblogs.com/0101454/stories/2002/09/16/spamDetection.html ?
 # It gives better results, in that scores are more likely to distribute
@@ -1023,14 +1020,6 @@ class BayesPlugin(pad.plugins.base.BasePlugin):
     def _skip_scan(self, permsgstatus, score, caller_untie):
         if score is None:
             self.ctxt.log.debug("bayes: not scoring message, returning undef")
-        # Take any opportunistic actions we can take.
-        if self.main.opportunistic_expire_check_only:
-            # We're supposed to report on expiry only -- so do the
-            # _opportunistic_calls() run for the journal only.
-            self._opportunistic_calls(True)
-            permsgstatus.bayes_expiry_due = self.store.expiry_due()
-        else:
-            self._opportunistic_calls(False)
         # Do any cleanup we need to do.
         self.store.cleanup()
                 
