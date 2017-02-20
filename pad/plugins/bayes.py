@@ -501,7 +501,7 @@ class BayesPlugin(pad.plugins.base.BasePlugin):
         
     def learn_message(self, params):
         if not self["use_bayes"]:
-            return:
+            return
         msg = params.msg
         msgdata = self.get_body_from_msg(msg)
         # XXX In SA, there is a time limit set here.
