@@ -488,6 +488,7 @@ class BayesPlugin(pad.plugins.base.BasePlugin):
         return msgid
     
     def get_body_from_msg(self, msg):
+        # TODO: Find the implementation of these.
         return {
             u"bayes_token_body": msg.get_visible_rendered_body_text_array(),
             u"bayes_token_inviz": msg.get_invisible_rendered_body_text_array(),
@@ -497,15 +498,15 @@ class BayesPlugin(pad.plugins.base.BasePlugin):
     def plugin_report(self, msg):
         """Train the message as spam."""
         super(BayesPlugin, self).plugin_report(msg)
+        self.learn_message(msg, self.get_msgid(msg), True)
         
-    def learn_message(self, params):
+    def learn_message(self, msg, msgid, isspam):
         if not self["use_bayes"]:
             return
-        msg = params.msg
         msgdata = self.get_body_from_msg(msg)
         # XXX In SA, there is a time limit set here.
         if self.store.tie_db_writable():
-            ret = self._learn_trapped(params.isspam, msg, msgdata, params.id)
+            ret = self._learn_trapped(isspam, msg, msgdata, msgid)
             if not self.main.learn_caller_will_untie:
                 self.store.untie_db()
             return ret
