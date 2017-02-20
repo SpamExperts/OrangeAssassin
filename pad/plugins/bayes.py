@@ -1287,7 +1287,7 @@ class BayesPlugin(pad.plugins.base.BasePlugin):
             return "Invalid format, must be one of: %s" % (",".join(formats))
     
         fmt = '"%s"' % raw_fmt    
-        amt = min((limit, len(info))
+        amt = min((limit, len(info)))
         if not amt:
             return ""
         
