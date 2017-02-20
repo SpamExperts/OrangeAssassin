@@ -745,9 +745,9 @@ class BayesPlugin(pad.plugins.base.BasePlugin):
         rettokens = []
         for token in split:
             # Trim non-alphanumeric characters at the start of end.
-            token = re.sub(ur"^[-'"\.,]+", "", token)
+            token = re.sub(ur"^[-'\"\.,]+", "", token)
             # So we don't get loads of '"foo' tokens
-            token = re.sub(ur"[-'"\.,]+$", "", token)
+            token = re.sub(ur"[-'\"\.,]+$", "", token)
     
             # Skip false magic tokens.
             # TVD: we need to do a defined() check since SQL doesn't have magic
