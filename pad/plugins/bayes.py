@@ -21,6 +21,20 @@ import math
 import time
 import hashlib
 
+try:
+    from sqlalchemy import Column
+    from sqlalchemy.types import Float
+    from sqlalchemy.types import String
+    from sqlalchemy.types import Integer
+    from sqlalchemy.sql.schema import PrimaryKeyConstraint
+    from sqlalchemy.ext.declarative.api import declarative_base
+
+    Base = declarative_base()
+    has_sqlalchemy = True
+except:
+    has_sqlalchemy = False
+    import pymysql
+
 import pad.plugins.base
 
 
@@ -477,6 +491,76 @@ CREATE TABLE IF NOT EXISTS `bayes_vars` (
 )
 """
 
+if has_sqlalchemy:
+    class BayesExpire(Base):
+        """Schema for the bayes_expire table."""
+
+        __tablename__ = 'bayes_expire'
+
+        id = Column("id", Integer)
+        runtime = Column("runtime", Integer)
+
+        __table_args__ = (
+            PrimaryKeyConstraint("id"),)
+            
+    class BayesGlobalVars(Base):
+        """Schema for the bayes_global_vars table."""
+        
+        __tablename__ = "bayes_global_vars"
+        
+        variable = Column("variable", String(30))
+        value = Column("value", String(200))
+
+        __table_args__ = (
+            PrimaryKeyConstraint("variable"),)
+
+    class BayesSeen(Base):
+        """Schema for the bayes_seen table."""
+        
+        __tablename__ = "bayes_seen"
+        
+        id = Column("id", Integer)
+        msgid = Column("msgid", String(200))
+        flag = Column("flag", String(1))
+
+        __table_args__ = (
+            PrimaryKeyConstraint("id", "msgid"),)
+
+    class BayesToken(Base):
+        """Schema for the bayes_token table."""
+        
+        __tablename__ = "bayes_token"
+        
+        id = Column("id", Integer)
+        token = Column("token", String(5))
+        spam_count = Column("spam_count", Integer)
+        ham_count = Column("ham_count", Integer)
+        atime = Column("atime", Integer)
+
+        __table_args__ = (
+            PrimaryKeyConstraint("id", "token"),)
+        # XXX Should also index on the (id, atime) combination.
+
+    class BayesVars(Base):
+        """Schema for bayes_vars table."""
+        
+        __tablename__ = "bayes_vars"
+        
+        id = Column("id", Integer)  # should autoincrement
+        username = Column("username", String(200))
+        spam_count = Column("spam_count", Integer)
+        ham_count = Column("ham_count", Integer)
+        token_count = Column("token_count", Integer)
+        last_expire = Column("last_expire", Integer)
+        last_atime_delta = Column("last_atime_delta", Integer)
+        last_expire_reduce = Column("last_expire_reduce", Integer)
+        oldest_token_age = Column("oldest_token_age", Integer, default=2147483647)
+        newest_token_age = Column("newest_token_age", Integer)
+        
+        __table_args__ = (
+            PrimaryKeyConstraint("id"),)
+        # Should also be a key on username, if we start using that.
+        
 
 class Store(object):
     def __init__(self, session):
