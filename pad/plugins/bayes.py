@@ -423,6 +423,61 @@ REQUIRE_SIGNIFICANT_TOKENS_TO_SCORE = -1
 MAX_TOKEN_LENGTH = 15
 
 
+BAYES_EXPIRE_TABLE = """
+CREATE TABLE IF NOT EXISTS `bayes_expire` (
+  `id` int(11) NOT NULL default '0',
+  `runtime` int(11) NOT NULL default '0',
+  KEY `bayes_expire_idx1` (`id`)
+)
+"""
+
+BAYES_GLOBAL_VARS_TABLE = """
+CREATE TABLE IF NOT EXISTS `bayes_global_vars` (
+  `variable` varchar(30) NOT NULL default '',
+  `value` varchar(200) NOT NULL default '',
+  PRIMARY KEY  (`variable`)
+)
+"""
+
+BAYES_SEEN_TABLE = """
+CREATE TABLE IF NOT EXISTS `bayes_seen` (
+  `id` int(11) NOT NULL default '0',
+  `msgid` varchar(200) character set latin1 collate latin1_bin NOT NULL default '',
+  `flag` char(1) NOT NULL default '',
+  PRIMARY KEY  (`id`,`msgid`)
+)
+"""
+
+BAYES_TOKEN_TABLE = """
+CREATE TABLE IF NOT EXISTS `bayes_token` (
+  `id` int(11) NOT NULL default '0',
+  `token` char(5) NOT NULL default '',
+  `spam_count` int(11) NOT NULL default '0',
+  `ham_count` int(11) NOT NULL default '0',
+  `atime` int(11) NOT NULL default '0',
+  PRIMARY KEY  (`id`,`token`),
+  INDEX bayes_token_idx1 (id, atime)
+)
+"""
+
+BAYES_VARS_TABLE = """
+CREATE TABLE IF NOT EXISTS `bayes_vars` (
+  `id` int(11) NOT NULL auto_increment,
+  `username` varchar(200) NOT NULL default '',
+  `spam_count` int(11) NOT NULL default '0',
+  `ham_count` int(11) NOT NULL default '0',
+  `token_count` int(11) NOT NULL default '0',
+  `last_expire` int(11) NOT NULL default '0',
+  `last_atime_delta` int(11) NOT NULL default '0',
+  `last_expire_reduce` int(11) NOT NULL default '0',
+  `oldest_token_age` int(11) NOT NULL default '2147483647',
+  `newest_token_age` int(11) NOT NULL default '0',
+  PRIMARY KEY  (`id`),
+  UNIQUE KEY `bayes_vars_idx1` (`username`)
+)
+"""
+
+
 class Store(object):
     def __init__(self, session):
         self.session = session
@@ -474,16 +529,22 @@ class Store(object):
 
     def sync_due(self):
         pass
+        
+    def get_magic_re():
+        pass
 
 
 class BayesPlugin(pad.plugins.base.BasePlugin):
     eval_rules = ("check_bayes",)
-    options = {u"use_bayes": (u"bool", True),
-               u"use_learner": (u"bool", True),
-               u"use_bayes_rules": (u"bool", True),
-               u"detailed_bayes_score": (u"bool", False),
-               u"bayes_min_spam_num": (u"int", 200),
-               u"bayes_min_ham_num": (u"int", 200),}
+    options = {
+        u"use_bayes": (u"bool", True),
+        u"use_learner": (u"bool", True),
+        u"use_bayes_rules": (u"bool", True),
+        u"detailed_bayes_score": (u"bool", False),
+        u"bayes_min_spam_num": (u"int", 200),
+        u"bayes_min_ham_num": (u"int", 200),
+        u"bayes_ignore_headers": (u"list", []),
+        }
     
     def __init__(self, *args, **kwargs):
         super(BayesPlugin, self).__init__(*args, **kwargs)
@@ -492,6 +553,7 @@ class BayesPlugin(pad.plugins.base.BasePlugin):
         self.learn_caller_will_untie = False
         self.learn_no_relearn = False
         self.use_hapaxes = False
+        self.use_ignores = True
     
     def finish(self):
         if self.store:
@@ -566,7 +628,7 @@ class BayesPlugin(pad.plugins.base.BasePlugin):
             if (seen == "s" and isspam) or (seen == "h" and not isspam):
                 self.ctxt.log.debug("bayes: %s already learnt correctly, not learning twice", msgid)
                 return False
-            elif seen not in "hs":
+            elif seen not in {"h", "s"}:
                 self.ctxt.log.warn("bayes: db_seen corrupt: value='%s' for %s, ignored", seen, msgid)
             else:
                 # Bug 3704: If the message was already learned, don't try learning it again.
@@ -682,9 +744,9 @@ class BayesPlugin(pad.plugins.base.BasePlugin):
             tokens.extend(self._tokenise_line(value, "H%s:" % prefix, 0))
         # Remove duplicates, skip empty tokens (this happens sometimes),
         # generate a SHA1 hash, and take the lower 40 bits as the token.
-        # XXX Removing duplicates can be done with a set, and it would be better if this yield'd
-        # XXX as the tokens were created, rather than all at once.
-        for token in tokens:
+        # XXX It would be better if we could refactor all of this so that we yielded
+        # XXX tokens as they were generated.
+        for token in set(tokens):
             if not token:
                 continue
             yield hashlib.sha1(token)[-5:]
@@ -713,7 +775,7 @@ class BayesPlugin(pad.plugins.base.BasePlugin):
         magic_re = self.store.get_magic_re()
     
         rettokens = []
-        for token in split:
+        for token in line.split():
             # Trim non-alphanumeric characters at the start of end.
             token = re.sub(ur"^[-'\"\.,]+", "", token)
             # So we don't get loads of '"foo' tokens
