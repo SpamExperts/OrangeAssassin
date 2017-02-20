@@ -431,8 +431,8 @@ class BayesPlugin(pad.plugins.base.BasePlugin):
     options = {u"use_bayes": (u"bool", True),
                u"use_learner": (u"bool", True),
                u"use_bayes_rules": (u"bool", True),
-               u"bayes_min_spam_num", (u"int", ???),
-               u"bayes_min_ham_num", (u"int", ???),}
+               u"bayes_min_spam_num", (u"int", 200),
+               u"bayes_min_ham_num", (u"int", 200),}
     
     def __init__(self, *args, **kwargs):
         super(BayesPlugin, self).__init__(*args, **kwargs)
