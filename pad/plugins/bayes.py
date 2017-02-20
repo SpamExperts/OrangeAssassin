@@ -1162,18 +1162,6 @@ class BayesPlugin(pad.plugins.base.BasePlugin):
         
         return ignore
 
-    def learner_close(self, params):
-        quiet = params.quiet
-    
-        # Do a sanity check here. Weird things happen if we remain tied
-        # after compiling; for example, spamd will never see that the
-        # number of messages has reached the bayes-scanning threshold.
-        # XXX Is this true in OA as well as SA?
-        if self.store.db_readable():
-            if not quiet:
-                self.ctxt.log.warn("bayes: oops! still tied to bayes DBs, untying")
-            self.store.untie_db()
-    
     def _compute_prob_for_token(self, token, ns, nn, s, n):
         """Compute the probability that a token is spammy."""
         # We allow the caller to give us the token information, just
