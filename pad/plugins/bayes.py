@@ -27,6 +27,8 @@ import pad.plugins.base
 class Chi(object):
     """Chi-squared probability combining and related constants."""
 
+    # Pre-calculating this saves a lot of work, because this is used
+    # extremely frequently.
     LN2 = math.log(2)
     
     # Value for 'x' in Gary Robinson's f(w) equation.
@@ -64,6 +66,7 @@ class Chi(object):
         
         The return value is a float in [0.0, 1.0].
         """
+        # Avoid dictionary lookups in inner loops.
         frexp = math.frexp
         ln = math.log
         
@@ -97,19 +100,20 @@ class Chi(object):
         prob = (S - H + 1.0) / 2.0
         return prob
     
-    def chi2Q(x2, halfv, exp=math.exp, min=min):
+    @staticmethod
+    def chi2Q(x2, halfv, exp=math.exp):
         """Return prob(chisq >= x2, with v degrees of freedom)."""
         # XXX If x2 is very large, exp(-m) will underflow to 0.
         m = x2 / 2.0
         total = term = exp(-m)
-        for i in xrange(1, halfv):
+        for i in range(1, halfv):
             term *= m / i
             total += term
         # With small x2 and large v, accumulated roundoff error, plus error
         # in the platform exp(), can cause this to spill a few ULP above
         # 1.0. For example, chi2Q(100, 300) on my box has
-        # total == 1.0 + 2.0**-52 at this point. Returning a value even a
-        # teensy bit over 1.0 is no good.
+        # total == 1.0000000000000009 at this point. Returning a value even
+        # a teensy bit over 1.0 is no good.
         return min(total, 1.0)
 
 
@@ -152,13 +156,13 @@ class NaiveBayes(object):
 
 
 # Pick ONLY ONE of these combining implementations.
-combiner = Chi()
-#combiner = NaiveBayes
+_combiner = Chi()
+#_combiner = NaiveBayes
 
-combine = combiner.combine
-FW_S_DOT_X = combiner.FW_S_DOT_X
-FW_S_CONSTANT = combiner.FW_S_CONSTANT
-MIN_PROB_STRENGTH = combiner.MIN_PROB_STRENGTH
+combine = _combiner.combine
+FW_S_DOT_X = _combiner.FW_S_DOT_X
+FW_S_CONSTANT = _combiner.FW_S_CONSTANT
+MIN_PROB_STRENGTH = _combiner.MIN_PROB_STRENGTH
 
 # XXX Should some of these options be controllable in the configuration
 # XXX file? I don't think SA allows that, and they are generally quite
@@ -171,7 +175,6 @@ MIN_PROB_STRENGTH = combiner.MIN_PROB_STRENGTH
 # advance!).
 
 # Received is handled specially.
-# This is a list of regular expressions.
 # XXX This could use a lot of modernisation.
 IGNORED_HEADERS = {{header.lower() for header in {
     u"Sender",  # Misc noise.
@@ -333,17 +336,17 @@ IGNORED_HEADERS = {{header.lower() for header in {
 # Note only the presence of these headers, in order to reduce the
 # hapaxen they generate.
 MARK_PRESENCE_ONLY_HEADERS = {header.lower() for header in {
-    ur"X-Face",
-    ur"X-GPG-Fingerprint",
-    ur"X-GPG-Key-Fingerprint",
-    ur"X-PGP-Fingerprint",
-    ur"X-PGP-Key-Fingerprint",
-    ur"X-GnuPG-Fingerprint",
-    ur"X-GnuPG-Key-Fingerprint",
-    ur"X-Gnu-PG-Fingerprint",
-    ur"X-Gnu-PG-Key-Fingerprint",
-    ur"DKIM-Signature",
-    ur"DomainKey-Signature",
+    u"X-Face",
+    u"X-GPG-Fingerprint",
+    u"X-GPG-Key-Fingerprint",
+    u"X-PGP-Fingerprint",
+    u"X-PGP-Key-Fingerprint",
+    u"X-GnuPG-Fingerprint",
+    u"X-GnuPG-Key-Fingerprint",
+    u"X-Gnu-PG-Fingerprint",
+    u"X-Gnu-PG-Key-Fingerprint",
+    u"DKIM-Signature",
+    u"DomainKey-Signature",
 }}
 
 # Tweaks tested as of Nov 18 2002 by jm: see SpamAssassin-devel list
@@ -373,7 +376,7 @@ ADD_INVIZ_TOKENS_NO_PREFIX = False
 
 # We store header-mined tokens in the db with a "HHeaderName:val"
 # format. Some headers may contain lots of gibberish tokens, so allow a
-# little basic compression by mapping the header name at least here.
+# little basic compression by mapping the header name here.
 # These are the headers that appear with the most frequency in jm's DB.
 # Note: this doesn't have to be 2-way (ie. LHSes that map to the same
 # RHS are not a problem), but mixing tokens from multiple different
@@ -417,89 +420,10 @@ N_SIGNIFICANT_TOKENS = 150
 # considered usable?
 REQUIRE_SIGNIFICANT_TOKENS_TO_SCORE = -1
 
-# How long a token should we hold onto? (Mote: German speakers typically
+# How long a token should we hold onto? (Note: German speakers typically
 # will require a longer token than English ones).
 # SpamAssassin defaults to 15, SpamBayes defaults to 12.
 MAX_TOKEN_LENGTH = 15
-
-
-class Bayes(object):
-    """This is the general class used to train a learning classifier
-    with new samples of spam and ham mail, and classify based on prior
-    training."""
-
-    def __init__(self, main):
-        self.main = main
-        self.conf = main.conf
-        self.use_ignores = True
-    
-    def force_close(self, quiet):
-        """Force the Bayes DBs to be closed, if they haven't already
-        been; called at the end of scan operation, or when switching
-        between user IDs, or when finish_learner() is called."""
-        self.main.call_plugins("learner_close", {"quiet": quiet})
-    
-    def ignore_message(self):
-
-sub ignore_message {
-my ($self,$PMS) = @_;
-
-return 0 unless $self->{use_ignores};
-
-my $ig_from = $self->{main}->call_plugins ("check_wb_list",
-{ permsgstatus => $PMS, type => 'from', list => 'bayes_ignore_from' });
-my $ig_to = $self->{main}->call_plugins ("check_wb_list",
-{ permsgstatus => $PMS, type => 'to', list => 'bayes_ignore_to' });
-
-my $ignore = $ig_from || $ig_to;
-dbg("bayes: not using bayes, bayes_ignore_from or _to rule") if $ignore;
-return $ignore;
-
-
-sub learn {
-my ($self, $isspam, $msg, $id) = @_;
-return unless $self->{conf}->{use_learner};
-return unless defined $msg;
-
-if( $self->{use_ignores} ) # Remove test when PerMsgStatus available.
-# DMK, koppel@ece.lsu.edu: Hoping that the ultimate fix to bug 2263 will
-# make it unnecessary to construct a PerMsgStatus here.
-my $PMS = new Mail::SpamAssassin::PerMsgStatus $self->{main}, $msg;
-my $ignore = $self->ignore_message($PMS);
-$PMS->finish();
-return 0 if $ignore;
-
-return $self->{main}->call_plugins("learn_message", { isspam => $isspam, msg => $msg, id => $id });
-
-
-sub forget {
-my ($self, $msg, $id) = @_;
-return unless $self->{conf}->{use_learner};
-return unless defined $msg;
-return $self->{main}->call_plugins("forget_message", { msg => $msg, id => $id });
-
-
-sub sync {
-my ($self, $sync, $expire, $opts) = @_;
-return 0 unless $self->{conf}->{use_learner};
-
-if ($sync) {
-$self->{main}->call_plugins("learner_sync", $opts );
-if ($expire) {
-$self->{main}->call_plugins("learner_expire_old_training", $opts );
-
-return 0;
-
-
-sub is_scan_available {
-my $self = shift;
-return 0 unless $self->{conf}->{use_learner};
-return $self->{main}->call_plugins("learner_is_scan_available");
-
-
-
-
-
 
 
 class BayesPlugin(pad.plugins.base.BasePlugin):
@@ -512,6 +436,7 @@ class BayesPlugin(pad.plugins.base.BasePlugin):
     
     def __init__(self, *args, **kwargs):
         super(BayesPlugin, self).__init__(*args, **kwargs)
+        # XXX Need to get a store.
         self.store = None
     
     def finish(self):
@@ -535,8 +460,7 @@ class BayesPlugin(pad.plugins.base.BasePlugin):
         # Use the hexdigest of a SHA1 hash of (Date: and top N bytes of
         # body), where N is min(1024 bytes, 1/2 of body length).
         date = msg[u"Date"] or u"None"
-        # XXX What is get_pristine_body()???
-        body = msg.get_pristine_body()
+        body = msg.as_string().split("\n\n", 1)[1]
         if len(body) > 64:
             keep = 1024 if len(body) > 2048 else (len(body) // 2)
             body = body[:keep]
@@ -546,8 +470,8 @@ class BayesPlugin(pad.plugins.base.BasePlugin):
         # LF<->CR<->CRLF changes.
         body = body.replace("\n", "").replace("\r", "")
         
-        msgid = "%s@sa_generated" % hashlib.sha1("%s\x00%s" %
-                                                 (date, body)).hexdigest()
+        msgid = u"%s@sa_generated" % hashlib.sha1("%s\x00%s" %
+                                                  (date, body)).hexdigest()
         return msgid
     
     # XXX Finish this
@@ -777,15 +701,15 @@ class BayesPlugin(pad.plugins.base.BasePlugin):
                 self.store.remove_running_expiry_tok()
     
     def tokenise(self, msg, msgdata):
-        tokens = [self._tokenize_line(line, "", 1) for line in msgdata["bayes_token_body"]]
-        tokens.extend([self._tokenize_line(line, "", 2) for line in msgdata["bayes_token_uris"]])
+        tokens = [self._tokenise_line(line, "", 1) for line in msgdata["bayes_token_body"]]
+        tokens.extend([self._tokenise_line(line, "", 2) for line in msgdata["bayes_token_uris"]])
         if ADD_INVIZ_TOKENS_I_PREFIX:
-            tokens.extend([self._tokenize_line(line, "I*:", 1) for line in msgdata["bayes_token_inviz"]])
+            tokens.extend([self._tokenise_line(line, "I*:", 1) for line in msgdata["bayes_token_inviz"]])
         if ADD_INVIZ_TOKENS_NO_PREFIX:
-            tokens.extend([self._tokenize_line(line, "", 1) for line in msgdata["bayes_token_inviz"]])
-        hdrs = self._tokenize_headers(msg)
-        for prefix, value in hdrs:
-            tokens.extend(self._tokenize_line(value, "H%s:" % prefix, 0))
+            tokens.extend([self._tokenise_line(line, "", 1) for line in msgdata["bayes_token_inviz"]])
+        hdrs = self._tokenise_headers(msg)
+        for prefix, value in hdrs.values():
+            tokens.extend(self._tokenise_line(value, "H%s:" % prefix, 0))
         # Remove duplicates, skip empty tokens (this happens sometimes),
         # generate a SHA1 hash, and take the lower 40 bits as the token.
         # XXX Removing duplicates can be done with a set, and it would be better if this yield'd
@@ -846,7 +770,7 @@ class BayesPlugin(pad.plugins.base.BasePlugin):
             # Are we in the body? If so, apply some body-specific breakouts.
             if (region == 1 or region == 2):
                 if CHEW_BODY_MAILADDRS and $token =~ /\S\@\S/i:
-                    push (@rettokens, $self->_tokenize_mail_addrs ($token));
+                    push (@rettokens, $self->_tokenise_mail_addrs ($token));
                 elif CHEW_BODY_URIS and $token =~ /\S\.[a-z]/i:
                     push (@rettokens, "UD:".$token); # the full token
                     my $bit = $token; while ($bit =~ s/^[^\.]+\.(.+)$/$1/gs) {
@@ -888,109 +812,114 @@ class BayesPlugin(pad.plugins.base.BasePlugin):
             retokens.append(tokprefix + token)    
         return rettokens
 
-    def _tokenize_headers(self, msg):
+    def _tokenise_headers(self, msg):
+        """Tokenise the headers of the message.
+        
+        Return a dictionary that maps the case-sensitive header name to
+        a normalised value."""
         parsed = {}
-        user_ignore = {hdr.lower() for hdr in self["bayes_ignore_headers"]}
+        user_ignore = {header.lower() for header in self[u"bayes_ignore_headers"]}
     
-        hdrs = set()
-        for header in msg.keys():
-            # Skip lines for headers we don't want.
-            if header.lower() in IGNORED_HEADERS:
-                continue
-            if IGNORE_MSGID_TOKENS and header.lower() == "message-id":
-                continue
-            hdrs.add(header)
-        # XXX What is get_all_metadata()???
-        hdrs.add(msg.get_all_metadata())
+        headers = {
+            header
+            for header in msg.keys()
+            if header.lower() not in IGNORED_HEADERS and (not IGNORE_MSGID_TOKENS or header.lower() != "message-id")
+        }
+        # TODO: SA adds in all of the message's metadata as additional headers here.
+        # It's possible that we might want to do that as well, but we'll need to ensure
+        # that everything is suitable (e.g. not huge) and can be appropriately converted
+        # to a string.
         
         addr_headers = {
-            "return-path",
-            "from",
-            "to",
-            "cc",
-            "reply-to",
-            "errors-to",
-            "mail-followup-to",
-            "sender",
-            "x-return-path",
-            "x-from",
-            "x-to",
-            "x-cc",
-            "x-reply-to",
-            "x-errors-to",
-            "x-mail-followup-to",
-            "x-sender",
-            "resent-return-path",
-            "resent-from",
-            "resent-to",
-            "resent-cc",
-            "resent-reply-to",
-            "resent-errors-to",
-            "resent-mail-followup-to",
-            "resent-sender",
+            u"return-path",
+            u"from",
+            u"to",
+            u"cc",
+            u"reply-to",
+            u"errors-to",
+            u"mail-followup-to",
+            u"sender",
+            u"x-return-path",
+            u"x-from",
+            u"x-to",
+            u"x-cc",
+            u"x-reply-to",
+            u"x-errors-to",
+            u"x-mail-followup-to",
+            u"x-sender",
+            u"resent-return-path",
+            u"resent-from",
+            u"resent-to",
+            u"resent-cc",
+            u"resent-reply-to",
+            u"resent-errors-to",
+            u"resent-mail-followup-to",
+            u"resent-sender",
         }    
         
-        for hdr in hdrs:
-            values = msg.get_all(hdr)
-            if hdr == "received":
+        for header in headers:
+            values = msg.get_all(header)
+            if header.lower() == u"received":
                 # Use only the last 2 received lines: usually a good source of
                 # spamware tokens and HELO names.
                 values = values[-2:]
             for val in values:
                 # Prep the header value.
                 val = val.rstrip()
-                lhdr = hdr.lower()
+                l_header = header.lower()
                 
                 # Remove user-specified headers here.
-                if lhdr in user_ignore:
+                if l_header in user_ignore:
                     continue
                 
                 # Special tokenisation for some headers:
-                if lhdr in ("message-id", "x-message-id", "resent-message-id"):
+                if l_header in (u"message-id", u"x-message-id", u"resent-message-id"):
                     val = self._pre_chew_message_id(val)
-                elif PRE_CHEW_ADDR_HEADERS and lhdr in addr_headers:
+                elif PRE_CHEW_ADDR_HEADERS and l_header in addr_headers:
                     val = self._pre_chew_addr_header(val)
-                elif lhdr == "received":
+                elif l_header == u"received":
                     val = self._pre_chew_received(val)
-                elif lhdr == "content-type":
+                elif l_header == u"content-type":
                     val = self._pre_chew_content_type(val)
-                elif lhdr == "mime-version":
-                    val = val.replace("1.0", "")  # Totally innocuous.
-                elif lhdr in MARK_PRESENCE_ONLY_HDRS:
+                elif l_header == u"mime-version":
+                    val = val.replace(u"1.0", u"")  # Totally innocuous.
+                elif l_leader in MARK_PRESENCE_ONLY_HDRS:
                     val = "1"  # Just mark the presence, they create lots of hapaxen.
                 
-                if MAP_HEADERS_MID and lhdr in {"in-reply-to", "references", "message-id"}:
-                    parsed["*MI"] = val
-                if MAP_HEADERS_FROMTOCC and lhdr in {"from", "to", cc"}:
-                    parsed["*Ad"] = val
-                if MAP_HEADERS_USERAGENT and lhdr in {"x-mailer", "user-agent"}:
-                    parsed["*UA"] = val
+                if MAP_HEADERS_MID and l_header in {u"in-reply-to", u"references", u"message-id"}:
+                    parsed[u"*MI"] = val
+                if MAP_HEADERS_FROMTOCC and l_header in {u"from", u"to", u"cc"}:
+                    parsed[u"*Ad"] = val
+                if MAP_HEADERS_USERAGENT and l_header in {u"x-mailer", u"user-agent"}:
+                    parsed[u"*UA"] = val
                 
-                # Replace hdr name with "compressed" version if possible.
-                hdr = HEADER_NAME_COMPRESSION.get(hdr, hdr)
+                # Replace header name with "compressed" version if possible.
+                header = HEADER_NAME_COMPRESSION.get(header, header)
         
-                if hdr in parsed:
-                    parsed[hdr] = "%s %s" % (parsed_hdr, val)
+                if header in parsed:
+                    parsed[header] = u"%s %s" % (parsed[hdr], val)
                 else:
-                    parsed[hdr] = val
-                logger.debug('bayes: header tokens for %s = "%s"' % (hdr, parsed[hdr]))
+                    parsed[header] = val
+                logger.debug(u'bayes: header tokens for %s = "%s"' % (header, parsed[header]))
         return parsed
 
     @staticmethod
     def _pre_chew_content_type(val):
+        """Normalise the Content-Type header."""
         # Hopefully this will retain good bits without too many hapaxen.
         mo = re.search(r"""boundary=[\"\'](.*?)[\"\']""", val, re.IGNORE)
         if mo:
+            # Replace all hex with literal "H".
             boundary = re.sub(r"[a-fA-F0-9]", "H", mo.groups()[0])
             # Break up blocks of separator chars so they become their own tokens.
             boundary = re.sub(r"([-_\.=]+)", " \1 ", boundary)
             val = val + boundary
         # Stop-list words for Content-Type header: these wind up totally grey.
-        val = re.sub(r"\b(?:text|charset)\b", "", val)
-        return val
+        return re.sub(r"\b(?:text|charset)\b", "", val)
 
     @staticmethod
     def _pre_chew_message_id(val):
+        """Normalise the Message-ID header."""
         # We can (a) get rid of a lot of hapaxen and (b) increase the token
         # specificity by pre-parsing some common formats.
         
@@ -1056,11 +985,11 @@ class BayesPlugin(pad.plugins.base.BasePlugin):
     def _pre_chew_addr_header(val):
         addrs = []
         for addr in self.find_all_addrs_in_line(val):
-            addrs.extend(self._tokenize_mail_addrs(addr))
+            addrs.extend(self._tokenise_mail_addrs(addr))
         return " ".join(addrs)
 
     @staticmethod
-    def _tokenize_mail_addrs(addr):
+    def _tokenise_mail_addrs(addr):
         if "@" not in addr:
             return
         local, domain = addr.rsplit("@", 1)
@@ -1401,18 +1330,18 @@ class BayesPlugin(pad.plugins.base.BasePlugin):
         
         ns = pms.bayes_nspam
         nh = pms.bayes_nham
-        # XXX Finish this.
-        digit = sub { $_[0] > 9 ? "+" : $_[0] };
         now = time.time()
-    
-        # XXX Finish this.    
-        join ', ', map {
-            my($t,$prob,$s,$h,$u) = @$_;
-            my $a = int(($now - $u)/(3600 * 24));
-            my $d = $self->_compute_declassification_distance($ns,$nh,$s,$h,$prob);
-            my $p = sprintf "%.3f", $prob;
-            my $n = $s + $h;
-            my ($c,$o) = $prob < 0.5 ? ($h,$s) : ($s,$h);
-            my ($D,$S,$H,$C,$O,$N) = map &$digit($_), ($d,$s,$h,$c,$o,$n);
-            eval $fmt; ## no critic
-        } @{$info}[0..$amt-1];
+        def f(t, prob, s, h, u):
+            a = int((now - u) / (3600 * 24))
+            d = self._compute_declassification_distance(ns, nh, s, h, prob)
+            p = "%.3f" % prob
+            n = s + h
+            if prob < 0.5:
+                c = h
+                o = s
+            else:
+                c = s
+                o = h
+            return fmt(x)
+        
+        return ", ".join(f(x) for x in info)
