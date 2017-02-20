@@ -23,7 +23,6 @@ import hashlib
 
 try:
     from sqlalchemy import Column
-    from sqlalchemy.types import Float
     from sqlalchemy.types import String
     from sqlalchemy.types import Integer
     from sqlalchemy.sql.schema import PrimaryKeyConstraint
@@ -563,44 +562,83 @@ if has_sqlalchemy:
         
 
 class Store(object):
-    def __init__(self, session):
-        self.session = session
+    def __init__(self, plugin):
+        self.conn = None
         
     def untie_db(self):
-        pass
+        if self.conn:
+            self.conn.close()
 
     def tie_db_readonly(self):
-        pass
+        # TODO: Being able to distinguish between needing read-only and
+        # read-write access to the database is very useful, so I've left
+        # that in. However, we don't really support that further down
+        # (e.g. in the configuration), so for now, it's just the same.
+        return self.tie_db_writeable()
         
-    def db_readable(self):
-        pass
-
     def tie_db_writeable(self):
-        pass
+        self.conn = pymysql.connect(host=self.engine["hostname"], port=3306,
+                                    user=self.engine["user"],
+                                    passwd=self.engine["password"],
+                                    db=self.engine["db_name"],
+                                    )
 
     def tok_get(self, token):
-        pass
+        cursor = self.conn.cursor()
+        cursor.execute("SELECT spam_count, ham_count, atime FROM bayes_token WHERE token=%s", (token, ))
+        result = cursor.fetchone()
+        cursor.close()
+        return result
 
-    def seen_get(self, msg):
-        pass
+    def tok_get_all(self, tokens):
+        cursor = self.conn.cursor()
+        for token in tokens:
+            cursor.execute("SELECT token, spam_count, ham_count, atime FROM bayes_token WHERE token=%s", (token, ))
+            yield cursor.fetchone()
+        cursor.close()
 
-    def seen_put(self, msgid, value):
-        pass
+    def seen_get(self, msgid):
+        cursor = self.conn.cursor()
+        cursor.execute("SELECT flag FROM bayes_seen WHERE msgid=%s", (msgid, ))
+        result = cursor.fetchone()[0]
+        cursor.close()
+        return result
+
+    def seen_put(self, msgid, flag):
+        cursor = self.conn.cursor()
+        cursor.execute("UPDATE bayes_seen SET flag=%s WHERE msgid=%s", (flag, msgid))
+        conn.commit()
+        cursor.close()
         
     def cleanup(self):
         pass
 
     def nspam_nham_get(self):
-        pass
+        cursor = self.conn.cursor()
+        cursor.execute("SELECT spam_count, ham_count FROM bayes_vars LIMIT 1")
+        result = cursor.fetchone()
+        cursor.close()
+        return result
 
     def nspam_nham_change(self, spam, ham):
-        pass
+        cursor = self.conn.cursor()
+        cursor.execute("UPDATE bayes_vars SET spam_count=%s, ham_count=%s", (spam, ham))
+        conn.commit()
+        cursor.close()
         
     def multi_tok_count_change(self, spam, ham, tokens, msgatime):
-        pass
+        cursor = self.conn.cursor()
+        for token in tokens:
+            cursor.execute("UPDATE bayes_token SET spam_count=%s, ham_count=%s, atime=%s WHERE token=%s", (spam, ham, msgatime, token))
+        conn.commit()
+        cursor.close()
 
     def tok_touch_all(self, touch_tokens, msgatime):
-        pass
+        cursor = self.conn.cursor()
+        for token in touch_tokens:
+            cursor.execute("UPDATE bayes_token SET atime=%s WHERE token=%s", (msgatime, token))
+        conn.commit()
+        cursor.close()
         
     def get_running_expire_tok(self):
         pass
@@ -632,7 +670,7 @@ class BayesPlugin(pad.plugins.base.BasePlugin):
     
     def __init__(self, *args, **kwargs):
         super(BayesPlugin, self).__init__(*args, **kwargs)
-        self.store = Store(self.get_session())
+        self.store = Store(self)
         # XXX Should these be exposed somewhere?
         self.learn_caller_will_untie = False
         self.learn_no_relearn = False
@@ -707,7 +745,7 @@ class BayesPlugin(pad.plugins.base.BasePlugin):
     def _learn_trapped(self, isspam, msg, msgdata, msgid):
         if not msgid:
             msgid = self.get_msgid(msg)
-        seen = self.store.seen_get(msg)
+        seen = self.store.seen_get(msgid)
         if seen:
             if (seen == "s" and isspam) or (seen == "h" and not isspam):
                 self.ctxt.log.debug("bayes: %s already learnt correctly, not learning twice", msgid)
@@ -1202,7 +1240,7 @@ class BayesPlugin(pad.plugins.base.BasePlugin):
         # XXX This has a timer in SA.
         msgdata = self._get_msgdata_from_permsgstatus(permsgstatus)
         msgtokens = self.tokenise(msg, msgdata)
-        tokensdata = self.store.tok_get_all(keys=msgtokens)
+        tokensdata = self.store.tok_get_all(msgtokens)
         probabilities_ref = self._compute_prob_for_all_tokens(tokensdata, ns, nn)
         pw = {}
         for tokendata, prob in zip(tokensdata, probabilities_ref):
