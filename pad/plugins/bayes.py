@@ -973,16 +973,9 @@ class BayesPlugin(pad.plugins.base.BasePlugin):
         # (on both sides).
         # Also make a dup with the full IP, as fodder for
         # bayes_dump_to_trusted_networks: "H*r:ip*aaa.bbb.ccc.ddd"
-        # XXX Finish this.
-        $val =~ s{\b(\d{1,3}\.)(\d{1,3}\.)(\d{1,3})(\.\d{1,3})\b}{
-            if ($2 eq '10' || ($2 eq '192' && $3 eq '168')) {
-                $1.$2.$3.$4.
-                " ip*".$1.$2.$3.$4." ";
-            } else {
-                $1.$2.$3.
-                " ip*".$1.$2.$3.$4." ";
-            }
-        }gex;
+        # XXX It's complicated to do this with a regular expression in Python.
+        # XXX It would probably be better to use ipaddress or similar to do
+        # XXX it instead.
         
         # Trim these: they turn out as the most common tokens, but with a
         # prob of about 0.5. Waste of space!
