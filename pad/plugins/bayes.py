@@ -176,7 +176,7 @@ MIN_PROB_STRENGTH = _combiner.MIN_PROB_STRENGTH
 
 # Received is handled specially.
 # XXX This could use a lot of modernisation.
-IGNORED_HEADERS = {{header.lower() for header in {
+IGNORED_HEADERS = {header.lower() for header in {
     u"Sender",  # Misc noise.
     u"X-Sender",  # Misc noise.
     u"Delivered-To",
