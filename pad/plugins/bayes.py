@@ -719,7 +719,6 @@ class BayesPlugin(pad.plugins.base.BasePlugin):
                 continue
             yield hashlib.sha1(token)[-5:]
 
-    # XXX Finish this.
     def _tokenise_line(self, line, tokprefix, region):
         # Include quotes, .'s and -'s for URIs, and [$,]'s for Nigerian-scam strings,
         # and ISO-8859-15 alphas. Do not split on @'s; better results keeping it.
@@ -729,30 +728,32 @@ class BayesPlugin(pad.plugins.base.BasePlugin):
         # DO split on "..." or "--" or "---"; common formatting error resulting in
         # hapaxes. Keep the separator itself as a token, though, as long ones can
         # be good spam signs.
-        line = re.sub(ur"", 
-    s/(\w)(\.{3,6})(\w)/$1 $2 $3/gs;
-    s/(\w)(\-{2,6})(\w)/$1 $2 $3/gs;
+        line = re.sub(ur"(\w)(\.{3,6}(\w)", ur"\1 \2 \3", line)
+        line = re.sub(ur"(\w)(\-{2,6}(\w)", ur"\1 \2 \3", line)
     
         if IGNORE_TITLE_CASE:
             if region == 1 or region == 2:
                 # Lower-case Title Case at start of a full-stop-delimited line (as would
                 # be seen in a Western language).
-                s/(?:^|\.\s+)([A-Z])([^A-Z]+)(?:\s|$)/ ' '. (lc $1) . $2 . ' ' /ge;
+                # XXX I don't think this can be done in a Python regular expression.
+                # XXX We should evaluate whether it's worth the complexity of doing
+                # XXX this.
     
         magic_re = self.store.get_magic_re()
     
+        rettokens = []
         for token in split:
             # Trim non-alphanumeric characters at the start of end.
-            token =~ s/^[-'"\.,]+//
+            token = re.sub(ur"^[-'"\.,]+", "", token)
             # So we don't get loads of '"foo' tokens
-            token =~ s/[-'"\.,]+$//
+            token = re.sub(ur"[-'"\.,]+$", "", token)
     
             # Skip false magic tokens.
             # TVD: we need to do a defined() check since SQL doesn't have magic
             # tokens, so the SQL BayesStore returns undef. I really want a way
             # of optimizing that out, but I haven't come up with anything yet.
             #
-            if magic-re and token =~ magic_re:
+            if magic_re and re.match(magic_re, token):
                 continue
     
             # *Do* keep 3-byte tokens; there are some solid signs in there -
@@ -763,29 +764,35 @@ class BayesPlugin(pad.plugins.base.BasePlugin):
             # - but extend the stop-list. These are squarely in the grey area,
             # and it just slows us down to record them.
             # See http://wiki.apache.org/spamassassin/BayesStopList for more info.
-            if    ($token =~ /^(?:a(?:ble|l(?:ready|l)|n[dy]|re)|b(?:ecause|oth)|c(?:an|ome)|e(?:ach|mail|ven)|f(?:ew|irst|or|rom)|give|h(?:a(?:ve|s)|ttp)|i(?:n(?:formation|to)|t\'s)|just|know|l(?:ike|o(?:ng|ok))|m(?:a(?:de|il(?:(?:ing|to))?|ke|ny)|o(?:re|st)|uch)|n(?:eed|o[tw]|umber)|o(?:ff|n(?:ly|e)|ut|wn)|p(?:eople|lace)|right|s(?:ame|ee|uch)|t(?:h(?:at|is|rough|e)|ime)|using|w(?:eb|h(?:ere|y)|ith(?:out)?|or(?:ld|k))|y(?:ears?|ou(?:(?:\'re|r))?))$/i):
+            if re.match(ur"^(?:a(?:ble|l(?:ready|l)|n[dy]|re)|b(?:ecause|oth)|c(?:an|ome)|e(?:ach|mail|ven)|f(?:ew|irst|or|rom)|give|h(?:a(?:ve|s)|ttp)|i(?:n(?:formation|to)|t\'s)|just|know|l(?:ike|o(?:ng|ok))|m(?:a(?:de|il(?:(?:ing|to))?|ke|ny)|o(?:re|st)|uch)|n(?:eed|o[tw]|umber)|o(?:ff|n(?:ly|e)|ut|wn)|p(?:eople|lace)|right|s(?:ame|ee|uch)|t(?:h(?:at|is|rough|e)|ime)|using|w(?:eb|h(?:ere|y)|ith(?:out)?|or(?:ld|k))|y(?:ears?|ou(?:(?:\'re|r))?))$/"):
                 continue
-            
         
             # Are we in the body? If so, apply some body-specific breakouts.
             if (region == 1 or region == 2):
-                if CHEW_BODY_MAILADDRS and $token =~ /\S\@\S/i:
-                    push (@rettokens, $self->_tokenise_mail_addrs ($token));
-                elif CHEW_BODY_URIS and $token =~ /\S\.[a-z]/i:
-                    push (@rettokens, "UD:".$token); # the full token
-                    my $bit = $token; while ($bit =~ s/^[^\.]+\.(.+)$/$1/gs) {
-                        push (@rettokens, "UD:".$1); # UD = URL domain
+                if CHEW_BODY_MAILADDRS and re.match(ur"\S\@\S", token):
+                    rettokens.append(self._tokenise_mail_addrs(token))
+                elif CHEW_BODY_URIS and re.match(ur"\S\.[a-z]", token, re.IGNORE):
+                    rettokens.append(u"UD:" + token)  # The full token.
+                    bit = token
+                    while True:
+                        bit = re.sub(ur"^[^\.]+\.(.+)$", "\1", bit)
+                        if not bit:
+                            break
+                        rettokens.append("UD:" + bit)  # UD = URL domain
     
             # Note: do not trim down overlong tokens if they contain '*'. This is
             # used as part of split tokens such as "HTo:D*net" indicating that
             # the domain ".net" appeared in the To header.
-            if length > MAX_TOKEN_LENGTH and $token !~ /\*/:
-                if TOKENIZE_LONG_8BIT_SEQS_AS_TUPLES and $token =~ /[\xa0-\xff]{2}/:
+            if length > MAX_TOKEN_LENGTH and "*" not in token:
+                if TOKENIZE_LONG_8BIT_SEQS_AS_TUPLES and re.match(ur"[\xa0-\xff]{2}", token):
                     # Matt sez: "Could be Asian? Autrijus suggested doing character ngrams,
                     # but I'm doing tuples to keep the dbs small(er)." Sounds like a plan
                     # to me! (jm)
-                    while ($token =~ s/^(..?)//) {
-                        push (@rettokens, "8:$1");
+                    while True:
+                        token = re.sub(ur"^(..?)", "", token)
+                        if not token:
+                            break
+                        rettokens.append("8:" + token)
                     continue
             
                 if (region == 0 and HDRS_TOKENIZE_LONG_TOKENS_AS_SKIPS) or (region == 1 and BODY_TOKENIZE_LONG_TOKENS_AS_SKIPS) or (region == 2 and URIS_TOKENIZE_LONG_TOKENS_AS_SKIPS):
@@ -796,17 +803,17 @@ class BayesPlugin(pad.plugins.base.BasePlugin):
         
             # Decompose tokens? Do this after shortening long tokens.    
             if (region == 1 or region == 2) and DECOMPOSE_BODY_TOKENS:
-                if $token =~ /[^\w:\*]/:
+                if re.match(ur"[^\w:\*]"):
                     decompd = token  # "Foo!"
-                    decompd =~ s/[^\w:\*]//gs
+                    decompd = re.sub(ur"[^\w:\*]", u"", decompd)
                     rettokens.append(tokprefix + decompd)  # "Foo"
         
-                if $token =~ /[A-Z]/:
+                if re.match(ur"[A-Z]", token):
                     decompd = token.lower()
                     rettokens.append(tokprefix + decompd)  # "foo!"
                     
-                    if $token =~ /[^\w:\*]/:
-                        decompd =~ s/[^\w:\*]//gs
+                    if re.match(ur"[^\w:\*]", token):
+                        decompd = re.sub(ur"[^\w:\*]", u"", decompd)
                         rettokens.append(topprefix + decompd)  # "foo"
         
             retokens.append(tokprefix + token)    
