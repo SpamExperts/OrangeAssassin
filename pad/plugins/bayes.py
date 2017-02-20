@@ -626,14 +626,6 @@ class BayesPlugin(pad.plugins.base.BasePlugin):
         self.store.cleanup()
         return True
 
-    def learner_expire_old_training(self, params):
-        if not self["use_bayes"]:
-            return False
-        self.ctxt.log.debug("bayes: expiry starting")
-        # XXX In SA this is a timed operation.
-        self.store.expire_old_tokens(params)
-        self.ctxt.log.debug("bayes: expiry completed")
-
     # Check to make sure we can tie() the DB, and we have enough entries to do a scan.
     # If we're told the caller will untie(), go ahead and leave the db tied.
     def learner_is_scan_available(self, params):
