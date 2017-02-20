@@ -1279,7 +1279,7 @@ class BayesPlugin(pad.plugins.base.BasePlugin):
             "medium": "$p-$D-$N--$t",
             "long": "$p-$d--${h}h-${s}s--${a}d--$t",
             "Long": 'Probability $p -declassification distance $D --in ${h} ham messages -and ${s} spam messages --${a} days old--token:"$t"'
-        )
+        }
         
         try:
             raw_fmt = formats[fmt_arg] if fmt_arg else "$p-$D--$t"
