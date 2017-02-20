@@ -626,13 +626,6 @@ class BayesPlugin(pad.plugins.base.BasePlugin):
         self.store.cleanup()
         return True
 
-    def learner_sync(self, params):
-        if not self["use_bayes"]:
-            return False
-        self.ctxt.log.debug("bayes: bayes journal sync starting")
-        self.store.sync(params)
-        self.ctxt.log.debug("bayes: bayes journal sync completed")
-    
     def learner_expire_old_training(self, params):
         if not self["use_bayes"]:
             return False
