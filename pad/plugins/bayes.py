@@ -604,7 +604,7 @@ class BayesPlugin(pad.plugins.base.BasePlugin):
         if seen:
             if seen == "s":
                 isspam = True
-            elif seen = "h"
+            elif seen == "h"
                 isspam = False
             else:
                 self.ctxt.log.debug("bayes: forget: msgid %s seen entry is neither ham nor spam but '%s', ignored", msgid, seen)
