@@ -436,6 +436,9 @@ class Store(object):
     def tie_db_readonly(self):
         pass
         
+    def db_readable(self):
+        pass
+
     def tie_db_writeable(self):
         pass
 
@@ -448,10 +451,25 @@ class Store(object):
     def cleanup(self):
         pass
 
+    def nspam_nham_get():
+        pass
+
     def nspam_nham_change(self, spam, ham):
         pass
         
     def multi_tok_count_change(self, spam, ham, tokens, msgatime):
+        pass
+        
+    def get_running_expire_tok(self):
+        pass
+
+    def remove_running_expiry_tok(self):
+        pass
+
+    def expiry_due(self):
+        pass
+
+    def sync_due(self):
         pass
 
 
@@ -634,59 +652,19 @@ class BayesPlugin(pad.plugins.base.BasePlugin):
         if not self.store.tie_db_readonly():
             return False
     
-        # We need the DB to stay tied, so if the journal sync occurs, don't untie!
-        caller_untie = self.main.learn_caller_will_untie
-        try:
-            self.main.learn_caller_will_untie = 1
-            # Do a journal sync if necessary.  Do this before the nspam_nham_get()
-            # call since the sync may cause an update in the number of messages
-            # learnt.
-            self._opportunistic_calls(True)
-        finally:
-            # Reset the variable appropriately.
-            self.main.learn_caller_will_untie = caller_untie
-    
         ns, nn = self.store.nspam_nham_get()
         if ns < self["bayes_min_spam_num"]:
             self.ctxt.log.debug("bayes: not available for scanning, only %s spam(s) in bayes DB < %s", ns, self["bayes_min_spam_num"])
-            if not self.main.learn_caller_will_untie:
+            if not self.learn_caller_will_untie:
                 self.store.untie_db()
             return False
         if nn < self["bayes_min_ham_num"]:
             self.ctxt.log.debug("bayes: not available for scanning, only %s ham(s) in bayes DB < %s", nn, self["bayes_min_ham_num"])
-            if not self.main.learn_caller_will_untie:
+            if not self.learn_caller_will_untie:
                 self.store.untie_db()
             return False
         return True
-    
-    def _opportunistic_calls(self, journal_only):
-        # If we're not already tied, abort.
-        if not self.store.db_readable():
-            self.ctxt.log.debug("bayes: opportunistic call attempt failed, DB not readable")
-            return
-        
-        # Is an expire or sync running?
-        running_expire = self.store.get_running_expire_tok()
-        if running_expire is not None and running_expire + OPPORTUNISTIC_LOCK_VALUE > time.time():
-            self.ctxt.log.debug("bayes: opportunistic call attempt skipped, found fresh running expire magic token")
-            return
-        
-        # Handle expiry and syncing.
-        if not journal_only and self.store.expiry_due():
-            self.ctxt.log.debug("bayes: opportunistic call found expiry due")
-        
-            # Sync will bring the DB R/W as necessary, and the expire will remove
-            # the running_expire token, may untie as well.
-            self.main.bayes_scanner.sync(1, 1)
-        elif self.store.sync_due():
-            self.ctxt.log.debug("bayes: opportunistic call found journal sync due")
-            # Sync will bring the DB R/W as necessary, may untie as well.
-            self.main.bayes_scanner.sync(1, 0)
-            
-            # We can only remove the running_expire token if we're doing R/W.
-            if self.store.db_writeable():
-                self.store.remove_running_expiry_tok()
-    
+
     def tokenise(self, msg, msgdata):
         tokens = [self._tokenise_line(line, "", 1) for line in msgdata["bayes_token_body"]]
         tokens.extend([self._tokenise_line(line, "", 2) for line in msgdata["bayes_token_uris"]])
