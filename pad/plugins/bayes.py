@@ -439,6 +439,9 @@ class Store(object):
     def tie_db_writeable(self):
         pass
 
+    def tok_get(self, token):
+        pass
+
     def seen_get(self, msg):
         pass
 
@@ -448,13 +451,16 @@ class Store(object):
     def cleanup(self):
         pass
 
-    def nspam_nham_get():
+    def nspam_nham_get(self):
         pass
 
     def nspam_nham_change(self, spam, ham):
         pass
         
     def multi_tok_count_change(self, spam, ham, tokens, msgatime):
+        pass
+
+    def tok_touch_all(self, touch_tokens, msgatime):
         pass
         
     def get_running_expire_tok(self):
@@ -475,6 +481,7 @@ class BayesPlugin(pad.plugins.base.BasePlugin):
     options = {u"use_bayes": (u"bool", True),
                u"use_learner": (u"bool", True),
                u"use_bayes_rules": (u"bool", True),
+               u"detailed_bayes_score": (u"bool", False),
                u"bayes_min_spam_num": (u"int", 200),
                u"bayes_min_ham_num": (u"int", 200),}
     
@@ -484,6 +491,7 @@ class BayesPlugin(pad.plugins.base.BasePlugin):
         # XXX Should these be exposed somewhere?
         self.learn_caller_will_untie = False
         self.learn_no_relearn = False
+        self.use_hapaxes = False
     
     def finish(self):
         if self.store:
@@ -962,7 +970,7 @@ class BayesPlugin(pad.plugins.base.BasePlugin):
             domain = domain.split(".", 1)[1]
             yield domain
 
-    def check_bayes(self, pms, fulltext, min_score, max_score):
+    def check_bayes(self, fulltext, min_score, max_score):
         """Check the message against the active Bayes classifier."""
         if not self["use_learner"]:
             return False
@@ -971,15 +979,15 @@ class BayesPlugin(pad.plugins.base.BasePlugin):
         if not self["use_bayes_rules"]:
             return False
             
-        if pms.bayes_score is None:
-            # XXX SA has a timer here.
-            pms.bayes_score = self.scan(pms, pms.msg)
+        # XXX SA has a timer here.
+        bayes_score = self.scan(msg)
             
-        if pms.bayes_score and (min_score == 0 or pms.bayes_score > min_score) and (max_score == "undef" or pms.bayes_score <= max_score):
+        if bayes_score and (min_score == 0 or bayes_score > min_score) and (max_score == "undef" or bayes_score <= max_score):
+            # TODO: Find test_log implementation.
             if self["detailed_bayes_score"]:
-                pms.test_log("score: %3.4f, hits: %s" % (pms.bayes_score, pms.bayes_hits))
+                test_log("score: %3.4f, hits: %s" % (bayes_score, bayes_hits))
             else:
-                pms.test_log("score: %3.4f" % pms.bayes_score)
+                test_log("score: %3.4f" % bayes_score)
             return True
         return False
 
@@ -1024,22 +1032,22 @@ class BayesPlugin(pad.plugins.base.BasePlugin):
         self.store.cleanup()
                 
         # Reset the value accordingly.
-        self.main.learn_caller_will_untie = caller_untie
+        self.learn_caller_will_untie = caller_untie
         
         # If our caller won't untie the db, we need to do it.
         if not caller_untie:
             self.store.untie_db()
         return score
 
-    def scan(self, permsgstatus, msg):
+    def scan(self, msg):
         if not self["use_learner"]:
             return
         # When we're doing a scan, we'll guarantee that we'll do the untie,
         # so override the global setting until we're done.
-        caller_untie = self.main.learn_caller_will_untie
-        self.main.learn_caller_will_untie = True
+        caller_untie = self.learn_caller_will_untie
+        self.learn_caller_will_untie = True
         
-        if self.main.bayes_scanner.ignore_message(permsgstatus):
+        if self.ignore_message(permsgstatus):
             return self._skip_scan()
         if not self.learner_is_scan_available():
             return self._skip_scan()
@@ -1073,11 +1081,11 @@ class BayesPlugin(pad.plugins.base.BasePlugin):
         now = time.time()
         if msgatime > now:
             msgatime = now
-            
-        permsgstatus.bayes_token_info_spammy = []
-        tinfo_spammy = permsgstatus.bayes_token_info_spammy
-        permsgstatus.bayes_token_info_hammy = []
-        tinfo_hammy = permsgstatus.bayes_token_info_hammy
+        
+        tinfo_spammy = []
+        self.set_local("bayes_token_info_spammy", tinfo_spammy)
+        tinfo_hammy = []
+        self.set_local("bayes_token_info_hammy", tinfo_hammy)
         
         tok_strength = {key: abs(value["prob"] - 0.5) for key, value in pw}
 
@@ -1130,10 +1138,8 @@ class BayesPlugin(pad.plugins.base.BasePlugin):
         # We don't really care about the return value here.
         self.store.tok_touch_all(touch_tokens, msgatime)
         
-        permsgstatus.bayes_nspam = ns
-        permsgstatus.bayes_nham = nn
-        
-        self.main.call_plugins("bayes_scan", toksref=msgtokens, probsref=pw, score=score, msgatime=msgatime, significant_tokens=touch_tokens)
+        self.set_local("bayes_nspam", ns)
+        self.set_local("bayes_nham", nn)
         
         return self._skip_scan()
 
