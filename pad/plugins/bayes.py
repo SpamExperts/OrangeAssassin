@@ -504,14 +504,7 @@ class BayesPlugin(pad.plugins.base.BasePlugin):
         msg = params.msg
         msgdata = self.get_body_from_msg(msg)
         # XXX In SA, there is a time limit set here.
-        if self[u"learn_to_journal"]:
-            # If we're going to learn to journal, we'll try going r/o first...
-            # If that fails for some reason, let's try going r/w.  This happens
-            # if the DB doesn't exist yet.
-            ok = self.store.tie_db_readonly() or self.store.tie_db_writable()
-        else:
-            ok = self.store.tie_db_writable()
-        if ok:
+        if self.store.tie_db_writable():
             ret = self._learn_trapped(params.isspam, msg, msgdata, params.id)
             if not self.main.learn_caller_will_untie:
                 self.store.untie_db()
@@ -582,14 +575,7 @@ class BayesPlugin(pad.plugins.base.BasePlugin):
         msg = params.msg
         msgdata = self.get_body_from_msg(msg)
         # XXX SA wraps this in a timer.
-        if self.main.learn_to_journal:
-            # If we're going to learn to journal, we'll try going r/o first...
-            # If that fails for some reason, let's try going r/w.  This happens
-            # if the DB doesn't exist yet.
-            ok = self.store.tie_db_readonly() or self.store.tie_db_writeable()
-        else:
-            ok = self.store.tie_db_writeable()
-        if ok:
+        if self.store.tie_db_writable():
             ret = self._forget_trapped(msg, msgdata, params.id)
             if not self.main.learn_caller_will_untie:
                 self.store.untie_db()
