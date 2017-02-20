@@ -426,6 +426,20 @@ REQUIRE_SIGNIFICANT_TOKENS_TO_SCORE = -1
 MAX_TOKEN_LENGTH = 15
 
 
+class Store(object):
+    def __init__(self, session):
+        self.session = session
+        
+    def untie_db():
+        pass
+
+    def tie_db_readonly():
+        pass
+        
+    def tie_db_writeable():
+        pass
+
+
 class BayesPlugin(pad.plugins.base.BasePlugin):
     eval_rules = ("check_bayes",)
     options = {u"use_bayes": (u"bool", True),
@@ -436,8 +450,7 @@ class BayesPlugin(pad.plugins.base.BasePlugin):
     
     def __init__(self, *args, **kwargs):
         super(BayesPlugin, self).__init__(*args, **kwargs)
-        # XXX Need to get a store.
-        self.store = None
+        self.store = Store(self.get_session())
     
     def finish(self):
         if self.store:
@@ -474,26 +487,12 @@ class BayesPlugin(pad.plugins.base.BasePlugin):
                                                   (date, body)).hexdigest()
         return msgid
     
-    # XXX Finish this
     def get_body_from_msg(self, msg):
-        permsgstatus = PerMsgStatus(self.main, msg)
-        msg.extract_message_metadata(permsgstatus)
-        msgdata = self._get_msgdata_from_permsgstatus(permsgstatus)
-        permsgstatus.finish()
-    
-        if msgdata is None:
-            # Why?!
-            logger.warn("bayes: failed to get body for %s", self.get_msgid(msg))
-            return {}
-        return msgdata
-    
-    # XXX Finish this
-    def _get_msgdata_from_permsgstatus(self, msg):
-        msgdata = {}
-        msgdata["bayes_token_body"] = msg.get_visible_rendered_body_text_array()
-        msgdata["bayes_token_inviz"] = msg.get_invisible_rendered_body_text_array()
-        msgdata["bayes_token_uris"] = msg.get_uri_list()
-        return msgdata
+        return {
+            u"bayes_token_body": msg.get_visible_rendered_body_text_array(),
+            u"bayes_token_inviz": msg.get_invisible_rendered_body_text_array(),
+            u"bayes_token_uris": msg.get_uri_list(),
+        }
     
     def plugin_report(self, msg):
         """Train the message as spam."""
@@ -505,7 +504,7 @@ class BayesPlugin(pad.plugins.base.BasePlugin):
         msg = params.msg
         msgdata = self.get_body_from_msg(msg)
         # XXX In SA, there is a time limit set here.
-        if self.main.learn_to_journal:
+        if self[u"learn_to_journal"]:
             # If we're going to learn to journal, we'll try going r/o first...
             # If that fails for some reason, let's try going r/w.  This happens
             # if the DB doesn't exist yet.
