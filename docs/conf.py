@@ -126,6 +126,12 @@ html_theme_options = {
     "github_banner": True,
     "show_related": True,
 }
+html_context = {
+    'css_files': [
+        # overrides for wide tables in RTD theme
+        '_static/theme_overrides.css',
+    ],
+}
 
 # Add any paths that contain custom themes here, relative to this directory.
 #html_theme_path = []
