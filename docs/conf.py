@@ -136,7 +136,7 @@ html_theme = 'sphinx_rtd_theme'
 #     'navigation_depth': 3,
 # }
 html_context = {
-    'css_files': [
+    'extra_css_files': [
         # CSS that can be used to override theme values.
         '_static/theme_overrides.css',
     ],
