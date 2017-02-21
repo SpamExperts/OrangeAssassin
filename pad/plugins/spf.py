@@ -1,12 +1,14 @@
 """ SPF Plugin."""
 
 from __future__ import absolute_import
-from builtins import str
-import re
-import spf
-import pad.plugins.base
-import pad.message
 
+import re
+from builtins import str
+
+import spf
+
+import pad.message
+import pad.plugins.base
 from pad.regex import Regex
 
 RECEIVED_RE = Regex(r"""
@@ -190,7 +192,9 @@ class SpfPlugin(pad.plugins.base.BasePlugin):
             else:
                 continue
             if identity:
-                if identity in ('mfrom', 'mailfrom', 'None'):
+
+                if identity in ('mfrom', 'mailfrom', 'none'):
+                    print("!!!!!!!!!!!!!")
                     if self.spf_check:
                         continue
                     identity = ''

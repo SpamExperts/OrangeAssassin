@@ -69,6 +69,7 @@ SpamPAD accepts various types of configuration options. The current types are:
         ["This message was marked as spam on _HOSTNAME_.",
          "The message score was _SCORE_.",
          "Contact me at _CONTACTADDRESS_."]
+
 **clear**
     Clears one or more of the append type option.
 
