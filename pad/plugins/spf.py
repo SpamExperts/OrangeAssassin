@@ -7,7 +7,6 @@ from builtins import str
 
 import spf
 
-import pad.message
 import pad.plugins.base
 from pad.regex import Regex
 
@@ -194,7 +193,6 @@ class SpfPlugin(pad.plugins.base.BasePlugin):
             if identity:
 
                 if identity in ('mfrom', 'mailfrom', 'none'):
-                    print("!!!!!!!!!!!!!")
                     if self.spf_check:
                         continue
                     identity = ''
