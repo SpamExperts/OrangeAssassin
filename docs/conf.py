@@ -118,17 +118,26 @@ html_theme = 'sphinx_rtd_theme'
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
 # documentation.
-html_theme_options = {
-    "travis_button": True,
-    "github_button": True,
-    "github_user": "SpamExperts",
-    "github_repo": "SpamPAD",
-    "github_banner": True,
-    "show_related": True,
-}
+
+# Alabaster theme options
+# html_theme_options = {
+#     "travis_button": True,
+#     "github_button": True,
+#     "github_user": "SpamExperts",
+#     "github_repo": "SpamPAD",
+#     "github_banner": True,
+#     "show_related": True,
+# }
+
+# RTD theme options
+# html_theme_options = {
+#     'collapse_navigation': False,
+#     'display_version': False,
+#     'navigation_depth': 3,
+# }
 html_context = {
     'css_files': [
-        # overrides for wide tables in RTD theme
+        # CSS that can be used to override theme values.
         '_static/theme_overrides.css',
     ],
 }
