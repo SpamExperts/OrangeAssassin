@@ -1143,6 +1143,16 @@ Received: from example.com ([1.2.3.4]) by test.com
         result = self.check_pad(email)
         self.check_report(result, 2, ['SPF_SOFTFAIL', 'SPF_HELO_FAIL'])
 
+    def test_def_whitelist_from_spf_with_identity_None(self):
+        lists = """def_whitelist_from_spf *spamexperts.com"""
+
+        email = """Received-SPF: pass (example.com: domain of test@example.com) identity=None
+Received: from example.com ([1.2.3.4]) by test.com
+    (envelope-from <test@spamexperts.com>)"""
+
+        self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG + lists)
+        result = self.check_pad(email)
+        self.check_report(result, 2, ['SPF_HELO_FAIL', 'SPF_SOFTFAIL'])
 
 def suite():
     """Gather all the tests from this package in a test suite."""
