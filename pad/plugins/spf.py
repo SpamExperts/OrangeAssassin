@@ -192,7 +192,7 @@ class SpfPlugin(pad.plugins.base.BasePlugin):
                 continue
             if identity:
 
-                if identity in ('mfrom', 'mailfrom', 'none'):
+                if identity.lower() in ('mfrom', 'mailfrom', 'none'):
                     if self.spf_check:
                         continue
                     identity = ''
