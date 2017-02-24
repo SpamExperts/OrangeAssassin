@@ -26,6 +26,7 @@ AUTHRES_RE = Regex(r"""
 class SpfPlugin(pad.plugins.base.BasePlugin):
     spf_check = False
     spf_check_helo = False
+    no_valid_identity = False
     eval_rules = (
         "check_for_spf_pass",
         "check_for_spf_neutral",
@@ -164,6 +165,8 @@ class SpfPlugin(pad.plugins.base.BasePlugin):
             received_spf_headers.reverse()
         if received_spf_headers:
             self.check_spf_received_header(received_spf_headers)
+            if not self.no_valid_identity:
+                self.received_headers(msg, '')
         elif authres_header:
             self.check_authres_header(authres_header)
 
@@ -186,13 +189,12 @@ class SpfPlugin(pad.plugins.base.BasePlugin):
             result = match.group(1)
             if match.group() == result:
                 identity = ''
-            elif match.group(2) != 'None':
+            elif match.group(2).lower() != 'none':
                 identity = match.group(2)
             else:
                 continue
             if identity:
-
-                if identity.lower() in ('mfrom', 'mailfrom', 'none'):
+                if identity.lower() in ('mfrom', 'mailfrom'):
                     if self.spf_check:
                         continue
                     identity = ''
@@ -205,6 +207,9 @@ class SpfPlugin(pad.plugins.base.BasePlugin):
                     continue
             elif self.spf_check:
                 continue
+
+            if not identity:
+                self.no_valid_identity = True
 
             result.replace("error", "temperror")
             if identity:
