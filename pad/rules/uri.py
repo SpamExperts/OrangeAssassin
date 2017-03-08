@@ -11,6 +11,7 @@ class URIRule(pad.rules.base.BaseRule):
     Note that this does include the protocol.
     """
     _rule_type = "URI: "
+    rule_type = 'uri'
 
     def __init__(self, name, pattern, score=None, desc=None, priority=0,
                  tflags=None):

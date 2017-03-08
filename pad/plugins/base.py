@@ -169,6 +169,13 @@ class BasePlugin(pad.conf.Conf, object):
         May be overridden.
         """
 
+    def auto_learn_discriminator(self, ruleset, msg):
+        """All message operations have finished and it can be checked for
+        submission to autolearning systems
+
+        May be overridden.
+        """
+
     def plugin_report(self, msg):
         """Called when a message should be reported as spam.
 

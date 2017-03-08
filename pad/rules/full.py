@@ -6,6 +6,7 @@ import pad.rules.base
 
 class FullRule(pad.rules.base.BaseRule):
     """Match a regular expression against the full raw message."""
+    rule_type = 'full'
 
     def __init__(self, name, pattern, score=None, desc=None, priority=0,
                  tflags=None):

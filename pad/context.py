@@ -348,6 +348,12 @@ class GlobalContext(_Context):
             plugin.check_end(ruleset, msg)
 
     @_callback_chain
+    def hook_auto_learn(self, ruleset, msg):
+        """Hook for calling auto learning plugins"""
+        for plugin in self.plugins.values():
+            plugin.auto_learn_discriminator(ruleset, msg)
+
+    @_callback_chain
     def hook_report(self, msg, spam=True, local=True, remote=True):
         """Hook when the message should be reported as spam."""
         for plugin in self.plugins.values():

@@ -24,6 +24,7 @@ _SUBRULE_P = Regex(r"([_a-zA-Z]\w*)(?=\W|$)")
 class MetaRule(pad.rules.base.BaseRule):
     """These rules are boolean or arithmetic combinations of other rules."""
     _location = {}
+    rule_type = 'meta'
 
     def __init__(self, name, rule, score=None, desc=None, priority=0,
                  tflags=None):

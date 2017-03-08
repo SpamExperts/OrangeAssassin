@@ -8,6 +8,7 @@ import pad.rules.base
 class MimeHeaderRule(pad.rules.base.BaseRule):
     """Abstract class for all MIME header rules."""
     _rule_type = "BODY: "
+    rule_type = 'header'
 
     def match(self, msg):
         raise NotImplementedError()
@@ -70,6 +71,8 @@ class _PatternMimeRawHeaderRule(_PatternMimeHeaderRule):
 
 class HeaderRule(pad.rules.base.BaseRule):
     """Abstract base class for all header rules."""
+
+    rule_type = 'header'
 
     def match(self, msg):
         raise NotImplementedError()

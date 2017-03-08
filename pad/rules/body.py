@@ -14,6 +14,7 @@ class BodyRule(pad.rules.base.BaseRule):
         - subject headers prepended
     """
     _rule_type = "BODY: "
+    rule_type = "body"
 
     def __init__(self, name, pattern, score=None, desc=None, priority=0,
                  tflags=None):
@@ -38,6 +39,7 @@ class RawBodyRule(BodyRule):
         - decoded and stripped of any headers
     """
     _rule_type = "RAW: "
+    rule_type = "rawbody"
 
     def match(self, msg):
         return bool(self._pattern.match(msg.raw_text))

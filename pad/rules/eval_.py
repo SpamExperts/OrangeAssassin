@@ -31,6 +31,7 @@ class EvalRule(pad.rules.base.BaseRule):
                  priority=0, tflags=None):
         super(EvalRule, self).__init__(name, score=score, desc=desc,
                                        priority=priority, tflags=tflags)
+        self.rule_type = target
         try:
             eval_rule_name, eval_args = _EVAL_RULE_P.match(eval_rule).groups()
             self.eval_rule_name = eval_rule_name

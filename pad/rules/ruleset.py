@@ -356,3 +356,4 @@ class RuleSet(object):
             self.ctxt.log.debug("Stop processing the messages as "
                                 "requested: %s", e)
         self.ctxt.hook_check_end(self, msg)
+        self.ctxt.hook_auto_learn(self, msg)
