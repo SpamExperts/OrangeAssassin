@@ -1,3 +1,5 @@
+"""Implements the functionality to submit messages for learning when they
+fall outside the defined threshold"""
 from __future__ import absolute_import
 
 import pad.plugins.base
