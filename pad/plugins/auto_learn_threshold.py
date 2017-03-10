@@ -47,18 +47,21 @@ class AutoLearnThreshold(pad.plugins.base.BasePlugin):
 
     def should_learn(self, msg):
         """Checks if the necessary conditions for learning are met"""
-        body_points = self.get_local(msg, "header_points")
-        header_points = self.get_local(msg, "body_points")
+        body_points = self.get_local(msg, "body_points")
+        header_points = self.get_local(msg, "header_points")
         learned_points = self.get_local(msg, "learned_points")
+        min_body_points = self.get_local(msg, "min_body_points")
+        min_header_points = self.get_local(msg, "min_header_points")
+        autolearn_forced = self.get_local(msg, "autolearn_forced")
 
         if self.get_local(msg, "learner_thinks_spam"):
-            if header_points < self['min_header_points']:
+            if header_points < min_header_points:
                 self.ctxt.log.debug("not learning, header score: %s < %s",
-                                    header_points, self['min_header_points'])
+                                    header_points, min_header_points)
                 return False
-            if body_points < self['min_body_points']:
+            if body_points < min_body_points:
                 self.ctxt.log.debug("not learning, body score: %s < %s",
-                                    body_points, self['min_body_points'])
+                                    body_points, min_body_points)
                 return False
             if learned_points < LEARNER_HAM_POINTS:
                 self.ctxt.log.debug("not learning, learn score: %s < %s",
@@ -91,7 +94,7 @@ class AutoLearnThreshold(pad.plugins.base.BasePlugin):
                            self.get_local(msg, "autolearn_points"),
                            self['bayes_auto_learn_threshold_nonspam'],
                            self['bayes_auto_learn_threshold_spam'],
-                           self["autolearn_forced"])
+                           autolearn_forced)
         return True
 
     def prepare_learning_metadata(self, msg, tests):
@@ -148,13 +151,15 @@ class AutoLearnThreshold(pad.plugins.base.BasePlugin):
                        points >= self['bayes_auto_learn_threshold_spam'])
         self.set_local(msg, "learner_thinks_ham",
                        points <= self['bayes_auto_learn_threshold_nonspam'])
-        self['autolearn_forced'] = autolearn_forced
+        self.set_local(msg, 'autolearn_forced', autolearn_forced)
         if autolearn_forced:
-            self['min_body_points'] = MIN_BODY_POINTS_LOW_THRESHOLD
-            self['min_header_points'] = MIN_HEADER_POINTS_LOW_THRESHOLD
+            self.set_local(msg, 'min_body_points',
+                           MIN_BODY_POINTS_LOW_THRESHOLD)
+            self.set_local(msg, 'min_header_points',
+                           MIN_HEADER_POINTS_LOW_THRESHOLD)
         else:
-            self['min_body_points'] = MIN_BODY_POINTS
-            self['min_header_points'] = MIN_HEADER_POINTS
+            self.set_local(msg, 'min_body_points', MIN_BODY_POINTS)
+            self.set_local(msg, 'min_header_points', MIN_HEADER_POINTS)
 
     def auto_learn_discriminator(self, ruleset, msg):
         """Decides if a message should be submitted for autolearning
