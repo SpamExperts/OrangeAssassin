@@ -25,7 +25,6 @@ class AutoLearnThreshold(pad.plugins.base.BasePlugin):
          Exclude all tests flagged with noautolearn, userconf or have a 0 score
         """
         for name, rule in tests.items():
-            self.ctxt.log.debug(name)
             if not rule.score:
                 continue
             tflags = rule.tflags or []
@@ -56,15 +55,15 @@ class AutoLearnThreshold(pad.plugins.base.BasePlugin):
         if self.get_local(msg, "learner_thinks_spam"):
             if header_points < self['min_header_points']:
                 self.ctxt.log.debug("not learning, header score: %s < %s",
-                                header_points, self['min_header_points'])
+                                    header_points, self['min_header_points'])
                 return False
             if body_points < self['min_body_points']:
                 self.ctxt.log.debug("not learning, body score: %s < %s",
-                                header_points, self['min_body_points'])
+                                    body_points, self['min_body_points'])
                 return False
             if learned_points < LEARNER_HAM_POINTS:
                 self.ctxt.log.debug("not learning, learn score: %s < %s",
-                                learned_points, LEARNER_HAM_POINTS)
+                                    learned_points, LEARNER_HAM_POINTS)
                 return False
             if msg.score <= self.ctxt.conf['required_score']:
                 self.ctxt.log.debug("not learning, msg score: %s < %s",
@@ -73,11 +72,11 @@ class AutoLearnThreshold(pad.plugins.base.BasePlugin):
         elif self.get_local(msg, "learner_thinks_ham"):
             if learned_points > LEARNER_SPAM_POINTS:
                 self.ctxt.log.debug("not learning, learn score: %s > %s",
-                                learned_points, LEARNER_SPAM_POINTS)
+                                    learned_points, LEARNER_SPAM_POINTS)
                 return False
             if msg.score >= self.ctxt.conf['required_score']:
-                self.ctxt.log.debug("not learning, msg score: %s > %s",
-                                msg.score, self.ctxt.conf['required_score'])
+                self.ctxt.log.debug("not learning, msg score: %s >= %s",
+                                    msg.score, self.ctxt.conf['required_score'])
                 return False
         else:
             self.ctxt.log.debug(
