@@ -141,10 +141,10 @@ class PADParser(object):
             return
         with open(filename, "rb") as rulef:
             # Extract file extension
-            extension = filename.rsplit(".")[1]
+            base_name, extension = os.path.splitext(filename)
 
             # Parse YML configuration file
-            if extension in ("yml", "yaml"):
+            if extension in (".yml", ".yaml"):
                 chunk = str()
 
                 # Since the parsing order counts we cannot load the
@@ -195,7 +195,7 @@ class PADParser(object):
     def _handle_yaml_element(self, yaml_dict, _depth):
         """Method that adds the YAML parsed element to the self.results"""
 
-        if not type(yaml_dict) is dict:
+        if not isinstance(yaml_dict, dict):
             return
 
         for key, value in yaml_dict.items():
@@ -215,7 +215,7 @@ class PADParser(object):
                         self.ctxt.hook_parse_config("report", desc)
 
             # If the element is a dict maybe it can describe a rule
-            elif type(value) is dict:
+            elif isinstance(value, dict):
 
                 # If the rule is not present in the results
                 if key not in self.results:
@@ -240,9 +240,11 @@ class PADParser(object):
                             # set the target
                             if value[param].startswith("eval:"):
                                 try:
-                                    self.results[key]["target"] = self.results[key]["type"]
+                                    self.results[key]["target"] = \
+                                        self.results[key]["type"]
                                 except KeyError:
-                                    raise Exception('Results: %s -> %s', self.results, value)
+                                    self.results[key]["target"] = value["type"]
+
                                 self.results[key]["type"] = "eval"
                             self.results[key]["value"] = value[param]
 

@@ -6,7 +6,10 @@ env:
   matrix:
     - USE_YAML=1
 python:
+- '2.7.11'
 - '3.5'
+- pypy
+- pypy3
 install:
 - pip install -r requirements/base.txt;
 - if [[ $USE_SQLALCHEMY == false ]]; then pip install pymysql; fi
@@ -26,7 +29,3 @@ before_script:
 - if [[ $USE_SQLALCHEMY == false ]]; then mysql -u root -e 'create database spampad;'; fi
 script:
 - env USE_PICKLES=0 py.test tests/functional/test_plugins/test_dkim.py
-- cat tests/test_match_conf/20.yaml
-- cat tests/test_match_conf/v310.yml
-- cat tests/test_match_conf/v320.yml
-- ls tests/test_match_conf/
