@@ -239,8 +239,10 @@ class PADParser(object):
                             # If we have an eval rule, update the type and
                             # set the target
                             if value[param].startswith("eval:"):
-                                self.results[key]["target"] = \
-                                self.results[key]["type"]
+                                try:
+                                    self.results[key]["target"] = self.results[key]["type"]
+                                except KeyError:
+                                    raise Exception('Results: %s', self.results)
                                 self.results[key]["type"] = "eval"
                             self.results[key]["value"] = value[param]
 
