@@ -216,7 +216,7 @@ class PADParser(object):
 
             # If the element is a dict maybe it can describe a rule
             elif isinstance(value, dict):
-
+                # import pdb; pdb.set_trace()
                 # If the rule is not present in the results
                 if key not in self.results:
                     self.results[key] = dict()
@@ -234,6 +234,7 @@ class PADParser(object):
                             if value[param] in RULES or value[
                                 param] in self.ctxt.cmds:
 
+                                self.results[key][param] = value[param]
                                 # If the value was allready added we should
                                 # set the rule target and change the type
                                 # to eval
@@ -241,8 +242,7 @@ class PADParser(object):
                                     if self.results[key]["value"].startswith("eval:"):
                                         self.results[key]["target"] = value["type"]
                                         self.results[key]["type"] = "eval"
-                                else:
-                                    self.results[key][param] = value[param]
+
 
                         elif param == "value":
                             # If we have an eval rule, update the type and
