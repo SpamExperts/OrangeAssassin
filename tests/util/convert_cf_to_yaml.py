@@ -1,17 +1,24 @@
 import sys
 import yaml
+import re
 
 RULES_TYPES = {
     "full", "body", "rawbody", "uri", "meta", "header", "mimeheader", "eval"
 }
 
 RULES_SETTINGS = {
-    "score", "priority", "describe", "lang", "tflags"
+    "score", "priority", "describe", "lang", "tflags", "uri_detail"
 }
 
 
 def convert(filename):
-    new_filename = filename.rsplit(".")[0] + ".yml"
+
+    extension = filename.rsplit(".")[1]
+
+    if extension == "pre":
+        new_filename = filename.rsplit(".")[0] + ".yml"
+    elif extension == "cf":
+        new_filename = filename.rsplit(".")[0] + ".yaml"
 
     with open(filename, "r") as old, open(new_filename, "w+") as new:
         for line in old:
@@ -29,13 +36,13 @@ def convert(filename):
                 yaml_dict["ifplugin"] = line.split()[1].strip()
 
             elif line.startswith("loadplugin"):
-                yaml_dict["loadplugin"] = line.split()[1].strip()
+                yaml_dict["loadplugin"] = line.split(' ', 1)[1].strip()
 
             else:
                 rtype = line.split()[0]
                 if rtype in RULES_TYPES:
                     rname = line.split()[1]
-                    rvalue = line.rsplit(' ', 2)[2]
+                    rvalue = line.split(' ', 2)[2]
                     yaml_dict[rname] = dict()
                     yaml_dict[rname]["type"] = rtype
                     yaml_dict[rname]["value"] = rvalue
@@ -62,9 +69,11 @@ def convert(filename):
                         yaml_dict[rname] = dict()
                         yaml_dict[rname][rtype] = rvalue
                 else:
-                    rvalue = line.split(' ', 1)[1]
-                    yaml_dict[rtype] = rvalue
-                    yaml_dict
+                    try:
+                        rvalue = line.split(' ', 1)[1]
+                        yaml_dict[rtype] = rvalue
+                    except IndexError:
+                        pass
 
             yaml.dump(yaml_dict, new, default_flow_style=False)
 

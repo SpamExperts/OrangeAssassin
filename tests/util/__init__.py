@@ -2,6 +2,8 @@
 from __future__ import print_function
 from __future__ import absolute_import
 
+from tests.util.convert_cf_to_yaml import convert
+
 import os
 import sys
 import shutil
@@ -71,6 +73,20 @@ class TestBase(unittest.TestCase):
             pref.write(pre_config)
         with open(os.path.join(self.test_conf, "20.cf"), "w") as conf:
             conf.write(config)
+
+        # If USE_YAML environment variable is set, convert file to yml
+        # and remove the old ones
+        if os.environ.get("USE_YAML") == "1":
+            convert(os.path.join(self.test_conf, "v310.pre"))
+            os.remove(os.path.join(self.test_conf, "v310.pre"))
+            convert(os.path.join(self.test_conf, "v320.pre"))
+            os.remove(os.path.join(self.test_conf, "v320.pre"))
+            convert(os.path.join(self.test_conf, "20.cf"))
+            os.remove(os.path.join(self.test_conf, "20.cf"))
+
+
+
+
 
     def check_pad(self, message, message_only=False, report_only=True,
                   extra_args=None, debug=False, expect_failure=False, env=None):

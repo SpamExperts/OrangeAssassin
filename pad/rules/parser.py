@@ -223,7 +223,7 @@ class PADParser(object):
 
                 # Put in the result just the valid rule params
                 for param in value:
-                    if param in YAML_RULE_PARAMS:
+                    if param in YAML_RULE_PARAMS or param in self.ctxt.cmds:
 
                         # Score and priority should be converted to string
                         if param == "score" or param == "priority":
@@ -255,6 +255,12 @@ class PADParser(object):
                                 if locale_language.startswith(lang):
                                     self.results[key]["describe"] = desc
 
+                        # Set rule type to uri_detail and set rule value
+                        # to the value of uri_detail key
+                        elif param == "uri_detail":
+                            self.results[key]["type"] = "uri_detail"
+                            param = "value"
+                            self.results[key][param] = value["uri_detail"]
                         else:
                             self.results[key][param] = value[param]
 
@@ -316,6 +322,7 @@ class PADParser(object):
             except ValueError:
                 raise pad.errors.InvalidSyntax(filename, line_no, line,
                                                "Missing argument")
+
             if rtype == "tflags":
                 value = value.split()
 
