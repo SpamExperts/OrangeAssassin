@@ -53,14 +53,14 @@ class TestBase(unittest.TestCase):
 
     def tearDown(self):
         unittest.TestCase.tearDown(self)
-        try:
-            shutil.rmtree(self.test_conf, True)
-        except OSError:
-            pass
-        try:
-            shutil.rmtree(self.debug_email)
-        except OSError:
-            pass
+        # try:
+        #     shutil.rmtree(self.test_conf, True)
+        # except OSError:
+        #     pass
+        # try:
+        #     shutil.rmtree(self.debug_email)
+        # except OSError:
+        #     pass
 
     def setup_conf(self, config=DEFAULT_CONFIG, pre_config=DEFAULT_PRE_CONFIG):
         """Setup the configuration folder with the specified

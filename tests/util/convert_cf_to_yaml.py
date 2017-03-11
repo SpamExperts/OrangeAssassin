@@ -10,7 +10,6 @@ RULES_SETTINGS = {
     "score", "priority", "describe", "lang", "tflags", "uri_detail"
 }
 
-
 def convert(filename):
 
     base_name, extension = os.path.splitext(filename)
