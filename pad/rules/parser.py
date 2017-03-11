@@ -233,15 +233,23 @@ class PADParser(object):
                         elif param == "type":
                             if value[param] in RULES or value[
                                 param] in self.ctxt.cmds:
-                                self.results[key][param] = value[param]
+
+                                # If the value was allready added we should
+                                # set the rule target and change the type
+                                # to eval
+                                if "value" in self.results[key]:
+                                    if self.results[key]["value"].startswith("eval:"):
+                                        self.results[key]["target"] = value["type"]
+                                        self.results[key]["type"] = "eval"
+                                else:
+                                    self.results[key][param] = value[param]
 
                         elif param == "value":
                             # If we have an eval rule, update the type and
                             # set the target
                             if value[param].startswith("eval:"):
                                 try:
-                                    self.results[key]["target"] = \
-                                        self.results[key]["type"]
+                                    self.results[key]["target"] = self.results[key]["type"]
                                 except KeyError:
                                     self.results[key]["target"] = value["type"]
 
