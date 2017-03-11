@@ -1,6 +1,6 @@
+import os
 import sys
 import yaml
-import re
 
 RULES_TYPES = {
     "full", "body", "rawbody", "uri", "meta", "header", "mimeheader", "eval"
@@ -13,12 +13,12 @@ RULES_SETTINGS = {
 
 def convert(filename):
 
-    extension = filename.rsplit(".")[1]
+    base_name, extension = os.path.splitext(filename)
 
-    if extension == "pre":
-        new_filename = filename.rsplit(".")[0] + ".yml"
-    elif extension == "cf":
-        new_filename = filename.rsplit(".")[0] + ".yaml"
+    if extension == ".pre":
+        new_filename = base_name + ".yml"
+    elif extension == ".cf":
+        new_filename = base_name+ ".yaml"
 
     with open(filename, "r") as old, open(new_filename, "w+") as new:
         for line in old:
@@ -79,7 +79,7 @@ def convert(filename):
 
 
 def main():
-    if not sys.argv[1] or len(sys.argv) != 2:
+    if len(sys.argv) != 2:
         print("Usage: python %s <filename>" % sys.argv[0])
         return
 

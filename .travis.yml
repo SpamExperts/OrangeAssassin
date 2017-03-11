@@ -4,16 +4,9 @@ os:
 - linux
 env:
   matrix:
-    - USE_SQLALCHEMY=true
-    - USE_SQLALCHEMY=false
     - USE_YAML=1
-    - USE_YAML=0
-
 python:
 - '2.7.11'
-- '3.5'
-- pypy
-- pypy3
 install:
 - pip install -r requirements/base.txt;
 - if [[ $USE_SQLALCHEMY == false ]]; then pip install pymysql; fi
