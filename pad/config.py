@@ -106,7 +106,7 @@ def get_config_files(config_path, siteconfig_path, userpref_path=None):
     config_files = []
     config_files.extend(
             sorted(get_files_with_extension(siteconfig_path, ".pre")))
-    if siteconfig_path != config_path:
+    if os.path.expanduser(siteconfig_path) != os.path.expanduser(config_path):
         config_files.extend(
                 sorted(get_files_with_extension(config_path, ".pre")))
         config_files.extend(
