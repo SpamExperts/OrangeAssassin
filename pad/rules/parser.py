@@ -216,7 +216,6 @@ class PADParser(object):
 
             # If the element is a dict maybe it can describe a rule
             elif isinstance(value, dict):
-                # import pdb; pdb.set_trace()
                 # If the rule is not present in the results
                 if key not in self.results:
                     self.results[key] = dict()
