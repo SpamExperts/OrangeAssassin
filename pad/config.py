@@ -111,8 +111,22 @@ def get_config_files(config_path, siteconfig_path, userpref_path=None):
                 sorted(get_files_with_extension(config_path, ".pre")))
         config_files.extend(
                 sorted(get_files_with_extension(config_path, ".cf")))
+
+        # Also append .yml and .yaml files from config_path
+        config_files.extend(
+            sorted(get_files_with_extension(config_path, ".yml")))
+        config_files.extend(
+            sorted(get_files_with_extension(config_path, ".yaml")))
+
     config_files.extend(
             sorted(get_files_with_extension(siteconfig_path, ".cf")))
+
+    # Also append .yml and .yaml files from siteconfig_path
+    config_files.extend(
+        sorted(get_files_with_extension(siteconfig_path, ".yml")))
+    config_files.extend(
+        sorted(get_files_with_extension(siteconfig_path, ".yaml")))
+
     if userpref_path is not None and os.path.exists(userpref_path):
         config_files.append(os.path.expanduser(userpref_path))
     return config_files

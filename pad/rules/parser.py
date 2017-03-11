@@ -14,8 +14,8 @@ from builtins import dict
 from builtins import object
 
 
-import re
 import os
+import yaml
 import warnings
 import contextlib
 import collections
@@ -90,6 +90,19 @@ RULES = {
     "eval": pad.rules.eval_.EvalRule,
 }
 
+# Params that a YAML rule can have
+YAML_RULE_PARAMS = frozenset(
+    (
+        "type", # Rule type (see RULES)
+        "score", # Rule score - number
+        "priority", # Rule priority - number
+        "describe", # Rule description
+        "lang", # Rule language
+        "tflags", # Rule tflags option (list)
+        "value" # Rule value (regex)
+    )
+)
+
 _COMMENT_P = Regex(r"((?<=[^\\])#.*)")
 
 
@@ -127,13 +140,128 @@ class PADParser(object):
             self.ctxt.log.warn("Ignoring %s, not a file", filename)
             return
         with open(filename, "rb") as rulef:
-            for line_no, line in enumerate(rulef):
-                try:
-                    with self._paranoid(pad.errors.InvalidSyntax):
-                        self._handle_line(filename, line, line_no + 1, _depth)
-                except pad.errors.PluginLoadError as e:
-                    warnings.warn(str(e))
-                    self.ctxt.log.warn("%s", e)
+            # Extract file extension
+            extension = filename.rsplit(".")[1]
+
+            # Parse YML configuration file
+            if extension in ("yml", "yaml"):
+                chunk = str()
+
+                # Since the parsing order counts we cannot load the
+                # entire file using yaml.safe_load() so we split it
+                # in chunks where each chunks represent a single element
+                for line_no, line in enumerate(rulef):
+
+                    # Decode the line
+                    line = line.decode("iso-8859-1")
+
+                    # Skip comments or empty lines
+                    if not line or line.startswith("#") or line.startswith(
+                            "\n"):
+                        continue
+
+                    # A line not starting with space indicate the
+                    # begin of a new element
+                    if not line.startswith(' '):
+
+                        # The previous element ended so we need to
+                        # parse the YAML inside chunk
+                        if chunk:
+                            element = yaml.safe_load(chunk)
+                            self._handle_yaml_element(element, _depth)
+
+                        # A new element starts so we need to reset the
+                        # chunk before appendint to it
+                        chunk = str()
+                        chunk += line
+                    else:
+                        chunk += line
+
+                # Parse the YAML inside the last chunk
+                if chunk:
+                    element = yaml.safe_load(chunk)
+                    self._handle_yaml_element(element, _depth)
+
+            else:
+                # Parse UNIX-style configuration file
+                for line_no, line in enumerate(rulef):
+                    try:
+                        with self._paranoid(pad.errors.InvalidSyntax):
+                            self._handle_line(filename, line, line_no + 1, _depth)
+                    except pad.errors.PluginLoadError as e:
+                        warnings.warn(str(e))
+                        self.ctxt.log.warn("%s", e)
+
+    def _handle_yaml_element(self, yaml_dict, _depth):
+        """Method that adds the YAML parsed element to the self.results"""
+
+        if not type(yaml_dict) is dict:
+            return
+
+        for key, value in yaml_dict.items():
+            if key == "include":
+                self._handle_include(value, None, None, _depth)
+            elif key == "ifplugin":
+                self._handle_ifplugin(value)
+            elif key == "loadplugin":
+                self._handle_loadplugin(value)
+            elif key == "lang":
+                # If current locale match update report
+                for lang, desc in value.items():
+                    locale.setlocale(locale.LC_ALL, '')
+                    locale_language = locale.getlocale(locale.LC_MESSAGES)[0]
+
+                    if locale_language.startswith(lang):
+                        self.ctxt.hook_parse_config("report", desc)
+
+            # If the element is a dict maybe it can describe a rule
+            elif type(value) is dict:
+
+                # If the rule is not present in the results
+                if key not in self.results:
+                    self.results[key] = dict()
+
+                # Put in the result just the valid rule params
+                for param in value:
+                    if param in YAML_RULE_PARAMS:
+
+                        # Score and priority should be converted to string
+                        if param == "score" or param == "priority":
+                            self.results[key][param] = str(value[param])
+
+                        # Type should be added only if is a valid one
+                        elif param == "type":
+                            if value[param] in RULES or value[
+                                param] in self.ctxt.cmds:
+                                self.results[key][param] = value[param]
+
+                        elif param == "value":
+                            # If we have an eval rule, update the type and
+                            # set the target
+                            if value[param].startswith("eval:"):
+                                self.results[key]["target"] = \
+                                self.results[key]["type"]
+                                self.results[key]["type"] = "eval"
+                            self.results[key]["value"] = value[param]
+
+                        elif param == "lang":
+
+                            # If current locale match, update rule description
+                            for lang, desc in value[param].items():
+                                locale.setlocale(locale.LC_ALL, '')
+                                locale_language = \
+                                locale.getlocale(locale.LC_MESSAGES)[0]
+
+                                if locale_language.startswith(lang):
+                                    self.results[key]["describe"] = desc
+
+                        else:
+                            self.results[key][param] = value[param]
+
+            # If no case from above matched maybe a plugin can use this
+            # key and value
+            else:
+                self.ctxt.hook_parse_config(key, value)
 
     def _handle_line(self, filename, line, line_no, _depth=0):
         """Handles a single line."""
