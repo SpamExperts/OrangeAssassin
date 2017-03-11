@@ -242,7 +242,7 @@ class PADParser(object):
                                 try:
                                     self.results[key]["target"] = self.results[key]["type"]
                                 except KeyError:
-                                    raise Exception('Results: %s', self.results)
+                                    raise Exception('Results: %s -> %s', self.results, value)
                                 self.results[key]["type"] = "eval"
                             self.results[key]["value"] = value[param]
 
