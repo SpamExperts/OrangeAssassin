@@ -34,7 +34,7 @@ script:
 #- env USE_PICKLES=0 py.test tests/functional/ -vv
 #- if [[ $TRAVIS_PYTHON_VERSION != pypy* ]]; then env USE_PICKLES=1 py.test tests/functional/ -vv ; fi
 #- py.test tests/profiling/
- - env USE_PICKLES=1 py.test tests/functional/test_received_parser.py::TestReceivedParser::test_header_msg_ignore_localhost
+ - env USE_PICKLES=1 py.test tests/functional/test_received_parser.py::TestReceivedParser::test_header_msg_ignore_qmail
 #after_script:
 #- cat .profile_results/*report.txt
 #- pep8 --show-source pad
