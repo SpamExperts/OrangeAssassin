@@ -2,6 +2,7 @@
 
 import logging
 import unittest
+from collections import OrderedDict
 from builtins import UnicodeDecodeError
 
 try:
@@ -63,7 +64,7 @@ class TestParseGetRuleset(unittest.TestCase):
 
     def test_parse_get_rules_invalid_rule(self):
         mock_body_rule = Mock(**{"get_rule.side_effect":
-                                 pad.errors.InvalidRule("TEST_RULE")})
+                                     pad.errors.InvalidRule("TEST_RULE")})
         data = {"type": "body", "score": "1.0"}
         self.mock_results["TEST_RULE"] = data
         self.mock_rules["body"] = mock_body_rule
@@ -75,7 +76,7 @@ class TestParseGetRuleset(unittest.TestCase):
 
     def test_parse_get_rules_invalid_rule_paranoid(self):
         mock_body_rule = Mock(**{"get_rule.side_effect":
-                                 pad.errors.InvalidRule("TEST_RULE")})
+                                     pad.errors.InvalidRule("TEST_RULE")})
         data = {"type": "body", "score": "1.0"}
         self.mock_results["TEST_RULE"] = data
         self.mock_rules["body"] = mock_body_rule
@@ -221,7 +222,7 @@ class TestParsePADLine(unittest.TestCase):
                           b"endif"
                           ],
                          {"TEST_RULE2": {"type": "body",
-                                        "value": "/test2/"}})
+                                         "value": "/test2/"}})
 
     def test_parse_line_convert_evalrule(self):
         self.check_parse([b"body TEST_RULE eval:check_test()"],
@@ -236,8 +237,9 @@ class TestParsePADLine(unittest.TestCase):
                                         }})
 
     def test_parse_line_load_plugin(self):
-        self.check_parse([b"loadplugin DumpText /etc/pad/plugins/dump_text.py"],
-                         {})
+        self.check_parse(
+            [b"loadplugin DumpText /etc/pad/plugins/dump_text.py"],
+            {})
         self.mock_ctxt.return_value.load_plugin.assert_called_with(
             "DumpText", "/etc/pad/plugins/dump_text.py")
 
@@ -270,8 +272,9 @@ class TestParsePADLine(unittest.TestCase):
 
     def test_parse_line_include_max_recursion(self):
         patch("pad.rules.parser.os.path.isfile", return_value=True).start()
-        rules = Mock(**{"__iter__": Mock(return_value=iter([b"include testf_1"])),
-                        "name": "testf_1"})
+        rules = Mock(
+            **{"__iter__": Mock(return_value=iter([b"include testf_1"])),
+               "name": "testf_1"})
         expected = {}
 
         open_name = "pad.rules.parser.open"
@@ -326,14 +329,14 @@ class TestParsePADLine(unittest.TestCase):
         self.check_parse(rules, expected)
 
     def test_parse_line_lang_report_as_locales(self):
-        rules = [b"lang en report /test/report",]
+        rules = [b"lang en report /test/report", ]
         parser = self.check_parse(rules, {})
         parser.ctxt.hook_parse_config.assert_called_with("report",
-                                                     "/test/report")
+                                                         "/test/report")
 
     def test_parse_line_lang_report_wrong_language(self):
         rules = [b"lang en report /test/report",
-                 b"lang es report /test/report/es",]
+                 b"lang es report /test/report/es", ]
         parser = self.check_parse(rules, {})
         parser.ctxt.hook_parse_config.assert_called_with("report",
                                                          "/test/report")
@@ -450,7 +453,389 @@ class TestParsePADRules(unittest.TestCase):
 
     def test_parse_files(self):
         pad.rules.parser.parse_pad_rules(["testf1.cf"])
-        self.mock_parser.return_value.parse_file.assert_called_with("testf1.cf")
+        self.mock_parser.return_value.parse_file.assert_called_with(
+            "testf1.cf")
+
+
+class TestParsePADRules(unittest.TestCase):
+    def setUp(self):
+        unittest.TestCase.setUp(self)
+        logging.getLogger("pad-logger").handlers = [logging.NullHandler()]
+        self.mock_parser = patch("pad.rules.parser.PADParser").start()
+
+    def tearDown(self):
+        unittest.TestCase.tearDown(self)
+        patch.stopall()
+
+    def test_paranoid(self):
+        pad.rules.parser.parse_pad_rules([])
+        self.mock_parser.assert_called_once_with(paranoid=False,
+                                                 ignore_unknown=True)
+
+    def test_paranoid_true(self):
+        pad.rules.parser.parse_pad_rules([], paranoid=True)
+        self.mock_parser.assert_called_once_with(paranoid=True,
+                                                 ignore_unknown=True)
+
+    def test_parse_files(self):
+        pad.rules.parser.parse_pad_rules(["testf1.cf"])
+        self.mock_parser.return_value.parse_file.assert_called_with(
+            "testf1.cf")
+
+
+class TestParseYMLConfig(unittest.TestCase):
+    """Test _handle_yaml_element method"""
+
+    def setUp(self):
+        logging.getLogger("pad-logger").handlers = [logging.NullHandler()]
+        patch("pad.rules.parser.PADParser._handle_include").start()
+        patch("pad.rules.parser.PADParser._handle_ifplugin").start()
+        patch("pad.rules.parser.PADParser._handle_loadplugin").start()
+        self.plugins = {}
+        self.cmds = ["uri_detail"]
+        self.mock_ctxt = patch(
+            "pad.rules.parser.pad.context.GlobalContext",
+            **{"return_value.plugins": self.plugins,
+               "return_value.hook_parse_config.return_value": False,
+               "return_value.cmds": self.cmds}).start()
+        self.parser = pad.rules.parser.PADParser()
+        patch("pad.rules.parser.locale.getlocale", return_value=["fr"]).start()
+
+    def tearDown(self):
+        patch.stopall()
+
+    def test_handle_yaml_element_not_dict(self):
+        """Test yaml element not dict"""
+        yaml_dict = "string"
+        res = self.parser._handle_yaml_element(yaml_dict, 0)
+        self.res = None
+
+    def test_handle_yaml_element_include(self):
+        """Test include statement"""
+        self.parser._handle_yaml_element({"include": "file"}, 0)
+        self.parser._handle_include.assert_called_with("file", None, None, 0)
+
+    def test_handle_yaml_element_loadplugin(self):
+        """Test loadplugin statement"""
+        self.parser._handle_yaml_element({"loadplugin": "plugin"}, 0)
+        self.parser._handle_loadplugin.assert_called_with("plugin")
+
+    def test_handle_yaml_element_report_lang(self):
+        self.parser._handle_yaml_element({"lang": {"fr": "description"}}, 0)
+        self.parser.ctxt.hook_parse_config.assert_called_with("report",
+                                                              "description")
+
+    def test_handle_yaml_element_rule_score_override(self):
+        """Test if second score overrides the first one"""
+        self.parser._handle_yaml_element({"RULE": {"score": "10"}}, 0)
+        self.parser._handle_yaml_element({"RULE": {"score": "20"}}, 0)
+
+        expected_results = OrderedDict([
+            ("RULE", {"score": "20"})
+        ])
+
+        self.assertEqual(self.parser.results, expected_results)
+
+    def test_handle_yaml_element_rule_description_override(self):
+        """Test if second description overrides the first one"""
+
+        self.parser._handle_yaml_element({"RULE": {"describe": "desc1"}}, 0)
+        self.parser._handle_yaml_element({"RULE": {"describe": "desc2"}}, 0)
+
+        expected_results = OrderedDict([
+            ("RULE", {"describe": "desc2"})
+        ])
+
+        self.assertEqual(self.parser.results, expected_results)
+
+    def test_handle_yaml_element_rule_type_override(self):
+        """Test if second type overrides te first one"""
+        self.parser._handle_yaml_element({"RULE": {"type": "body"}}, 0)
+        self.parser._handle_yaml_element({"RULE": {"type": "header"}}, 0)
+
+        expected_results = OrderedDict([
+            ("RULE", {"type": "header"})
+        ])
+
+        self.assertEqual(self.parser.results, expected_results)
+
+    def test_handle_yaml_element_rule_priority_override(self):
+        """Test if second priority overrides the first one"""
+        self.parser._handle_yaml_element({"RULE": {"priority": "-1"}}, 0)
+        self.parser._handle_yaml_element({"RULE": {"priority": "1"}}, 0)
+
+        expected_results = OrderedDict([
+            ("RULE", {"priority": "1"})
+        ])
+
+        self.assertEqual(self.parser.results, expected_results)
+
+    def test_handle_yaml_element_rule_value_override(self):
+        """Test if second value overrides the first one"""
+        self.parser._handle_yaml_element({"RULE": {"value": "value1"}}, 0)
+        self.parser._handle_yaml_element({"RULE": {"value": "value2"}}, 0)
+
+        expected_results = OrderedDict([
+            ("RULE", {"value": "value2"})
+        ])
+
+        self.assertEqual(self.parser.results, expected_results)
+
+    def test_handle_yaml_element_rule_tflags_override(self):
+        """Test if second tflag overrides the first one"""
+        self.parser._handle_yaml_element({"RULE": {"tflags": ["net", "nice"]}},
+                                         0)
+        self.parser._handle_yaml_element(
+            {"RULE": {"tflags": ["autolearn", "nice"]}}, 0)
+
+        expected_results = OrderedDict([
+            ("RULE", {"tflags": ["autolearn", "nice"]})
+        ])
+
+        self.assertEqual(self.parser.results, expected_results)
+
+    def test_handle_yaml_element_rule_lang_override(self):
+        """Test if second lang element overrides the first one and they both
+        override rule description"""
+        """Test if second value overrides the first one"""
+        self.parser._handle_yaml_element({"RULE": {"lang": {
+            "fr": "fr first description",
+            "en": "en first description"
+        }}}, 0)
+        self.parser._handle_yaml_element({"RULE": {"lang": {
+            "fr": "fr second description",
+            "en": "en second description"
+        }}}, 0)
+
+        expected_results = OrderedDict([
+            ("RULE", {"describe": "fr second description"})
+        ])
+
+        self.assertEqual(self.parser.results, expected_results)
+
+    def test_handle_yaml_element_eval_rule(self):
+        """Test if eval rule is properly saved"""
+        patch("pad.rules.parser.locale.getlocale", return_value=["fr"]).start()
+
+        yaml_dict = {
+            "RULE": {
+                "score": "23",
+                "priority": "24",
+                "value": "eval::test()",
+                "type": "body",
+                "lang": {
+                    "fr": "description"
+                },
+            }
+        }
+        self.parser._handle_yaml_element(yaml_dict, 0)
+
+        expected_result = OrderedDict(
+            [('RULE',
+              {'describe': 'description',
+               'priority': '24',
+               'score': '23',
+               'target': 'body',
+               'type': 'eval',
+               'value': 'eval::test()'})
+             ])
+
+        self.assertEqual(self.parser.results, expected_result)
+
+    def test_handle_yaml_element_eval_rule_splitted_type_before_eval(self):
+        """Test if an eval rule splitted in multiple parts in properly
+        loaded, rule type comes before eval"""
+        self.parser._handle_yaml_element({"RULE": {
+            "type": "body",
+        }}, 0)
+
+        self.parser._handle_yaml_element({"RULE": {
+            "value": "eval:test()"
+        }}, 0)
+
+        expected_result = OrderedDict([('RULE', {'target': 'body',
+                                                 'type': 'eval',
+                                                 'value': 'eval:test()'})])
+
+        self.assertEqual(self.parser.results, expected_result)
+
+    def test_handle_yaml_element_eval_rule_splitted_type_after_eval(self):
+        """Test if an eval rule splitted in multiple parts in properly
+        loaded, rule type comes after eval (target and type should not be
+        overrided"""
+        self.parser._handle_yaml_element({"RULE": {
+            "value": "eval::test()"
+        }}, 0)
+
+        self.parser._handle_yaml_element({"RULE": {
+            "type": "body",
+        }}, 0)
+
+        expected_result = OrderedDict([('RULE', {'target': 'body',
+                                                 'type': 'eval',
+                                                 'value': 'eval::test()'})])
+
+        self.assertEqual(self.parser.results, expected_result)
+
+    def test_handle_yaml_element_rule_uri_detail(self):
+        patch("pad.rules.parser.locale.getlocale", return_value=["fr"]).start()
+
+        self.parser._handle_yaml_element(
+            {"RULE": {"uri_detail": "uri_detail_value"}}, 0)
+
+        expected_result = OrderedDict(
+            [('RULE',
+              {'type': 'uri_detail',
+               'value': 'uri_detail_value'})
+             ])
+
+        self.assertEqual(self.parser.results, expected_result)
+
+    def test_handle_yaml_element_rule_uri_detail_case1(self):
+        """Test when uri_detail, type and value come separate: uri, body, value"""
+        self.parser._handle_yaml_element(
+            {"RULE": {"uri_detail": "uri_detail_value"}}, 0)
+        self.parser._handle_yaml_element({"RULE": {"type": "body", }}, 0)
+        self.parser._handle_yaml_element({"RULE": {"value": "value", }}, 0)
+
+        expected_result = OrderedDict(
+            [('RULE',
+              {'type': 'body',
+               'value': 'value'})
+             ])
+
+        self.assertEqual(self.parser.results, expected_result)
+
+    def test_handle_yaml_element_rule_uri_detail_case2(self):
+        """Test when uri_detail, type and value come separate:body, value, uri """
+        self.parser._handle_yaml_element({"RULE": {"type": "body", }}, 0)
+        self.parser._handle_yaml_element({"RULE": {"value": "value", }}, 0)
+        self.parser._handle_yaml_element(
+            {"RULE": {"uri_detail": "uri_detail_value"}}, 0)
+
+        expected_result = OrderedDict(
+            [('RULE',
+              {'type': 'uri_detail',
+               'value': 'uri_detail_value'})
+             ])
+
+        self.assertEqual(self.parser.results, expected_result)
+
+    def test_handle_yaml_element_rule_uri_detail_case3(self):
+        """Test when uri_detail, type and value come separate:body, uri, value"""
+        self.parser._handle_yaml_element({"RULE": {"type": "body", }}, 0)
+        self.parser._handle_yaml_element(
+            {"RULE": {"uri_detail": "uri_detail_value"}}, 0)
+        self.parser._handle_yaml_element({"RULE": {"value": "value", }}, 0)
+
+        expected_result = OrderedDict(
+            [('RULE',
+              {'type': 'uri_detail',
+               'value': 'uri_detail_value'})
+             ])
+
+        self.assertEqual(self.parser.results, expected_result)
+
+    @unittest.skip("Don't work as expected")
+    def test_handle_yaml_element_rule_uri_detail_case3(self):
+        """Test when uri_detail, type and value come separate:value, uri, type"""
+        self.parser._handle_yaml_element({"RULE": {"value": "value", }}, 0)
+        self.parser._handle_yaml_element(
+            {"RULE": {"uri_detail": "uri_detail_value"}}, 0)
+        self.parser._handle_yaml_element({"RULE": {"type": "body", }}, 0)
+
+        expected_result = OrderedDict(
+            [('RULE',
+              {'type': 'uri_detail',
+               'value': 'uri_detail_value'})
+             ])
+
+        self.assertEqual(self.parser.results, expected_result)
+
+    def test_handle_yaml_element_rule_uri_detail_before_type(self):
+        """Test if uri detail overrides rule type and value when
+        uri_detail comes before type and value"""
+
+        self.parser._handle_yaml_element(
+            {"RULE": {"uri_detail": "uri_detail_value"}}, 0)
+        self.parser._handle_yaml_element({"RULE":
+            {
+                "type": "body",
+                "value": "value"
+            }}, 0)
+        expected_result = OrderedDict(
+            [('RULE',
+              {'type': 'body',
+               'value': 'value'})
+             ])
+
+        self.assertEqual(self.parser.results, expected_result)
+
+    def test_handle_yaml_element_rule_uri_detail_after_type(self):
+        """Test if uri detail overrides rule type and value when
+        uri_detail comes after type and value"""
+        self.parser._handle_yaml_element({"RULE":
+            {
+                "type": "body",
+                "value": "value"
+            }}, 0)
+
+        self.parser._handle_yaml_element({"RULE":
+            {
+                "uri_detail": "uri_detail_value"}},
+            0)
+
+        expected_result = OrderedDict(
+            [('RULE',
+              {'type': 'uri_detail',
+               'value': 'uri_detail_value'})
+             ])
+
+        self.assertEqual(self.parser.results, expected_result)
+
+    def test_handle_yaml_element_unknown_rule(self):
+        yaml_dict = {
+            "key": "value"
+        }
+
+        self.parser._handle_yaml_element(yaml_dict, 0)
+        self.parser.ctxt.hook_parse_config.assert_called_with("key", "value")
+
+
+class TestParseFileYML(unittest.TestCase):
+    """Test parse_file method for YML case"""
+
+    def setUp(self):
+        logging.getLogger("pad-logger").handlers = [logging.NullHandler()]
+        patch("pad.rules.parser.PADParser._handle_yaml_element").start()
+        self.load_dict = {"key": "value"}
+        patch("pad.rules.parser.yaml.safe_load",
+              return_value=self.load_dict).start()
+        self.mock_ctxt = patch(
+            "pad.rules.parser.pad.context.GlobalContext",
+            **{"return_value.plugins": {},
+               "return_value.hook_parse_config.return_value": False,
+               "return_value.cmds": []}).start()
+        self.parser = pad.rules.parser.PADParser()
+        patch("os.path.isfile", return_value=True).start()
+
+    def tearDown(self):
+        patch.stopall()
+
+    @unittest.skip("Skip until fix")
+    def test_parse_yml_file(self):
+
+        content = ("key1:\n"
+                   " key12: value1\n"
+                   "key2:\n"
+                   " key22: value2\n"
+                   "key: value\n"
+                   "#skipped line")
+
+        patch("pad.rules.parser.open", mock_open(read_data=content)).start()
+        self.parser.parse_file("test.yml", _depth=0)
+
+
 
 
 def suite():
@@ -459,7 +844,10 @@ def suite():
     test_suite.addTest(unittest.makeSuite(TestParseGetRuleset, "test"))
     test_suite.addTest(unittest.makeSuite(TestParsePADLine, "test"))
     test_suite.addTest(unittest.makeSuite(TestParsePADRules, "test"))
+    test_suite.addTest(unittest.makeSuite(TestParseYMLConfig, "test"))
+    test_suite.addTest(unittest.makeSuite(TestParseFileYML, "test"))
     return test_suite
+
 
 if __name__ == '__main__':
     unittest.main(defaultTest='suite')

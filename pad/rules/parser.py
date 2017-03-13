@@ -99,7 +99,7 @@ YAML_RULE_PARAMS = frozenset(
         "describe", # Rule description
         "lang", # Rule language
         "tflags", # Rule tflags option (list)
-        "value" # Rule value (regex)
+        "value", # Rule value (regex)
     )
 )
 
@@ -201,8 +201,6 @@ class PADParser(object):
         for key, value in yaml_dict.items():
             if key == "include":
                 self._handle_include(value, None, None, _depth)
-            elif key == "ifplugin":
-                self._handle_ifplugin(value)
             elif key == "loadplugin":
                 self._handle_loadplugin(value)
             elif key == "lang":
@@ -221,7 +219,7 @@ class PADParser(object):
                     self.results[key] = dict()
 
                 # Put in the result just the valid rule params
-                for param in value:
+                for param in sorted(value.keys()):
                     if param in YAML_RULE_PARAMS or param in self.ctxt.cmds:
 
                         # Score and priority should be converted to string
@@ -233,26 +231,39 @@ class PADParser(object):
                             if value[param] in RULES or value[
                                 param] in self.ctxt.cmds:
 
-                                self.results[key][param] = value[param]
-                                # If the value was allready added we should
-                                # set the rule target and change the type
-                                # to eval
-                                if "value" in self.results[key]:
-                                    if self.results[key]["value"].startswith("eval:"):
+                                # If we have an eval rule and no target was setted
+                                if self.results[key].get("type", None) == "eval":
+                                    if "target" not in self.results[key]:
+                                        # Set just the target
                                         self.results[key]["target"] = value["type"]
-                                        self.results[key]["type"] = "eval"
+                                        continue
 
+                                self.results[key][param] = value[param]
 
                         elif param == "value":
-                            # If we have an eval rule, update the type and
-                            # set the target
+
+                            if "type" in self.results[key]:
+                                if self.results[key]["type"] == "uri_detail":
+                                    continue
+
+                            # If we have an eval rule
+                            # -type becomes "eval"
+                            # -target becomes type
                             if value[param].startswith("eval:"):
-                                try:
-                                    self.results[key]["target"] = self.results[key]["type"]
-                                except KeyError:
-                                    self.results[key]["target"] = value["type"]
+
+                                # If type was already set
+                                target = self.results[key].get("type", None)
+
+                                # If type is in the same dict
+                                if not target:
+                                    target = value.get("type", None)
+
+                                # Set target only if we have a type
+                                if target:
+                                    self.results[key]["target"] = target
 
                                 self.results[key]["type"] = "eval"
+
                             self.results[key]["value"] = value[param]
 
                         elif param == "lang":
@@ -270,8 +281,7 @@ class PADParser(object):
                         # to the value of uri_detail key
                         elif param == "uri_detail":
                             self.results[key]["type"] = "uri_detail"
-                            param = "value"
-                            self.results[key][param] = value["uri_detail"]
+                            self.results[key]["value"] = value["uri_detail"]
                         else:
                             self.results[key][param] = value[param]
 

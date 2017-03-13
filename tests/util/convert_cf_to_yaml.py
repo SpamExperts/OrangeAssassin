@@ -31,9 +31,6 @@ def convert(filename):
             if line.startswith("include"):
                 yaml_dict["include"] = line.split()[1].strip()
 
-            elif line.startswith("ifplugin"):
-                yaml_dict["ifplugin"] = line.split()[1].strip()
-
             elif line.startswith("loadplugin"):
                 yaml_dict["loadplugin"] = line.split(' ', 1)[1].strip()
 
