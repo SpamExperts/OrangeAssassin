@@ -150,7 +150,7 @@ class AutoLearnThreshold(pad.plugins.base.BasePlugin):
         self.set_local(msg, "learner_thinks_spam",
                        points >= self['bayes_auto_learn_threshold_spam'])
         self.set_local(msg, "learner_thinks_ham",
-                       points <= self['bayes_auto_learn_threshold_nonspam'])
+                       points < self['bayes_auto_learn_threshold_nonspam'])
         self.set_local(msg, 'autolearn_forced', autolearn_forced)
         if autolearn_forced:
             self.set_local(msg, 'min_body_points',
