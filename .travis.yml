@@ -31,8 +31,8 @@ before_script:
 - if [[ $USE_SQLALCHEMY == false ]]; then mysql -u root -e 'create database spampad;'; fi
 script:
 - py.test tests/unit/ --cov pad --cov scripts --cov-report term-missing
-- env USE_PICKLES=0 py.test tests/functional/
-- if [[ $TRAVIS_PYTHON_VERSION != pypy* ]]; then env USE_PICKLES=1 py.test tests/functional/; fi
+- env USE_PICKLES=0 py.test tests/functional/ -vv
+- if [[ $TRAVIS_PYTHON_VERSION != pypy* ]]; then env USE_PICKLES=1 py.test tests/functional/ -vv ; fi
 - py.test tests/profiling/
 after_script:
 - cat .profile_results/*report.txt
