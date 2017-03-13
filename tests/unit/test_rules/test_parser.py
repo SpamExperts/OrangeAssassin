@@ -822,20 +822,22 @@ class TestParseFileYML(unittest.TestCase):
     def tearDown(self):
         patch.stopall()
 
-    @unittest.skip("Skip until fix")
+    @unittest.skip("Cannot mock read from file because of encoding")
     def test_parse_yml_file(self):
 
-        content = ("key1:\n"
+        content = ("key1:\n",
                    " key12: value1\n"
                    "key2:\n"
                    " key22: value2\n"
                    "key: value\n"
                    "#skipped line")
 
-        patch("pad.rules.parser.open", mock_open(read_data=content)).start()
+        m = mock_open(read_data=content)
+        m.return_value.__iter__ = lambda self: iter(self.readline, '')
+        patch("pad.rules.parser.open", m, create=True).start()
+
+        import pdb; pdb.set_trace()
         self.parser.parse_file("test.yml", _depth=0)
-
-
 
 
 def suite():

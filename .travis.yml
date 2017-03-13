@@ -8,10 +8,10 @@ env:
 #    - USE_SQLALCHEMY=false
     - USE_YAML=1
 python:
-#- '2.7.11'
-#- '3.5'
+- '2.7.11'
+- '3.5'
 - pypy
-#- pypy3
+- pypy3
 install:
 - pip install -r requirements/base.txt;
 - if [[ $USE_SQLALCHEMY == false ]]; then pip install pymysql; fi
@@ -30,14 +30,13 @@ install:
 before_script:
 - if [[ $USE_SQLALCHEMY == false ]]; then mysql -u root -e 'create database spampad;'; fi
 script:
-#- py.test tests/unit/ --cov pad --cov scripts --cov-report term-missing
-#- env USE_PICKLES=0 py.test tests/functional/ -vv
-#- if [[ $TRAVIS_PYTHON_VERSION != pypy* ]]; then env USE_PICKLES=1 py.test tests/functional/ -vv ; fi
-#- py.test tests/profiling/
- - env USE_PICKLES=0 py.test tests/functional/test_received_parser.py -vv
-#after_script:
-#- cat .profile_results/*report.txt
-#- pep8 --show-source pad
-#after_success:
-#- bash <(curl -s https://codecov.io/bash)
-#- coveralls
+- py.test tests/unit/ --cov pad --cov scripts --cov-report term-missing
+- env USE_PICKLES=0 py.test tests/functional/
+- if [[ $TRAVIS_PYTHON_VERSION != pypy* ]]; then env USE_PICKLES=1 py.test tests/functional/; fi
+- py.test tests/profiling/
+after_script:
+- cat .profile_results/*report.txt
+- pep8 --show-source pad
+after_success:
+- bash <(curl -s https://codecov.io/bash)
+- coveralls
