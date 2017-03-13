@@ -145,7 +145,7 @@ class PADParser(object):
 
             # Parse YML configuration file
             if extension in (".yml", ".yaml"):
-                chunk = str()
+                chunk = []
 
                 # Since the parsing order counts we cannot load the
                 # entire file using yaml.safe_load() so we split it
@@ -167,18 +167,20 @@ class PADParser(object):
                         # The previous element ended so we need to
                         # parse the YAML inside chunk
                         if chunk:
+                            chunk = "\n".join(chunk)
                             element = yaml.safe_load(chunk)
                             self._handle_yaml_element(element, _depth)
 
                         # A new element starts so we need to reset the
                         # chunk before appendint to it
-                        chunk = str()
-                        chunk += line
+                        chunk = []
+                        chunk.append(line)
                     else:
-                        chunk += line
+                        chunk.append(line)
 
                 # Parse the YAML inside the last chunk
                 if chunk:
+                    chunk = "\n".join(chunk)
                     element = yaml.safe_load(chunk)
                     self._handle_yaml_element(element, _depth)
 
