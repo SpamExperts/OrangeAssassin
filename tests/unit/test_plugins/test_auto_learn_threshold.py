@@ -17,7 +17,7 @@ class TestAutoLearnThresholdPlugin(unittest.TestCase):
         self.global_data = {
             "bayes_auto_learn_threshold_nonspam": 0.1,
             "bayes_auto_learn_threshold_spam": 12.0,
-            "bayes_auto_learn_on_error": True
+            "bayes_auto_learn_on_error": False
         }
         self.mock_ctxt = MagicMock()
         self.mock_msg = MagicMock(msg={})
