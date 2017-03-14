@@ -267,7 +267,7 @@ class TestDaemon(TestDaemonBase):
 
         third_msg = list(msg.walk())[2]["Content-Description"]
 
-        self.assertEqual(third_msg, "original message before SpamPAD")
+        self.assertEqual(third_msg, "original message before OrangeAssassin")
 
     def test_process_content_body_spam(self):
         process_row = "PROCESS"

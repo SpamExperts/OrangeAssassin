@@ -36,7 +36,7 @@ with open("requirements/tests.txt") as test:
     test_requirements = test.readlines()
 
 distutils.core.setup(
-    name='SpamPAD',
+    name='OrangeAssassin',
     version=pad.__version__,
     scripts=[
         'scripts/match.py',

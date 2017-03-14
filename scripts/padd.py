@@ -1,6 +1,6 @@
 #! /usr/bin/env python
 
-"""Starts the SpamPAD daemon."""
+"""Starts the OrangeAssassin daemon."""
 
 from __future__ import print_function
 from __future__ import absolute_import

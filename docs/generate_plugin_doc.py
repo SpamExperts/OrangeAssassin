@@ -1,4 +1,4 @@
-"""Generates a documentation file for one SpamPAD plugin.
+"""Generates a documentation file for one OrangeAssassin plugin.
 
 Example usage:
 

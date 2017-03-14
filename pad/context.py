@@ -276,7 +276,7 @@ class GlobalContext(_Context):
     @_callback_chain
     def hook_parse_config(self, key, value):
         """Hook for the parsing configuration files."""
-        # First check the SpamPAD default config and
+        # First check the OrangeAssassin default config and
         # then check all the plugins.
         self.conf.parse_config(key, value)
         for plugin in self.plugins.values():

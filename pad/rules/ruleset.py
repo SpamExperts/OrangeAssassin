@@ -208,7 +208,7 @@ class RuleSet(object):
         """Create a bounce message from the original."""
         newmsg = email.mime.multipart.MIMEMultipart("mixed")
         newmsg["Received"] = (
-            "from localhost by %s with SpamPad (version %s); %s" %
+            "from localhost by %s with OrangeAssassin (version %s); %s" %
             (socket.gethostname(), pad.__version__,
              email.utils.formatdate(localtime=True))
         )
@@ -236,7 +236,7 @@ class RuleSet(object):
         )
         original_attachment.add_header("Content-Disposition", "inline")
         original_attachment.add_header("Content-Description",
-                                       "original message before SpamPAD")
+                                       "original message before OrangeAssassin")
         original_attachment.set_payload(msg.raw_msg)
         newmsg.attach(original_attachment)
         return newmsg

@@ -42,7 +42,7 @@ Options
     (Resent-To, To, Cc, obvious envelope recipient, etc.) the mail will be blacklisted.
 **def_whitelist_from_rcvd** [] (type `list`)
     Same as whitelist_from_rcvd, but used for the default whitelist entries
-    in the SpamPad distribution. The whitelist score is lower, because these
+    in the OrangeAssassin distribution. The whitelist score is lower, because these
     are often targets for spammer spoofing.
 **whitelist_from_rcvd** [] (type `list`)
     Works similarly to whitelist_from, except that in addition to matching a sender

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# SpamPAD documentation build configuration file, created by
+# OrangeAssassin documentation build configuration file, created by
 # sphinx-quickstart on Mon Feb  8 12:08:38 2016.
 #
 # This file is execfile()d with the current directory set to its
@@ -51,8 +51,8 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = u'SpamPAD'
-copyright = u'2016, SpamExperts'
+project = u'OrangeAssassin'
+copyright = u'2017, SpamExperts'
 author = u'SpamExperts'
 
 # The version info for the project you're documenting, acts as replacement for
@@ -124,7 +124,7 @@ html_theme = 'sphinx_rtd_theme'
 #     "travis_button": True,
 #     "github_button": True,
 #     "github_user": "SpamExperts",
-#     "github_repo": "SpamPAD",
+#     "github_repo": "OrangeAssassin",
 #     "github_banner": True,
 #     "show_related": True,
 # }
@@ -227,7 +227,7 @@ html_static_path = ['_static']
 #html_search_scorer = 'scorer.js'
 
 # Output file base name for HTML help builder.
-htmlhelp_basename = 'SpamPADdoc'
+htmlhelp_basename = 'OrangeAssassindoc'
 
 # -- Options for LaTeX output ---------------------------------------------
 
@@ -249,7 +249,7 @@ latex_elements = {
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-    (master_doc, 'SpamPAD.tex', u'SpamPAD Documentation',
+    (master_doc, 'OrangeAssassin.tex', u'OrangeAssassin Documentation',
      u'SpamExperts', 'manual'),
 ]
 
@@ -279,7 +279,7 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    (master_doc, 'spampad', u'SpamPAD Documentation',
+    (master_doc, 'OrangeAssassin', u'OrangeAssassin Documentation',
      [author], 1)
 ]
 
@@ -293,8 +293,8 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-    (master_doc, 'SpamPAD', u'SpamPAD Documentation',
-     author, 'SpamPAD', 'One line description of project.',
+    (master_doc, 'OrangeAssassin', u'OrangeAssassin Documentation',
+     author, 'OrangeAssassin', 'One line description of project.',
      'Miscellaneous'),
 ]
 

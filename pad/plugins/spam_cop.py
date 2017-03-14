@@ -112,7 +112,7 @@ class SpamCopPlugin(pad.plugins.base.BasePlugin):
                                                 host)
         if len(original) > self["spamcop_max_report_size"]*1024:
             x = self["spamcop_max_report_size"]*1024
-            original = original[:x] + "\n[truncated by SpamPad]\n"
+            original = original[:x] + "\n[truncated by OrangeAssassin]\n"
 
         message.attach(email.mime.text.MIMEText(
             'This is a multi-part message in MIME format.'))

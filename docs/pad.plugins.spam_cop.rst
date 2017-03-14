@@ -29,7 +29,7 @@ Options
 **spamcop_to_address** "spamassassin-submit@spam.spamcop.net" (type `str`)
     Your customized SpamCop report submission address. You need to obtain this
     address by registering at http://www.spamcop.net/. If this is not set,
-    SpamCop reports will go to a generic reporting address for SpamPad
+    SpamCop reports will go to a generic reporting address for OrangeAssassin
     users and your reports will probably have less weight in the SpamCop system.
 **spamcop_max_report_size** 50 (type `int`)
     Messages larger than this size (in kilobytes) will be truncated in report

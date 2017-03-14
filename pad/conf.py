@@ -186,7 +186,7 @@ class Conf(object):
 
 
 class PADConf(Conf):
-    """Main configuration of SpamPAD"""
+    """Main configuration of OrangeAssassin"""
 
     options = {
         "report": ("append", []),
