@@ -16,7 +16,7 @@ class AutoLearnThreshold(pad.plugins.base.BasePlugin):
     options = {
         "bayes_auto_learn_threshold_nonspam": ("float", 0.1),
         "bayes_auto_learn_threshold_spam": ("float", 12.0),
-        "bayes_auto_learn_on_error": ("bool", True)
+        "bayes_auto_learn_on_error": ("bool", False)
     }
 
     def valid_tests(self, tests):
