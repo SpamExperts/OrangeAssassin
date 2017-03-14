@@ -14,7 +14,7 @@ Example usage
     loadplugin      pad.plugins.auto_learn_threshold.AutoLearnThreshold
     bayes_auto_learn_threshold_nonspam 0.5 # optional, default is 0.1
     bayes_auto_learn_threshold_nonspam 12.0 # optional, default is 12.0
-    bayes_auto_learn_on_error False # optional, default is True
+    bayes_auto_learn_on_error 1 # optional, default is 1
 
 Usage
 =====
@@ -32,7 +32,7 @@ General requirements
   (unless any test has the tflag **autolearn_force** in which case the header
    and body tests requirement drops to -99)
 - The bayes plugin classified the message differently than this plugin
-  (unless **bayes_auto_learn_on_error** option is set to False)
+  (unless **bayes_auto_learn_on_error** option is set to 0)
 
 
 Case 1
@@ -58,7 +58,7 @@ Options
     Messages that score below this value will be submitted for learning as HAM
 **bayes_auto_learn_threshold_spam** 12.0 (type `float`)
     Messages that score over this value will be submitted for learning as SPAM
-**bayes_auto_learn_on_error** True (type `bool`)
+**bayes_auto_learn_on_error** 0 (type `bool`)
     Messages will be submitted for learning only if Bayes disagrees with the
     classification
 
