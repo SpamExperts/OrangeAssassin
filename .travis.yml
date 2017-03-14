@@ -4,8 +4,8 @@ os:
 - linux
 env:
   matrix:
-#    - USE_SQLALCHEMY=true
-#    - USE_SQLALCHEMY=false
+    - USE_SQLALCHEMY=true
+    - USE_SQLALCHEMY=false
     - USE_YAML=1
 python:
 - '2.7.11'
