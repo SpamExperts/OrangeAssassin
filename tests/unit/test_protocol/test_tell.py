@@ -7,8 +7,8 @@ try:
 except ImportError:
     from mock import patch, Mock, call
 
-import pad
-import pad.protocol.tell
+import oa
+import oa.protocol.tell
 
 
 class TestTellCommand(unittest.TestCase):
@@ -20,7 +20,7 @@ class TestTellCommand(unittest.TestCase):
         self.mockrules = Mock()
         self.mockserver.get_user_ruleset.return_value = self.mockrules
         for klass in ("TellCommand",):
-            patch("pad.protocol.tell.%s.get_and_handle" % klass).start()
+            patch("oa.protocol.tell.%s.get_and_handle" % klass).start()
         self.msg = Mock(score=0)
 
     def tearDown(self):
@@ -35,8 +35,8 @@ class TestTellCommand(unittest.TestCase):
         expected = [
             "DidSet: local\r\n"
         ]
-        cmd = pad.protocol.tell.TellCommand(self.mockr, self.mockw,
-                                            self.mockserver)
+        cmd = oa.protocol.tell.TellCommand(self.mockr, self.mockw,
+                                           self.mockserver)
         result = list(cmd.handle(self.msg, options))
         self.mockrules.ctxt.hook_report.assert_called_with(
             self.msg, True, True, False
@@ -51,8 +51,8 @@ class TestTellCommand(unittest.TestCase):
         expected = [
             "DidSet: remote\r\n"
         ]
-        cmd = pad.protocol.tell.TellCommand(self.mockr, self.mockw,
-                                            self.mockserver)
+        cmd = oa.protocol.tell.TellCommand(self.mockr, self.mockw,
+                                           self.mockserver)
         result = list(cmd.handle(self.msg, options))
         self.mockrules.ctxt.hook_report.assert_called_with(
             self.msg, True, False, True
@@ -67,8 +67,8 @@ class TestTellCommand(unittest.TestCase):
         expected = [
             "DidSet: local,remote\r\n"
         ]
-        cmd = pad.protocol.tell.TellCommand(self.mockr, self.mockw,
-                                            self.mockserver)
+        cmd = oa.protocol.tell.TellCommand(self.mockr, self.mockw,
+                                           self.mockserver)
         result = list(cmd.handle(self.msg, options))
         self.mockrules.ctxt.hook_report.assert_called_with(
             self.msg, True, True, True
@@ -83,8 +83,8 @@ class TestTellCommand(unittest.TestCase):
         expected = [
             "DidRemove: local\r\n"
         ]
-        cmd = pad.protocol.tell.TellCommand(self.mockr, self.mockw,
-                                            self.mockserver)
+        cmd = oa.protocol.tell.TellCommand(self.mockr, self.mockw,
+                                           self.mockserver)
         result = list(cmd.handle(self.msg, options))
         self.mockrules.ctxt.hook_revoke.assert_called_with(
             self.msg, False, True, False
@@ -99,8 +99,8 @@ class TestTellCommand(unittest.TestCase):
         expected = [
             "DidRemove: remote\r\n"
         ]
-        cmd = pad.protocol.tell.TellCommand(self.mockr, self.mockw,
-                                            self.mockserver)
+        cmd = oa.protocol.tell.TellCommand(self.mockr, self.mockw,
+                                           self.mockserver)
         result = list(cmd.handle(self.msg, options))
         self.mockrules.ctxt.hook_revoke.assert_called_with(
             self.msg, False, False, True
@@ -115,8 +115,8 @@ class TestTellCommand(unittest.TestCase):
         expected = [
             "DidRemove: local,remote\r\n"
         ]
-        cmd = pad.protocol.tell.TellCommand(self.mockr, self.mockw,
-                                            self.mockserver)
+        cmd = oa.protocol.tell.TellCommand(self.mockr, self.mockw,
+                                           self.mockserver)
         result = list(cmd.handle(self.msg, options))
         self.mockrules.ctxt.hook_revoke.assert_called_with(
             self.msg, False, True, True
@@ -133,8 +133,8 @@ class TestTellCommand(unittest.TestCase):
             "DidSet: remote\r\n",
             "DidRemove: local\r\n"
         ]
-        cmd = pad.protocol.tell.TellCommand(self.mockr, self.mockw,
-                                            self.mockserver)
+        cmd = oa.protocol.tell.TellCommand(self.mockr, self.mockw,
+                                           self.mockserver)
         result = list(cmd.handle(self.msg, options))
         self.mockrules.ctxt.hook_report.assert_called_with(
             self.msg, True, False, True

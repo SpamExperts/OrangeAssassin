@@ -8,7 +8,7 @@ import subprocess
 
 import sqlite3
 import tests.util
-import pad.dns_interface
+import oa.dns_interface
 
 PRE_CONFIG = r"""
 report _SCORE_
@@ -19,7 +19,7 @@ default_dns_lifetime 0.5
 default_dns_timeout 0.5
 envelope_sender_header X-From
 
-loadplugin      pad.plugins.dns_eval.DNSEval
+loadplugin      oa.plugins.dns_eval.DNSEval
 """
 
 CONFIG = r"""

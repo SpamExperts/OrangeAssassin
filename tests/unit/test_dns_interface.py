@@ -12,7 +12,7 @@ except ImportError:
 
 from builtins import str
 
-from pad.dns_interface import DNSInterface
+from oa.dns_interface import DNSInterface
 
 
 class TestDNSInterface(unittest.TestCase):
@@ -20,9 +20,9 @@ class TestDNSInterface(unittest.TestCase):
 
     def setUp(self):
         super(TestDNSInterface, self).setUp()
-        logging.getLogger("pad-logger").handlers = [logging.NullHandler()]
+        logging.getLogger("oa-logger").handlers = [logging.NullHandler()]
         self.resolver = patch(
-            "pad.dns_interface.dns.resolver.Resolver").start().return_value
+            "oa.dns_interface.dns.resolver.Resolver").start().return_value
         self.dns = DNSInterface()
 
     def tearDown(self):
@@ -68,17 +68,17 @@ class TestDNSInterface(unittest.TestCase):
         self.assertFalse(self.dns.available)
 
     def test_dns_available_test(self):
-        patch("pad.dns_interface.DNSInterface._query").start()
+        patch("oa.dns_interface.DNSInterface._query").start()
         self.dns.available = "test"
         self.assertTrue(self.dns.available)
 
     def test_dns_available_test_fail(self):
-        patch("pad.dns_interface.DNSInterface._query", return_value=[]).start()
+        patch("oa.dns_interface.DNSInterface._query", return_value=[]).start()
         self.dns.available = "test"
         self.assertFalse(self.dns.available)
 
     def test_dns_available_test_custom_dns(self):
-        patch("pad.dns_interface.DNSInterface._query", return_value=[]).start()
+        patch("oa.dns_interface.DNSInterface._query", return_value=[]).start()
         self.dns.available = "test: example.com 1.example.com 2.example.com"
         self.assertFalse(self.dns.available)
 

@@ -6,7 +6,7 @@ import tests.util
 
 # Load plugin and report matched RULES and SCORE
 PRE_CONFIG = """
-loadplugin pad.plugins.spf.SpfPlugin
+loadplugin oa.plugins.spf.SpfPlugin
 report _SCORE_
 report _TESTS_
 """

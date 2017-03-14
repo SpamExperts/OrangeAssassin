@@ -5,7 +5,7 @@ from __future__ import absolute_import
 import sys
 import platform
 
-import pad
+import oa
 import distutils.core
 
 with open("requirements/base.txt") as base:
@@ -37,17 +37,17 @@ with open("requirements/tests.txt") as test:
 
 distutils.core.setup(
     name='OrangeAssassin',
-    version=pad.__version__,
+    version=oa.__version__,
     scripts=[
         'scripts/match.py',
-        'scripts/padd.py',
+        'scripts/oad.py',
         'scripts/compile.py'
     ],
     packages=[
-        'pad',
-        'pad.rules',
-        'pad.plugins',
-        'pad.protocol',
+        'oa',
+        'oa.rules',
+        'oa.plugins',
+        'oa.protocol',
     ],
     install_requires=requirements,
     tests_require=test_requirements,

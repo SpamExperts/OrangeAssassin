@@ -2,14 +2,14 @@
 import email
 
 import unittest
-import pad.plugins
+import oa.plugins
 
 try:
     from unittest.mock import patch, Mock, MagicMock
 except ImportError:
     from mock import patch, Mock, MagicMock
 
-from pad.plugins import whitelist_subject
+from oa.plugins import whitelist_subject
 
 
 MESSAGE = """MIME-Version: 1.0
@@ -35,8 +35,8 @@ class TestWhitelistSubject(unittest.TestCase):
         self.options = {}
         self.global_data = {}
         self.msg_data = {}
-        patch("pad.plugins.whitelist_subject.WhiteListSubjectPlugin.options", self.options).start()
-        patch("pad.plugins.whitelist_subject.WhiteListSubjectPlugin.inhibit_further_callbacks").start()
+        patch("oa.plugins.whitelist_subject.WhiteListSubjectPlugin.options", self.options).start()
+        patch("oa.plugins.whitelist_subject.WhiteListSubjectPlugin.inhibit_further_callbacks").start()
 
         self.mock_ctxt = MagicMock(**{
             "get_plugin_data.side_effect": lambda p, k: self.global_data[k],
@@ -55,28 +55,28 @@ class TestWhitelistSubject(unittest.TestCase):
         self.options["whitelist_subject"] = ("list", [r"[a-zA-Z]+"])
         self.msg = email.message_from_string(MESSAGE.format("Test subject"))
         self.mock_msg.msg = self.msg
-        plugin = pad.plugins.whitelist_subject.WhiteListSubjectPlugin(self.mock_ctxt)
+        plugin = oa.plugins.whitelist_subject.WhiteListSubjectPlugin(self.mock_ctxt)
         self.assertTrue(plugin._check_subject(self.mock_msg, self.options["whitelist_subject"][1]))
 
     def test_check_subject_one_regex_false(self):
         self.options["whitelist_subject"] = ("list", [r"[a-z]+"])
         self.msg = email.message_from_string(MESSAGE.format("Test subject"))
         self.mock_msg.msg = self.msg
-        plugin = pad.plugins.whitelist_subject.WhiteListSubjectPlugin(self.mock_ctxt)
+        plugin = oa.plugins.whitelist_subject.WhiteListSubjectPlugin(self.mock_ctxt)
         self.assertFalse(plugin._check_subject(self.mock_msg, self.options["whitelist_subject"][1]))
 
     def test_check_subject_one_regex_blank(self):
         self.options["whitelist_subject"] = ("list", [])
         self.msg = email.message_from_string(MESSAGE.format("Test subject"))
         self.mock_msg.msg = self.msg
-        plugin = pad.plugins.whitelist_subject.WhiteListSubjectPlugin(self.mock_ctxt)
+        plugin = oa.plugins.whitelist_subject.WhiteListSubjectPlugin(self.mock_ctxt)
         self.assertFalse(plugin._check_subject(self.mock_msg, self.options["whitelist_subject"][1]))
 
     def test_check_subject_list_regex(self):
         self.options["whitelist_subject"] = ("list", [r"[a-z]+", r".*\d$", r"^\d.*"])
         self.msg = email.message_from_string(MESSAGE.format("1Test subject"))
         self.mock_msg.msg = self.msg
-        plugin = pad.plugins.whitelist_subject.WhiteListSubjectPlugin(self.mock_ctxt)
+        plugin = oa.plugins.whitelist_subject.WhiteListSubjectPlugin(self.mock_ctxt)
         self.assertTrue(plugin._check_subject(self.mock_msg, self.options["whitelist_subject"][1]))
 
     def test_check_subject_one_regex_black(self):
@@ -84,7 +84,7 @@ class TestWhitelistSubject(unittest.TestCase):
         self.options["whitelist_subject"] = ("list", [])
         self.msg = email.message_from_string(MESSAGE.format("Test subject"))
         self.mock_msg.msg = self.msg
-        plugin = pad.plugins.whitelist_subject.WhiteListSubjectPlugin(self.mock_ctxt)
+        plugin = oa.plugins.whitelist_subject.WhiteListSubjectPlugin(self.mock_ctxt)
         self.assertFalse(plugin.check_subject_in_whitelist(self.mock_msg))
         self.assertTrue(plugin.check_subject_in_blacklist(self.mock_msg))
 
@@ -93,14 +93,14 @@ class TestWhitelistSubject(unittest.TestCase):
         self.options["blacklist_subject"] = ("list", [])
         self.msg = email.message_from_string(MESSAGE.format("Test subject"))
         self.mock_msg.msg = self.msg
-        plugin = pad.plugins.whitelist_subject.WhiteListSubjectPlugin(self.mock_ctxt)
+        plugin = oa.plugins.whitelist_subject.WhiteListSubjectPlugin(self.mock_ctxt)
         self.assertFalse(plugin.check_subject_in_blacklist(self.mock_msg))
         self.assertTrue(plugin.check_subject_in_whitelist(self.mock_msg))
 
     def test_set_append_option(self):
         self.options["whitelist_subject"] = ("list", [r"[a-zA-Z]+"])
         new_option = r"^\d.*"
-        plugin = pad.plugins.whitelist_subject.WhiteListSubjectPlugin(self.mock_ctxt)
+        plugin = oa.plugins.whitelist_subject.WhiteListSubjectPlugin(self.mock_ctxt)
         plugin.set_append_option("whitelist_subject", new_option)
         self.assertEqual(self.options["whitelist_subject"], ('list', ['[a-zA-Z]+', new_option]))
 
@@ -108,7 +108,7 @@ class TestWhitelistSubject(unittest.TestCase):
         self.options["whitelist_subject"] = ("list", [r"[a-zA-Z]+"])
         self.options["blacklist_subject"] = ("list", [])
         new_option = r"^\d.*"
-        plugin = pad.plugins.whitelist_subject.WhiteListSubjectPlugin(self.mock_ctxt)
+        plugin = oa.plugins.whitelist_subject.WhiteListSubjectPlugin(self.mock_ctxt)
         plugin.parse_config("whitelist_subject", new_option)
         self.assertEqual(self.options["whitelist_subject"], ('list', ['[a-zA-Z]+', new_option]))
 
@@ -116,7 +116,7 @@ class TestWhitelistSubject(unittest.TestCase):
         self.options["whitelist_subject"] = ("list", [r"[a-zA-Z]+"])
         self.options["blacklist_subject"] = ("list", [])
         new_option = "he(lo"
-        plugin = pad.plugins.whitelist_subject.WhiteListSubjectPlugin(self.mock_ctxt)
+        plugin = oa.plugins.whitelist_subject.WhiteListSubjectPlugin(self.mock_ctxt)
         plugin.parse_config("whitelist_subject", new_option)
         self.assertEqual(self.options["whitelist_subject"], ('list', ['[a-zA-Z]+']))
 
@@ -124,7 +124,7 @@ class TestWhitelistSubject(unittest.TestCase):
         self.options["whitelist_subject"] = ("list", [r"[a-zA-Z]+"])
         self.options["blacklist_subject"] = ("list", [])
         new_option = r"^\d.*"
-        plugin = pad.plugins.whitelist_subject.WhiteListSubjectPlugin(self.mock_ctxt)
+        plugin = oa.plugins.whitelist_subject.WhiteListSubjectPlugin(self.mock_ctxt)
         plugin.parse_config("whitelist", new_option)
         self.assertEqual(self.options["whitelist_subject"], ('list', ['[a-zA-Z]+']))
 

@@ -7,8 +7,8 @@ except ImportError:
     from mock import patch, Mock, MagicMock, call
 
 
-import pad.plugins
-from pad.plugins import image_info
+import oa.plugins
+from oa.plugins import image_info
 
 
 class TestImageInfoBase(unittest.TestCase):
@@ -18,10 +18,10 @@ class TestImageInfoBase(unittest.TestCase):
         self.options = {}
         self.global_data = {}
         self.msg_data = {}
-        patch("pad.plugins.whitelist_subject.WhiteListSubjectPlugin.options",
+        patch("oa.plugins.whitelist_subject.WhiteListSubjectPlugin.options",
               self.options).start()
         patch(
-            "pad.plugins.whitelist_subject.WhiteListSubjectPlugin."
+            "oa.plugins.whitelist_subject.WhiteListSubjectPlugin."
             "inhibit_further_callbacks").start()
 
         self.mock_ctxt = MagicMock(**{
@@ -34,7 +34,7 @@ class TestImageInfoBase(unittest.TestCase):
             "side_effect": lambda p, k, v: self.msg_data.setdefault(k, v),
         })
         self.mock_msg.msg = None
-        self.plugin = pad.plugins.image_info.ImageInfoPlugin(self.mock_ctxt)
+        self.plugin = oa.plugins.image_info.ImageInfoPlugin(self.mock_ctxt)
 
     def tearDown(self):
         unittest.TestCase.tearDown(self)
@@ -45,9 +45,9 @@ class TestImageInfoPlugin(TestImageInfoBase):
     """Test plugin helper methods."""
 
     def test_extract_metadata(self):
-        patch("pad.plugins.image_info.ImageInfoPlugin._add_name").start()
-        patch("pad.plugins.image_info.ImageInfoPlugin._update_counts").start()
-        patch("pad.plugins.image_info.ImageInfoPlugin._save_stats").start()
+        patch("oa.plugins.image_info.ImageInfoPlugin._add_name").start()
+        patch("oa.plugins.image_info.ImageInfoPlugin._update_counts").start()
+        patch("oa.plugins.image_info.ImageInfoPlugin._save_stats").start()
 
         add_name_calls = []
         update_counts_calls = []

@@ -7,7 +7,7 @@ try:
 except ImportError:
     from mock import patch, Mock, MagicMock, call
 
-import pad.plugins.razor2
+import oa.plugins.razor2
 
 class TestRazor2(unittest.TestCase):
     def setUp(self):
@@ -29,9 +29,9 @@ class TestRazor2(unittest.TestCase):
         self.mock_msg.raw_msg = "testmessage"
 
         self.mock_subprocess_Popen = patch(
-            "pad.plugins.razor2.subprocess.Popen").start()
+            "oa.plugins.razor2.subprocess.Popen").start()
 
-        self.plug = pad.plugins.razor2.Razor2Plugin(self.mock_ctxt)
+        self.plug = oa.plugins.razor2.Razor2Plugin(self.mock_ctxt)
 
     def tearDown(self):
         unittest.TestCase.tearDown(self)
@@ -114,7 +114,7 @@ class TestRazor2(unittest.TestCase):
 
     def test_plugin_revoke_timer(self):
         mock_kill_process = patch(
-            "pad.plugins.razor2.kill_process").start()
+            "oa.plugins.razor2.kill_process").start()
         self.global_data["razor_timeout"] = 1
         proc_obj = self.mock_subprocess_Popen.return_value
         result = self.plug.launch_subprocess(self.mock_msg, "razor-revoke")
@@ -136,7 +136,7 @@ class TestRazor2(unittest.TestCase):
 
     def test_plugin_revoke_time_exceeded(self):
         mock_kill_process = patch(
-            "pad.plugins.razor2.kill_process").start()
+            "oa.plugins.razor2.kill_process").start()
         self.global_data["razor_timeout"] = 1
         proc_obj = self.mock_subprocess_Popen.return_value
         proc_obj.returncode = 1
@@ -146,7 +146,7 @@ class TestRazor2(unittest.TestCase):
 
     def test_plugin_kill_process(self):
         proc_obj = self.mock_subprocess_Popen.return_value
-        pad.plugins.razor2.kill_process(proc_obj, self.mock_ctxt.log)
+        oa.plugins.razor2.kill_process(proc_obj, self.mock_ctxt.log)
         proc_obj.kill.assert_called_with()
 
     def test_plugin_report_OSError_communicate(self):
@@ -185,11 +185,11 @@ class TestReportRevoke(unittest.TestCase):
         self.mock_msg.raw_msg = "testmessage"
 
         self.mock_subprocess_Popen = patch(
-            "pad.plugins.razor2.subprocess.Popen").start()
+            "oa.plugins.razor2.subprocess.Popen").start()
 
-        self.plug = pad.plugins.razor2.Razor2Plugin(self.mock_ctxt)
+        self.plug = oa.plugins.razor2.Razor2Plugin(self.mock_ctxt)
         self.mock_launch_subprocess = patch(
-            "pad.plugins.razor2.Razor2Plugin.launch_subprocess").start()
+            "oa.plugins.razor2.Razor2Plugin.launch_subprocess").start()
 
     def tearDown(self):
         unittest.TestCase.tearDown(self)

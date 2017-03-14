@@ -8,9 +8,9 @@ except ImportError:
     from mock import patch, MagicMock, Mock, call
 
 
-import pad.context
-import pad.message
-import pad.plugins.uri_eval
+import oa.context
+import oa.message
+import oa.plugins.uri_eval
 
 ascii_lowercase = 'abcdefghijklmnopqrstuvwxyz'
 ascii_uppercase = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
@@ -32,7 +32,7 @@ class TestURIDetail(unittest.TestCase):
                                                   v: self.msg_data.setdefault(k,
                                                                               v),
         })
-        self.plugin = pad.plugins.uri_eval.URIEvalPlugin(self.mock_ctxt)
+        self.plugin = oa.plugins.uri_eval.URIEvalPlugin(self.mock_ctxt)
 
     def tearDown(self):
         unittest.TestCase.tearDown(self)
@@ -53,7 +53,7 @@ class TestURIDetail(unittest.TestCase):
 
     def test_check_https_ip_mismatch(self):
         self.mock_extract_url_from_text = \
-            patch("pad.plugins.uri_eval.URIEvalPlugin."
+            patch("oa.plugins.uri_eval.URIEvalPlugin."
                   "extract_url_from_text").start()
         self.mock_extract_url_from_text.return_value = \
             ["https://www.paypal.com/login/account-unlock"]
@@ -71,7 +71,7 @@ class TestURIDetail(unittest.TestCase):
 
     def test_check_https_ip_mismatch_http(self):
         self.mock_extract_url_from_text = \
-            patch("pad.plugins.uri_eval.URIEvalPlugin."
+            patch("oa.plugins.uri_eval.URIEvalPlugin."
                   "extract_url_from_text").start()
         self.mock_extract_url_from_text.return_value = \
             ["http://www.paypal.com/login/account"]
@@ -88,7 +88,7 @@ class TestURIDetail(unittest.TestCase):
 
     def test_check_https_ip_mismatch_without_ip(self):
         self.mock_extract_url_from_text = \
-            patch("pad.plugins.uri_eval.URIEvalPlugin."
+            patch("oa.plugins.uri_eval.URIEvalPlugin."
                   "extract_url_from_text").start()
         self.mock_extract_url_from_text.return_value = \
             ["http://www.paypal.com/login/account"]
@@ -105,7 +105,7 @@ class TestURIDetail(unittest.TestCase):
 
     def test_check_https_ip_mismatch_KeyError(self):
         self.mock_extract_url_from_text = \
-            patch("pad.plugins.uri_eval.URIEvalPlugin."
+            patch("oa.plugins.uri_eval.URIEvalPlugin."
                   "extract_url_from_text").start()
         self.mock_extract_url_from_text.return_value = \
             ["http://www.paypal.com/login/account-unlock"]
@@ -121,7 +121,7 @@ class TestURIDetail(unittest.TestCase):
 
     def test_check_uri_truncated_does_not_match(self):
         self.mock_extract_url_from_text = \
-            patch("pad.plugins.uri_eval.URIEvalPlugin."
+            patch("oa.plugins.uri_eval.URIEvalPlugin."
                   "extract_url_from_text").start()
         self.mock_extract_url_from_text.return_value = \
             ["https://www.PAYPAL.com/..."]
@@ -139,7 +139,7 @@ class TestURIDetail(unittest.TestCase):
         mytext = [random.choice(ascii_letters) for _ in range(8192)]
         long_text = "".join(mytext)
         self.mock_extract_url_from_text = \
-            patch("pad.plugins.uri_eval.URIEvalPlugin."
+            patch("oa.plugins.uri_eval.URIEvalPlugin."
                   "extract_url_from_text").start()
         self.mock_extract_url_from_text.return_value = \
             ["https://www.PAYPAL.com/..."]

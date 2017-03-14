@@ -9,20 +9,20 @@ try:
 except ImportError:
     from mock import patch, Mock, mock_open, MagicMock
 
-import pad.errors
-import pad.rules.parser
+import oa.errors
+import oa.rules.parser
 
 
 class TestParseGetRuleset(unittest.TestCase):
     def setUp(self):
         unittest.TestCase.setUp(self)
-        logging.getLogger("pad-logger").handlers = [logging.NullHandler()]
+        logging.getLogger("oa-logger").handlers = [logging.NullHandler()]
         self.mock_results = {}
         self.mock_rules = {}
-        self.mock_ruleset = patch("pad.rules.parser."
-                                  "pad.rules.ruleset.RuleSet").start()
-        patch("pad.rules.parser.RULES", self.mock_rules).start()
-        self.parser = pad.rules.parser.PADParser()
+        self.mock_ruleset = patch("oa.rules.parser."
+                                  "oa.rules.ruleset.RuleSet").start()
+        patch("oa.rules.parser.RULES", self.mock_rules).start()
+        self.parser = oa.rules.parser.PADParser()
         self.parser.results = self.mock_results
 
     def tearDown(self):
@@ -59,11 +59,11 @@ class TestParseGetRuleset(unittest.TestCase):
         self.mock_rules["body"] = mock_body_rule
         self.parser.ctxt.paranoid = True
 
-        self.assertRaises(pad.errors.InvalidRule, self.parser.get_ruleset)
+        self.assertRaises(oa.errors.InvalidRule, self.parser.get_ruleset)
 
     def test_parse_get_rules_invalid_rule(self):
         mock_body_rule = Mock(**{"get_rule.side_effect":
-                                 pad.errors.InvalidRule("TEST_RULE")})
+                                 oa.errors.InvalidRule("TEST_RULE")})
         data = {"type": "body", "score": "1.0"}
         self.mock_results["TEST_RULE"] = data
         self.mock_rules["body"] = mock_body_rule
@@ -75,13 +75,13 @@ class TestParseGetRuleset(unittest.TestCase):
 
     def test_parse_get_rules_invalid_rule_paranoid(self):
         mock_body_rule = Mock(**{"get_rule.side_effect":
-                                 pad.errors.InvalidRule("TEST_RULE")})
+                                 oa.errors.InvalidRule("TEST_RULE")})
         data = {"type": "body", "score": "1.0"}
         self.mock_results["TEST_RULE"] = data
         self.mock_rules["body"] = mock_body_rule
         self.parser.ctxt.paranoid = True
 
-        self.assertRaises(pad.errors.InvalidRule,
+        self.assertRaises(oa.errors.InvalidRule,
                           self.parser.get_ruleset)
 
     def test_parse_get_rules_cmd_plugin(self):
@@ -102,12 +102,12 @@ class TestParseGetRuleset(unittest.TestCase):
 class TestParsePADLine(unittest.TestCase):
     def setUp(self):
         unittest.TestCase.setUp(self)
-        logging.getLogger("pad-logger").handlers = [logging.NullHandler()]
+        logging.getLogger("oa-logger").handlers = [logging.NullHandler()]
         self.plugins = {}
-        self.mock_ruleset = patch("pad.rules.parser."
-                                  "pad.rules.ruleset.RuleSet").start()
+        self.mock_ruleset = patch("oa.rules.parser."
+                                  "oa.rules.ruleset.RuleSet").start()
         self.mock_ctxt = patch(
-            "pad.rules.parser.pad.context.GlobalContext",
+            "oa.rules.parser.oa.context.GlobalContext",
             **{"return_value.plugins": self.plugins,
                "return_value.hook_parse_config.return_value": False}).start()
 
@@ -116,7 +116,7 @@ class TestParsePADLine(unittest.TestCase):
         patch.stopall()
 
     def check_parse(self, rules, expected):
-        parser = pad.rules.parser.PADParser()
+        parser = oa.rules.parser.PADParser()
         for line_no, line in enumerate(rules):
             parser._handle_line("filename", line, line_no)
         self.assertEqual(parser.results, expected)
@@ -169,13 +169,13 @@ class TestParsePADLine(unittest.TestCase):
                                                          "test_config")
 
     def test_parse_line_invalid_syntax(self):
-        self.assertRaises(pad.errors.InvalidSyntax, self.check_parse,
+        self.assertRaises(oa.errors.InvalidSyntax, self.check_parse,
                           [b"body TEST_RULE"], {})
 
     def test_parse_line_decoding_error(self):
         error = UnicodeDecodeError("iso-8859-1", b'test', 0, 1, 'test error')
         mock_line = Mock(**{"decode.side_effect": error})
-        self.assertRaises(pad.errors.InvalidSyntax, self.check_parse,
+        self.assertRaises(oa.errors.InvalidSyntax, self.check_parse,
                           [mock_line], {})
 
     def test_parse_line_ifplugin_loaded(self):
@@ -236,31 +236,31 @@ class TestParsePADLine(unittest.TestCase):
                                         }})
 
     def test_parse_line_load_plugin(self):
-        self.check_parse([b"loadplugin DumpText /etc/pad/plugins/dump_text.py"],
+        self.check_parse([b"loadplugin DumpText /etc/oa/plugins/dump_text.py"],
                          {})
         self.mock_ctxt.return_value.load_plugin.assert_called_with(
-            "DumpText", "/etc/pad/plugins/dump_text.py")
+            "DumpText", "/etc/oa/plugins/dump_text.py")
 
     def test_parse_line_load_plugin_reimplemented(self):
         self.check_parse([b"loadplugin Mail::SpamAssassin::Plugin::DumpText"],
                          {})
         self.mock_ctxt.return_value.load_plugin.assert_called_with(
-            "pad.plugins.dump_text.DumpText", None)
+            "oa.plugins.dump_text.DumpText", None)
 
     def test_parse_line_load_plugin_no_path(self):
-        self.check_parse([b"loadplugin pad.plugins.dump_text.DumpText"], {})
+        self.check_parse([b"loadplugin oa.plugins.dump_text.DumpText"], {})
         self.mock_ctxt.return_value.load_plugin.assert_called_with(
-            "pad.plugins.dump_text.DumpText", None)
+            "oa.plugins.dump_text.DumpText", None)
 
     def test_parse_line_include(self):
-        patch("pad.rules.parser.os.path.isfile", return_value=True).start()
+        patch("oa.rules.parser.os.path.isfile", return_value=True).start()
         rules = [b"body TEST_RULE /test/",
                  b"include testf_2", ]
         expected = {"TEST_RULE": {"type": "body",
                                   "value": "/test/"},
                     "TEST_RULE2": {"type": "body",
                                    "value": "/test2/"}}
-        open_name = "pad.rules.parser.open"
+        open_name = "oa.rules.parser.open"
         with patch(open_name, create=True) as open_mock:
             open_mock.return_value = MagicMock()
             handle = open_mock.return_value.__enter__.return_value
@@ -269,19 +269,19 @@ class TestParsePADLine(unittest.TestCase):
             self.check_parse(rules, expected)
 
     def test_parse_line_include_max_recursion(self):
-        patch("pad.rules.parser.os.path.isfile", return_value=True).start()
+        patch("oa.rules.parser.os.path.isfile", return_value=True).start()
         rules = Mock(**{"__iter__": Mock(return_value=iter([b"include testf_1"])),
                         "name": "testf_1"})
         expected = {}
 
-        open_name = "pad.rules.parser.open"
+        open_name = "oa.rules.parser.open"
         with patch(open_name, create=True) as open_mock:
             open_mock.return_value = MagicMock()
             handle = open_mock.return_value.__enter__.return_value
             handle.__iter__.return_value = (b"include testf2",)
             handle.__iter__.name = "testf_1"
 
-            self.assertRaises(pad.errors.MaxRecursionDepthExceeded,
+            self.assertRaises(oa.errors.MaxRecursionDepthExceeded,
                               self.check_parse, rules, expected)
 
     def test_parse_line_priority_order(self):
@@ -431,25 +431,25 @@ class TestParsePADLine(unittest.TestCase):
 class TestParsePADRules(unittest.TestCase):
     def setUp(self):
         unittest.TestCase.setUp(self)
-        logging.getLogger("pad-logger").handlers = [logging.NullHandler()]
-        self.mock_parser = patch("pad.rules.parser.PADParser").start()
+        logging.getLogger("oa-logger").handlers = [logging.NullHandler()]
+        self.mock_parser = patch("oa.rules.parser.PADParser").start()
 
     def tearDown(self):
         unittest.TestCase.tearDown(self)
         patch.stopall()
 
     def test_paranoid(self):
-        pad.rules.parser.parse_pad_rules([])
+        oa.rules.parser.parse_pad_rules([])
         self.mock_parser.assert_called_once_with(paranoid=False,
                                                  ignore_unknown=True)
 
     def test_paranoid_true(self):
-        pad.rules.parser.parse_pad_rules([], paranoid=True)
+        oa.rules.parser.parse_pad_rules([], paranoid=True)
         self.mock_parser.assert_called_once_with(paranoid=True,
                                                  ignore_unknown=True)
 
     def test_parse_files(self):
-        pad.rules.parser.parse_pad_rules(["testf1.cf"])
+        oa.rules.parser.parse_pad_rules(["testf1.cf"])
         self.mock_parser.return_value.parse_file.assert_called_with("testf1.cf")
 
 

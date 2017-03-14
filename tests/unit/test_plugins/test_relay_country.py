@@ -6,9 +6,9 @@ try:
 except ImportError:
     from mock import patch, MagicMock
 
-import pad.context
-import pad.message
-import pad.plugins.relay_country
+import oa.context
+import oa.message
+import oa.plugins.relay_country
 
 MSGTEST="""Delivered-To: user@example.com
 Received: by 10.107.130.85 with SMTP id e82csp671450iod;
@@ -104,7 +104,7 @@ class TestRelayCountry(unittest.TestCase):
         self.options = {}
         self.global_data = {"ipv4": MockGeoIP(),
                             "ipv6": MockGeoIP()}
-        patch("pad.plugins.relay_country.RelayCountryPlugin.options",
+        patch("oa.plugins.relay_country.RelayCountryPlugin.options",
               self.options).start()
         self.mock_ctxt = MagicMock(**{
             "get_plugin_data.side_effect": lambda p, k: self.global_data[k],
@@ -113,7 +113,7 @@ class TestRelayCountry(unittest.TestCase):
             self.global_data.setdefault(
                 k, v)}
                                    )
-        self.plugin = pad.plugins.relay_country.RelayCountryPlugin(
+        self.plugin = oa.plugins.relay_country.RelayCountryPlugin(
             self.mock_ctxt)
 
     def tearDown(self):
@@ -122,21 +122,21 @@ class TestRelayCountry(unittest.TestCase):
 
     def test_matching_relay_countries(self):
         """Test getting all the countries"""
-        message = pad.message.Message(self.mock_ctxt, MSGTEST)
+        message = oa.message.Message(self.mock_ctxt, MSGTEST)
         self.plugin.parsed_metadata(message)
         expected_result = ['GB']
         self.assertEqual(message.headers["X-Relay-Countries"], expected_result)
 
     def test_no_received_headers(self):
         """Test a message where there are no "Received" headers"""
-        message = pad.message.Message(self.mock_ctxt, MSG_NORECEIVED)
+        message = oa.message.Message(self.mock_ctxt, MSG_NORECEIVED)
         self.plugin.parsed_metadata(message)
         expected_result = []
         self.assertEqual(message.headers["X-Relay-Countries"], expected_result)
 
     def test_unknown_ipdaddress(self):
         """Test a message where there are no "Received" headers"""
-        message = pad.message.Message(self.mock_ctxt, MSG_UNKNOWN)
+        message = oa.message.Message(self.mock_ctxt, MSG_UNKNOWN)
         self.plugin.parsed_metadata(message)
         expected_result = ["XX"]
         self.assertEqual(message.headers["X-Relay-Countries"], expected_result)

@@ -7,7 +7,7 @@ try:
 except ImportError:
     from mock import patch, Mock, MagicMock
 
-import pad.plugins.pyzor
+import oa.plugins.pyzor
 
 
 class TestPyzorCheck(unittest.TestCase):
@@ -16,8 +16,8 @@ class TestPyzorCheck(unittest.TestCase):
     def setUp(self):
         unittest.TestCase.setUp(self)
         self.mock_pyzor = patch(
-            "pad.plugins.pyzor.pyzor.client.BatchClient").start()
-        self.mock_digester = patch("pad.plugins.pyzor.pyzor.digest.DataDigester",
+            "oa.plugins.pyzor.pyzor.client.BatchClient").start()
+        self.mock_digester = patch("oa.plugins.pyzor.pyzor.digest.DataDigester",
                                    **{"return_value.value":
                                       self.digest}).start()
         self.msg_data = {}
@@ -38,7 +38,7 @@ class TestPyzorCheck(unittest.TestCase):
         patch.stopall()
 
     def test_finish_parsing(self):
-        plugin = pad.plugins.pyzor.PyzorPlugin(self.mock_ctxt)
+        plugin = oa.plugins.pyzor.PyzorPlugin(self.mock_ctxt)
         plugin.finish_parsing_end(self.mock_ruleset)
         expected = ("PyzorPlugin", "client", self.mock_pyzor(timeout=3.5))
 
@@ -47,7 +47,7 @@ class TestPyzorCheck(unittest.TestCase):
     def test_check_pyzor_set_digest(self):
         self.global_data["client"] = self.mock_client
 
-        plugin = pad.plugins.pyzor.PyzorPlugin(self.mock_ctxt)
+        plugin = oa.plugins.pyzor.PyzorPlugin(self.mock_ctxt)
         plugin.check_pyzor(self.mock_msg)
 
         expected = ("PyzorPlugin", "digest", self.digest)
@@ -56,7 +56,7 @@ class TestPyzorCheck(unittest.TestCase):
     def test_check_pyzor_no_use(self):
         self.global_data["client"] = self.mock_client
         self.global_data["use_pyzor"] = False
-        plugin = pad.plugins.pyzor.PyzorPlugin(self.mock_ctxt)
+        plugin = oa.plugins.pyzor.PyzorPlugin(self.mock_ctxt)
 
         result = plugin.check_pyzor(self.mock_msg)
 
@@ -65,7 +65,7 @@ class TestPyzorCheck(unittest.TestCase):
 
     def test_check_pyzor_check_server(self):
         self.global_data["client"] = self.mock_client
-        plugin = pad.plugins.pyzor.PyzorPlugin(self.mock_ctxt)
+        plugin = oa.plugins.pyzor.PyzorPlugin(self.mock_ctxt)
 
         plugin.check_pyzor(self.mock_msg)
 
@@ -74,7 +74,7 @@ class TestPyzorCheck(unittest.TestCase):
 
     def test_check_pyzor_check_matched(self):
         self.global_data["client"] = self.mock_client
-        plugin = pad.plugins.pyzor.PyzorPlugin(self.mock_ctxt)
+        plugin = oa.plugins.pyzor.PyzorPlugin(self.mock_ctxt)
 
         self.mock_client.check.return_value = {"Count": 6, "WL-Count": 0}
 
@@ -83,7 +83,7 @@ class TestPyzorCheck(unittest.TestCase):
 
     def test_check_pyzor_check_matched_too_few(self):
         self.global_data["client"] = self.mock_client
-        plugin = pad.plugins.pyzor.PyzorPlugin(self.mock_ctxt)
+        plugin = oa.plugins.pyzor.PyzorPlugin(self.mock_ctxt)
 
         self.mock_client.check.return_value = {"Count": 4, "WL-Count": 0}
 
@@ -92,7 +92,7 @@ class TestPyzorCheck(unittest.TestCase):
 
     def test_check_pyzor_check_matched_whitelisted(self):
         self.global_data["client"] = self.mock_client
-        plugin = pad.plugins.pyzor.PyzorPlugin(self.mock_ctxt)
+        plugin = oa.plugins.pyzor.PyzorPlugin(self.mock_ctxt)
 
         self.mock_client.check.return_value = {"Count": 6, "WL-Count": 1}
 
@@ -106,8 +106,8 @@ class TestPyzorReport(unittest.TestCase):
     def setUp(self):
         unittest.TestCase.setUp(self)
         self.mock_pyzor = patch(
-            "pad.plugins.pyzor.pyzor.client.BatchClient").start()
-        self.mock_digester = patch("pad.plugins.pyzor.pyzor.digest.DataDigester",
+            "oa.plugins.pyzor.pyzor.client.BatchClient").start()
+        self.mock_digester = patch("oa.plugins.pyzor.pyzor.digest.DataDigester",
                                    **{"return_value.value":
                                       self.digest}).start()
         self.msg_data = {}
@@ -130,7 +130,7 @@ class TestPyzorReport(unittest.TestCase):
     def test_report_pyzor_spam(self):
         self.global_data["client"] = self.mock_client
         self.msg_data["digest"] = self.digest
-        plugin = pad.plugins.pyzor.PyzorPlugin(self.mock_ctxt)
+        plugin = oa.plugins.pyzor.PyzorPlugin(self.mock_ctxt)
 
         plugin.plugin_report(self.mock_msg)
 
@@ -140,7 +140,7 @@ class TestPyzorReport(unittest.TestCase):
     def test_report_pyzor_ham(self):
         self.global_data["client"] = self.mock_client
         self.msg_data["digest"] = self.digest
-        plugin = pad.plugins.pyzor.PyzorPlugin(self.mock_ctxt)
+        plugin = oa.plugins.pyzor.PyzorPlugin(self.mock_ctxt)
 
         plugin.plugin_revoke(self.mock_msg)
 
@@ -149,7 +149,7 @@ class TestPyzorReport(unittest.TestCase):
 
     def test_report_no_digest(self):
         self.global_data["client"] = self.mock_client
-        plugin = pad.plugins.pyzor.PyzorPlugin(self.mock_ctxt)
+        plugin = oa.plugins.pyzor.PyzorPlugin(self.mock_ctxt)
 
         plugin.plugin_report(self.mock_msg)
         expected = ("PyzorPlugin", "digest", self.digest)
@@ -159,7 +159,7 @@ class TestPyzorReport(unittest.TestCase):
         self.global_data["client"] = self.mock_client
         self.global_data["use_pyzor"] = False
         self.msg_data["digest"] = self.digest
-        plugin = pad.plugins.pyzor.PyzorPlugin(self.mock_ctxt)
+        plugin = oa.plugins.pyzor.PyzorPlugin(self.mock_ctxt)
 
         plugin.plugin_report(self.mock_msg)
 

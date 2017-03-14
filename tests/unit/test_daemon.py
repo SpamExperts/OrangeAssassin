@@ -9,19 +9,19 @@ except ImportError:
     from mock import patch, Mock, call
 
 
-import scripts.padd
+import scripts.oad
 
 
 class TestDaemon(unittest.TestCase):
     def setUp(self):
         unittest.TestCase.setUp(self)
-        patch("scripts.padd.pad.config.setup_logging").start()
-        self.mock_pfs = patch("scripts.padd.pad.server.PreForkServer").start()
-        self.mock_s = patch("scripts.padd.pad.server.Server").start()
-        self.argv = ["padd.py"]
+        patch("scripts.padd.oa.config.setup_logging").start()
+        self.mock_pfs = patch("scripts.padd.oa.server.PreForkServer").start()
+        self.mock_s = patch("scripts.padd.oa.server.Server").start()
+        self.argv = ["oad.py"]
         patch("scripts.padd.sys.exit", create=True).start()
         patch("scripts.padd.sys.argv", self.argv, create=True).start()
-        patch("scripts.padd.pad.config.get_default_configs",
+        patch("scripts.padd.oa.config.get_default_configs",
               return_value={"default": "/etc/mail/spamassassin",
                             "required": False}).start()
 
@@ -30,7 +30,7 @@ class TestDaemon(unittest.TestCase):
         patch.stopall()
 
     def test_normal(self):
-        scripts.padd.main()
+        scripts.oad.main()
         self.mock_s.assert_called_with(
             ("0.0.0.0", 783), '/etc/mail/spamassassin',
             '/etc/mail/spamassassin', paranoid=False,
@@ -40,7 +40,7 @@ class TestDaemon(unittest.TestCase):
 
     def test_preforked(self):
         self.argv.append("--prefork=6")
-        scripts.padd.main()
+        scripts.oad.main()
         self.mock_pfs.assert_called_with(
             ("0.0.0.0", 783), '/etc/mail/spamassassin',
             '/etc/mail/spamassassin', paranoid=False,
@@ -54,9 +54,9 @@ class TestAction(unittest.TestCase):
     def setUp(self):
         unittest.TestCase.setUp(self)
         self.mock_send = patch("scripts.padd.spoon.daemon.send_action").start()
-        patch("scripts.padd.pad.config.setup_logging").start()
+        patch("scripts.padd.oa.config.setup_logging").start()
         patch("scripts.padd.os.path.exists", return_value=True).start()
-        self.argv = ["padd.py"]
+        self.argv = ["oad.py"]
         patch("scripts.padd.sys.exit", create=True).start()
         patch("scripts.padd.sys.argv", self.argv, create=True).start()
         mock_o = patch("scripts.padd.open", create=True).start()
@@ -69,12 +69,12 @@ class TestAction(unittest.TestCase):
 
     def test_reload(self):
         self.argv.append("reload")
-        scripts.padd.main()
+        scripts.oad.main()
         self.mock_send.assert_called_with("reload", "/var/run/padd.pid")
 
     def test_stop(self):
         self.argv.append("stop")
-        scripts.padd.main()
+        scripts.oad.main()
         self.mock_send.assert_called_with("stop", "/var/run/padd.pid")
 
 

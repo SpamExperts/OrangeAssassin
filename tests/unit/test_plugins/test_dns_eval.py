@@ -1,6 +1,6 @@
 """Test DNSEval"""
 import unittest
-import pad.dns_interface
+import oa.dns_interface
 import collections
 
 try:
@@ -10,8 +10,8 @@ except ImportError:
 
 import ipaddress
 
-import pad.context
-import pad.plugins.dns_eval
+import oa.context
+import oa.plugins.dns_eval
 
 
 class TestDNSEval(unittest.TestCase):
@@ -22,12 +22,12 @@ class TestDNSEval(unittest.TestCase):
         self.local_data = {}
         self.global_data = {}
         self.mock_ctxt = MagicMock()
-        self.mock_ctxt.dns.reverse_ip = pad.dns_interface.DNSInterface().reverse_ip
+        self.mock_ctxt.dns.reverse_ip = oa.dns_interface.DNSInterface().reverse_ip
         self.mock_ctxt.skip_rbl_checks = False
         self.mock_msg = MagicMock()
         self.mock_msg.sender_address = "sender@example.com"
         self.mock_msg.get_untrusted_ips.return_value = self.ips
-        self.plugin = pad.plugins.dns_eval.DNSEval(self.mock_ctxt)
+        self.plugin = oa.plugins.dns_eval.DNSEval(self.mock_ctxt)
         self.plugin.set_local = lambda m, k, v: self.local_data.__setitem__(k, v)
         self.plugin.get_local = lambda m, k: self.local_data.__getitem__(k)
         self.plugin.set_global = self.global_data.__setitem__
@@ -39,7 +39,7 @@ class TestDNSEval(unittest.TestCase):
         eval_rule.eval_rule_name = "check_rbl"
         eval_rule.eval_args = ("set id", "rbl.example.com.")
         self.mock_ruleset.checked["MY_RULE"] = eval_rule
-        patch("pad.plugins.dns_eval.isinstance", return_value=True,
+        patch("oa.plugins.dns_eval.isinstance", return_value=True,
               create=True).start()
 
         self.plugin.finish_parsing_end(self.mock_ruleset)
@@ -88,7 +88,7 @@ class TestDNSEval(unittest.TestCase):
         eval_rule.eval_rule_name = "check_rbl"
         eval_rule.eval_args = ("example_ser", "rbl.example.com.")
         self.mock_ruleset.checked["MY_RULE"] = eval_rule
-        patch("pad.plugins.dns_eval.isinstance", return_value=True,
+        patch("oa.plugins.dns_eval.isinstance", return_value=True,
               create=True).start()
 
         self.plugin.finish_parsing_end(self.mock_ruleset)

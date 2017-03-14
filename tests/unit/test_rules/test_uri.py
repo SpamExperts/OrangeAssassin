@@ -7,7 +7,7 @@ try:
 except ImportError:
     from mock import patch, Mock, call
 
-import pad.rules.uri
+import oa.rules.uri
 
 
 class TestUriRule(unittest.TestCase):
@@ -22,7 +22,7 @@ class TestUriRule(unittest.TestCase):
 
     def test_match(self):
         mock_pattern = Mock(**{"match.return_value": True})
-        rule = pad.rules.uri.URIRule("TEST", pattern=mock_pattern)
+        rule = oa.rules.uri.URIRule("TEST", pattern=mock_pattern)
         result = rule.match(self.mock_msg)
 
         mock_pattern.match.assert_called_once_with(self.uri_list[0])
@@ -30,7 +30,7 @@ class TestUriRule(unittest.TestCase):
 
     def test_match_notmatched(self):
         mock_pattern = Mock(**{"match.return_value": False})
-        rule = pad.rules.uri.URIRule("TEST", pattern=mock_pattern)
+        rule = oa.rules.uri.URIRule("TEST", pattern=mock_pattern)
         result = rule.match(self.mock_msg)
 
         calls = [call(uri) for uri in self.uri_list]
@@ -38,10 +38,10 @@ class TestUriRule(unittest.TestCase):
         self.assertEqual(result, False)
 
     def test_get_rule_kwargs(self):
-        mock_perl2re = patch("pad.rules.uri.pad.regex.perl2re").start()
+        mock_perl2re = patch("oa.rules.uri.oa.regex.perl2re").start()
         data = {"value": "/test/"}
         expected = {"pattern": mock_perl2re("/test/")}
-        kwargs = pad.rules.uri.URIRule.get_rule_kwargs(data)
+        kwargs = oa.rules.uri.URIRule.get_rule_kwargs(data)
         mock_perl2re.assert_called_with("/test/")
         self.assertEqual(kwargs, expected)
 

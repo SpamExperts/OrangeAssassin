@@ -13,13 +13,13 @@ import argparse
 
 import dill as pickle
 
-import pad
-import pad.common
-import pad.config
-import pad.errors
-import pad.message
-import pad.rules.meta
-import pad.rules.parser
+import oa
+import oa.common
+import oa.config
+import oa.errors
+import oa.message
+import oa.rules.meta
+import oa.rules.parser
 
 from future.utils import PY3
 
@@ -81,13 +81,13 @@ def parse_arguments(args):
                         action="store_true", default=False,
                         help="Deactivate lazy loading of rules/regex")
     parser.add_argument("-v", "--version", action="version",
-                        version=pad.__version__)
+                        version=oa.__version__)
     parser.add_argument("-C", "--configpath", action="store",
                         help="Path to standard configuration directory",
-                        **pad.config.get_default_configs(site=False))
+                        **oa.config.get_default_configs(site=False))
     parser.add_argument("-S", "--sitepath", "--siteconfigpath", action="store",
                         help="Path to standard configuration directory",
-                        **pad.config.get_default_configs(site=True))
+                        **oa.config.get_default_configs(site=True))
     parser.add_argument("-p", "--prefspath", "--prefs-file",
                         default="~/.spamassassin/user_prefs",
                         help="Path to user preferences.")
@@ -114,11 +114,11 @@ def call_post_parsing(ruleset):
 
 def main():
     options = parse_arguments(sys.argv[1:])
-    pad.config.LAZY_MODE = not options.lazy_mode
-    logger = pad.config.setup_logging("pad-logger", debug=options.debug)
-    config_files = pad.config.get_config_files(options.configpath,
-                                               options.sitepath,
-                                               options.prefspath)
+    oa.config.LAZY_MODE = not options.lazy_mode
+    logger = oa.config.setup_logging("oa-logger", debug=options.debug)
+    config_files = oa.config.get_config_files(options.configpath,
+                                              options.sitepath,
+                                              options.prefspath)
 
     if not config_files:
         logger.critical("Config: no rules were found.")
@@ -126,19 +126,19 @@ def main():
 
     serialize = options.serialize
 
-    if serialize and not pad.common.can_compile():
+    if serialize and not oa.common.can_compile():
         logger.error("Cannot compile in this environment")
         serialize = False
 
     if not serialize:
         try:
-            ruleset = pad.rules.parser.parse_pad_rules(
+            ruleset = oa.rules.parser.parse_pad_rules(
                 config_files, options.paranoid, not options.show_unknown
             ).get_ruleset()
-        except pad.errors.MaxRecursionDepthExceeded as e:
+        except oa.errors.MaxRecursionDepthExceeded as e:
             logger.critical(e.recursion_list)
             sys.exit(1)
-        except pad.errors.ParsingError as e:
+        except oa.errors.ParsingError as e:
             logger.critical(e)
             sys.exit(1)
     else:
@@ -157,7 +157,7 @@ def main():
             if type(raw_msg) is bytes and PY3:
                 raw_msg = raw_msg.decode("utf-8", "ignore")
             msgf.close()
-            msg = pad.message.Message(ruleset.ctxt, raw_msg)
+            msg = oa.message.Message(ruleset.ctxt, raw_msg)
 
             if options.revoke:
                 ruleset.ctxt.hook_revoke(msg)

@@ -8,7 +8,7 @@ try:
 except ImportError:
     from mock import patch, Mock, MagicMock, call
 
-import pad.plugins.wlbl_eval
+import oa.plugins.wlbl_eval
 
 
 class TestGetHeader(unittest.TestCase):
@@ -28,9 +28,9 @@ class TestGetHeader(unittest.TestCase):
         })
 
         self.mock_addr_header = patch(
-            "pad.message.Message.get_all_addr_header").start()
+            "oa.message.Message.get_all_addr_header").start()
 
-        self.plug = pad.plugins.wlbl_eval.WLBLEvalPlugin(self.mock_ctxt)
+        self.plug = oa.plugins.wlbl_eval.WLBLEvalPlugin(self.mock_ctxt)
 
         FROM_HEADERS = ('From', "Envelope-Sender", 'Resent-From',
                         'X-Envelope-From','EnvelopeFrom')
@@ -61,7 +61,7 @@ class TestGetHeader(unittest.TestCase):
     def test_get_from_addresses_from_headers(self):
         self.mock_msg.get_all_addr_header.side_effect = self.get_from_header
 
-        self.mock_from_headers = patch("pad.plugins.wlbl_eval.FROM_HEADERS",
+        self.mock_from_headers = patch("oa.plugins.wlbl_eval.FROM_HEADERS",
                                      ["From"]).start()
         result = self.plug.get_from_addresses(self.mock_msg)
         self.assertEqual(list(result),
@@ -87,9 +87,9 @@ class TestBaseDomain(unittest.TestCase):
                                                   v: self.msg_data.setdefault(k,
                                                                               v),
         })
-        self.plug = pad.plugins.wlbl_eval.WLBLEvalPlugin(self.mock_ctxt)
+        self.plug = oa.plugins.wlbl_eval.WLBLEvalPlugin(self.mock_ctxt)
         self.mock_check_in_TL_TLDS = patch(
-            "pad.plugins.wlbl_eval.WLBLEvalPlugin.check_in_TL_TLDS").start()
+            "oa.plugins.wlbl_eval.WLBLEvalPlugin.check_in_TL_TLDS").start()
 
     def tearDown(self):
         unittest.TestCase.tearDown(self)
@@ -151,13 +151,13 @@ class TestWhitelist(unittest.TestCase):
                                                   v: self.msg_data.
                                   setdefault(k,v),
         })
-        self.mock_rcvd = patch("pad.plugins.wlbl_eval."
+        self.mock_rcvd = patch("oa.plugins.wlbl_eval."
                                "WLBLEvalPlugin.check_whitelist_rcvd").start()
 
-        self.mock_addr_in_list = patch("pad.plugins.wlbl_eval.WLBLEvalPlugin."
+        self.mock_addr_in_list = patch("oa.plugins.wlbl_eval.WLBLEvalPlugin."
                   "check_address_in_list").start()
 
-        self.plug = pad.plugins.wlbl_eval.WLBLEvalPlugin(self.mock_ctxt)
+        self.plug = oa.plugins.wlbl_eval.WLBLEvalPlugin(self.mock_ctxt)
 
 
     def tearDown(self):
@@ -343,10 +343,10 @@ class TestUrilist(unittest.TestCase):
                                   setdefault(k,v),
         })
 
-        self.mock_add_in_list = patch("pad.plugins.wlbl_eval."
+        self.mock_add_in_list = patch("oa.plugins.wlbl_eval."
                                       "WLBLEvalPlugin.add_in_list").start()
 
-        self.plug = pad.plugins.wlbl_eval.WLBLEvalPlugin(self.mock_ctxt)
+        self.plug = oa.plugins.wlbl_eval.WLBLEvalPlugin(self.mock_ctxt)
 
     def tearDown(self):
         unittest.TestCase.tearDown(self)
@@ -500,7 +500,7 @@ class TestGetAddresses(unittest.TestCase):
                                   setdefault(k, v),
         })
 
-        self.plug = pad.plugins.wlbl_eval.WLBLEvalPlugin(self.mock_ctxt)
+        self.plug = oa.plugins.wlbl_eval.WLBLEvalPlugin(self.mock_ctxt)
 
     def tearDown(self):
         unittest.TestCase.tearDown(self)
@@ -528,7 +528,7 @@ class TestGetAddresses(unittest.TestCase):
 
     def test_get_to_addresses_to_headers(self):
         self.mock_msg.get_all_addr_header.side_effect = self.get_header
-        self.mock_to_headers = patch("pad.plugins.wlbl_eval.TO_HEADERS",
+        self.mock_to_headers = patch("oa.plugins.wlbl_eval.TO_HEADERS",
                                      ["To"]).start()
         result = self.plug.get_to_addresses(self.mock_msg)
         self.assertEqual(list(result),
@@ -563,15 +563,15 @@ class TestToFromWlBl(unittest.TestCase):
                                   setdefault(k, v),
         })
 
-        self.plug = pad.plugins.wlbl_eval.WLBLEvalPlugin(self.mock_ctxt)
+        self.plug = oa.plugins.wlbl_eval.WLBLEvalPlugin(self.mock_ctxt)
         self.mock__check_whitelist = \
-            patch("pad.plugins.wlbl_eval.WLBLEvalPlugin."
+            patch("oa.plugins.wlbl_eval.WLBLEvalPlugin."
                   "_check_whitelist").start()
         self.mock_check_address_in_list = \
-            patch("pad.plugins.wlbl_eval.WLBLEvalPlugin."
+            patch("oa.plugins.wlbl_eval.WLBLEvalPlugin."
                   "check_address_in_list").start()
         self.mock_get_to_addresses = \
-            patch("pad.plugins.wlbl_eval.WLBLEvalPlugin."
+            patch("oa.plugins.wlbl_eval.WLBLEvalPlugin."
                   "get_to_addresses").start()
 
     def tearDown(self):
@@ -636,9 +636,9 @@ class TestMatchRcvd(unittest.TestCase):
                                                   v: self.msg_data.
                                   setdefault(k, v),
         })
-        self.mock_base_domain = patch("pad.plugins.wlbl_eval."
+        self.mock_base_domain = patch("oa.plugins.wlbl_eval."
                                       "WLBLEvalPlugin.base_domain").start()
-        self.plug = pad.plugins.wlbl_eval.WLBLEvalPlugin(self.mock_ctxt)
+        self.plug = oa.plugins.wlbl_eval.WLBLEvalPlugin(self.mock_ctxt)
 
     def tearDown(self):
         unittest.TestCase.tearDown(self)
@@ -728,7 +728,7 @@ class TestUriHost(unittest.TestCase):
                                   setdefault(k, v),
         })
 
-        self.plug = pad.plugins.wlbl_eval.WLBLEvalPlugin(self.mock_ctxt)
+        self.plug = oa.plugins.wlbl_eval.WLBLEvalPlugin(self.mock_ctxt)
 
     def tearDown(self):
         unittest.TestCase.tearDown(self)
@@ -783,7 +783,7 @@ class TestCheckForged(unittest.TestCase):
                 lambda p, k, v: self.msg_data.setdefault(k, v),
         })
 
-        self.plug = pad.plugins.wlbl_eval.WLBLEvalPlugin(self.mock_ctxt)
+        self.plug = oa.plugins.wlbl_eval.WLBLEvalPlugin(self.mock_ctxt)
 
     def tearDown(self):
         unittest.TestCase.tearDown(self)
@@ -857,7 +857,7 @@ class TestAddInList(unittest.TestCase):
             "set_plugin_data.side_effect":
                 lambda p, k, v: self.msg_data.setdefault(k, v)})
 
-        self.plug = pad.plugins.wlbl_eval.WLBLEvalPlugin(self.mock_ctxt)
+        self.plug = oa.plugins.wlbl_eval.WLBLEvalPlugin(self.mock_ctxt)
 
     def tearDown(self):
         unittest.TestCase.tearDown(self)
@@ -917,17 +917,17 @@ class TestCheckToFrom(unittest.TestCase):
             "set_plugin_data.side_effect":
                 lambda p, k,v: self.msg_data.setdefault(k, v),
         })
-        self.mock_rcvd = patch("pad.plugins.wlbl_eval."
+        self.mock_rcvd = patch("oa.plugins.wlbl_eval."
                                "WLBLEvalPlugin.check_whitelist_rcvd").start()
-        self.mock_check_address = patch("pad.plugins.wlbl_eval."
+        self.mock_check_address = patch("oa.plugins.wlbl_eval."
                                "WLBLEvalPlugin.check_address_in_list").start()
-        self.mock_check_whitelist = patch("pad.plugins.wlbl_eval."
+        self.mock_check_whitelist = patch("oa.plugins.wlbl_eval."
                                 "WLBLEvalPlugin._check_whitelist").start()
         self.mock_get_from_addresses = patch(
-            "pad.plugins.wlbl_eval.WLBLEvalPlugin.get_from_addresses").start()
+            "oa.plugins.wlbl_eval.WLBLEvalPlugin.get_from_addresses").start()
         self.mock_get_to_addresses = patch(
-            "pad.plugins.wlbl_eval.WLBLEvalPlugin.get_to_addresses").start()
-        self.plug = pad.plugins.wlbl_eval.WLBLEvalPlugin(self.mock_ctxt)
+            "oa.plugins.wlbl_eval.WLBLEvalPlugin.get_to_addresses").start()
+        self.plug = oa.plugins.wlbl_eval.WLBLEvalPlugin(self.mock_ctxt)
 
     def tearDown(self):
         unittest.TestCase.tearDown(self)
@@ -986,11 +986,11 @@ class TestAddressInList(unittest.TestCase):
                                                   v: self.msg_data.setdefault(k,
                                                                               v),
         })
-        self.mock_rcvd = patch("pad.plugins.wlbl_eval."
+        self.mock_rcvd = patch("oa.plugins.wlbl_eval."
                                "WLBLEvalPlugin.check_whitelist_rcvd").start()
 
 
-        self.plug = pad.plugins.wlbl_eval.WLBLEvalPlugin(self.mock_ctxt)
+        self.plug = oa.plugins.wlbl_eval.WLBLEvalPlugin(self.mock_ctxt)
 
     def tearDown(self):
         unittest.TestCase.tearDown(self)
@@ -1036,16 +1036,16 @@ class TestCheckWhitelist(unittest.TestCase):
                 lambda p, k, v: self.msg_data.setdefault(k, v),
         })
 
-        self.mock_get_from_addresses = patch("pad.plugins.wlbl_eval."
+        self.mock_get_from_addresses = patch("oa.plugins.wlbl_eval."
                                              "WLBLEvalPlugin."
                                              "get_from_addresses").start()
-        self.mock_check_in_list = patch("pad.plugins.wlbl_eval."
+        self.mock_check_in_list = patch("oa.plugins.wlbl_eval."
                                         "WLBLEvalPlugin.check_in_list").start()
         self.mock_check_in_default_whitelist = patch(
-            "pad.plugins.wlbl_eval.WLBLEvalPlugin."
+            "oa.plugins.wlbl_eval.WLBLEvalPlugin."
             "check_in_default_whitelist").start()
 
-        self.plug = pad.plugins.wlbl_eval.WLBLEvalPlugin(self.mock_ctxt)
+        self.plug = oa.plugins.wlbl_eval.WLBLEvalPlugin(self.mock_ctxt)
 
     def tearDown(self):
         unittest.TestCase.tearDown(self)
@@ -1091,10 +1091,10 @@ class TestParseList(unittest.TestCase):
             "set_plugin_data.side_effect":
                 lambda p, k,v: self.msg_data.setdefault(k,v),
         })
-        self.mock_add_in_dict = patch("pad.plugins.wlbl_eval."
+        self.mock_add_in_dict = patch("oa.plugins.wlbl_eval."
                                       "WLBLEvalPlugin.add_in_dict").start()
 
-        self.plug = pad.plugins.wlbl_eval.WLBLEvalPlugin(self.mock_ctxt)
+        self.plug = oa.plugins.wlbl_eval.WLBLEvalPlugin(self.mock_ctxt)
 
     def tearDown(self):
         unittest.TestCase.tearDown(self)
@@ -1173,9 +1173,9 @@ class TestCheckUriWB(unittest.TestCase):
                                                                               v),
         })
         self.mock_check_uri = patch(
-            "pad.plugins.wlbl_eval.WLBLEvalPlugin.check_uri_host_listed").start()
+            "oa.plugins.wlbl_eval.WLBLEvalPlugin.check_uri_host_listed").start()
 
-        self.plug = pad.plugins.wlbl_eval.WLBLEvalPlugin(self.mock_ctxt)
+        self.plug = oa.plugins.wlbl_eval.WLBLEvalPlugin(self.mock_ctxt)
 
     def tearDown(self):
         unittest.TestCase.tearDown(self)
@@ -1209,12 +1209,12 @@ class TestCheckWhitelistRcvd(unittest.TestCase):
                                                   v: self.msg_data.
                                   setdefault(k, v),
         })
-        self.mock_check_rcvd = patch("pad.plugins.wlbl_eval.WLBLEvalPlugin."
+        self.mock_check_rcvd = patch("oa.plugins.wlbl_eval.WLBLEvalPlugin."
                                      "check_rcvd").start()
         self.mock_check_found_forged = patch(
-            "pad.plugins.wlbl_eval.WLBLEvalPlugin.check_found_forged").start()
+            "oa.plugins.wlbl_eval.WLBLEvalPlugin.check_found_forged").start()
 
-        self.plug = pad.plugins.wlbl_eval.WLBLEvalPlugin(self.mock_ctxt)
+        self.plug = oa.plugins.wlbl_eval.WLBLEvalPlugin(self.mock_ctxt)
 
     def tearDown(self):
         unittest.TestCase.tearDown(self)

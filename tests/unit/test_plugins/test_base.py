@@ -7,20 +7,20 @@ try:
 except ImportError:
     from mock import patch, Mock, MagicMock
 
-import pad.errors
-import pad.context
-import pad.plugins.base
+import oa.errors
+import oa.context
+import oa.plugins.base
 
 
 class TestBasePlugin(unittest.TestCase):
     def setUp(self):
         unittest.TestCase.setUp(self)
         self.options = {}
-        pad.plugins.base.BasePlugin.dsn_name = None
-        patch("pad.plugins.base.BasePlugin.options", self.options).start()
-        self.mock_create_engine = patch("pad.plugins.base.create_engine",
+        oa.plugins.base.BasePlugin.dsn_name = None
+        patch("oa.plugins.base.BasePlugin.options", self.options).start()
+        self.mock_create_engine = patch("oa.plugins.base.create_engine",
                                         create=True).start()
-        self.mock_session_maker = patch("pad.plugins.base.sessionmaker",
+        self.mock_session_maker = patch("oa.plugins.base.sessionmaker",
                                         create=True).start()
         self.conf = {
             "use_bayes": True,
@@ -37,60 +37,60 @@ class TestBasePlugin(unittest.TestCase):
     def test_init_options_defaults(self):
         self.options["test_bool"] = ("bool", False)
 
-        pad.plugins.base.BasePlugin(self.mock_ctxt)
+        oa.plugins.base.BasePlugin(self.mock_ctxt)
         self.mock_ctxt.set_plugin_data.assert_called_with("BasePlugin",
                                                           "test_bool", False)
 
     def test_init_options_dsn_defaults(self):
-        pad.plugins.base.BasePlugin.dsn_name = "test_plugin"
-        pad.plugins.base.BasePlugin(self.mock_ctxt)
+        oa.plugins.base.BasePlugin.dsn_name = "test_plugin"
+        oa.plugins.base.BasePlugin(self.mock_ctxt)
 
         self.assertIn("test_plugin_dsn", self.options)
         self.assertIn("test_plugin_sql_password", self.options)
         self.assertIn("test_plugin_sql_username", self.options)
 
     def test_set_global(self):
-        plugin = pad.plugins.base.BasePlugin(self.mock_ctxt)
+        plugin = oa.plugins.base.BasePlugin(self.mock_ctxt)
 
         plugin.set_global("test", "value")
         self.mock_ctxt.set_plugin_data.assert_called_with("BasePlugin",
                                                           "test", "value")
 
     def test_get_global(self):
-        plugin = pad.plugins.base.BasePlugin(self.mock_ctxt)
+        plugin = oa.plugins.base.BasePlugin(self.mock_ctxt)
 
         plugin.get_global("test")
         self.mock_ctxt.get_plugin_data.assert_called_with("BasePlugin", "test")
 
     def test_del_global(self):
-        plugin = pad.plugins.base.BasePlugin(self.mock_ctxt)
+        plugin = oa.plugins.base.BasePlugin(self.mock_ctxt)
 
         plugin.del_global("test")
         self.mock_ctxt.del_plugin_data.assert_called_with("BasePlugin", "test")
 
     def test_set_local(self):
-        plugin = pad.plugins.base.BasePlugin(self.mock_ctxt)
+        plugin = oa.plugins.base.BasePlugin(self.mock_ctxt)
 
         plugin.set_local(self.mock_msg, "test", "value")
         self.mock_msg.set_plugin_data.assert_called_with("BasePlugin",
                                                          "test", "value")
 
     def test_get_local(self):
-        plugin = pad.plugins.base.BasePlugin(self.mock_ctxt)
+        plugin = oa.plugins.base.BasePlugin(self.mock_ctxt)
 
         plugin.get_local(self.mock_msg, "test")
         self.mock_msg.get_plugin_data.assert_called_with("BasePlugin", "test")
 
     def test_del_local(self):
-        plugin = pad.plugins.base.BasePlugin(self.mock_ctxt)
+        plugin = oa.plugins.base.BasePlugin(self.mock_ctxt)
 
         plugin.del_local(self.mock_msg, "test")
         self.mock_msg.del_plugin_data.assert_called_with("BasePlugin", "test")
 
     def test_parse_config_int(self):
         self.options["test"] = ("int", 0)
-        plugin = pad.plugins.base.BasePlugin(self.mock_ctxt)
-        self.assertRaises(pad.errors.InhibitCallbacks, plugin.parse_config,
+        plugin = oa.plugins.base.BasePlugin(self.mock_ctxt)
+        self.assertRaises(oa.errors.InhibitCallbacks, plugin.parse_config,
                           "test", "1")
 
         self.mock_ctxt.set_plugin_data.assert_called_with("BasePlugin",
@@ -98,14 +98,14 @@ class TestBasePlugin(unittest.TestCase):
 
     def test_parse_config_int_invalid(self):
         self.options["test"] = ("int", 0)
-        plugin = pad.plugins.base.BasePlugin(self.mock_ctxt)
-        self.assertRaises(pad.errors.PluginError, plugin.parse_config, "test",
+        plugin = oa.plugins.base.BasePlugin(self.mock_ctxt)
+        self.assertRaises(oa.errors.PluginError, plugin.parse_config, "test",
                           "abc")
 
     def test_parse_config_float(self):
         self.options["test"] = ("float", 0)
-        plugin = pad.plugins.base.BasePlugin(self.mock_ctxt)
-        self.assertRaises(pad.errors.InhibitCallbacks, plugin.parse_config,
+        plugin = oa.plugins.base.BasePlugin(self.mock_ctxt)
+        self.assertRaises(oa.errors.InhibitCallbacks, plugin.parse_config,
                           "test", "1.1")
 
         self.mock_ctxt.set_plugin_data.assert_called_with("BasePlugin",
@@ -113,14 +113,14 @@ class TestBasePlugin(unittest.TestCase):
 
     def test_parse_config_float_invalid(self):
         self.options["test"] = ("float", 0)
-        plugin = pad.plugins.base.BasePlugin(self.mock_ctxt)
-        self.assertRaises(pad.errors.PluginError, plugin.parse_config, "test",
+        plugin = oa.plugins.base.BasePlugin(self.mock_ctxt)
+        self.assertRaises(oa.errors.PluginError, plugin.parse_config, "test",
                           "abc")
 
     def test_parse_config_bool(self):
         self.options["test"] = ("bool", False)
-        plugin = pad.plugins.base.BasePlugin(self.mock_ctxt)
-        self.assertRaises(pad.errors.InhibitCallbacks, plugin.parse_config,
+        plugin = oa.plugins.base.BasePlugin(self.mock_ctxt)
+        self.assertRaises(oa.errors.InhibitCallbacks, plugin.parse_config,
                           "test", "true")
 
         self.mock_ctxt.set_plugin_data.assert_called_with("BasePlugin",
@@ -128,8 +128,8 @@ class TestBasePlugin(unittest.TestCase):
 
     def test_parse_config_str(self):
         self.options["test"] = ("str", "def_value")
-        plugin = pad.plugins.base.BasePlugin(self.mock_ctxt)
-        self.assertRaises(pad.errors.InhibitCallbacks, plugin.parse_config,
+        plugin = oa.plugins.base.BasePlugin(self.mock_ctxt)
+        self.assertRaises(oa.errors.InhibitCallbacks, plugin.parse_config,
                           "test", "value")
 
         self.mock_ctxt.set_plugin_data.assert_called_with("BasePlugin",
@@ -137,8 +137,8 @@ class TestBasePlugin(unittest.TestCase):
 
     def test_parse_config_list(self):
         self.options["test"] = ("list", [])
-        plugin = pad.plugins.base.BasePlugin(self.mock_ctxt)
-        self.assertRaises(pad.errors.InhibitCallbacks, plugin.parse_config,
+        plugin = oa.plugins.base.BasePlugin(self.mock_ctxt)
+        self.assertRaises(oa.errors.InhibitCallbacks, plugin.parse_config,
                           "test", "value1,value2")
 
         self.mock_ctxt.set_plugin_data.assert_called_with("BasePlugin",
@@ -148,11 +148,11 @@ class TestBasePlugin(unittest.TestCase):
     def test_create_engine_from_dbi(self):
         dbi = "DBI:mysql:spamassassin:localhost"
         alchemy = "mysql://testuser:password@localhost/spamassassin"
-        mock_dbi = patch("pad.plugins.base.dbi_to_alchemy",
+        mock_dbi = patch("oa.plugins.base.dbi_to_alchemy",
                          return_value=alchemy).start()
 
-        pad.plugins.base.BasePlugin.dsn_name = "test_plugin"
-        plugin = pad.plugins.base.BasePlugin(self.mock_ctxt)
+        oa.plugins.base.BasePlugin.dsn_name = "test_plugin"
+        plugin = oa.plugins.base.BasePlugin(self.mock_ctxt)
 
         expected = self.mock_create_engine(alchemy)
         plugin.finish_parsing_end(self.mock_ruleset)
@@ -162,12 +162,12 @@ class TestBasePlugin(unittest.TestCase):
     def test_create_engine_from_dbi_real_context(self):
         dbi = "DBI:mysql:spamassassin:localhost"
         alchemy = "mysql://testuser:password@localhost/spamassassin"
-        mock_dbi = patch("pad.plugins.base.dbi_to_alchemy",
+        mock_dbi = patch("oa.plugins.base.dbi_to_alchemy",
                          return_value=alchemy).start()
-        context = pad.context.GlobalContext()
+        context = oa.context.GlobalContext()
 
-        pad.plugins.base.BasePlugin.dsn_name = "test_plugin"
-        plugin = pad.plugins.base.BasePlugin(context)
+        oa.plugins.base.BasePlugin.dsn_name = "test_plugin"
+        plugin = oa.plugins.base.BasePlugin(context)
 
         plugin_data = context.plugin_data["BasePlugin"]
         plugin_data["test_plugin_dsn"] = dbi
@@ -180,10 +180,10 @@ class TestBasePlugin(unittest.TestCase):
 
     def test_create_engine_from_alchemy_real_context(self):
         alchemy = "mysql://testuser:password@localhost/spamassassin"
-        context = pad.context.GlobalContext()
+        context = oa.context.GlobalContext()
 
-        pad.plugins.base.BasePlugin.dsn_name = "test_plugin"
-        plugin = pad.plugins.base.BasePlugin(context)
+        oa.plugins.base.BasePlugin.dsn_name = "test_plugin"
+        plugin = oa.plugins.base.BasePlugin(context)
 
         plugin_data = context.plugin_data["BasePlugin"]
         plugin_data["test_plugin_dsn"] = alchemy
@@ -193,10 +193,10 @@ class TestBasePlugin(unittest.TestCase):
 
     def test_get_session(self):
         engine = MagicMock()
-        context = pad.context.GlobalContext()
+        context = oa.context.GlobalContext()
 
-        pad.plugins.base.BasePlugin.dsn_name = "test_plugin"
-        plugin = pad.plugins.base.BasePlugin(context)
+        oa.plugins.base.BasePlugin.dsn_name = "test_plugin"
+        plugin = oa.plugins.base.BasePlugin(context)
 
         plugin_data = context.plugin_data["BasePlugin"]
         plugin_data["engine"] = engine
@@ -222,7 +222,7 @@ class TestDBItoAlchemy(unittest.TestCase):
         dsn = "DBI:mysql:spamassassin:localhost"
         user = "testuser"
         password = "password"
-        result = pad.plugins.base.dbi_to_alchemy(dsn, user, password)
+        result = oa.plugins.base.dbi_to_alchemy(dsn, user, password)
         self.assertEqual(result, expected)
 
     def test_mysql_port(self):
@@ -231,7 +231,7 @@ class TestDBItoAlchemy(unittest.TestCase):
         dsn = "DBI:mysql:spamassassin:localhost:3306"
         user = "testuser"
         password = "password"
-        result = pad.plugins.base.dbi_to_alchemy(dsn, user, password)
+        result = oa.plugins.base.dbi_to_alchemy(dsn, user, password)
         self.assertEqual(result, expected)
 
     def test_postgress(self):
@@ -240,7 +240,7 @@ class TestDBItoAlchemy(unittest.TestCase):
         dsn = "DBI:Pg:dbname=spamassassin;host=localhost"
         user = "testuser"
         password = "password"
-        result = pad.plugins.base.dbi_to_alchemy(dsn, user, password)
+        result = oa.plugins.base.dbi_to_alchemy(dsn, user, password)
         self.assertEqual(result, expected)
 
     def test_postgress_port(self):
@@ -249,7 +249,7 @@ class TestDBItoAlchemy(unittest.TestCase):
         dsn = "DBI:Pg:dbname=spamassassin;host=localhost;port=3306"
         user = "testuser"
         password = "password"
-        result = pad.plugins.base.dbi_to_alchemy(dsn, user, password)
+        result = oa.plugins.base.dbi_to_alchemy(dsn, user, password)
         self.assertEqual(result, expected)
 
     def test_sqlite(self):
@@ -258,7 +258,7 @@ class TestDBItoAlchemy(unittest.TestCase):
         dsn = "DBI:SQLite:dbname=/path/spamassassin.db"
         user = ""
         password = ""
-        result = pad.plugins.base.dbi_to_alchemy(dsn, user, password)
+        result = oa.plugins.base.dbi_to_alchemy(dsn, user, password)
         self.assertEqual(result, expected)
 
     def test_unknown_driver(self):
@@ -266,7 +266,7 @@ class TestDBItoAlchemy(unittest.TestCase):
         dsn = "DBI:Oracle:somethingelse"
         user = "testuser"
         password = "password"
-        result = pad.plugins.base.dbi_to_alchemy(dsn, user, password)
+        result = oa.plugins.base.dbi_to_alchemy(dsn, user, password)
         self.assertEqual(result, expected)
 
 

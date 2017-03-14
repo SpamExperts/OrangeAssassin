@@ -106,7 +106,7 @@ This is a abcdef123456 test message.
 
 
 class TestDaemonBase(unittest.TestCase):
-    daemon_script = "scripts/padd.py"
+    daemon_script = "scripts/oad.py"
     # Uncomment this to test under spamd
     # daemon_script = "spamd"
     test_conf = os.path.abspath("tests/test_padd_conf/")
@@ -133,7 +133,7 @@ class TestDaemonBase(unittest.TestCase):
         args = [cls.daemon_script, "-D", "-C", cls.test_conf,
                 "--siteconfigpath", cls.test_conf, "--allow-tell",
                 "-i", "127.0.0.1", "-p", str(cls.port)]
-        if cls.daemon_script == "scripts/padd.py":
+        if cls.daemon_script == "scripts/oad.py":
             args.append("--log-file")
             args.append(os.path.abspath("padd.log"))
         cls.padd_procs.append(subprocess.Popen(args))
@@ -185,7 +185,7 @@ class TestDaemon(TestDaemonBase):
         unittest.TestCase.tearDown(self)
 
     def test_ping(self):
-        """Return a confirmation that padd.py/spamd is alive."""
+        """Return a confirmation that oad.py/spamd is alive."""
         process = "PING"
         command = "%s SPAMC/1.2\r\n" % process
         result = self.send_to_proc(command)

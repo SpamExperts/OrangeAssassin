@@ -6,7 +6,7 @@ import tests.util
 
 # Load plugin and report matched RULES and SCORE
 PRE_CONFIG = """
-loadplugin pad.plugins.relay_eval.RelayEval
+loadplugin oa.plugins.relay_eval.RelayEval
 
 report _SCORE_
 report _TESTS_

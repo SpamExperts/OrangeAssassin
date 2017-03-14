@@ -7,7 +7,7 @@ try:
 except ImportError:
     from mock import patch, Mock, MagicMock, call
 
-import pad.plugins.auto_learn_threshold
+import oa.plugins.auto_learn_threshold
 
 class TestAutoLearnThresholdPlugin(unittest.TestCase):
 
@@ -21,7 +21,7 @@ class TestAutoLearnThresholdPlugin(unittest.TestCase):
         }
         self.mock_ctxt = MagicMock()
         self.mock_msg = MagicMock(msg={})
-        self.plugin = pad.plugins.auto_learn_threshold.AutoLearnThreshold(self.mock_ctxt)
+        self.plugin = oa.plugins.auto_learn_threshold.AutoLearnThreshold(self.mock_ctxt)
         self.plugin.set_local = lambda m, k, v: self.local_data.__setitem__(k,
                                                                             v)
         self.plugin.get_local = lambda m, k: self.local_data.__getitem__(k)

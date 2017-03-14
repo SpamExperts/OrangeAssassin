@@ -49,7 +49,7 @@ class TestImageInfo(tests.util.TestBase):
     def test_image_name(self):
         """Check message for image name"""
         self.setup_conf(CONFIG_NAMED,
-                        pre_config="loadplugin pad.plugins.image_info.ImageInfoPlugin\n"
+                        pre_config="loadplugin oa.plugins.image_info.ImageInfoPlugin\n"
                         "report _SCORE_")
         msg = new_email(
             {1: new_image(1, 1, "gif", "image001.gif")})
@@ -59,7 +59,7 @@ class TestImageInfo(tests.util.TestBase):
     def test_image_size(self):
         """Check message for image size"""
         self.setup_conf(CONFIG_SIZED,
-                        pre_config="loadplugin pad.plugins.image_info.ImageInfoPlugin\n"
+                        pre_config="loadplugin oa.plugins.image_info.ImageInfoPlugin\n"
                         "report _SCORE_")
         msg = new_email(
             {1: new_image(127, 264, "gif", "image001.gif")})
@@ -69,7 +69,7 @@ class TestImageInfo(tests.util.TestBase):
     def test_image_count(self):
         """Check message for images count"""
         self.setup_conf(CONFIG_COUNT,
-                        pre_config="loadplugin pad.plugins.image_info.ImageInfoPlugin\n"
+                        pre_config="loadplugin oa.plugins.image_info.ImageInfoPlugin\n"
                         "report _SCORE_")
         msg = new_email(
             {1: new_image(127, 264, "gif", "image001.gif"),
@@ -80,7 +80,7 @@ class TestImageInfo(tests.util.TestBase):
     def test_image_pixel_coverage(self):
         """Check message for image pixel coverage"""
         self.setup_conf(CONFIG_COVERAGE,
-                        pre_config="loadplugin pad.plugins.image_info.ImageInfoPlugin\n"
+                        pre_config="loadplugin oa.plugins.image_info.ImageInfoPlugin\n"
                         "report _SCORE_")
         msg = new_email(
             {1: new_image(200, 200, "gif", "image001.gif")})
@@ -90,7 +90,7 @@ class TestImageInfo(tests.util.TestBase):
     def test_image_range(self):
         """Check message for image with size in range"""
         self.setup_conf(CONFIG_RANGE,
-                        pre_config="loadplugin pad.plugins.image_info.ImageInfoPlugin\n"
+                        pre_config="loadplugin oa.plugins.image_info.ImageInfoPlugin\n"
                         "report _SCORE_")
         msg = new_email(
             {1: new_image(320, 220, "gif", "image001.gif")})
@@ -100,7 +100,7 @@ class TestImageInfo(tests.util.TestBase):
     def test_image_text_ratio(self):
         """Check message for ration between text and images"""
         self.setup_conf(CONFIG_IMG_RATIO,
-                        pre_config="loadplugin pad.plugins.image_info.ImageInfoPlugin\n"
+                        pre_config="loadplugin oa.plugins.image_info.ImageInfoPlugin\n"
                         "report _SCORE_")
         msg = new_email(
             {1: new_image(127, 264, "gif", "image001.gif")})
@@ -110,7 +110,7 @@ class TestImageInfo(tests.util.TestBase):
     def test_image_count_fail(self):
         """Fail for images count"""
         self.setup_conf(CONFIG_COUNT,
-                        pre_config="loadplugin pad.plugins.image_info.ImageInfoPlugin\n"
+                        pre_config="loadplugin oa.plugins.image_info.ImageInfoPlugin\n"
                         "report _SCORE_")
         msg = new_email(
             {1: new_image(127, 264, "jpg", "image001.jpg"),
@@ -121,7 +121,7 @@ class TestImageInfo(tests.util.TestBase):
     def test_image_size_fail(self):
         """Fail for image size"""
         self.setup_conf(CONFIG_SIZED,
-                        pre_config="loadplugin pad.plugins.image_info.ImageInfoPlugin\n"
+                        pre_config="loadplugin oa.plugins.image_info.ImageInfoPlugin\n"
                         "report _SCORE_")
         msg = new_email(
             {1: new_image(127, 222, "gif", "image001.gif")})
@@ -131,7 +131,7 @@ class TestImageInfo(tests.util.TestBase):
     def test_pixel_coverage_fail(self):
         """Fail for image pixel coverage"""
         self.setup_conf(CONFIG_COVERAGE,
-                        pre_config="loadplugin pad.plugins.image_info.ImageInfoPlugin\n"
+                        pre_config="loadplugin oa.plugins.image_info.ImageInfoPlugin\n"
                         "report _SCORE_")
         msg = new_email(
             {1: new_image(2, 2, "gif", "image001.gif")})
@@ -141,7 +141,7 @@ class TestImageInfo(tests.util.TestBase):
     def test_image_name_fail(self):
         """Fail for image name"""
         self.setup_conf(CONFIG_NAMED,
-                        pre_config="loadplugin pad.plugins.image_info.ImageInfoPlugin\n"
+                        pre_config="loadplugin oa.plugins.image_info.ImageInfoPlugin\n"
                         "report _SCORE_")
         msg = new_email(
             {1: new_image(1, 1, "gif", "image0011.gif")})
@@ -152,7 +152,7 @@ class TestImageInfo(tests.util.TestBase):
         """Check message for image name, size and count"""
         self.setup_conf(CONFIG_NAMED + "\n" + CONFIG_SIZED +
                         "\n" + CONFIG_COUNT,
-                        pre_config="loadplugin pad.plugins.image_info.ImageInfoPlugin\n"
+                        pre_config="loadplugin oa.plugins.image_info.ImageInfoPlugin\n"
                         "report _SCORE_")
         msg = new_email(
             {1: new_image(127, 264, "gif", "image001.gif")})
@@ -164,7 +164,7 @@ class TestImageInfo(tests.util.TestBase):
         and only name is equal"""
         self.setup_conf(CONFIG_NAMED + "\n" + CONFIG_SIZED +
                         "\n" + CONFIG_COVERAGE,
-                        pre_config="loadplugin pad.plugins.image_info.ImageInfoPlugin\n"
+                        pre_config="loadplugin oa.plugins.image_info.ImageInfoPlugin\n"
                         "report _SCORE_")
         msg = new_email(
             {1: new_image(100, 100, "gif", "image001.gif")})
@@ -176,7 +176,7 @@ class TestImageInfo(tests.util.TestBase):
         and no matches"""
         self.setup_conf(CONFIG_NAMED + "\n" + CONFIG_SIZED +
                         "\n" + CONFIG_COVERAGE,
-                        pre_config="loadplugin pad.plugins.image_info.ImageInfoPlugin\n"
+                        pre_config="loadplugin oa.plugins.image_info.ImageInfoPlugin\n"
                         "report _SCORE_")
         msg = new_email(
             {1: new_image(100, 100, "gif", "image002.gif")})
@@ -187,7 +187,7 @@ class TestImageInfo(tests.util.TestBase):
         """Check real multipart message"""
         self.setup_conf(CONFIG_NAMED + "\n" + CONFIG_SIZED +
                 "\n" + CONFIG_COVERAGE,
-                pre_config="loadplugin pad.plugins.image_info.ImageInfoPlugin\n"
+                pre_config="loadplugin oa.plugins.image_info.ImageInfoPlugin\n"
                 "report _SCORE_")
         with open(os.path.join(TESTDATA_DIR, "multipart.eml")) as m:
             msg = email.message_from_file(m)

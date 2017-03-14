@@ -7,7 +7,7 @@ except ImportError:
 
 import dkim
 
-import pad.plugins.dkim
+import oa.plugins.dkim
 
 
 class TestGetHeader(unittest.TestCase):
@@ -27,9 +27,9 @@ class TestGetHeader(unittest.TestCase):
         })
 
         self.mock_addr_header = patch(
-            "pad.message.Message.get_all_addr_header").start()
+            "oa.message.Message.get_all_addr_header").start()
 
-        self.plug = pad.plugins.dkim.DKIMPlugin(self.mock_ctxt)
+        self.plug = oa.plugins.dkim.DKIMPlugin(self.mock_ctxt)
 
     def tearDown(self):
         unittest.TestCase.tearDown(self)
@@ -59,7 +59,7 @@ class TestGetHeader(unittest.TestCase):
     def test_get_from_addresses_from_headers(self):
         self.mock_msg.get_all_addr_header.side_effect = self.get_from_header
 
-        self.mock_from_headers = patch("pad.plugins.wlbl_eval.FROM_HEADERS",
+        self.mock_from_headers = patch("oa.plugins.wlbl_eval.FROM_HEADERS",
                                      ["From"]).start()
         result = self.plug.get_from_addresses(self.mock_msg)
         self.assertEqual(list(result),
@@ -108,9 +108,9 @@ class TestGetTxt(unittest.TestCase):
         })
 
         self.mock_get_txt_dnspython = patch(
-            "pad.plugins.dkim.DKIMPlugin.get_txt_dnspython").start()
+            "oa.plugins.dkim.DKIMPlugin.get_txt_dnspython").start()
 
-        self.plug = pad.plugins.dkim.DKIMPlugin(self.mock_ctxt)
+        self.plug = oa.plugins.dkim.DKIMPlugin(self.mock_ctxt)
 
     def tearDown(self):
         unittest.TestCase.tearDown(self)
@@ -147,9 +147,9 @@ class TestGetAuthors(unittest.TestCase):
         })
 
         self.mock_get_addr_header = patch(
-            "pad.message.Message.get_addr_header").start()
+            "oa.message.Message.get_addr_header").start()
 
-        self.plug = pad.plugins.dkim.DKIMPlugin(self.mock_ctxt)
+        self.plug = oa.plugins.dkim.DKIMPlugin(self.mock_ctxt)
 
     def tearDown(self):
         unittest.TestCase.tearDown(self)
@@ -177,15 +177,15 @@ class TestCheckDKIM(unittest.TestCase):
         })
 
         self.mock_get_authors = patch(
-            "pad.plugins.dkim.DKIMPlugin._get_authors").start()
+            "oa.plugins.dkim.DKIMPlugin._get_authors").start()
         self.mock_parse_input = patch(
-            "pad.plugins.dkim.DKIMPlugin.parse_input").start()
+            "oa.plugins.dkim.DKIMPlugin.parse_input").start()
         self.mock_check_signed_by = patch(
-            "pad.plugins.dkim.DKIMPlugin._check_dkim_signed_by").start()
+            "oa.plugins.dkim.DKIMPlugin._check_dkim_signed_by").start()
         self.mock_check_signature = patch(
-            "pad.plugins.dkim.DKIMPlugin.check_dkim_signature").start()
+            "oa.plugins.dkim.DKIMPlugin.check_dkim_signature").start()
 
-        self.plug = pad.plugins.dkim.DKIMPlugin(self.mock_ctxt)
+        self.plug = oa.plugins.dkim.DKIMPlugin(self.mock_ctxt)
 
     def tearDown(self):
         unittest.TestCase.tearDown(self)
@@ -387,7 +387,7 @@ class TestCheckSignature(unittest.TestCase):
         })
 
         self.mock_get_authors = patch(
-            "pad.plugins.dkim.DKIMPlugin._get_authors").start()
+            "oa.plugins.dkim.DKIMPlugin._get_authors").start()
         self.mock_dkim_parse_tag = patch(
             "dkim.util.parse_tag_value").start()
         self.mock_dkim_verify = patch(
@@ -395,7 +395,7 @@ class TestCheckSignature(unittest.TestCase):
         self.mock_dkim_validate_signature_fields = patch(
             "dkim.validate_signature_fields").start()
 
-        self.plug = pad.plugins.dkim.DKIMPlugin(self.mock_ctxt)
+        self.plug = oa.plugins.dkim.DKIMPlugin(self.mock_ctxt)
 
     def tearDown(self):
         unittest.TestCase.tearDown(self)
