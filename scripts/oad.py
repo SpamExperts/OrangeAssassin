@@ -29,7 +29,7 @@ def run_daemon(args):
         server.prefork = args.prefork
     else:
         server = oa.server.Server(
-            address, args.sitepath, args.configpath,paranoid=args.paranoid,
+            address, args.sitepath, args.configpath, paranoid=args.paranoid,
             ignore_unknown=not args.show_unknown
         )
     try:
@@ -54,9 +54,11 @@ def main():
                         help="Die upon user errors")
     parser.add_argument("--show-unknown", action="store_true", default=False,
                         help="Show warnings about unknown parsing errors")
-    parser.add_argument("-l", "--allow-tell", action="store_true", default=False,
+    parser.add_argument("-l", "--allow-tell", action="store_true",
+                        default=False,
                         help="Allow learning/reporting")
-    parser.add_argument("-d", "--daemonize", action="store_true", default=False,
+    parser.add_argument("-d", "--daemonize", action="store_true",
+                        default=False,
                         help="Detach the process")
     parser.add_argument("--prefork", type=int, default=None,
                         help="Pre fork the server with a number of workers")
@@ -71,17 +73,19 @@ def main():
     parser.add_argument("-S", "--sitepath", "--siteconfigpath", action="store",
                         help="Path to standard configuration directory",
                         **oa.config.get_default_configs(site=True))
-    parser.add_argument("-r", "--pidfile", default="/var/run/padd.pid")
+    parser.add_argument("-r", "--pidfile", default="/var/run/oad.pid")
     parser.add_argument("--log-file", dest="log_file",
-                        default="/var/log/padd.log")
+                        default="/var/log/oad.log")
     parser.add_argument("-dl", "--deactivate-lazy", dest="lazy_mode",
                         action="store_true", default=False,
                         help="Deactivate lazy loading of rules/regex")
     # parser.add_argument("-4", "--ipv4-only", "--ipv4", default=False,
-    #                     action="store_true", help="Use IPv4 where applicable, "
+    #                     action="store_true", help="Use IPv4 where
+    # applicable, "
     #                                               "disables IPv6")
     # parser.add_argument("-6", default=False,
-    #                     action="store_true", help="Use IPv6 where applicable, "
+    #                     action="store_true", help="Use IPv6 where
+    # applicable, "
     #                                               "disables IPv4")
     parser.add_argument("-v", "--version", action="version",
                         version=oa.__version__)
