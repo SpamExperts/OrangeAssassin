@@ -2,7 +2,7 @@
 Daemon
 ******
 
-This page explains how to run SpamPAD in daemon mode.
+This page explains how to run OrangeAssassin in daemon mode.
 
 Starting the daemon
 ===================

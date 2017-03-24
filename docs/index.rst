@@ -1,4 +1,4 @@
-SpamPAD's documentation
+OrangeAssassin's documentation
 =======================
 
 Contents:

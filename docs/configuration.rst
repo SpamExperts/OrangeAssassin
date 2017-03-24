@@ -2,21 +2,21 @@
 Configuration
 *************
 
-This page describes how to configure SpamPAD.
+This page describes how to configure OrangeAssassin.
 
 .. _configuration-files:
 
 Configuration files
 ===================
 
-The SpamPAD configuration can be separated into multiple files. These are read
+The OrangeAssassin configuration can be separated into multiple files. These are read
 from the `configpath` and `sitepath` directories. You can change these
 locations using the `-C` or `-S` options of the daemon and CLI script.
 
 More files can be included from other locations by using the include option::
 
     # This includes a different file
-    include /etc/spampad/custom_prefs.cf
+    include /etc/orangeassassin/custom_prefs.cf
 
 Users can also configure custom preferences in their home directory when
 running the CLI script. This location is also customizable with the `-P`
@@ -34,7 +34,7 @@ will have to enable it with `allow_user_rules`.
 Configuration types
 ===================
 
-SpamPAD accepts various types of configuration options. The current types are:
+OrangeAssassin accepts various types of configuration options. The current types are:
 
 **int**
     Integer number.
@@ -79,7 +79,7 @@ Compiling rules
 ===============
 
 
-Users can compile rules in SpamPAD in two ways:
+Users can compile rules in OrangeAssassin in two ways:
     
     1. Re-parsing the rules::
         
@@ -146,11 +146,11 @@ Message modifications
     `X-Spam-` and the header string ill have any TAGS replaced with their
     values. For example::
 
-        add_header all PAD-Report Checked with SpamPAD _SCORE_
+        add_header all PAD-Report Checked with OrangeAssassin _SCORE_
 
     Will add a new header to every message like::
 
-        X-Spam-PAD-Report: Checked with SpamPAD <score>
+        X-Spam-PAD-Report: Checked with OrangeAssassin <score>
 **remove_header** [] (type `append`)
     Removes all header from message with the specified name. The value for this
     option must be in the following format::
@@ -179,9 +179,9 @@ Reporting
     contains the `report` for this message. Note this only applies to
     messages classified as spam.
 
-    When this option is set to 1 and the messages is marked as spam, SpamPAD
+    When this option is set to 1 and the messages is marked as spam, OrangeAssassin
     will generate a multipart/mixed messages. The new message will have
-    `text/plain` part with the SpamPAD report and `message/rfc882` part with
+    `text/plain` part with the OrangeAssassin report and `message/rfc882` part with
     the original message.
 
     When the option is set to 2 instead of using a `messages/rfc882` content
