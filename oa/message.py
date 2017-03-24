@@ -206,10 +206,10 @@ class Message(oa.context.MessageContext):
                 except (LookupError, UnicodeError, AssertionError):
                     continue
             else:
-                if PY3:
-                    parts.append(value)
-                else:
+                try:
                     parts.append(value.decode("utf-8", "ignore"))
+                except AttributeError:
+                    parts.append(value)
         return "".join(parts)
 
     def get_raw_header(self, header_name):
