@@ -177,7 +177,11 @@ class PADParser(object):
             rtype, value = line, ""
 
         if rtype == "include":
-            self._handle_include(value, line, line_no, _depth)
+            dirname = None
+            if os.path.isabs(filename):
+                dirname = os.path.dirname(filename)
+            self._handle_include(value, line, line_no, _depth,
+                                 dirname=dirname)
         elif rtype == "ifplugin":
             self._handle_ifplugin(value)
         elif rtype == "loadplugin":
@@ -243,10 +247,12 @@ class PADParser(object):
                 self.ctxt.err("%s:%s Ignoring unknown configuration line: %s",
                               filename, line_no, line)
 
-
-    def _handle_include(self, value, line, line_no, _depth=0):
+    def _handle_include(self, value, line, line_no, _depth=0,
+                        dirname=None):
         """Handles the 'include' keyword."""
         filename = value.strip()
+        if not os.path.isabs(filename):
+            filename = os.path.join(dirname, filename)
         try:
             self.parse_file(filename, _depth=_depth + 1)
         except oa.errors.MaxRecursionDepthExceeded as e:

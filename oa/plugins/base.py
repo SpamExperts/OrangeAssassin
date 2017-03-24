@@ -32,6 +32,7 @@ def dbi_to_mysql(dsn, user, password):
         conection_dates["password"] = password
         return conection_dates
 
+
 def dbi_to_alchemy(dsn, user, password):
     """Convert perl DBI setting to SQLAlchemy settings."""
     dummy, driver, connection = dsn.split(":", 2)

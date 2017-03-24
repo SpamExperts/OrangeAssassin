@@ -85,7 +85,7 @@ class RelayEval(oa.plugins.base.BasePlugin):
 
     def check_relays_unparseable(self, msg, option=None, target=None):
         """This eval rule is not implemented."""
-        pass
+        return False
 
     def check_for_sender_no_reverse(self, msg, option=None, target=None):
         """Check if the apparent sender (in the last received header) had

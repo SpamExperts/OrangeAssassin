@@ -208,6 +208,8 @@ class HeaderEval(oa.plugins.base.BasePlugin):
         self.hotmail_addr_but_no_hotmail_received = 0
         self.hotmail_addr_with_forged_hotmail_received = 0
         rcvd = msg.msg.get("Received")
+        if not rcvd:
+            return False
         pickup_service_regex = Regex(r"from mail pickup service by hotmail"
                                      r"\.com with Microsoft SMTPSVC;")
         if pickup_service_regex.search(rcvd):
@@ -386,6 +388,11 @@ class HeaderEval(oa.plugins.base.BasePlugin):
         for header_name in ("To", "Cc", "Bcc", "ToCc"):
             recipients.extend(msg.get_all_addr_header(header_name))
 
+        if not recipients:
+            self.set_local(msg, "tocc_similar", 0)
+            self.set_local(msg, "tocc_sorted", False)
+            return
+
         sorted_recipients = sorted(recipients)
         self.set_local(msg, "tocc_sorted", sorted_recipients == recipients)
         # Remove dupes IF they are next to each other
@@ -519,7 +526,7 @@ class HeaderEval(oa.plugins.base.BasePlugin):
         except KeyError:
             pass
 
-        self.set_local(msg, "date_diff", 0)
+        self.set_local(msg, "date_diff", datetime.timedelta(0))
 
         date_header_time = self._get_date_header_time(msg)
         received_header_times = self._get_received_header_times(msg)
@@ -530,14 +537,13 @@ class HeaderEval(oa.plugins.base.BasePlugin):
             if diff:
                 diffs.append(diff)
 
-
         try:
             date_diff = sorted(diffs)[0]
             self.set_local(msg, "date_diff", date_diff)
             return date_diff
         except IndexError:
-            self.set_local(msg, "date_diff", 0)
-            return 0
+            self.set_local(msg, "date_diff", datetime.timedelta(0))
+            return datetime.timedelta(0)
 
     def subject_is_all_caps(self, msg, target=None):
         """Checks if the subject is all capital letters.
@@ -595,6 +601,8 @@ class HeaderEval(oa.plugins.base.BasePlugin):
 
     def check_outlook_message_id(self, msg, target=None):
         message_id = msg.msg.get("Message-ID")
+        if not message_id:
+            return
         msg_regex = Regex(r"^<[0-9a-f]{4}([0-9a-f]{8})\$[0-9a-f]{8}\$["
                           r"0-9a-f]{8}\@")
         regex = msg_regex.search(message_id)

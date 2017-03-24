@@ -23,7 +23,6 @@ _SUBRULE_P = Regex(r"([_a-zA-Z]\w*)(?=\W|$)")
 
 class MetaRule(oa.rules.base.BaseRule):
     """These rules are boolean or arithmetic combinations of other rules."""
-    _location = {}
     rule_type = 'meta'
 
     def __init__(self, name, rule, score=None, desc=None, priority=0,
@@ -32,6 +31,7 @@ class MetaRule(oa.rules.base.BaseRule):
         super(MetaRule, self).__init__(name, score=score, desc=desc,
                                        priority=priority, tflags=tflags)
         self.rule = rule
+        self._location = {}
 
     def postparsing(self, ruleset, _depth=0):
         """Get the referenced sub-rules of this meta-rule and add execute the

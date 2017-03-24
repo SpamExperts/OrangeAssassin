@@ -342,7 +342,12 @@ class RuleSet(object):
         """Match the message against all the rules in this ruleset."""
         try:
             for name, rule in self.checked.items():
-                result = rule.match(msg)
+                try:
+                    result = rule.match(msg)
+                except Exception as e:
+                    self.ctxt.log.critical("Unable to run rule %r: %s",
+                                           name, e, exc_info=True)
+                    result = False
                 if isinstance(result, str):
                     msg.rules_descriptions[name] = result
                     result = True
