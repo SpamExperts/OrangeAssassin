@@ -146,11 +146,11 @@ Message modifications
     `X-Spam-` and the header string ill have any TAGS replaced with their
     values. For example::
 
-        add_header all PAD-Report Checked with OrangeAssassin _SCORE_
+        add_header all OA-Report Checked with OrangeAssassin _SCORE_
 
     Will add a new header to every message like::
 
-        X-Spam-PAD-Report: Checked with OrangeAssassin <score>
+        X-Spam-OA-Report: Checked with OrangeAssassin <score>
 **remove_header** [] (type `append`)
     Removes all header from message with the specified name. The value for this
     option must be in the following format::

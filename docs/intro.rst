@@ -79,8 +79,8 @@ An example for Python3 would be:
 .. code-block:: bash
 
     sudo apt-get install python3-dev libjpeg-dev build-essential zlib1g-dev
-    virtualenv -p /usr/bin/python3 ~/pad-env
-    source ~/pad-env/bin/activate
+    virtualenv -p /usr/bin/python3 ~/oa-env
+    source ~/oa-env/bin/activate
     git clone https://github.com/SpamExperts/OrangeAssassin
     cd OrangeAssassin
     pip install sqlalchemy || pip install pymysql
