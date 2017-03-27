@@ -576,7 +576,7 @@ class TestUserConfigDaemon(TestDaemon):
         content_row = "Content-length: %s\r\n" % self.user_msg_len
         command = ("%s SPAMC/1.2\r\n%s\r\n%s\r\n" %
                    (process_row, content_row, USER_TEST_MSG))
-        with self.assertRaises(AssertionError):
+        with self.assertRaises(self.failureException):
             self.send_to_proc(command).split("\r\n")
 
     def test_user_msg_spam_override(self):
