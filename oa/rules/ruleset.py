@@ -344,6 +344,8 @@ class RuleSet(object):
             for name, rule in self.checked.items():
                 try:
                     result = rule.match(msg)
+                except oa.errors.StopProcessing as e:
+                    raise
                 except Exception as e:
                     self.ctxt.log.critical("Unable to run rule %r: %s",
                                            name, e, exc_info=True)
