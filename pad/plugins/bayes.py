@@ -851,8 +851,7 @@ class BayesPlugin(pad.plugins.base.BasePlugin):
                 return
 
         # Now that we're sure we haven't seen this message before ...
-        # TODO: Find the implementation of this.
-        msgatime = self.receive_date()
+        msgatime = self.receive_date(msg)
         # If the message atime comes back as being more than 1 day in the
         # future, something's messed up and we should revert to current time as
         # a safety measure.
@@ -872,7 +871,7 @@ class BayesPlugin(pad.plugins.base.BasePlugin):
         self.ctxt.log.debug("bayes: learned '%s', atime: %s", msgid, msgatime)
         return True
 
-    def receive_date(self):
+    def receive_date(self, msg):
         """Get the date from the headers."""
         for header in msg.get_all("Received"):
             try:
