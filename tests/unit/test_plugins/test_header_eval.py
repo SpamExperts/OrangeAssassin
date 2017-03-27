@@ -801,7 +801,7 @@ for ; Sat, 18 Jun 2016 05:00:14 GMT"""]
     def test_check_date_diff_none(self):
         self.local_data = {"date_header_time": -1}
         result = self.plugin._check_date_diff(self.mock_msg)
-        self.assertEqual(result, 0)
+        self.assertEqual(result, datetime.timedelta(0))
 
     def test_check_date_diff(self):
         date_header_time = datetime.datetime(2016, 10, 10, 15, 0, 0)

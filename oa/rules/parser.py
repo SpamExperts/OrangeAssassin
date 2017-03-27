@@ -251,7 +251,7 @@ class PADParser(object):
                         dirname=None):
         """Handles the 'include' keyword."""
         filename = value.strip()
-        if not os.path.isabs(filename):
+        if not os.path.isabs(filename) and dirname is not None:
             filename = os.path.join(dirname, filename)
         try:
             self.parse_file(filename, _depth=_depth + 1)
