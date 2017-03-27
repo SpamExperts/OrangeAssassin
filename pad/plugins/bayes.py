@@ -20,6 +20,7 @@ The results are incorporated into SpamAssassin as the BAYES_* rules.
 import math
 import time
 import hashlib
+import email.utils
 
 try:
     from sqlalchemy import Column
@@ -566,10 +567,12 @@ class Store(object):
         self.conn = None
         
     def untie_db(self):
+        """Remove the connection to the database."""
         if self.conn:
             self.conn.close()
 
     def tie_db_readonly(self):
+        """Create a read-only connection to the database."""
         # TODO: Being able to distinguish between needing read-only and
         # read-write access to the database is very useful, so I've left
         # that in. However, we don't really support that further down
@@ -577,6 +580,7 @@ class Store(object):
         return self.tie_db_writeable()
         
     def tie_db_writeable(self):
+        """Create a read/write connection to the database."""
         self.conn = pymysql.connect(host=self.engine["hostname"], port=3306,
                                     user=self.engine["user"],
                                     passwd=self.engine["password"],
@@ -584,6 +588,7 @@ class Store(object):
                                     )
 
     def tok_get(self, token):
+        """Get the spam and ham counts, and access times for the specified token."""
         cursor = self.conn.cursor()
         cursor.execute("SELECT spam_count, ham_count, atime FROM bayes_token WHERE token=%s", (token, ))
         result = cursor.fetchone()
@@ -591,6 +596,7 @@ class Store(object):
         return result
 
     def tok_get_all(self, tokens):
+        """Like tok_get, but for all tokens specified. Each returned tuple starts with the token."""
         cursor = self.conn.cursor()
         for token in tokens:
             cursor.execute("SELECT token, spam_count, ham_count, atime FROM bayes_token WHERE token=%s", (token, ))
@@ -598,6 +604,7 @@ class Store(object):
         cursor.close()
 
     def seen_get(self, msgid):
+        """Get the "seen" flag for the specified message."""
         cursor = self.conn.cursor()
         cursor.execute("SELECT flag FROM bayes_seen WHERE msgid=%s", (msgid, ))
         result = cursor.fetchone()[0]
@@ -605,15 +612,18 @@ class Store(object):
         return result
 
     def seen_put(self, msgid, flag):
+        """Set the "seen" flag for the specified message."""
         cursor = self.conn.cursor()
         cursor.execute("UPDATE bayes_seen SET flag=%s WHERE msgid=%s", (flag, msgid))
         conn.commit()
         cursor.close()
         
     def cleanup(self):
+        """Do any necessary cleanup."""
         pass
 
     def nspam_nham_get(self):
+        """Get the spam and ham counts for the database."""
         cursor = self.conn.cursor()
         cursor.execute("SELECT spam_count, ham_count FROM bayes_vars LIMIT 1")
         result = cursor.fetchone()
@@ -621,12 +631,14 @@ class Store(object):
         return result
 
     def nspam_nham_change(self, spam, ham):
+        """Set the spam and ham counts for the database."""
         cursor = self.conn.cursor()
         cursor.execute("UPDATE bayes_vars SET spam_count=%s, ham_count=%s", (spam, ham))
         conn.commit()
         cursor.close()
         
     def multi_tok_count_change(self, spam, ham, tokens, msgatime):
+        """Update the spam and ham counts, and access time for the specified tokens."""
         cursor = self.conn.cursor()
         for token in tokens:
             cursor.execute("UPDATE bayes_token SET spam_count=%s, ham_count=%s, atime=%s WHERE token=%s", (spam, ham, msgatime, token))
@@ -634,6 +646,7 @@ class Store(object):
         cursor.close()
 
     def tok_touch_all(self, touch_tokens, msgatime):
+        """Update the access time for all the specified tokens."""
         cursor = self.conn.cursor()
         for token in touch_tokens:
             cursor.execute("UPDATE bayes_token SET atime=%s WHERE token=%s", (msgatime, token))
@@ -641,22 +654,28 @@ class Store(object):
         cursor.close()
         
     def get_running_expire_tok(self):
-        pass
+        # We don't do opportunistic expiry at the moment.
+        raise NotYetImplemented()
 
     def remove_running_expiry_tok(self):
-        pass
+        # We don't do opportunistic expiry at the moment.
+        raise NotYetImplemented()
 
     def expiry_due(self):
-        pass
+        # We don't do opportunistic expiry at the moment.
+        raise NotYetImplemented()
 
     def sync_due(self):
+        """Return True if a sync is required."""
         pass
         
     def get_magic_re():
+        """Not used in the SQL implementation."""
         pass
 
 
 class BayesPlugin(pad.plugins.base.BasePlugin):
+    """Implement a somewhat Bayesian plug-in."""
     eval_rules = ("check_bayes",)
     options = {
         u"use_bayes": (u"bool", True),
@@ -678,6 +697,7 @@ class BayesPlugin(pad.plugins.base.BasePlugin):
         self.use_ignores = True
     
     def finish(self):
+        """Finish processing the message."""
         if self.store:
             self.store.untie_db()
 
@@ -711,13 +731,64 @@ class BayesPlugin(pad.plugins.base.BasePlugin):
         msgid = u"%s@sa_generated" % hashlib.sha1("%s\x00%s" %
                                                   (date, body)).hexdigest()
         return msgid
-    
+
+    def get_body_text_array_common(self, method_name):
+        """Common method for rendered, visible_rendered, and invisible_rendered methods."""
+        key = "text_" + method_name
+        if hasattr(self, key):
+            return getattr(self, key)
+        setattr(self, key, [])
+        
+        # Find all parts that are leaves.
+        parts = self.find_parts(ur".", 1)
+        if not parts:
+            return getattr(self, key)
+            
+        if method_name == "invisible_rendered":
+            text = ""
+        else:
+            text = self.msg["Subject"] or "\n"
+
+        for part in self.msg.walk():
+            if text:
+                text += "\n"
+            # There's a SA HTML library that handles actually getting the content.
+            # If we want to do this, we should do it as a separate feature.
+            pass
+
+        # Whitespace handling (warning: small changes have large effects!).
+        text = re.sub(ur"\n+\s*\n+", ur"\f", text)  # Double newlines => form feed.
+        text = re.sub(ur" \t\n\r\x0b", ur" ", text)  # whitespace (incl. VT) => space.
+        text = re.sub(ur"\f", ur"\n", text)  # Form feeds => newline.
+
+        setattr(self, key, self.split_into_array_of_short_lines(text))
+        return getattr(self, key)
+
+    def split_into_array_of_short_lines(self, text):
+        """Split the text into a list of short lines."""
+        # SA tries to avoid splitting things into pieces here, but we keep it
+        # a bit simpler and just split on lines.
+        return text.splitlines()
+
+    def get_rendered_body_text_array(self):
+        return self.get_body_text_array_common("rendered")                                                       
+
+    def get_visible_rendered_body_text_array(self):
+        """Get an array of the visible message text."""
+        return self.get_body_text_array_common("visible_rendered")
+
+    def get_invisible_rendered_body_text_array(self):
+        """Get an array of the invisible message text."""
+        return self.get_body_text_array_common("invisible_rendered")
+
     def get_body_from_msg(self, msg):
-        # TODO: Find the implementation of these.
+        # For now, nothing (see comments elsewhere).
+        return {}
         return {
-            u"bayes_token_body": msg.get_visible_rendered_body_text_array(),
-            u"bayes_token_inviz": msg.get_invisible_rendered_body_text_array(),
-            u"bayes_token_uris": msg.get_uri_list(),
+            u"bayes_token_body": self.get_visible_rendered_body_text_array(),
+            u"bayes_token_inviz": self.get_invisible_rendered_body_text_array(),
+            # We should do get_uri_list as part of a separate feature.
+#            u"bayes_token_uris": self.get_uri_list(),
         }
     
     def plugin_report(self, msg):
@@ -731,6 +802,7 @@ class BayesPlugin(pad.plugins.base.BasePlugin):
         self.learn_message(msg, False)
 
     def learn_message(self, msg, isspam, msgid=None):
+        """Learn the message has spam or ham."""
         if not self["use_bayes"]:
             return
         msgdata = self.get_body_from_msg(msg)
@@ -743,6 +815,10 @@ class BayesPlugin(pad.plugins.base.BasePlugin):
         return None
     
     def _learn_trapped(self, isspam, msg, msgdata, msgid):
+        """Do the actual training work.
+        
+        In SA this is "trapped", in that it is wrapped inside of a timeout.
+        Here, it is not currently, but we may add that in the future."""
         if not msgid:
             msgid = self.get_msgid(msg)
         seen = self.store.seen_get(msgid)
@@ -776,7 +852,7 @@ class BayesPlugin(pad.plugins.base.BasePlugin):
 
         # Now that we're sure we haven't seen this message before ...
         # TODO: Find the implementation of this.
-        msgatime = msg.receive_date()
+        msgatime = self.receive_date()
         # If the message atime comes back as being more than 1 day in the
         # future, something's messed up and we should revert to current time as
         # a safety measure.
@@ -796,7 +872,19 @@ class BayesPlugin(pad.plugins.base.BasePlugin):
         self.ctxt.log.debug("bayes: learned '%s', atime: %s", msgid, msgatime)
         return True
 
+    def receive_date(self):
+        """Get the date from the headers."""
+        for header in msg.get_all("Received"):
+            try:
+                ts = header.rsplit(";", 1)[1]
+            except IndexError:
+                continue
+            ts = email.utils.parsedate(ts)
+            return time.mktime(ts)
+        # SA will look in other headers too. Perhaps we should also?
+
     def forget_message(self, msg, msgdata, msgid):
+        """Unlearn a message."""
         if not self["use_bayes"]:
             return
         # XXX SA wraps this in a timer.
@@ -808,6 +896,10 @@ class BayesPlugin(pad.plugins.base.BasePlugin):
         return None
 
     def _forget_trapped(self, msg, msgdata, msgid):
+        """Do the actual unlearning work.
+
+        In SA this is "trapped", in that it is wrapped inside of a timeout.
+        Here, it is not currently, but we may add that in the future."""
         if not msgid:
             msgid = self.get_msgid(msg)
         seen = self.store.seen_get(msgid)
@@ -833,9 +925,9 @@ class BayesPlugin(pad.plugins.base.BasePlugin):
         self.store.cleanup()
         return True
 
-    # Check to make sure we can tie() the DB, and we have enough entries to do a scan.
-    # If we're told the caller will untie(), go ahead and leave the db tied.
     def learner_is_scan_available(self, params):
+        """Check to make sure we can tie() the DB, and we have enough entries to do a scan.
+        If we're told the caller will untie(), go ahead and leave the db tied."""
         if not self["use_bayes"]:
             return False
         if not self.store.tie_db_readonly():
@@ -855,11 +947,15 @@ class BayesPlugin(pad.plugins.base.BasePlugin):
         return True
 
     def tokenise(self, msg, msgdata):
-        tokens = [self._tokenise_line(line, "", 1) for line in msgdata["bayes_token_body"]]
-        tokens.extend([self._tokenise_line(line, "", 2) for line in msgdata["bayes_token_uris"]])
-        if ADD_INVIZ_TOKENS_I_PREFIX:
+        """Convert the message to a sequence of tokens."""
+        tokens = []
+        if "bayes_token_body" in msgdata:
+            tokens.extend([self._tokenise_line(line, "", 1) for line in msgdata["bayes_token_body"]])
+        if "bayes_token_uris" in msgdata:
+            tokens.extend([self._tokenise_line(line, "", 2) for line in msgdata["bayes_token_uris"]])
+        if ADD_INVIZ_TOKENS_I_PREFIX and "bayes_token_inviz" in msgdata:
             tokens.extend([self._tokenise_line(line, "I*:", 1) for line in msgdata["bayes_token_inviz"]])
-        if ADD_INVIZ_TOKENS_NO_PREFIX:
+        if ADD_INVIZ_TOKENS_NO_PREFIX and "bayes_token_inviz" in msgdata:
             tokens.extend([self._tokenise_line(line, "", 1) for line in msgdata["bayes_token_inviz"]])
         hdrs = self._tokenise_headers(msg)
         for prefix, value in hdrs.values():
