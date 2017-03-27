@@ -42,7 +42,7 @@ class TestProcessCommand(unittest.TestCase):
                                                  self.mockserver)
         self.mockrules.get_adjusted_message.return_value = "Test"
         result = list(cmd.handle(self.msg, {}))
-        self.assertEqual(result, ['Spam: False ; 0 / 5\r\n',
+        self.assertEqual(result, ['Spam: False ; 0.0 / 5\r\n',
                                   'Content-length: 4\r\n\r\n', 'Test'])
         self.mockrules.get_adjusted_message.assert_called_with(self.msg)
 
@@ -58,7 +58,7 @@ class TestProcessCommand(unittest.TestCase):
                                                  self.mockserver)
         self.mockrules.get_adjusted_message.return_value = "Test"
         result = list(cmd.handle(self.msg, {}))
-        self.assertEqual(result, ['Spam: False ; 0 / 5\r\n',
+        self.assertEqual(result, ['Spam: False ; 0.0 / 5\r\n',
                                   'Content-length: 4\r\n\r\n', 'Test'])
         self.mockrules.get_adjusted_message.assert_called_with(
             self.msg, header_only=True

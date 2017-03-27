@@ -43,7 +43,7 @@ class TestCheckCommand(unittest.TestCase):
                                              self.mockserver)
         self.msg.score = 2442
         result = list(cmd.handle(self.msg, {}))
-        self.assertEqual(result, ["Spam: %s ; %s / %s\r\n" % (True, 2442, 5),
+        self.assertEqual(result, ["Spam: %s ; %.1f / %s\r\n" % (True, 2442, 5),
                                   'Content-length: 0\r\n\r\n', ""])
 
     def test_check_score_not_spam(self):
@@ -51,7 +51,7 @@ class TestCheckCommand(unittest.TestCase):
                                              self.mockserver)
         self.msg.score = 1
         result = list(cmd.handle(self.msg, {}))
-        self.assertEqual(result, ["Spam: %s ; %s / %s\r\n" % (False, 1, 5),
+        self.assertEqual(result, ["Spam: %s ; %.1f / %s\r\n" % (False, 1, 5),
                                   'Content-length: 0\r\n\r\n', ""])
 
     def test_symbols_score(self):
@@ -63,7 +63,7 @@ class TestCheckCommand(unittest.TestCase):
         self.msg.rules_checked['TEST_RULE_2'] = False
         self.msg.rules_checked['TEST_RULE_3'] = True
         result = list(cmd.handle(self.msg, {}))
-        self.assertEqual(result, ["Spam: %s ; %s / %s\r\n" % (True, 2442, 5),
+        self.assertEqual(result, ["Spam: %s ; %.1f / %s\r\n" % (True, 2442, 5),
                                   'Content-length: 23\r\n\r\n',
                                   "TEST_RULE_1,TEST_RULE_3"])
 
@@ -76,7 +76,7 @@ class TestCheckCommand(unittest.TestCase):
         self.msg.rules_checked['TEST_RULE_2'] = False
         self.msg.rules_checked['TEST_RULE_3'] = True
         result = list(cmd.handle(self.msg, {}))
-        self.assertEqual(result, ["Spam: %s ; %s / %s\r\n" % (False, 3, 5),
+        self.assertEqual(result, ["Spam: %s ; %.1f / %s\r\n" % (False, 3, 5),
                                   'Content-length: 23\r\n\r\n',
                                   "TEST_RULE_1,TEST_RULE_3"])
 
@@ -86,7 +86,7 @@ class TestCheckCommand(unittest.TestCase):
         self.msg.score = 2442
         self.mockrules.get_report.return_value = "Test report"
         result = list(cmd.handle(self.msg, {}))
-        expected = ['Spam: True ; 2442 / 5\r\n',
+        expected = ['Spam: True ; 2442.0 / 5\r\n',
                     'Content-length: 11\r\n\r\n', 'Test report']
         self.assertEqual(result, expected)
 
@@ -96,7 +96,7 @@ class TestCheckCommand(unittest.TestCase):
         self.msg.score = 4
         self.mockrules.get_report.return_value = "Test report"
         result = list(cmd.handle(self.msg, {}))
-        expected = ['Spam: False ; 4 / 5\r\n',
+        expected = ['Spam: False ; 4.0 / 5\r\n',
                     'Content-length: 11\r\n\r\n', 'Test report']
         self.assertEqual(result, expected)
 
@@ -106,7 +106,7 @@ class TestCheckCommand(unittest.TestCase):
         self.msg.score = 2442
         self.mockrules.get_report.return_value = "Test report"
         result = list(cmd.handle(self.msg, {}))
-        expected = ['Spam: True ; 2442 / 5\r\n',
+        expected = ['Spam: True ; 2442.0 / 5\r\n',
                     'Content-length: 11\r\n\r\n', 'Test report']
         self.assertEqual(result, expected)
 
@@ -116,7 +116,8 @@ class TestCheckCommand(unittest.TestCase):
         self.msg.score = 4
         self.mockrules.get_report.return_value = "Test report"
         result = list(cmd.handle(self.msg, {}))
-        expected = ['Spam: False ; 4 / 5\r\n', 'Content-length: 0\r\n\r\n', '']
+        expected = ['Spam: False ; 4.0 / 5\r\n', 'Content-length: '
+                                                 '0\r\n\r\n', '']
         self.assertEqual(result, expected)
 
 def suite():
