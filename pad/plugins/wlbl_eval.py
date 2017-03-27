@@ -11,13 +11,6 @@ from pad.regex import Regex
 from pad.networks import _format_network_str
 
 
-FROM_HEADERS = ('From', "Envelope-Sender", 'Resent-From', 'X-Envelope-From',
-                'EnvelopeFrom')
-TO_HEADERS = ('To', 'Resent-To', 'Resent-Cc', 'Apparently-To', 'Delivered-To',
-              'Envelope-Recipients', 'Apparently-Resent-To', 'X-Envelope-To',
-              'Envelope-To',
-              'X-Delivered-To', 'X-Original-To', 'X-Rcpt-To', 'X-Real-To',
-              'Cc')
 #TL_TLDS = ['com', 'co.uk', 'multi.surbl.org']
 
 
@@ -241,35 +234,6 @@ class WLBLEvalPlugin(pad.plugins.base.BasePlugin):
         self.set_local(msg, param, found_match)
         return False
 
-    def get_from_addresses(self, msg):
-        """Get addresses from 'Resent-From' header,
-        and if there are no addresses, get from
-        all FROM_HEADERS.
-        """
-        addresses = msg.get_all_addr_header('Resent-From')
-        if addresses:
-            for address in addresses:
-                yield address
-        else:
-            for key in FROM_HEADERS:
-                for address in msg.get_all_addr_header(key):
-                    yield address
-
-    def get_to_addresses(self, msg):
-        """Get addresses from 'Resent-To' and 'Resent-Cc'
-        headers, ad if there are no addresses, get from
-        all TO_HEADERS.
-        """
-        addresses = msg.get_all_addr_header('Resent-To')
-        addresses.extend(msg.get_all_addr_header('Resent-Cc'))
-        if addresses:
-            for address in addresses:
-                yield address
-        else:
-            for key in TO_HEADERS:
-                for address in msg.get_all_addr_header(key):
-                    yield address
-
     def check_in_TL_TLDS(self, address):
         if address in self["util_rb_tld"]:
             return True
@@ -304,7 +268,7 @@ class WLBLEvalPlugin(pad.plugins.base.BasePlugin):
         """Check addresses from "default whitelist"/"whitelist" in
         "parsed_whitelist_from"
         """
-        addresses = self.get_from_addresses(msg)
+        addresses = msg.get_from_addresses(msg)
         if self.get_local(msg, check_name) == 0:
             if check_name == "from_in_whitelist":
                 list_name = 'parsed_whitelist_from'
@@ -318,21 +282,21 @@ class WLBLEvalPlugin(pad.plugins.base.BasePlugin):
         """Get all the to addresses with get_to_addresses and
         check if they match the whitelist regexes.
         """
-        return self.check_address_in_list(self.get_to_addresses(msg),
+        return self.check_address_in_list(msg.get_to_addresses(msg),
                                           'parsed_whitelist_to')
 
     def check_from_in_blacklist(self, msg, target=None):
         """Get all the from addresses and
         check if they match the blacklist regexes.
         """
-        return self.check_address_in_list(self.get_from_addresses(msg),
+        return self.check_address_in_list(msg.get_from_addresses(msg),
                                           'parsed_blacklist_from')
 
     def check_to_in_blacklist(self, msg, target=None):
         """Get all the from addresses and
         check if they match the blacklist regexes.
         """
-        return self.check_address_in_list(self.get_to_addresses(msg),
+        return self.check_address_in_list(msg.get_to_addresses(msg),
                                           'parsed_blacklist_to')
 
     def check_from_in_list(self, msg, list_name, target=None):
@@ -342,7 +306,7 @@ class WLBLEvalPlugin(pad.plugins.base.BasePlugin):
         if not list_name:
             return False
         parsed_list_name = "parsed_%s" % list_name
-        return self.check_address_in_list(self.get_from_addresses(msg),
+        return self.check_address_in_list(msg.get_from_addresses(msg),
                                           parsed_list_name)
 
     def check_to_in_list(self, msg, list_name, target=None):
@@ -350,21 +314,21 @@ class WLBLEvalPlugin(pad.plugins.base.BasePlugin):
         the given list regexes.
         """
         parsed_list_name = "parsed_%s" % list_name
-        return self.check_address_in_list(self.get_to_addresses(msg),
+        return self.check_address_in_list(msg.get_to_addresses(msg),
                                           parsed_list_name)
 
     def check_to_in_all_spam(self, msg, target=None):
         """Get all the to addresses and check if they match
         the 'all_spam_to' regexes.
         """
-        return self.check_address_in_list(self.get_to_addresses(msg),
+        return self.check_address_in_list(msg.get_to_addresses(msg),
                                           'parsed_all_spam_to')
 
     def check_to_in_more_spam(self, msg, target=None):
         """Get all the to addresses and check if they match
         the 'more_spam_to' regexes.
         """
-        return self.check_address_in_list(self.get_to_addresses(msg),
+        return self.check_address_in_list(msg.get_to_addresses(msg),
                                           'parsed_more_spam_to')
 
     def check_from_in_default_whitelist(self, msg, target=None):

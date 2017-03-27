@@ -17,6 +17,7 @@ http://www.linuxjournal.com/print.php?sid=6467
 The results are incorporated into SpamAssassin as the BAYES_* rules.
 """
 
+import re
 import math
 import time
 import hashlib
@@ -36,6 +37,7 @@ except:
     import pymysql
 
 import pad.plugins.base
+from pad.regex import Regex
 
 
 class Chi(object):
@@ -690,16 +692,39 @@ class BayesPlugin(pad.plugins.base.BasePlugin):
     def __init__(self, *args, **kwargs):
         super(BayesPlugin, self).__init__(*args, **kwargs)
         self.store = Store(self)
-        # XXX Should these be exposed somewhere?
+        # XXX Should these be exposed somewhere? They aren't in spamassassin
+        # XXX but we could add them as options and have them configurable
         self.learn_caller_will_untie = False
         self.learn_no_relearn = False
         self.use_hapaxes = False
         self.use_ignores = True
-    
+
     def finish(self):
         """Finish processing the message."""
         if self.store:
             self.store.untie_db()
+
+    def parse_list(self, list_name):
+        parsed_list = []
+        characters = ["?", "@", ".", "*@"]
+        for addr in self[list_name]:
+            if len([e for e in characters if e in addr]):
+                address = re.escape(addr).replace(r"\*", ".*").replace(r"\?", ".?")
+                if "@" in address:
+                    parsed_list.append(address)
+                else:
+                    parsed_list.append(".*@"+address)
+        return parsed_list
+
+
+    def check_address_in_list(self, addresses, list_name):
+        """Check if addresses match the regexes from list_name.
+        """
+        for address in addresses:
+            for regex in self[list_name]:
+                if Regex(regex).search(address):
+                    return True
+        return False
 
     def get_msgid(self, msg):
         """Generate a unique ID for the message.
@@ -1065,7 +1090,7 @@ class BayesPlugin(pad.plugins.base.BasePlugin):
                     if re.match(ur"[^\w:\*]", token):
                         decompd = re.sub(ur"[^\w:\*]", u"", decompd)
                         rettokens.append(topprefix + decompd)  # "foo"
-        
+
             retokens.append(tokprefix + token)    
         return rettokens
 
@@ -1249,7 +1274,7 @@ class BayesPlugin(pad.plugins.base.BasePlugin):
             domain = domain.split(".", 1)[1]
             yield domain
 
-    def check_bayes(self, fulltext, min_score, max_score):
+    def check_bayes(self, msg, min_score, max_score):
         """Check the message against the active Bayes classifier."""
         if not self["use_learner"]:
             return False
@@ -1325,15 +1350,21 @@ class BayesPlugin(pad.plugins.base.BasePlugin):
         # so override the global setting until we're done.
         caller_untie = self.learn_caller_will_untie
         self.learn_caller_will_untie = True
-        
-        if self.ignore_message(permsgstatus):
+
+        if self.ignore_message(msg):
             return self._skip_scan()
         if not self.learner_is_scan_available():
             return self._skip_scan()
         ns, nn = self.store.nspam_nham_get()
         self.ctxt.log.debug("bayes: corpus size: nspam = %s, nham = %s", ns, nn)
         # XXX This has a timer in SA.
-        msgdata = self._get_msgdata_from_permsgstatus(permsgstatus)
+        # XXX This is the equivalent of hook_parse_metadata and what we do
+        # XXX when we initialize and parse the message
+        # XXX Looks like the proper aproach for us would be to extract the
+        # XXX the variables required for tokenize like `bayes_token_uris` in
+        # XXX a local extract_metadata method and access them with
+        # XXX set_local/get_local those look like the equivalent of msgdata
+        msgdata = self._get_msgdata_from_permsgstatus(msgdata)
         msgtokens = self.tokenise(msg, msgdata)
         tokensdata = self.store.tok_get_all(msgtokens)
         probabilities_ref = self._compute_prob_for_all_tokens(tokensdata, ns, nn)
@@ -1422,13 +1453,20 @@ class BayesPlugin(pad.plugins.base.BasePlugin):
         
         return self._skip_scan()
 
-    def ignore_message(self, PMS):
+    def ignore_message(self, msg):
+        """Checks if the message should be ignored
+        :type msg: pad.message.Message
+        :return: bool
+        """
         if not self.use_ignores:
             return False
-    
-        ig_from = self.main.call_plugins("check_wb_list", permsgstatus=PMS, type_="from", list_="bayes_ignore_from")    
-        ig_to = self.main.call_plugins("check_wb_list", permsgstatus=PMF, type_="to", list_="bayes_ignore_to")
-        
+
+        # XXX Although it is possible to do this by calling the wlbleval plugin
+        # XXX I think it's better if we copy that small function and not
+        # XXX depend on it, or even better move the code somewhere common
+        ig_from = self.check_address_in_list(msg.get_from_addresses(), "bayes_ignore_from")
+        ig_to = self.check_address_in_list(msg.get_to_addresses(), "bayes_ignore_to")
+
         ignore = ig_from or ig_to
         
         if ignore:

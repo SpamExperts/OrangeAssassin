@@ -513,3 +513,41 @@ class Message(pad.context.MessageContext):
                 yield payload, part
             else:
                 yield None, part
+
+    def get_from_addresses(self):
+        """Get addresses from 'Resent-From' header,
+        and if there are no addresses, get from
+        all FROM_HEADERS.
+        """
+        addresses = self.get_all_addr_header('Resent-From')
+        if addresses:
+            for address in addresses:
+                yield address
+        else:
+            for key in FROM_HEADERS:
+                for address in self.get_all_addr_header(key):
+                    yield address
+
+    def get_to_addresses(self):
+        """Get addresses from 'Resent-To' and 'Resent-Cc'
+        headers, ad if there are no addresses, get from
+        all TO_HEADERS.
+        """
+        addresses = self.get_all_addr_header('Resent-To')
+        addresses.extend(self.get_all_addr_header('Resent-Cc'))
+        if addresses:
+            for address in addresses:
+                yield address
+        else:
+            for key in TO_HEADERS:
+                for address in self.get_all_addr_header(key):
+                    yield address
+
+
+FROM_HEADERS = ('From', "Envelope-Sender", 'Resent-From', 'X-Envelope-From',
+                'EnvelopeFrom')
+TO_HEADERS = ('To', 'Resent-To', 'Resent-Cc', 'Apparently-To', 'Delivered-To',
+              'Envelope-Recipients', 'Apparently-Resent-To', 'X-Envelope-To',
+              'Envelope-To',
+              'X-Delivered-To', 'X-Original-To', 'X-Rcpt-To', 'X-Real-To',
+              'Cc')
