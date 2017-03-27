@@ -17,8 +17,8 @@ class CheckCommand(oa.protocol.base.BaseProtocol):
             spam = True
         else:
             spam = False
-        yield "Spam: %s ; %s / %s\r\n" % (spam, msg.score,
-                                          self.ruleset.conf["required_score"])
+        yield "Spam: %s ; %.1f / %s\r\n" % (spam, msg.score,
+                                            self.ruleset.conf["required_score"])
         result = "".join(self.extra_details(msg, options))
         yield "Content-length: %s\r\n\r\n" % len(result)
         yield result

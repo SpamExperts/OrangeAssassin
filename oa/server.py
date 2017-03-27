@@ -53,7 +53,7 @@ class Server(spoon.server.TCPSpoon):
     """The PAD server. Handles incoming connections in a single
     thread and single process.
     """
-    server_logger = "spoon-server"
+    server_logger = "oa-logger"
     handler_klass = RequestHandler
 
     def __init__(self, address, sitepath, configpath, paranoid=False,

@@ -331,7 +331,7 @@ class TestDaemon(TestDaemonBase):
                    (process_row, content_row, TEST_MSG))
         result = self.send_to_proc(command).split("\r\n", 4)
         expected = [u'0 EX_OK',
-                    u'Spam: False ; 0 / 5.0',
+                    u'Spam: False ; 0.0 / 5.0',
                     u'Content-length: 0',
                     u'',
                     u'']
@@ -381,7 +381,7 @@ class TestDaemon(TestDaemonBase):
                    (process_row, content_row, TEST_MSG))
         result = self.send_to_proc(command).split("\r\n")
         expected = [u'0 EX_OK',
-                    u'Spam: False ; 0 / 5.0',
+                    u'Spam: False ; 0.0 / 5.0',
                     u'Content-length: 0',
                     u'',
                     u'']
@@ -410,7 +410,7 @@ class TestDaemon(TestDaemonBase):
                    (process_row, content_row, MULTIPART_MSG))
         result = self.send_to_proc(command).split("\r\n")
         expected = [u'0 EX_OK',
-                    u'Spam: False ; 0 / 5.0',
+                    u'Spam: False ; 0.0 / 5.0',
                     u'Content-length: 0',
                     u'', u'']
         self.assertEqual(expected, result)
@@ -538,7 +538,7 @@ class TestUserConfigDaemon(TestDaemon):
                    (process_row, content_row,
                     USER_TEST_MSG.replace("abcdef123456", "abcdef555555")))
         result = self.send_to_proc(command).split("\r\n")
-        expected = [u'0 EX_OK', u'Spam: False ; 0 / 5.0',
+        expected = [u'0 EX_OK', u'Spam: False ; 0.0 / 5.0',
                     u'Content-length: 0', u'', u'']
         self.assertEqual(result, expected)
 
