@@ -1,6 +1,6 @@
-"""Parse PAD rule sets.
+"""Parse OA rule sets.
 
-The general syntax for PAD rules is (on one line):
+The general syntax for OA rules is (on one line):
 
 <type> <name> <value>
 
