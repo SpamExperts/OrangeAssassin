@@ -1,4 +1,3 @@
-
 ***************
 URIDetailPlugin
 ***************
@@ -15,7 +14,7 @@ Example usage
 Usage
 =====
 
-<Description>
+N/A
 
 Options
 =======
@@ -31,5 +30,4 @@ None
 Tags
 ====
 
-<Describe TAGS>
-
+None

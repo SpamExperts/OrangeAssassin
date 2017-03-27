@@ -17,7 +17,7 @@ Example usage
 Usage
 =====
 
-<Description>
+N/A
 
 Options
 =======
@@ -40,8 +40,9 @@ Options
 EVAL rules
 ==========
 
+None
 
 Tags
 ====
 
-<Describe TAGS>
+None

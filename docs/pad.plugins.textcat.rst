@@ -1,4 +1,3 @@
-
 *************
 TextCatPlugin
 *************
@@ -22,7 +21,7 @@ Example usage
 Usage
 =====
 
-<Description>
+N/A
 
 Options
 =======
@@ -51,5 +50,5 @@ EVAL rules
 Tags
 ====
 
-<Describe TAGS>
+N/A
 

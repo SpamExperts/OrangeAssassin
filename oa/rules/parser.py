@@ -13,7 +13,6 @@ from __future__ import absolute_import
 from builtins import dict
 from builtins import object
 
-
 import re
 import os
 import warnings
@@ -40,38 +39,38 @@ MAX_RECURSION = 10
 
 # Rules that require 2 arguments
 KNOWN_2_RTYPE = frozenset(
-        (
-            "score",  # Specifies the score adjustment if the rule matches
-            "priority",  # Specifies the priority of the rule
-            "describe",  # Specifies a comment describing the rule
-            "full",  # Specifies a FullRule
-            "body",  # Specifies a BodyRule
-            "rawbody",  # Specifies a RawBodyRule
-            "uri",  # Specifies a URIRule
-            "header",  # Specifies a HeaderRule
-            "mimeheader",  # Specifies a MimeHeaderRule
-            "meta",  # Specifies a MetaRule
-            "eval",  # Specifies a EvalRule
-            "lang",  # Specifies a language
-            "tflags", #Specifies a TflagRule
-        )
+    (
+        "score",  # Specifies the score adjustment if the rule matches
+        "priority",  # Specifies the priority of the rule
+        "describe",  # Specifies a comment describing the rule
+        "full",  # Specifies a FullRule
+        "body",  # Specifies a BodyRule
+        "rawbody",  # Specifies a RawBodyRule
+        "uri",  # Specifies a URIRule
+        "header",  # Specifies a HeaderRule
+        "mimeheader",  # Specifies a MimeHeaderRule
+        "meta",  # Specifies a MetaRule
+        "eval",  # Specifies a EvalRule
+        "lang",  # Specifies a language
+        "tflags",  # Specifies a TflagRule
+    )
 )
 # Rules that require 1 arguments
 KNOWN_1_RTYPE = frozenset(
-        (
-            "report",  # Add some text to the report template
-            "unsafe_report", # Add some text to the unsafe report template
-            "add_header",  # Adds a header to the message
-            "remove_header",  # Remove header from message
-            "include",  # Include another file in the current one
-            "ifplugin",  # Check if plugin is loaded.
-            "loadplugin",  # Load a plugin.
-            "require_version",  # Only load this file if the version matches
-            "required_score",  # Set the required score for this ruleset
-            "report_safe",  # Set the method of reporting spam
-            "report_contact",  # Set the contact address
-            "required_score",  # Set the required score (default 5)
-        )
+    (
+        "report",  # Add some text to the report template
+        "unsafe_report",  # Add some text to the unsafe report template
+        "add_header",  # Adds a header to the message
+        "remove_header",  # Remove header from message
+        "include",  # Include another file in the current one
+        "ifplugin",  # Check if plugin is loaded.
+        "loadplugin",  # Load a plugin.
+        "require_version",  # Only load this file if the version matches
+        "required_score",  # Set the required score for this ruleset
+        "report_safe",  # Set the method of reporting spam
+        "report_contact",  # Set the contact address
+        "required_score",  # Set the required score (default 5)
+    )
 )
 
 # These are the types of rules that we know how to interpret, ignore anything
@@ -141,12 +140,12 @@ class PADParser(object):
             line = line.decode("iso-8859-1").strip()
         except UnicodeDecodeError as e:
             raise oa.errors.InvalidSyntax(filename, line_no, line,
-                                           "Decoding Error: %s" % e)
-        if line.startswith("if can"):
-            # XXX We don't support for this check, simply
-            # XXX skip everything for now.
-            self._ignore = True
-            return
+                                          "Decoding Error: %s" % e)
+        # if line.startswith("if can"):
+        #     # XXX We don't support for this check, simply
+        #     # XXX skip everything for now.
+        #     self._ignore = True
+        #     return
 
         if line.startswith("endif"):
             self._ignore = False
@@ -191,7 +190,7 @@ class PADParser(object):
                 rtype, name, value = line.split(None, 2)
             except ValueError:
                 raise oa.errors.InvalidSyntax(filename, line_no, line,
-                                               "Missing argument")
+                                              "Missing argument")
             if rtype == "tflags":
                 value = value.split()
 
@@ -208,7 +207,7 @@ class PADParser(object):
                         rtype, value = value.split(None, 1)
                     except ValueError:
                         raise oa.errors.InvalidSyntax(filename, line_no, line,
-                                                       "Missing argument")
+                                                      "Missing argument")
 
                     if not self.ctxt.hook_parse_config(rtype, value):
                         self.ctxt.err("%s:%s Ignoring unknown"
@@ -220,7 +219,7 @@ class PADParser(object):
                     rtype, name, value = value.split(None, 2)
                 except ValueError:
                     raise oa.errors.InvalidSyntax(filename, line_no, line,
-                                                   "Missing argument")
+                                                  "Missing argument")
 
             if name not in self.results:
                 self.results[name] = dict()
@@ -238,7 +237,8 @@ class PADParser(object):
                         int(value)
                     except ValueError:
                         self.ctxt.err("%s:%s Invalid type for priority value "
-                                      "in configuration line: %s, setting it by"
+                                      "in configuration line: %s, setting it "
+                                      "by"
                                       " default to 0", filename, line_no, line)
                 self.results[name][rtype] = value
 

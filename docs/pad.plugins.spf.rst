@@ -1,6 +1,6 @@
-*************
+**********
 SPF Plugin 
-*************
+**********
 
 This plugin checks a message against Sender Policy Framework (SPF) 
 records published by the domain owners in DNS to fight email 

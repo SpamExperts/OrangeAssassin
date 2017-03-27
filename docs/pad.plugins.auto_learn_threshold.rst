@@ -71,5 +71,5 @@ This plugin doesn't expose any eval rules
 Tags
 ====
 
-<Describe TAGS>
+None
 

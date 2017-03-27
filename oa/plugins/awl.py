@@ -302,6 +302,11 @@ class AutoWhiteListPlugin(oa.plugins.base.BasePlugin):
         conn.close()
 
     def check_from_in_auto_whitelist(self, msg, target=None):
+        """Adjust the message score according to the
+        auto whitelist rules.
+
+        :return:
+        """
         score = msg.score
         factor = self["auto_whitelist_factor"]
         origin_ip = self.get_local(msg, "originip")

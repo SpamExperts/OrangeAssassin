@@ -12,10 +12,14 @@ Example usage
 
     loadplugin      pad.plugins.image_info.ImageInfoPlugin
 
+    body         DC_IMAGE001_GIF         eval:image_named('image001.gif')
+    describe     DC_IMAGE001_GIF         Contains image named image001.gif
+
 Usage
 =====
 
-<Description>
+This plugin exposes various methods to check image information with
+eval rules.
 
 Options
 =======
@@ -41,5 +45,5 @@ EVAL rules
 Tags
 ====
 
-<Describe TAGS>
+None
 

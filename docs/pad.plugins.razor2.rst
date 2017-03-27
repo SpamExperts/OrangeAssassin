@@ -1,6 +1,6 @@
-***********
+************
 Razor2Plugin
-***********
+************
 
 Checks the message against the Razor server.
 
@@ -45,3 +45,5 @@ EVAL rules
 
 Tags
 ====
+
+None
