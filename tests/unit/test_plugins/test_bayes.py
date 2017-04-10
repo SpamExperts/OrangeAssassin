@@ -4,32 +4,39 @@ import mock
 import email
 import hashlib
 import unittest
-
+from mock import MagicMock
 from pad.plugins.bayes import BayesPlugin
 
 
 class BayesTests(unittest.TestCase):
     """Test cases for the BayesPlugin class."""
 
+    def setUp(self):
+        self.global_data = {}
+        self.mock_ctxt = MagicMock(**{
+            "get_plugin_data.side_effect": lambda p, k: self.global_data[k],
+            "set_plugin_data.side_effect": lambda p, k, v: self.global_data.setdefault(k, v)})
+
+
     def test_get_msgid(self):
         """Test the get_msgid method when there is a Message-ID header."""
         msg_id = "test-id"
         msg = email.message_from_string("Message-ID: <%s>\n\nTest" % msg_id)
-        found_id = BayesPlugin().get_msgid(msg)
-        self.assertEqual(msgid, found_id)
+        found_id = BayesPlugin(self.mock_ctxt).get_msgid(msg)
+        self.assertEqual(msg_id, found_id)
 
     def test_get_msgid_generated(self):
         """Test the get_msgid method when there is no Message-ID header."""
         text = "Hello world!"
         msg = email.message_from_string("Subject: test\n\n%s" % text)
-        found_id = BayesPlugin().get_msgid(msg)
+        found_id = BayesPlugin(self.mock_ctxt).get_msgid(msg)
         msg_id = "%s@sa_generated" % hashlib.sha1("None\x00%s" % text).hexdigest()
         self.assertEqual(msg_id, found_id)
 
     def test_learn_message(self):
         """Test the learn_message method."""
         msgdata = {}
-        b = BayesPlugin()
+        b = BayesPlugin(self.mock_ctxt)
         b.get_body_from_msg = lambda x: msgdata
         b.store.tie_db_writeable = lambda: True
         ret = "test"
@@ -43,7 +50,7 @@ class BayesTests(unittest.TestCase):
 
     def test_learn_message_no_bayes(self):
         """Test the learn_message method when bayes is not enabled."""
-        b = BayesPlugin()
+        b = BayesPlugin(self.mock_ctxt)
         b["use_bayes"] = False
         result = b.learn_message(None, None)
         self.assertEqual(result, None)
@@ -55,7 +62,7 @@ class BayesTests(unittest.TestCase):
  (Exim 4.85) id 1azjrM-000RwX-P5
  for spam@mx99.antispamcloud.com; Mon, 09 May 2016 14:00:25 +0200\n\nHello world!""")
         expected = 1462795225
-        result = BayesPlugin().receive_date(msg)
+        result = BayesPlugin(self.mock_ctxt).receive_date(msg)
         self.assertEqual(expected, result)
 
 
