@@ -59,7 +59,7 @@ class TestGetHeader(unittest.TestCase):
     def test_get_from_addresses_from_headers(self):
         self.mock_msg.get_all_addr_header.side_effect = self.get_from_header
 
-        self.mock_from_headers = patch("pad.plugins.wlbl_eval.FROM_HEADERS",
+        self.mock_from_headers = patch("pad.message.FROM_HEADERS",
                                      ["From"]).start()
         result = self.plug.get_from_addresses(self.mock_msg)
         self.assertEqual(list(result),

@@ -1,10 +1,11 @@
 """Tests for the Bayes plug-in."""
 
+import mock
 import email
 import hashlib
 import unittest
 
-import mock
+from pad.plugins.bayes import BayesPlugin
 
 
 class BayesTests(unittest.TestCase):
@@ -16,7 +17,7 @@ class BayesTests(unittest.TestCase):
         msg = email.message_from_string("Message-ID: <%s>\n\nTest" % msg_id)
         found_id = BayesPlugin().get_msgid(msg)
         self.assertEqual(msgid, found_id)
-        
+
     def test_get_msgid_generated(self):
         """Test the get_msgid method when there is no Message-ID header."""
         text = "Hello world!"
@@ -39,7 +40,7 @@ class BayesTests(unittest.TestCase):
         result = b.learn_message(msg, isspam)
         self.assertEqual(ret, result)
         b._learn_trapped.assert_called_once_with(isspam, msg, msgdata, None)
-        
+
     def test_learn_message_no_bayes(self):
         """Test the learn_message method when bayes is not enabled."""
         b = BayesPlugin()
