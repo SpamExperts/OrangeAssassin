@@ -268,7 +268,7 @@ class WLBLEvalPlugin(pad.plugins.base.BasePlugin):
         """Check addresses from "default whitelist"/"whitelist" in
         "parsed_whitelist_from"
         """
-        addresses = msg.get_from_addresses(msg)
+        addresses = msg.get_from_addresses()
         if self.get_local(msg, check_name) == 0:
             if check_name == "from_in_whitelist":
                 list_name = 'parsed_whitelist_from'
@@ -282,21 +282,21 @@ class WLBLEvalPlugin(pad.plugins.base.BasePlugin):
         """Get all the to addresses with get_to_addresses and
         check if they match the whitelist regexes.
         """
-        return self.check_address_in_list(msg.get_to_addresses(msg),
+        return self.check_address_in_list(msg.get_to_addresses(),
                                           'parsed_whitelist_to')
 
     def check_from_in_blacklist(self, msg, target=None):
         """Get all the from addresses and
         check if they match the blacklist regexes.
         """
-        return self.check_address_in_list(msg.get_from_addresses(msg),
+        return self.check_address_in_list(msg.get_from_addresses(),
                                           'parsed_blacklist_from')
 
     def check_to_in_blacklist(self, msg, target=None):
         """Get all the from addresses and
         check if they match the blacklist regexes.
         """
-        return self.check_address_in_list(msg.get_to_addresses(msg),
+        return self.check_address_in_list(msg.get_to_addresses(),
                                           'parsed_blacklist_to')
 
     def check_from_in_list(self, msg, list_name, target=None):
@@ -306,7 +306,7 @@ class WLBLEvalPlugin(pad.plugins.base.BasePlugin):
         if not list_name:
             return False
         parsed_list_name = "parsed_%s" % list_name
-        return self.check_address_in_list(msg.get_from_addresses(msg),
+        return self.check_address_in_list(msg.get_from_addresses(),
                                           parsed_list_name)
 
     def check_to_in_list(self, msg, list_name, target=None):
@@ -314,21 +314,21 @@ class WLBLEvalPlugin(pad.plugins.base.BasePlugin):
         the given list regexes.
         """
         parsed_list_name = "parsed_%s" % list_name
-        return self.check_address_in_list(msg.get_to_addresses(msg),
+        return self.check_address_in_list(msg.get_to_addresses(),
                                           parsed_list_name)
 
     def check_to_in_all_spam(self, msg, target=None):
         """Get all the to addresses and check if they match
         the 'all_spam_to' regexes.
         """
-        return self.check_address_in_list(msg.get_to_addresses(msg),
+        return self.check_address_in_list(msg.get_to_addresses(),
                                           'parsed_all_spam_to')
 
     def check_to_in_more_spam(self, msg, target=None):
         """Get all the to addresses and check if they match
         the 'more_spam_to' regexes.
         """
-        return self.check_address_in_list(msg.get_to_addresses(msg),
+        return self.check_address_in_list(msg.get_to_addresses(),
                                           'parsed_more_spam_to')
 
     def check_from_in_default_whitelist(self, msg, target=None):
