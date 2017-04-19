@@ -736,7 +736,7 @@ class BayesPlugin(pad.plugins.base.BasePlugin):
         # That seems an unnecessary complication, so just return the
         # first one that we manage to generate.
         msgid = msg[u"Message-ID"]
-        if msgid and not re.match(ur"^\s*<\s*(?:\@sa_generated)?>.*$", msgid):
+        if msgid and not re.match(r"^\s*<\s*(?:\@sa_generated)?>.*$", msgid):
             # Remove \r and < and > prefix / suffixes.
             return msgid.strip().strip(u"<").strip(u">")
         
@@ -765,7 +765,7 @@ class BayesPlugin(pad.plugins.base.BasePlugin):
         setattr(self, key, [])
         
         # Find all parts that are leaves.
-        parts = self.find_parts(ur".", 1)
+        parts = self.find_parts(r".", 1)
         if not parts:
             return getattr(self, key)
             
@@ -782,9 +782,9 @@ class BayesPlugin(pad.plugins.base.BasePlugin):
             pass
 
         # Whitespace handling (warning: small changes have large effects!).
-        text = re.sub(ur"\n+\s*\n+", ur"\f", text)  # Double newlines => form feed.
-        text = re.sub(ur" \t\n\r\x0b", ur" ", text)  # whitespace (incl. VT) => space.
-        text = re.sub(ur"\f", ur"\n", text)  # Form feeds => newline.
+        text = re.sub(r"\n+\s*\n+", r"\f", text)  # Double newlines => form feed.
+        text = re.sub(r" \t\n\r\x0b", r" ", text)  # whitespace (incl. VT) => space.
+        text = re.sub(r"\f", "\n", text)  # Form feeds => newline.
 
         setattr(self, key, self.split_into_array_of_short_lines(text))
         return getattr(self, key)
@@ -997,13 +997,13 @@ class BayesPlugin(pad.plugins.base.BasePlugin):
         # Include quotes, .'s and -'s for URIs, and [$,]'s for Nigerian-scam strings,
         # and ISO-8859-15 alphas. Do not split on @'s; better results keeping it.
         # Some useful tokens: "$31,000,000" "www.clock-speed.net" "f*ck" "Hits!"
-        line = re.sub(ur"""-A-Za-z0-9,\@\*\!_'"\$.\241-\377""", "", line, re.DOTALL)
+        line = re.sub(r"""-A-Za-z0-9,\@\*\!_'"\$.\241-\377""", "", line, re.DOTALL)
         
         # DO split on "..." or "--" or "---"; common formatting error resulting in
         # hapaxes. Keep the separator itself as a token, though, as long ones can
         # be good spam signs.
-        line = re.sub(ur"(\w)(\.{3,6}(\w)", ur"\1 \2 \3", line)
-        line = re.sub(ur"(\w)(\-{2,6}(\w)", ur"\1 \2 \3", line)
+        line = re.sub(r"(\w)(\.{3,6}(\w)", r"\1 \2 \3", line)
+        line = re.sub(r"(\w)(\-{2,6}(\w)", r"\1 \2 \3", line)
     
         if IGNORE_TITLE_CASE:
             if region == 1 or region == 2:
@@ -1019,9 +1019,9 @@ class BayesPlugin(pad.plugins.base.BasePlugin):
         rettokens = []
         for token in line.split():
             # Trim non-alphanumeric characters at the start of end.
-            token = re.sub(ur"^[-'\"\.,]+", "", token)
+            token = re.sub(r"^[-'\"\.,]+", "", token)
             # So we don't get loads of '"foo' tokens
-            token = re.sub(ur"[-'\"\.,]+$", "", token)
+            token = re.sub(r"[-'\"\.,]+$", "", token)
     
             # Skip false magic tokens.
             # TVD: we need to do a defined() check since SQL doesn't have magic
@@ -1039,18 +1039,18 @@ class BayesPlugin(pad.plugins.base.BasePlugin):
             # - but extend the stop-list. These are squarely in the grey area,
             # and it just slows us down to record them.
             # See http://wiki.apache.org/spamassassin/BayesStopList for more info.
-            if re.match(ur"^(?:a(?:ble|l(?:ready|l)|n[dy]|re)|b(?:ecause|oth)|c(?:an|ome)|e(?:ach|mail|ven)|f(?:ew|irst|or|rom)|give|h(?:a(?:ve|s)|ttp)|i(?:n(?:formation|to)|t\'s)|just|know|l(?:ike|o(?:ng|ok))|m(?:a(?:de|il(?:(?:ing|to))?|ke|ny)|o(?:re|st)|uch)|n(?:eed|o[tw]|umber)|o(?:ff|n(?:ly|e)|ut|wn)|p(?:eople|lace)|right|s(?:ame|ee|uch)|t(?:h(?:at|is|rough|e)|ime)|using|w(?:eb|h(?:ere|y)|ith(?:out)?|or(?:ld|k))|y(?:ears?|ou(?:(?:\'re|r))?))$/"):
+            if re.match(r"^(?:a(?:ble|l(?:ready|l)|n[dy]|re)|b(?:ecause|oth)|c(?:an|ome)|e(?:ach|mail|ven)|f(?:ew|irst|or|rom)|give|h(?:a(?:ve|s)|ttp)|i(?:n(?:formation|to)|t\'s)|just|know|l(?:ike|o(?:ng|ok))|m(?:a(?:de|il(?:(?:ing|to))?|ke|ny)|o(?:re|st)|uch)|n(?:eed|o[tw]|umber)|o(?:ff|n(?:ly|e)|ut|wn)|p(?:eople|lace)|right|s(?:ame|ee|uch)|t(?:h(?:at|is|rough|e)|ime)|using|w(?:eb|h(?:ere|y)|ith(?:out)?|or(?:ld|k))|y(?:ears?|ou(?:(?:\'re|r))?))$/"):
                 continue
         
             # Are we in the body? If so, apply some body-specific breakouts.
             if (region == 1 or region == 2):
-                if CHEW_BODY_MAILADDRS and re.match(ur"\S\@\S", token):
+                if CHEW_BODY_MAILADDRS and re.match(r"\S\@\S", token):
                     rettokens.append(self._tokenise_mail_addrs(token))
-                elif CHEW_BODY_URIS and re.match(ur"\S\.[a-z]", token, re.IGNORE):
+                elif CHEW_BODY_URIS and re.match(r"\S\.[a-z]", token, re.IGNORE):
                     rettokens.append(u"UD:" + token)  # The full token.
                     bit = token
                     while True:
-                        bit = re.sub(ur"^[^\.]+\.(.+)$", "\1", bit)
+                        bit = re.sub(r"^[^\.]+\.(.+)$", "\1", bit)
                         if not bit:
                             break
                         rettokens.append("UD:" + bit)  # UD = URL domain
@@ -1059,12 +1059,12 @@ class BayesPlugin(pad.plugins.base.BasePlugin):
             # used as part of split tokens such as "HTo:D*net" indicating that
             # the domain ".net" appeared in the To header.
             if length > MAX_TOKEN_LENGTH and "*" not in token:
-                if TOKENIZE_LONG_8BIT_SEQS_AS_TUPLES and re.match(ur"[\xa0-\xff]{2}", token):
+                if TOKENIZE_LONG_8BIT_SEQS_AS_TUPLES and re.match(r"[\xa0-\xff]{2}", token):
                     # Matt sez: "Could be Asian? Autrijus suggested doing character ngrams,
                     # but I'm doing tuples to keep the dbs small(er)." Sounds like a plan
                     # to me! (jm)
                     while True:
-                        token = re.sub(ur"^(..?)", "", token)
+                        token = re.sub(r"^(..?)", "", token)
                         if not token:
                             break
                         rettokens.append("8:" + token)
@@ -1078,17 +1078,17 @@ class BayesPlugin(pad.plugins.base.BasePlugin):
         
             # Decompose tokens? Do this after shortening long tokens.    
             if (region == 1 or region == 2) and DECOMPOSE_BODY_TOKENS:
-                if re.match(ur"[^\w:\*]"):
+                if re.match(r"[^\w:\*]"):
                     decompd = token  # "Foo!"
-                    decompd = re.sub(ur"[^\w:\*]", u"", decompd)
+                    decompd = re.sub(r"[^\w:\*]", u"", decompd)
                     rettokens.append(tokprefix + decompd)  # "Foo"
         
-                if re.match(ur"[A-Z]", token):
+                if re.match(r"[A-Z]", token):
                     decompd = token.lower()
                     rettokens.append(tokprefix + decompd)  # "foo!"
                     
-                    if re.match(ur"[^\w:\*]", token):
-                        decompd = re.sub(ur"[^\w:\*]", u"", decompd)
+                    if re.match(r"[^\w:\*]", token):
+                        decompd = re.sub(r"[^\w:\*]", u"", decompd)
                         rettokens.append(topprefix + decompd)  # "foo"
 
             retokens.append(tokprefix + token)    
