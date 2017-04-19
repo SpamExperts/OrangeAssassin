@@ -16,6 +16,16 @@ class BayesTests(unittest.TestCase):
         self.mock_ctxt = MagicMock(**{
             "get_plugin_data.side_effect": lambda p, k: self.global_data[k],
             "set_plugin_data.side_effect": lambda p, k, v: self.global_data.setdefault(k, v)})
+        engine = {
+            "hostname":"",
+            "user":"",
+            "password":"",
+            "db_name":"",
+        }
+        mock.patch("pad.plugins.bayes.BayesPlugin.get_engine", return_value=engine).start()
+
+    def tearDown(self):
+        mock.patch.stopall()
 
 
     def test_get_msgid(self):

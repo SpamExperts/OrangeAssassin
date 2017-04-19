@@ -39,6 +39,8 @@ except:
 import pad.plugins.base
 from pad.regex import Regex
 
+class NotYetImplemented(NotImplemented):
+    pass
 
 class Chi(object):
     """Chi-squared probability combining and related constants."""
@@ -566,6 +568,7 @@ if has_sqlalchemy:
 
 class Store(object):
     def __init__(self, plugin):
+        self.engine = plugin.get_engine()
         self.conn = None
         
     def untie_db(self):
@@ -586,8 +589,7 @@ class Store(object):
         self.conn = pymysql.connect(host=self.engine["hostname"], port=3306,
                                     user=self.engine["user"],
                                     passwd=self.engine["password"],
-                                    db=self.engine["db_name"],
-                                    )
+                                    db=self.engine["db_name"])
 
     def tok_get(self, token):
         """Get the spam and ham counts, and access times for the specified token."""
@@ -617,7 +619,7 @@ class Store(object):
         """Set the "seen" flag for the specified message."""
         cursor = self.conn.cursor()
         cursor.execute("UPDATE bayes_seen SET flag=%s WHERE msgid=%s", (flag, msgid))
-        conn.commit()
+        self.conn.commit()
         cursor.close()
         
     def cleanup(self):
@@ -636,7 +638,7 @@ class Store(object):
         """Set the spam and ham counts for the database."""
         cursor = self.conn.cursor()
         cursor.execute("UPDATE bayes_vars SET spam_count=%s, ham_count=%s", (spam, ham))
-        conn.commit()
+        self.conn.commit()
         cursor.close()
         
     def multi_tok_count_change(self, spam, ham, tokens, msgatime):
@@ -644,7 +646,7 @@ class Store(object):
         cursor = self.conn.cursor()
         for token in tokens:
             cursor.execute("UPDATE bayes_token SET spam_count=%s, ham_count=%s, atime=%s WHERE token=%s", (spam, ham, msgatime, token))
-        conn.commit()
+        self.conn.commit()
         cursor.close()
 
     def tok_touch_all(self, touch_tokens, msgatime):
@@ -652,7 +654,7 @@ class Store(object):
         cursor = self.conn.cursor()
         for token in touch_tokens:
             cursor.execute("UPDATE bayes_token SET atime=%s WHERE token=%s", (msgatime, token))
-        conn.commit()
+        self.conn.commit()
         cursor.close()
         
     def get_running_expire_tok(self):
@@ -671,7 +673,7 @@ class Store(object):
         """Return True if a sync is required."""
         pass
         
-    def get_magic_re():
+    def get_magic_re(self):
         """Not used in the SQL implementation."""
         pass
 
@@ -832,7 +834,7 @@ class BayesPlugin(pad.plugins.base.BasePlugin):
             return
         msgdata = self.get_body_from_msg(msg)
         # XXX In SA, there is a time limit set here.
-        if self.store.tie_db_writable():
+        if self.store.tie_db_writeable():
             ret = self._learn_trapped(isspam, msg, msgdata, msgid)
             if not self.learn_caller_will_untie:
                 self.store.untie_db()
