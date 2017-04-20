@@ -40,7 +40,8 @@ class BayesTests(unittest.TestCase):
         text = "Hello world!"
         msg = email.message_from_string("Subject: test\n\n%s" % text)
         found_id = BayesPlugin(self.mock_ctxt).get_msgid(msg)
-        msg_id = "%s@sa_generated" % hashlib.sha1("None\x00%s" % text).hexdigest()
+        combined = "None\x00%s" % text
+        msg_id = "%s@sa_generated" % hashlib.sha1(combined.encode('utf-8')).hexdigest()
         self.assertEqual(msg_id, found_id)
 
     def test_learn_message(self):
