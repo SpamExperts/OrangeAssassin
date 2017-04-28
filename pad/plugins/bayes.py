@@ -755,9 +755,13 @@ class BayesPlugin(pad.plugins.base.BasePlugin):
         u"bayes_ignore_headers": (u"list", []),
         }
 
+    def finish_parsing_end(self, ruleset):
+        super(BayesPlugin, self).finish_parsing_end(ruleset)
+        self.store = Store(self)
+
+
     def __init__(self, *args, **kwargs):
         super(BayesPlugin, self).__init__(*args, **kwargs)
-        self.store = Store(self)
         # XXX Should these be exposed somewhere? They aren't in spamassassin
         # XXX but we could add them as options and have them configurable
         self.learn_caller_will_untie = False
