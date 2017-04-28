@@ -47,4 +47,6 @@ REIMPLEMENTED_PLUGINS = {
         "pad.plugins.mime_eval.MIMEEval",
     "Mail::SpamAssassin::Plugin::URIEval":
         "pad.plugins.uri_eval.URIEvalPlugin",
+    "Mail::SpamAssassin::Plugin::Bayes":
+        "pad.plugins.bayes.BayesPlugin",
 }
