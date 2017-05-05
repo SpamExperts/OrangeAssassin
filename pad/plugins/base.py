@@ -80,14 +80,13 @@ class BasePlugin(pad.conf.Conf, object):
     cmds = None
     # See pad.conf.Conf for details on options.
     options = None
-    # The name of the DSN options
-    dsn_name = None
+
+    # Database connection fields, each plugin should set their own if they need them
+    dsn = None
+    sql_username = ""
+    sql_password = ""
 
     def __init__(self, ctxt):
-        if self.dsn_name:
-            self.options[self.dsn_name + "_dsn"] = ("str", "")
-            self.options[self.dsn_name + "_sql_username"] = ("str", "")
-            self.options[self.dsn_name + "_sql_password"] = ("str", "")
         self.path_to_plugin = None
         super(BasePlugin, self).__init__(ctxt)
 
@@ -116,19 +115,18 @@ class BasePlugin(pad.conf.Conf, object):
         """
         connect_string = None
         self["engine"] = None
-        if self.dsn_name:
-            dsn = self[self.dsn_name + "_dsn"]
-            if dsn.upper().startswith("DBI"):
+        if self.dsn:
+            if self.dsn.upper().startswith("DBI"):
                 # Convert from SA format.
-                user = self[self.dsn_name + "_sql_username"]
-                password = self[self.dsn_name + "_sql_password"]
+                user = self.sql_username
+                password = self.sql_password
                 if not create_engine:
-                    self["engine"] = dbi_to_mysql(dsn, user, password)
+                    self["engine"] = dbi_to_mysql(self.dsn, user, password)
                 else:
-                    connect_string = dbi_to_alchemy(dsn, user, password)
-            elif dsn:
+                    connect_string = dbi_to_alchemy(self.dsn, user, password)
+            elif self.dsn:
                 # The connect string is already in the correct format
-                connect_string = dsn
+                connect_string = self.dsn
         if connect_string is not None:
             self["engine"] = create_engine(connect_string)
 

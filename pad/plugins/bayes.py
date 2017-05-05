@@ -744,7 +744,7 @@ class Store(object):
 
 class BayesPlugin(pad.plugins.base.BasePlugin):
     """Implement a somewhat Bayesian plug-in."""
-    eval_rules = ("check_bayes",)
+
     options = {
         u"use_bayes": (u"bool", True),
         u"use_learner": (u"bool", True),
@@ -753,7 +753,27 @@ class BayesPlugin(pad.plugins.base.BasePlugin):
         u"bayes_min_spam_num": (u"int", 200),
         u"bayes_min_ham_num": (u"int", 200),
         u"bayes_ignore_headers": (u"list", []),
-        }
+        u'bayes_sql_dsn': ('str', ''),
+        u'bayes_sql_dsn': ('str', ''),
+        u'bayes_sql_username': ('str', ''),
+        u'bayes_sql_password': ('str', ''),
+        u'bayes_auto_expire': ('int', 0),
+    }
+
+    eval_rules = ("check_bayes",)
+
+    @property
+    def dsn(self):
+        return self['bayes_sql_dsn']
+
+    @property
+    def sql_username(self):
+        # XXX need to figure out what's the deal with override username
+        return self['bayes_sql_username']
+
+    @property
+    def sql_password(self):
+        return self['bayes_sql_password']
 
     def finish_parsing_end(self, ruleset):
         super(BayesPlugin, self).finish_parsing_end(ruleset)
@@ -1145,7 +1165,7 @@ class BayesPlugin(pad.plugins.base.BasePlugin):
                     # "sk:" stands for "skip".
                     token = "sk:" + token[:7]
 
-            # Decompose tokens? Do this after shortening long tokens.    
+            # Decompose tokens? Do this after shortening long tokens.
             if (region == 1 or region == 2) and DECOMPOSE_BODY_TOKENS:
                 if re.match(r"[^\w:\*]"):
                     decompd = token  # "Foo!"
