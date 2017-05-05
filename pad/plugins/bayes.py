@@ -754,13 +754,13 @@ class BayesPlugin(pad.plugins.base.BasePlugin):
         u"bayes_min_ham_num": (u"int", 200),
         u"bayes_ignore_headers": (u"list", []),
         u'bayes_sql_dsn': ('str', ''),
-        u'bayes_sql_dsn': ('str', ''),
         u'bayes_sql_username': ('str', ''),
         u'bayes_sql_password': ('str', ''),
         u'bayes_auto_expire': ('int', 0),
     }
 
     eval_rules = ("check_bayes",)
+    store = None
 
     @property
     def dsn(self):
@@ -778,7 +778,6 @@ class BayesPlugin(pad.plugins.base.BasePlugin):
     def finish_parsing_end(self, ruleset):
         super(BayesPlugin, self).finish_parsing_end(ruleset)
         self.store = Store(self)
-
 
     def __init__(self, *args, **kwargs):
         super(BayesPlugin, self).__init__(*args, **kwargs)
@@ -878,7 +877,8 @@ class BayesPlugin(pad.plugins.base.BasePlugin):
         setattr(self, key, self.split_into_array_of_short_lines(text))
         return getattr(self, key)
 
-    def split_into_array_of_short_lines(self, text):
+    @staticmethod
+    def split_into_array_of_short_lines(text):
         """Split the text into a list of short lines."""
         # SA tries to avoid splitting things into pieces here, but we keep it
         # a bit simpler and just split on lines.
@@ -902,7 +902,7 @@ class BayesPlugin(pad.plugins.base.BasePlugin):
             u"bayes_token_body": self.get_visible_rendered_body_text_array(),
             u"bayes_token_inviz": self.get_invisible_rendered_body_text_array(),
             # We should do get_uri_list as part of a separate feature.
-#            u"bayes_token_uris": self.get_uri_list(),
+            # u"bayes_token_uris": self.get_uri_list(),
         }
 
     def plugin_report(self, msg):
@@ -985,7 +985,8 @@ class BayesPlugin(pad.plugins.base.BasePlugin):
         self.ctxt.log.debug("bayes: learned '%s', atime: %s", msgid, msgatime)
         return True
 
-    def receive_date(self, msg):
+    @staticmethod
+    def receive_date(msg):
         """Get the date from the headers."""
         for header in msg.get_all("Received"):
             try:
@@ -1075,32 +1076,34 @@ class BayesPlugin(pad.plugins.base.BasePlugin):
             tokens.extend(self._tokenise_line(value, "H%s:" % prefix, 0))
         # Remove duplicates, skip empty tokens (this happens sometimes),
         # generate a SHA1 hash, and take the lower 40 bits as the token.
-        # XXX It would be better if we could refactor all of this so that we yielded
-        # XXX tokens as they were generated.
+        # XXX It would be better if we could refactor all of this so that we
+        # XXX yielded tokens as they were generated.
         for token in set(tokens):
             if not token:
                 continue
             yield hashlib.sha1(token)[-5:]
 
     def _tokenise_line(self, line, tokprefix, region):
-        # Include quotes, .'s and -'s for URIs, and [$,]'s for Nigerian-scam strings,
-        # and ISO-8859-15 alphas. Do not split on @'s; better results keeping it.
+        # Include quotes, .'s and -'s for URIs, and [$,]'s for Nigerian-scam
+        # strings, and ISO-8859-15 alphas. Do not split on @'s; better
+        # results keeping it.
         # Some useful tokens: "$31,000,000" "www.clock-speed.net" "f*ck" "Hits!"
         line = re.sub(r"""-A-Za-z0-9,\@\*\!_'"\$.\241-\377""", "", line, re.DOTALL)
 
-        # DO split on "..." or "--" or "---"; common formatting error resulting in
-        # hapaxes. Keep the separator itself as a token, though, as long ones can
-        # be good spam signs.
+        # DO split on "..." or "--" or "---"; common formatting error
+        # resulting in hapaxes. Keep the separator itself as a token, though,
+        # as long ones can be good spam signs.
         line = re.sub(r"(\w)(\.{3,6}(\w)", r"\1 \2 \3", line)
         line = re.sub(r"(\w)(\-{2,6}(\w)", r"\1 \2 \3", line)
 
         if IGNORE_TITLE_CASE:
             if region == 1 or region == 2:
-                # Lower-case Title Case at start of a full-stop-delimited line (as would
-                # be seen in a Western language).
-                # XXX I don't think this can be done in a Python regular expression.
-                # XXX We should evaluate whether it's worth the complexity of doing
-                # XXX this.
+                # Lower-case Title Case at start of a full-stop-delimited
+                # line (as would be seen in a Western language).
+
+                # XXX I don't think this can be done in a Python regular
+                # XXX expression. We should evaluate whether it's worth the
+                # XXX complexity of doing this.
                 pass
 
         magic_re = self.store.get_magic_re()
@@ -1144,14 +1147,14 @@ class BayesPlugin(pad.plugins.base.BasePlugin):
                             break
                         rettokens.append("UD:" + bit)  # UD = URL domain
 
-            # Note: do not trim down overlong tokens if they contain '*'. This is
-            # used as part of split tokens such as "HTo:D*net" indicating that
-            # the domain ".net" appeared in the To header.
+            # Note: do not trim down overlong tokens if they contain '*'.
+            # This is used as part of split tokens such as "HTo:D*net"
+            # indicating that the domain ".net" appeared in the To header.
             if length > MAX_TOKEN_LENGTH and "*" not in token:
                 if TOKENIZE_LONG_8BIT_SEQS_AS_TUPLES and re.match(r"[\xa0-\xff]{2}", token):
-                    # Matt sez: "Could be Asian? Autrijus suggested doing character ngrams,
-                    # but I'm doing tuples to keep the dbs small(er)." Sounds like a plan
-                    # to me! (jm)
+                    # Matt sez: "Could be Asian? Autrijus suggested doing
+                    # character ngrams, but I'm doing tuples to keep the dbs
+                    # small(er)." Sounds like a plan to me! (jm)
                     while True:
                         token = re.sub(r"^(..?)", "", token)
                         if not token:
@@ -1196,10 +1199,10 @@ class BayesPlugin(pad.plugins.base.BasePlugin):
             for header in msg.keys()
             if header.lower() not in IGNORED_HEADERS and (not IGNORE_MSGID_TOKENS or header.lower() != "message-id")
         }
-        # TODO: SA adds in all of the message's metadata as additional headers here.
-        # It's possible that we might want to do that as well, but we'll need to ensure
-        # that everything is suitable (e.g. not huge) and can be appropriately converted
-        # to a string.
+        # TODO: SA adds in all of the message's metadata as additional
+        # headers here. It's possible that we might want to do that as well,
+        # but we'll need to ensure that everything is suitable (e.g. not
+        # huge) and can be appropriately converted to a string.
 
         addr_headers = {
             u"return-path",
