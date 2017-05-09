@@ -41,8 +41,8 @@ def dbi_to_alchemy(dsn, user, password):
     elif driver.lower() == "pg":
         driver = "postgresql"
         values = dict(item.split("=") for item in connection.split(";"))
-        db_name = values["dbname"]
-        hostname = values["host"]
+        db_name = values.get("dbname", "spamassassin")
+        hostname = values.get("host", "localhost")
         if "port" in values:
             hostname = "%s:%s" % (hostname, values["port"])
     elif driver.lower() == "sqlite":
