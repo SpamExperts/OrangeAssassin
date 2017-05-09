@@ -794,6 +794,24 @@ class BayesPlugin(pad.plugins.base.BasePlugin):
         super(BayesPlugin, self).finish_parsing_end(ruleset)
         self.store = Store(self)
 
+    def check_end(self, ruleset, msg):
+        learned = self.get_local(msg, "learned")
+        tchammy = len(self.get_local(msg, "bayes_token_info_hammy"))
+        tcspammy = len(self.get_local(msg, "bayes_token_info_spammy"))
+        count = self.get_local(msg, "count")
+        summary = "Tokens new, {}; hammy, {}; neutral, {}; spammy, {}.".format(
+            count - learned, tchammy, learned-tchammy-tcspammy, tcspammy
+        )
+        msg._create_plugin_tags({
+            "BAYESTCHAMMY": tchammy,
+            "BAYESTCSPAMMY": tcspammy,
+            "BAYESTCLEARNED": learned,
+            "BAYESTC": count - learned,
+            "HAMMYTOKENS":self.get_local(msg, "bayes_token_info_hammy"),
+            "SPAMMYTOKENS":self.get_local(msg, "bayes_token_info_spammy"),
+            "TOKENSUMMARY": summary,
+        })
+
     def __init__(self, *args, **kwargs):
         super(BayesPlugin, self).__init__(*args, **kwargs)
         # XXX Should these be exposed somewhere? They aren't in spamassassin
@@ -1484,7 +1502,9 @@ class BayesPlugin(pad.plugins.base.BasePlugin):
             return self._skip_scan(msg, score, caller_untie)
 
         tcount_total = len(msgtokens)
+        self.set_local(msg, "count", tcount_total)
         tcount_learned = len(pw)
+        self.set_local(msg, "learned", tcount_learned)
 
         # Figure out the message receive time (used as atime below)
         # If the message atime comes back as being in the future, something's
