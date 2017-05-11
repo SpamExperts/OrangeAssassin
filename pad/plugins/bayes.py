@@ -23,6 +23,14 @@ import time
 import hashlib
 import email.utils
 
+ADDR_HEADERS = {
+    u"return-path", u"from", u"to", u"cc", u"reply-to", u"errors-to",
+    u"mail-followup-to", u"sender", u"x-return-path", u"x-from", u"x-to",
+    u"x-cc", u"x-reply-to", u"x-errors-to", u"x-mail-followup-to", u"x-sender",
+    u"resent-return-path", u"resent-from", u"resent-to", u"resent-cc",
+    u"resent-reply-to", u"resent-errors-to", u"resent-mail-followup-to",
+    u"resent-sender", }
+
 try:
     from sqlalchemy import Column
     from sqlalchemy.types import String
@@ -1219,7 +1227,7 @@ class BayesPlugin(pad.plugins.base.BasePlugin):
 
                     if re.match(r"[^\w:\*]", token):
                         decompd = re.sub(r"[^\w:\*]", u"", decompd)
-                        rettokens.append(topprefix + decompd)  # "foo"
+                        rettokens.append(tokprefix + decompd)  # "foo"
 
             rettokens.append(tokprefix + token)
         return rettokens
@@ -1244,32 +1252,7 @@ class BayesPlugin(pad.plugins.base.BasePlugin):
         # but we'll need to ensure that everything is suitable (e.g. not
         # huge) and can be appropriately converted to a string.
 
-        addr_headers = {
-            u"return-path",
-            u"from",
-            u"to",
-            u"cc",
-            u"reply-to",
-            u"errors-to",
-            u"mail-followup-to",
-            u"sender",
-            u"x-return-path",
-            u"x-from",
-            u"x-to",
-            u"x-cc",
-            u"x-reply-to",
-            u"x-errors-to",
-            u"x-mail-followup-to",
-            u"x-sender",
-            u"resent-return-path",
-            u"resent-from",
-            u"resent-to",
-            u"resent-cc",
-            u"resent-reply-to",
-            u"resent-errors-to",
-            u"resent-mail-followup-to",
-            u"resent-sender",
-        }
+        addr_headers = ADDR_HEADERS
 
         for header in headers:
             values = msg.get_all(header)
@@ -1287,14 +1270,14 @@ class BayesPlugin(pad.plugins.base.BasePlugin):
                     continue
 
                 # Special tokenisation for some headers:
-                header = self._parse_special_header(addr_headers, header, l_header,
+                header = self._parse_special_header(header, l_header,
                                                     parsed, val)
         return parsed
 
-    def _parse_special_header(self, addr_headers, header, l_header, parsed, val):
+    def _parse_special_header(self, header, l_header, parsed, val):
         if l_header in (u"message-id", u"x-message-id", u"resent-message-id"):
             val = self._pre_chew_message_id(val)
-        elif PRE_CHEW_ADDR_HEADERS and l_header in addr_headers:
+        elif PRE_CHEW_ADDR_HEADERS and l_header in ADDR_HEADERS:
             val = self._pre_chew_addr_header(val)
         elif l_header == u"received":
             val = self._pre_chew_received(val)
@@ -1302,7 +1285,7 @@ class BayesPlugin(pad.plugins.base.BasePlugin):
             val = self._pre_chew_content_type(val)
         elif l_header == u"mime-version":
             val = val.replace(u"1.0", u"")  # Totally innocuous.
-        elif l_header in MARK_PRESENCE_ONLY_HDRS:
+        elif l_header in MARK_PRESENCE_ONLY_HEADERS:
             val = "1"  # Just mark the presence, they create lots of hapaxen.
         if MAP_HEADERS_MID and l_header in {u"in-reply-to", u"references",
                                             u"message-id"}:
@@ -1326,7 +1309,7 @@ class BayesPlugin(pad.plugins.base.BasePlugin):
     def _pre_chew_content_type(val):
         """Normalise the Content-Type header."""
         # Hopefully this will retain good bits without too many hapaxen.
-        mo = re.search(r"""boundary=[\"\'](.*?)[\"\']""", val, re.IGNORE)
+        mo = re.search(r"""boundary=[\"\'](.*?)[\"\']""", val, re.I)
         if mo:
             # Replace all hex with literal "H".
             boundary = re.sub(r"[a-fA-F0-9]", "H", mo.groups()[0])
@@ -1412,7 +1395,7 @@ class BayesPlugin(pad.plugins.base.BasePlugin):
             domain = domain.split(".", 1)[1]
             yield domain
 
-    def check_bayes(self, msg, min_score, max_score, target=None):
+    def check_bayes(self, msg, min_score, max_score=float('inf'), target=None):
         """Check the message against the active Bayes classifier."""
         min_score = float(min_score)
         max_score = float(max_score)
@@ -1425,8 +1408,8 @@ class BayesPlugin(pad.plugins.base.BasePlugin):
 
         # XXX SA has a timer here.
         bayes_score = self.scan(msg)
+        if bayes_score and (0 < bayes_score <= max_score):
 
-        if bayes_score and (min_score == 0 or bayes_score > min_score) and (max_score == "undef" or bayes_score <= max_score):
             # TODO: Find test_log implementation.
             if self["detailed_bayes_score"]:
                 pass
@@ -1522,7 +1505,8 @@ class BayesPlugin(pad.plugins.base.BasePlugin):
             if prob is None:
                 continue
             token, tok_spam, tok_ham, atime = tokendata
-            pw[token] = {"prob": prob, "spam_count": tok_spam, "ham_count": tok_ham, "atime": atime}
+            pw[token] = {"prob": prob, "spam_count": tok_spam,
+                         "ham_count": tok_ham, "atime": atime}
         # If none of the tokens were found in the DB, we're going to skip
         # this message...
         if not pw:
@@ -1700,10 +1684,13 @@ class BayesPlugin(pad.plugins.base.BasePlugin):
             "short": "$t",
             "Short": 'Token: "$t"',
             "compact": "$p-$D--$t",
-            "Compact": 'Probability $p -declassification distance $D ("+" means > 9) --token: "$t"',
+            "Compact": 'Probability $p -declassification distance $D '
+                       '("+" means > 9) --token: "$t"',
             "medium": "$p-$D-$N--$t",
             "long": "$p-$d--${h}h-${s}s--${a}d--$t",
-            "Long": 'Probability $p -declassification distance $D --in ${h} ham messages -and ${s} spam messages --${a} days old--token:"$t"'
+            "Long": 'Probability $p -declassification distance $D --in ${h} '
+                    'ham messages -and ${s} spam messages --${a} days old'
+                    '--token:"$t"'
         }
 
         try:
