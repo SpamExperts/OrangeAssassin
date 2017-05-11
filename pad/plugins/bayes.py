@@ -516,13 +516,13 @@ class BayesPlugin(pad.plugins.base.BasePlugin):
         summary = "Tokens new, {}; hammy, {}; neutral, {}; spammy, {}.".format(
             count - learned, tchammy, learned-tchammy-tcspammy, tcspammy
         )
-        msg._create_plugin_tags({
+        msg.plugin_tags.update({
             "BAYESTCHAMMY": tchammy,
             "BAYESTCSPAMMY": tcspammy,
             "BAYESTCLEARNED": learned,
             "BAYESTC": count - learned,
-            "HAMMYTOKENS":self.get_local(msg, "bayes_token_info_hammy"),
-            "SPAMMYTOKENS":self.get_local(msg, "bayes_token_info_spammy"),
+            "HAMMYTOKENS": self.get_local(msg, "bayes_token_info_hammy"),
+            "SPAMMYTOKENS": self.get_local(msg, "bayes_token_info_spammy"),
             "TOKENSUMMARY": summary,
         })
 
