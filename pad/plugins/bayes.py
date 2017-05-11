@@ -23,6 +23,24 @@ import time
 import hashlib
 import email.utils
 
+GREY_AREA_TOKEN_RE = r"""
+^
+(?:a
+(?:ble|l(?:ready|l)|n[dy]|re)
+|
+b(?:ecause|oth)|c(?:an|ome)|e(?:ach|mail|ven)
+|
+f(?:ew|irst|or|rom)|give|h(?:a(?:ve|s)|ttp)|i(?:n(?:formation|to)|t\'s)
+|
+just|know|l(?:ike|o(?:ng|ok))|m(?:a(?:de|il(?:(?:ing|to))?|ke|ny)
+|
+o(?:re|st)|uch)|n(?:eed|o[tw]|umber)|o(?:ff|n(?:ly|e)|ut|wn)|p(?:eople|lace)
+|
+right|s(?:ame|ee|uch)|t(?:h(?:at|is|rough|e)|ime)|using
+|
+w(?:eb|h(?:ere|y)|ith(?:out)?|or(?:ld|k))|y(?:ears?|ou(?:(?:\'re|r))?)
+)$/"""
+
 ADDR_HEADERS = {
     u"return-path", u"from", u"to", u"cc", u"reply-to", u"errors-to",
     u"mail-followup-to", u"sender", u"x-return-path", u"x-from", u"x-to",
@@ -38,7 +56,6 @@ try:
     from sqlalchemy.sql.schema import PrimaryKeyConstraint
     from sqlalchemy.ext.declarative.api import declarative_base
 
-    Base = declarative_base()
     has_sqlalchemy = True
 except:
     has_sqlalchemy = False
@@ -168,7 +185,7 @@ class NaiveBayes(object):
         combiner."""
         wc = len(sortedref)
         if not wc:
-           return 0.5
+            return 0.5
         P = 1
         Q = 1
         for pw in sortedref:
@@ -502,6 +519,8 @@ CREATE TABLE IF NOT EXISTS `bayes_vars` (
 """
 
 if has_sqlalchemy:
+    Base = declarative_base()
+
     class BayesExpire(Base):
         """Schema for the bayes_expire table."""
 
@@ -623,7 +642,8 @@ class Store(object):
         return result
 
     def tok_get_all(self, tokens):
-        """Like tok_get, but for all tokens specified. Each returned tuple starts with the token."""
+        """Like tok_get, but for all tokens specified.
+        Each returned tuple starts with the token."""
         if has_sqlalchemy:
             for token in tokens:
                 yield self.conn.execute(
@@ -699,7 +719,8 @@ class Store(object):
             self.conn.commit()
         else:
             cursor = self.conn.cursor()
-            cursor.execute("UPDATE bayes_vars SET spam_count=%s, ham_count=%s", (spam, ham))
+            cursor.execute("UPDATE bayes_vars SET spam_count=%s, ham_count=%s",
+                           (spam, ham))
             self.conn.commit()
             cursor.close()
 
@@ -713,7 +734,7 @@ class Store(object):
                     "atime=:atime WHERE token=:token",
                     {
                         'spam_count': spam, 'ham_count': ham,
-                        'atime': msgatime, 'token':token
+                        'atime': msgatime, 'token': token
                     }
                 )
             self.conn.commit()
@@ -739,7 +760,8 @@ class Store(object):
         else:
             cursor = self.conn.cursor()
             for token in touch_tokens:
-                cursor.execute("UPDATE bayes_token SET atime=%s WHERE token=%s", (msgatime, token))
+                cursor.execute("UPDATE bayes_token SET atime=%s WHERE token=%s",
+                               (msgatime, token))
             self.conn.commit()
             cursor.close()
 
@@ -852,7 +874,8 @@ class BayesPlugin(pad.plugins.base.BasePlugin):
         characters = ["?", "@", ".", "*@"]
         for addr in self[list_name]:
             if len([e for e in characters if e in addr]):
-                address = re.escape(addr).replace(r"\*", ".*").replace(r"\?", ".?")
+                address = re.escape(addr).replace(r"\*", ".*").replace(r"\?",
+                                                                       ".?")
                 if "@" in address:
                     parsed_list.append(address)
                 else:
@@ -868,16 +891,19 @@ class BayesPlugin(pad.plugins.base.BasePlugin):
                     return True
         return False
 
-    def get_body_text_array_common(self, msg, method_name):
+    def get_body_text_array_common(self, method_name):
         """Common method for rendered, visible_rendered, 
         and invisible_rendered methods. """
         text = self[method_name]
         key = "text_" + method_name
 
         # Whitespace handling (warning: small changes have large effects!).
-        text = re.sub(r"\n+\s*\n+", r"\f", text)  # Double newlines => form feed.
-        text = re.sub(r" \t\n\r\x0b", r" ", text)  # whitespace (incl. VT) => space.
-        text = re.sub(r"\f", "\n", text)  # Form feeds => newline.
+        # Double newlines => form feed.
+        text = re.sub(r"\n+\s*\n+", r"\f", text)
+        # whitespace (incl. VT) => space.
+        text = re.sub(r" \t\n\r\x0b", r" ", text)
+        # Form feeds => newline.
+        text = re.sub(r"\f", "\n", text)
 
         setattr(self, key, self.split_into_array_of_short_lines(text))
         return getattr(self, key)
@@ -890,15 +916,15 @@ class BayesPlugin(pad.plugins.base.BasePlugin):
         return text.splitlines()
 
     def get_rendered_body_text_array(self, msg):
-        return self.get_body_text_array_common(msg, "rendered")
+        return self.get_body_text_array_common("rendered")
 
     def get_visible_rendered_body_text_array(self, msg):
         """Get an array of the visible message text."""
-        return self.get_body_text_array_common(msg, "visible_rendered")
+        return self.get_body_text_array_common("visible_rendered")
 
     def get_invisible_rendered_body_text_array(self, msg):
         """Get an array of the invisible message text."""
-        return self.get_body_text_array_common(msg, "invisible_rendered")
+        return self.get_body_text_array_common("invisible_rendered")
 
     def get_body_from_msg(self, msg):
         # For now, nothing (see comments elsewhere).
@@ -1063,8 +1089,9 @@ class BayesPlugin(pad.plugins.base.BasePlugin):
         return True
 
     def learner_is_scan_available(self, params=None):
-        """Check to make sure we can tie() the DB, and we have enough entries to do a scan.
-        If we're told the caller will untie(), go ahead and leave the db tied."""
+        """Check to make sure we can tie() the DB, and we have enough entries 
+        to do a scan. If we're told the caller will untie(), go ahead and 
+        leave the db tied. """
         if not self["use_bayes"]:
             return False
         if not self.store.tie_db_readonly():
@@ -1161,23 +1188,7 @@ class BayesPlugin(pad.plugins.base.BasePlugin):
             # - but extend the stop-list. These are squarely in the grey area,
             # and it just slows us down to record them. See
             # http://wiki.apache.org/spamassassin/BayesStopList for more info.
-            if re.match(r"""
-            ^
-            (?:a
-            (?:ble|l(?:ready|l)|n[dy]|re)
-            |
-            b(?:ecause|oth)|c(?:an|ome)|e(?:ach|mail|ven)
-            |
-            f(?:ew|irst|or|rom)|give|h(?:a(?:ve|s)|ttp)|i(?:n(?:formation|to)|t\'s)
-            |
-            just|know|l(?:ike|o(?:ng|ok))|m(?:a(?:de|il(?:(?:ing|to))?|ke|ny)
-            |
-            o(?:re|st)|uch)|n(?:eed|o[tw]|umber)|o(?:ff|n(?:ly|e)|ut|wn)|p(?:eople|lace)
-            |
-            right|s(?:ame|ee|uch)|t(?:h(?:at|is|rough|e)|ime)|using
-            |
-            w(?:eb|h(?:ere|y)|ith(?:out)?|or(?:ld|k))|y(?:ears?|ou(?:(?:\'re|r))?)
-            )$/""", token, re.VERBOSE):
+            if re.match(GREY_AREA_TOKEN_RE, token, re.VERBOSE):
                 continue
 
             # Are we in the body? If so, apply some body-specific breakouts.
@@ -1199,7 +1210,7 @@ class BayesPlugin(pad.plugins.base.BasePlugin):
             if length > MAX_TOKEN_LENGTH and "*" not in token:
                 if TOKENIZE_LONG_8BIT_SEQS_AS_TUPLES and re.match(r"[\xa0-\xff]{2}", token):
                     # Matt sez: "Could be Asian? Autrijus suggested doing
-                    # character ngrams, but I'm doing tuples to keep the dbs
+                    # chracter ngrams, but I'm doing tuples to keep the dbs
                     # small(er)." Sounds like a plan to me! (jm)
                     while True:
                         token = re.sub(r"^(..?)", "", token)
@@ -1215,7 +1226,7 @@ class BayesPlugin(pad.plugins.base.BasePlugin):
                     token = "sk:" + token[:7]
 
             # Decompose tokens? Do this after shortening long tokens.
-            if (region == 1 or region == 2) and DECOMPOSE_BODY_TOKENS:
+            if region in (1, 2) and DECOMPOSE_BODY_TOKENS:
                 if re.match(r"[^\w:\*]", token):
                     decompd = token  # "Foo!"
                     decompd = re.sub(r"[^\w:\*]", u"", decompd)
@@ -1240,7 +1251,8 @@ class BayesPlugin(pad.plugins.base.BasePlugin):
         :type msg: pad.message.Message
         """
         parsed = {}
-        user_ignore = {header.lower() for header in self[u"bayes_ignore_headers"]}
+        user_ignore = {header.lower()
+                       for header in self[u"bayes_ignore_headers"]}
 
         headers = {
             header
@@ -1251,8 +1263,6 @@ class BayesPlugin(pad.plugins.base.BasePlugin):
         # headers here. It's possible that we might want to do that as well,
         # but we'll need to ensure that everything is suitable (e.g. not
         # huge) and can be appropriately converted to a string.
-
-        addr_headers = ADDR_HEADERS
 
         for header in headers:
             values = msg.get_all(header)
@@ -1361,7 +1371,7 @@ class BayesPlugin(pad.plugins.base.BasePlugin):
             r"[0-3\s]?[0-9]\s"
             r"(?:Jan|Feb|Ma[ry]|Apr|Ju[nl]|Aug|Sep|Oct|Nov|Dec)\s"
             r"(?:19|20)?[0-9]{2}\s"
-            r"[0-2][0-9](?:\:[0-5][0-9]){1,2}\s",
+            r"[0-2][0-9](?:\:[0-5][0-9]){1,2}\s"
             r"(?:\s*\(|\)|\s*(?:[+-][0-9]{4})|\s*(?:UT|[A-Z]{2,3}T))*", "", val)
 
         # IPs: break down to nearest /24, to reduce hapaxes -- EXCEPT for
@@ -1408,7 +1418,7 @@ class BayesPlugin(pad.plugins.base.BasePlugin):
 
         # XXX SA has a timer here.
         bayes_score = self.scan(msg)
-        if bayes_score and (0 < bayes_score <= max_score):
+        if bayes_score and (min_score < bayes_score <= max_score):
 
             # TODO: Find test_log implementation.
             if self["detailed_bayes_score"]:
