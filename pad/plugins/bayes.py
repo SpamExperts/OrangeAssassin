@@ -1208,7 +1208,7 @@ class BayesPlugin(pad.plugins.base.BasePlugin):
                         rettokens.append("8:" + token)
                     continue
 
-                if (region == 0 and HDRS_TOKENIZE_LONG_TOKENS_AS_SKIPS) or (region == 1 and BODY_TOKENIZE_LONG_TOKENS_AS_SKIPS) or (region == 2 and URIS_TOKENIZE_LONG_TOKENS_AS_SKIPS):
+                if (region == 0 and HEADERS_TOKENIZE_LONG_TOKENS_AS_SKIPS) or (region == 1 and BODY_TOKENIZE_LONG_TOKENS_AS_SKIPS) or (region == 2 and URIS_TOKENIZE_LONG_TOKENS_AS_SKIPS):
                     # SpamBayes trick via Matt: Just retain 7 chars. Do not retain
                     # the length, it does not help; see my mail to -devel of Nov 20 2002.
                     # "sk:" stands for "skip".
