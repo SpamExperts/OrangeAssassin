@@ -460,6 +460,11 @@ MAX_TOKEN_LENGTH = 15
 class BayesPlugin(pad.plugins.base.BasePlugin):
     """Implement a somewhat Bayesian plug-in."""
 
+    learn_caller_will_untie = False
+    learn_no_relearn = False
+    use_hapaxes = False
+    use_ignores = True
+
     options = {
         u"use_bayes": (u"bool", True),
         u"use_learner": (u"bool", True),
@@ -491,6 +496,11 @@ class BayesPlugin(pad.plugins.base.BasePlugin):
     def sql_password(self):
         return self['bayes_sql_password']
 
+    def check_start(self, msg):
+        self['rendered'] = msg.msg['subject'] or '\n'
+        self['visible_rendered'] = msg.msg['subject'] or '\n'
+        self['invisible_rendered'] = ''
+
     def extract_metadata(self, msg, payload, text, part):
         if part.get_content_type() == 'text/plain':
             self['rendered'] += text
@@ -499,10 +509,10 @@ class BayesPlugin(pad.plugins.base.BasePlugin):
             # XXX SA parses these and checks for [in]visible content
             pass
 
-    def check_start(self, msg):
-        self['rendered'] = msg.msg['subject'] or '\n'
-        self['visible_rendered'] = msg.msg['subject'] or '\n'
-        self['invisible_rendered'] = ''
+    def parsed_metadata(self, msg):
+        self[u"bayes_token_body"] = self.get_body_text_array_common(self["rendered"])
+        self[u'bayes_token_inviz'] = self.get_body_text_array_common(self["invisible_rendered"])
+        self[u'bayes_token_uris'] = []  # self.get_uri_list()
 
     def finish_parsing_end(self, ruleset):
         super(BayesPlugin, self).finish_parsing_end(ruleset)
@@ -526,14 +536,6 @@ class BayesPlugin(pad.plugins.base.BasePlugin):
             "TOKENSUMMARY": summary,
         })
 
-    def __init__(self, *args, **kwargs):
-        super(BayesPlugin, self).__init__(*args, **kwargs)
-        # XXX Should these be exposed somewhere? They aren't in spamassassin
-        # XXX but we could add them as options and have them configurable
-        self.learn_caller_will_untie = False
-        self.learn_no_relearn = False
-        self.use_hapaxes = False
-        self.use_ignores = True
 
     def finish(self):
         """Finish processing the message."""
@@ -562,12 +564,9 @@ class BayesPlugin(pad.plugins.base.BasePlugin):
                     return True
         return False
 
-    def get_body_text_array_common(self, method_name):
+    def get_body_text_array_common(self, text):
         """Common method for rendered, visible_rendered, 
         and invisible_rendered methods. """
-        text = self[method_name]
-        key = "text_" + method_name
-
         # Whitespace handling (warning: small changes have large effects!).
         # Double newlines => form feed.
         text = re.sub(r"\n+\s*\n+", r"\f", text)
@@ -576,8 +575,7 @@ class BayesPlugin(pad.plugins.base.BasePlugin):
         # Form feeds => newline.
         text = re.sub(r"\f", "\n", text)
 
-        setattr(self, key, self.split_into_array_of_short_lines(text))
-        return getattr(self, key)
+        return self.split_into_array_of_short_lines(text)
 
     @staticmethod
     def split_into_array_of_short_lines(text):
@@ -585,27 +583,6 @@ class BayesPlugin(pad.plugins.base.BasePlugin):
         # SA tries to avoid splitting things into pieces here, but we keep it
         # a bit simpler and just split on lines.
         return text.splitlines()
-
-    def get_rendered_body_text_array(self, msg):
-        return self.get_body_text_array_common("rendered")
-
-    def get_visible_rendered_body_text_array(self, msg):
-        """Get an array of the visible message text."""
-        return self.get_body_text_array_common("visible_rendered")
-
-    def get_invisible_rendered_body_text_array(self, msg):
-        """Get an array of the invisible message text."""
-        return self.get_body_text_array_common("invisible_rendered")
-
-    def get_body_from_msg(self, msg):
-        # For now, nothing (see comments elsewhere).
-        # return {}
-        return {
-            u"bayes_token_body": self.get_visible_rendered_body_text_array(msg),
-            u"bayes_token_inviz": self.get_invisible_rendered_body_text_array(msg),
-            # We should do get_uri_list as part of a separate feature.
-            # u"bayes_token_uris": self.get_uri_list(),
-        }
 
     def plugin_report(self, msg):
         """Train the message as spam."""
@@ -617,26 +594,24 @@ class BayesPlugin(pad.plugins.base.BasePlugin):
         super(BayesPlugin, self).plugin_revoke(msg)
         self.learn_message(msg, False)
 
-    def learn_message(self, msg, isspam, msgid=None):
+    def learn_message(self, msg, isspam):
         """Learn the message has spam or ham."""
         if not self["use_bayes"]:
             return
-        msgdata = self.get_body_from_msg(msg)
         # XXX In SA, there is a time limit set here.
         if self.store.tie_db_writeable():
-            ret = self._learn_trapped(isspam, msg, msgdata, msgid)
+            ret = self._learn_trapped(isspam, msg)
             if not self.learn_caller_will_untie:
                 self.store.untie_db()
             return ret
         return None
 
-    def _learn_trapped(self, isspam, msg, msgdata, msgid):
+    def _learn_trapped(self, isspam, msg):
         """Do the actual training work.
         
         In SA this is "trapped", in that it is wrapped inside of a timeout.
         Here, it is not currently, but we may add that in the future."""
-        if not msgid:
-            msgid = msg.msgid
+        msgid = msg.msgid
         seen = self.store.seen_get(msgid)
         if seen:
             if (seen == "s" and isspam) or (seen == "h" and not isspam):
@@ -667,7 +642,7 @@ class BayesPlugin(pad.plugins.base.BasePlugin):
             orig = self.learn_caller_will_untie
             try:
                 self.learn_caller_will_untie = True
-                fatal = self.forget_message(msg, msgdata, msgid)
+                fatal = self.forget_message(msg, msgid)
             finally:
                 # Reset the value post-forget() ...
                 self.learn_caller_will_untie = orig
@@ -679,13 +654,13 @@ class BayesPlugin(pad.plugins.base.BasePlugin):
                 return
 
         # Now that we're sure we haven't seen this message before ...
-        msgatime = self.receive_date(msg)
+        msgatime = msg.receive_date
         # If the message atime comes back as being more than 1 day in the
         # future, something's messed up and we should revert to current time as
         # a safety measure.
         if msgatime - time.time() > 86400:
             msgatime = time.time()
-        tokens = self.tokenise(msg, msgdata)
+        tokens = self.tokenise(msg)
         # XXX SA puts this in a timer.
         if isspam:
             self.store.nspam_nham_change(1, 0)
@@ -699,33 +674,19 @@ class BayesPlugin(pad.plugins.base.BasePlugin):
         self.ctxt.log.debug("bayes: learned '%s', atime: %s", msgid, msgatime)
         return True
 
-    @staticmethod
-    def receive_date(msg):
-        """Get the date from the headers."""
-        received = msg.get_all("Received") or list()
-        for header in received:
-            try:
-                ts = header.rsplit(";", 1)[1]
-            except IndexError:
-                continue
-            ts = email.utils.parsedate(ts)
-            return time.mktime(ts)
-        # SA will look in other headers too. Perhaps we should also?
-        return time.time()
-
-    def forget_message(self, msg, msgdata, msgid):
+    def forget_message(self, msg, msgid):
         """Unlearn a message."""
         if not self["use_bayes"]:
             return
         # XXX SA wraps this in a timer.
         if self.store.tie_db_writeable():
-            ret = self._forget_trapped(msg, msgdata, msgid)
+            ret = self._forget_trapped(msg, msgid)
             if not self.learn_caller_will_untie:
                 self.store.untie_db()
             return ret
         return None
 
-    def _forget_trapped(self, msg, msgdata, msgid):
+    def _forget_trapped(self, msg, msgid):
         """Do the actual unlearning work.
 
         In SA this is "trapped", in that it is wrapped inside of a timeout.
@@ -747,13 +708,13 @@ class BayesPlugin(pad.plugins.base.BasePlugin):
             self.ctxt.log.debug("bayes: forget: msgid %s not learnt, ignored",
                                 msgid)
             return False
-        tokens = self.tokenise(msg, msgdata)
+        tokens = self.tokenise(msg)
         if isspam:
             self.store.nspam_nham_change(-1, 0)
-            self.store.multi_tok_count_change(-1, 0, tokens)
+            self.store.multi_tok_count_change(-1, 0, tokens, msg.receive_date)
         else:
             self.store.nspam_nham_change(0, -1)
-            self.store.multi_tok_count_change(0, -1, tokens)
+            self.store.multi_tok_count_change(0, -1, tokens, msg.receive_date)
         # XXX check
         self.store.seen_delete(msgid)
         self.store.cleanup()
@@ -786,14 +747,14 @@ class BayesPlugin(pad.plugins.base.BasePlugin):
             return False
         return True
 
-    def tokenise(self, msg, msgdata):
+    def tokenise(self, msg):
         """Convert the message to a sequence of tokens."""
         tokens = []
-        for line in msgdata.get("bayes_token_body", []):
+        for line in self["bayes_token_body"]:
             tokens.extend(self._tokenise_line(line, "", 1))
-        for line in msgdata.get('bayes_token_uris', []):
+        for line in self['bayes_token_uris']:
             tokens.extend(self._tokenise_line(line, "", 2))
-        for line in msgdata.get('bayes_token_inviz', []):
+        for line in self['bayes_token_inviz']:
             if ADD_INVIZ_TOKENS_I_PREFIX:
                 tokens.extend(self._tokenise_line(line, "I*:", 1))
             if ADD_INVIZ_TOKENS_NO_PREFIX:
@@ -891,9 +852,9 @@ class BayesPlugin(pad.plugins.base.BasePlugin):
                     continue
 
                 if (region == 0 and HEADERS_TOKENIZE_LONG_TOKENS_AS_SKIPS) or (region == 1 and BODY_TOKENIZE_LONG_TOKENS_AS_SKIPS) or (region == 2 and URIS_TOKENIZE_LONG_TOKENS_AS_SKIPS):
-                    # SpamBayes trick via Matt: Just retain 7 chars. Do not retain
-                    # the length, it does not help; see my mail to -devel of Nov 20 2002.
-                    # "sk:" stands for "skip".
+                    # SpamBayes trick via Matt: Just retain 7 chars. Do not
+                    # retain the length, it does not help; see my mail to
+                    # -devel of Nov 20 2002. "sk:" stands for "skip".
                     token = "sk:" + token[:7]
 
             # Decompose tokens? Do this after shortening long tokens.
@@ -1137,7 +1098,7 @@ class BayesPlugin(pad.plugins.base.BasePlugin):
                         # Use Robinson's f(x) equation for low-n tokens,
                         # instead of just ignoring them.
                         robn = s + n
-                        prob = ((FW_S_DOT_X + (robn * prob)) / (FW_S_CONSTANT + robn))
+                        prob = (FW_S_DOT_X + (robn * prob)) / (FW_S_CONSTANT + robn)
             probabilities.append(prob)
         return probabilities
 
@@ -1170,15 +1131,7 @@ class BayesPlugin(pad.plugins.base.BasePlugin):
         ns, nn = self.store.nspam_nham_get()
         self.ctxt.log.debug("bayes: corpus size: nspam = %s, nham = %s", ns, nn)
         # XXX This has a timer in SA.
-        # XXX This is the equivalent of hook_parse_metadata and what we do
-        # XXX when we initialize and parse the message
-        # XXX Looks like the proper aproach for us would be to extract the
-        # XXX the variables required for tokenize like `bayes_token_uris` in
-        # XXX a local extract_metadata method and access them with
-        # XXX set_local/get_local those look like the equivalent of msgdata
-        msgdata = self.get_body_from_msg(msg)
-        # msgdata = self._get_msgdata_from_permsgstatus(msg)
-        msgtokens = list(t for t in self.tokenise(msg, msgdata))
+        msgtokens = list(t for t in self.tokenise(msg))
         tokensdata = list(d for d in self.store.tok_get_all(msgtokens))
         probabilities_ref = self._compute_prob_for_all_tokens(tokensdata, ns, nn)
         pw = {}
@@ -1203,8 +1156,7 @@ class BayesPlugin(pad.plugins.base.BasePlugin):
         # Figure out the message receive time (used as atime below)
         # If the message atime comes back as being in the future, something's
         # messed up and we should revert to current time as a safety measure.
-        # XXX What is receive_date()???
-        msgatime = self.receive_date(msg.msg)
+        msgatime = msg.receive_date
         now = time.time()
         if msgatime > now:
             msgatime = now

@@ -7,6 +7,7 @@ from builtins import dict
 from builtins import object
 
 import re
+import time
 import email
 import hashlib
 import functools
@@ -577,6 +578,20 @@ class Message(pad.context.MessageContext):
             combined.encode('utf-8')
         ).hexdigest()
         return msgid
+
+    @property
+    def receive_date(self):
+        """Get the date from the headers."""
+        received = self.msg.get_all("Received") or list()
+        for header in received:
+            try:
+                ts = header.rsplit(";", 1)[1]
+            except IndexError:
+                continue
+            ts = email.utils.parsedate(ts)
+            return time.mktime(ts)
+        # SA will look in other headers too. Perhaps we should also?
+        return time.time()
 
 
 FROM_HEADERS = ('From', "Envelope-Sender", 'Resent-From', 'X-Envelope-From',
