@@ -8,6 +8,7 @@ from builtins import object
 
 import re
 import email
+import hashlib
 import functools
 import ipaddress
 import email.utils
@@ -543,6 +544,40 @@ class Message(pad.context.MessageContext):
                 for address in self.get_all_addr_header(key):
                     yield address
 
+    @property
+    def msgid(self):
+        """Generate a unique ID for the message.
+        
+        If the message already has an ID that should be unique, in the
+        Message-ID header, then simply use that. Otherwise, generate an
+        ID from the Date header and message content."""
+        # SA potentially produces multiple IDs, and checks them both.
+        # That seems an unnecessary complication, so just return the
+        # first one that we manage to generate.
+        msgid = self.msg[u"Message-ID"]
+        if msgid and not re.match(r"^\s*<\s*(?:\@sa_generated)?>.*$", msgid):
+            # Remove \r and < and > prefix / suffixes.
+            return msgid.strip().strip(u"<").strip(u">")
+
+        # Use the hexdigest of a SHA1 hash of (Date: and top N bytes of
+        # body), where N is min(1024 bytes, 1/2 of body length).
+        date = self.msg[u"Date"] or u"None"
+        body = self.msg.as_string().split("\n\n", 1)[1]
+        if len(body) > 64:
+            keep = 1024 if len(body) > 2048 else (len(body) // 2)
+            body = body[:keep]
+
+        # Strip all CR and LF so that testing midstream from MTA and
+        # post delivery don't generate different IDs simply because of
+        # LF<->CR<->CRLF changes.
+        body = body.replace("\n", "").replace("\r", "")
+
+        combined = "{date}\x00{body}".format(date=date, body=body)
+        msgid = u"%s@sa_generated" % hashlib.sha1(
+            combined.encode('utf-8')
+        ).hexdigest()
+        return msgid
+
 
 FROM_HEADERS = ('From', "Envelope-Sender", 'Resent-From', 'X-Envelope-From',
                 'EnvelopeFrom')
@@ -551,3 +586,4 @@ TO_HEADERS = ('To', 'Resent-To', 'Resent-Cc', 'Apparently-To', 'Delivered-To',
               'Envelope-To',
               'X-Delivered-To', 'X-Original-To', 'X-Rcpt-To', 'X-Real-To',
               'Cc')
+

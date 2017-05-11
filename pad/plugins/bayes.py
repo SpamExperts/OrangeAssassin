@@ -39,8 +39,6 @@ except:
 import pad.plugins.base
 from pad.regex import Regex
 
-class NotYetImplemented(NotImplementedError):
-    pass
 
 class Chi(object):
     """Chi-squared probability combining and related constants."""
@@ -175,7 +173,7 @@ class NaiveBayes(object):
 
 # Pick ONLY ONE of these combining implementations.
 _combiner = Chi()
-#_combiner = NaiveBayes
+# _combiner = NaiveBayes
 
 combine = _combiner.combine
 FW_S_DOT_X = _combiner.FW_S_DOT_X
@@ -285,7 +283,7 @@ IGNORED_HEADERS = {header.lower() for header in {
     u"X-Pyzor",
     # XXX This needs a regular expression, but it doesn't seem worth having this
     # XXX whole check work with regular expressions just for this.
-#    ur"X-DCC-\S{2,25}-Metrics",
+    # ur"X-DCC-\S{2,25}-Metrics",
     u"X-Filtered-By",
     u"X-Scanned-By",
     u"X-Scanner",
@@ -294,7 +292,7 @@ IGNORED_HEADERS = {header.lower() for header in {
     u"X-RIPE-Spam-Status",
     # XXX This needs a regular expression, but it doesn't seem worth having this
     # XXX whole check work with regular expressions just for this.
-#    ur"X-SpamCop-[^:]+",
+    # ur"X-SpamCop-[^:]+",
     u"X-SMTPD",
     u"X-SMTPD Spam-Apparently-To",
     u"X-SMTPD X-Spam-Apparently-To",
@@ -324,7 +322,7 @@ IGNORED_HEADERS = {header.lower() for header in {
     # Annotations from Bugzilla.
     # XXX This needs a regular expression, but it doesn't seem worth having this
     # XXX whole check work with regular expressions just for this.
-#    ur"X-Bugzilla-[^:]+",
+    # ur"X-Bugzilla-[^:]+",
 
     # Annotations from VM: (thanks to Allen Smith).
     u"X-VM-Bookmark",
@@ -607,7 +605,11 @@ class Store(object):
 
         else:
             cursor = self.conn.cursor()
-            cursor.execute("SELECT spam_count, ham_count, atime FROM bayes_token WHERE token=%s", (token, ))
+            cursor.execute(
+                "SELECT spam_count, ham_count, atime "
+                "FROM bayes_token "
+                "WHERE token=%s", (token, )
+            )
             result = cursor.fetchone()
             cursor.close()
         return result
@@ -623,7 +625,10 @@ class Store(object):
         else:
             cursor = self.conn.cursor()
             for token in tokens:
-                cursor.execute("SELECT token, spam_count, ham_count, atime FROM bayes_token WHERE token=%s", (token, ))
+                cursor.execute(
+                    "SELECT token, spam_count, ham_count, atime "
+                    "FROM bayes_token WHERE token=%s", (token, )
+                )
                 yield cursor.fetchone()
             cursor.close()
 
@@ -635,7 +640,8 @@ class Store(object):
                 {'msgid': msgid}).fetchone()[0]
         else:
             cursor = self.conn.cursor()
-            cursor.execute("SELECT flag FROM bayes_seen WHERE msgid=%s", (msgid, ))
+            cursor.execute("SELECT flag FROM bayes_seen WHERE msgid=%s",
+                           (msgid,))
             result = cursor.fetchone()[0]
             cursor.close()
         return result
@@ -649,7 +655,9 @@ class Store(object):
             self.conn.commit()
         else:
             cursor = self.conn.cursor()
-            cursor.execute("UPDATE bayes_seen SET flag=%s WHERE msgid=%s", (flag, msgid))
+            cursor.execute(
+                "UPDATE bayes_seen SET flag=%s WHERE msgid=%s", (flag, msgid)
+            )
             self.conn.commit()
             cursor.close()
 
@@ -665,7 +673,9 @@ class Store(object):
             ).fetchone()
         else:
             cursor = self.conn.cursor()
-            cursor.execute("SELECT spam_count, ham_count FROM bayes_vars LIMIT 1")
+            cursor.execute(
+                "SELECT spam_count, ham_count FROM bayes_vars LIMIT 1"
+            )
             result = cursor.fetchone()
             cursor.close()
         return result
@@ -691,8 +701,8 @@ class Store(object):
             for token in tokens:
                 self.conn.execute(
                     "UPDATE bayes_token "
-                    "SET spam_count=:spam_count, ham_count=:ham_count, atime=:atime "
-                    "WHERE token=:token",
+                    "SET spam_count=:spam_count, ham_count=:ham_count, "
+                    "atime=:atime WHERE token=:token",
                     {
                         'spam_count': spam, 'ham_count': ham,
                         'atime': msgatime, 'token':token
@@ -703,7 +713,10 @@ class Store(object):
         else:
             cursor = self.conn.cursor()
             for token in tokens:
-                cursor.execute("UPDATE bayes_token SET spam_count=%s, ham_count=%s, atime=%s WHERE token=%s", (spam, ham, msgatime, token))
+                cursor.execute(
+                    "UPDATE bayes_token "
+                    "SET spam_count=%s, ham_count=%s, atime=%s "
+                    "WHERE token=%s", (spam, ham, msgatime, token))
             self.conn.commit()
             cursor.close()
 
@@ -724,15 +737,15 @@ class Store(object):
 
     def get_running_expire_tok(self):
         # We don't do opportunistic expiry at the moment.
-        raise NotYetImplemented()
+        raise NotImplementedError()
 
     def remove_running_expiry_tok(self):
         # We don't do opportunistic expiry at the moment.
-        raise NotYetImplemented()
+        raise NotImplementedError()
 
     def expiry_due(self):
         # We don't do opportunistic expiry at the moment.
-        raise NotYetImplemented()
+        raise NotImplementedError()
 
     def sync_due(self):
         """Return True if a sync is required."""
@@ -847,37 +860,6 @@ class BayesPlugin(pad.plugins.base.BasePlugin):
                     return True
         return False
 
-    def get_msgid(self, msg):
-        """Generate a unique ID for the message.
-        
-        If the message already has an ID that should be unique, in the
-        Message-ID header, then simply use that. Otherwise, generate an
-        ID from the Date header and message content."""
-        # SA potentially produces multiple IDs, and checks them both.
-        # That seems an unnecessary complication, so just return the
-        # first one that we manage to generate.
-        msgid = msg[u"Message-ID"]
-        if msgid and not re.match(r"^\s*<\s*(?:\@sa_generated)?>.*$", msgid):
-            # Remove \r and < and > prefix / suffixes.
-            return msgid.strip().strip(u"<").strip(u">")
-
-        # Use the hexdigest of a SHA1 hash of (Date: and top N bytes of
-        # body), where N is min(1024 bytes, 1/2 of body length).
-        date = msg[u"Date"] or u"None"
-        body = msg.as_string().split("\n\n", 1)[1]
-        if len(body) > 64:
-            keep = 1024 if len(body) > 2048 else (len(body) // 2)
-            body = body[:keep]
-
-        # Strip all CR and LF so that testing midstream from MTA and
-        # post delivery don't generate different IDs simply because of
-        # LF<->CR<->CRLF changes.
-        body = body.replace("\n", "").replace("\r", "")
-
-        combined = "{date}\x00{body}".format(date=date, body=body)
-        msgid = u"%s@sa_generated" % hashlib.sha1(combined.encode('utf-8')).digest()
-        return msgid
-
     def get_body_text_array_common(self, msg, method_name):
         """Common method for rendered, visible_rendered, 
         and invisible_rendered methods. """
@@ -949,22 +931,33 @@ class BayesPlugin(pad.plugins.base.BasePlugin):
         In SA this is "trapped", in that it is wrapped inside of a timeout.
         Here, it is not currently, but we may add that in the future."""
         if not msgid:
-            msgid = self.get_msgid(msg)
+            msgid = msg.msgid
         seen = self.store.seen_get(msgid)
         if seen:
             if (seen == "s" and isspam) or (seen == "h" and not isspam):
-                self.ctxt.log.debug("bayes: %s already learnt correctly, not learning twice", msgid)
+                self.ctxt.log.debug(
+                    "bayes: %s already learnt correctly, not learning twice",
+                    msgid
+                )
                 return False
             elif seen not in {"h", "s"}:
-                self.ctxt.log.warn("bayes: db_seen corrupt: value='%s' for %s, ignored", seen, msgid)
+                self.ctxt.log.warn(
+                    "bayes: db_seen corrupt: value='%s' for %s, ignored",
+                    seen, msgid
+                )
             else:
-                # Bug 3704: If the message was already learned, don't try learning it again.
-                # this prevents, for instance, manually learning as spam, then autolearning
-                # as ham, or visa versa.
+                # Bug 3704: If the message was already learned, don't try
+                # learning it again. this prevents, for instance, manually
+                # learning as spam, then autolearning as ham, or visa versa.
                 if self.learn_no_relearn:
-                    self.ctxt.log.debug("bayes: %s already learnt as opposite, not re-learning", msgid)
+                    self.ctxt.log.debug(
+                        "bayes: %s already learnt as opposite, not re-learning",
+                        msgid
+                    )
                     return False
-            self.ctxt.log.debug("bayes: %s already learnt as opposite, forgetting first", msgid)
+            self.ctxt.log.debug(
+                "bayes: %s already learnt as opposite, forgetting first", msgid
+            )
             # Kluge so that forget() won't untie the db on us ...
             orig = self.learn_caller_will_untie
             try:
@@ -976,7 +969,8 @@ class BayesPlugin(pad.plugins.base.BasePlugin):
 
             # Forget() gave us a fatal error, so propagate that up.
             if fatal is None:
-                self.ctxt.log.debug("bayes: forget() returned a fatal error, so learn() will too")
+                self.ctxt.log.debug("bayes: forget() returned a fatal error, "
+                                    "so learn() will too")
                 return
 
         # Now that we're sure we haven't seen this message before ...
@@ -1019,7 +1013,7 @@ class BayesPlugin(pad.plugins.base.BasePlugin):
         if not self["use_bayes"]:
             return
         # XXX SA wraps this in a timer.
-        if self.store.tie_db_writable():
+        if self.store.tie_db_writeable():
             ret = self._forget_trapped(msg, msgdata, msgid)
             if not self.learn_caller_will_untie:
                 self.store.untie_db()
@@ -1032,7 +1026,7 @@ class BayesPlugin(pad.plugins.base.BasePlugin):
         In SA this is "trapped", in that it is wrapped inside of a timeout.
         Here, it is not currently, but we may add that in the future."""
         if not msgid:
-            msgid = self.get_msgid(msg)
+            msgid = msg.msgid
         seen = self.store.seen_get(msgid)
         if seen:
             if seen == "s":
@@ -1040,10 +1034,13 @@ class BayesPlugin(pad.plugins.base.BasePlugin):
             elif seen == "h":
                 isspam = False
             else:
-                self.ctxt.log.debug("bayes: forget: msgid %s seen entry is neither ham nor spam but '%s', ignored", msgid, seen)
+                self.ctxt.log.debug("bayes: forget: msgid %s seen entry "
+                                    "is neither ham nor spam but '%s', ignored",
+                                    msgid, seen)
                 return False
         else:
-            self.ctxt.log.debug("bayes: forget: msgid %s not learnt, ignored", msgid)
+            self.ctxt.log.debug("bayes: forget: msgid %s not learnt, ignored",
+                                msgid)
             return False
         tokens = self.tokenise(msg, msgdata)
         if isspam:
@@ -1052,6 +1049,7 @@ class BayesPlugin(pad.plugins.base.BasePlugin):
         else:
             self.store.nspam_nham_change(0, -1)
             self.store.multi_tok_count_change(0, -1, tokens)
+        # XXX check
         self.store.seen_delete(msgid)
         self.store.cleanup()
         return True
@@ -1066,12 +1064,17 @@ class BayesPlugin(pad.plugins.base.BasePlugin):
 
         ns, nn = self.store.nspam_nham_get()
         if ns < self["bayes_min_spam_num"]:
-            self.ctxt.log.debug("bayes: not available for scanning, only %s spam(s) in bayes DB < %s", ns, self["bayes_min_spam_num"])
+            self.ctxt.log.debug(
+                "bayes: not available for scanning, only %s spam(s) in "
+                "bayes DB < %s", ns, self["bayes_min_spam_num"]
+            )
             if not self.learn_caller_will_untie:
                 self.store.untie_db()
             return False
         if nn < self["bayes_min_ham_num"]:
-            self.ctxt.log.debug("bayes: not available for scanning, only %s ham(s) in bayes DB < %s", nn, self["bayes_min_ham_num"])
+            self.ctxt.log.debug(
+                "bayes: not available for scanning, only %s ham(s) "
+                "in bayes DB < %s", nn, self["bayes_min_ham_num"])
             if not self.learn_caller_will_untie:
                 self.store.untie_db()
             return False
@@ -1106,7 +1109,8 @@ class BayesPlugin(pad.plugins.base.BasePlugin):
         # strings, and ISO-8859-15 alphas. Do not split on @'s; better
         # results keeping it.
         # Some useful tokens: "$31,000,000" "www.clock-speed.net" "f*ck" "Hits!"
-        line = re.sub(r"""-A-Za-z0-9,\@\*\!_'"\$.\241-\377""", "", line, re.DOTALL)
+        line = re.sub(r"""-A-Za-z0-9,\@\*\!_'"\$.\241-\377""", "", line,
+                      re.DOTALL)
 
         # DO split on "..." or "--" or "---"; common formatting error
         # resulting in hapaxes. Keep the separator itself as a token, though,
@@ -1147,13 +1151,29 @@ class BayesPlugin(pad.plugins.base.BasePlugin):
                 continue
 
             # - but extend the stop-list. These are squarely in the grey area,
-            # and it just slows us down to record them.
-            # See http://wiki.apache.org/spamassassin/BayesStopList for more info.
-            if re.match(r"^(?:a(?:ble|l(?:ready|l)|n[dy]|re)|b(?:ecause|oth)|c(?:an|ome)|e(?:ach|mail|ven)|f(?:ew|irst|or|rom)|give|h(?:a(?:ve|s)|ttp)|i(?:n(?:formation|to)|t\'s)|just|know|l(?:ike|o(?:ng|ok))|m(?:a(?:de|il(?:(?:ing|to))?|ke|ny)|o(?:re|st)|uch)|n(?:eed|o[tw]|umber)|o(?:ff|n(?:ly|e)|ut|wn)|p(?:eople|lace)|right|s(?:ame|ee|uch)|t(?:h(?:at|is|rough|e)|ime)|using|w(?:eb|h(?:ere|y)|ith(?:out)?|or(?:ld|k))|y(?:ears?|ou(?:(?:\'re|r))?))$/", token):
+            # and it just slows us down to record them. See
+            # http://wiki.apache.org/spamassassin/BayesStopList for more info.
+            if re.match(r"""
+            ^
+            (?:a
+            (?:ble|l(?:ready|l)|n[dy]|re)
+            |
+            b(?:ecause|oth)|c(?:an|ome)|e(?:ach|mail|ven)
+            |
+            f(?:ew|irst|or|rom)|give|h(?:a(?:ve|s)|ttp)|i(?:n(?:formation|to)|t\'s)
+            |
+            just|know|l(?:ike|o(?:ng|ok))|m(?:a(?:de|il(?:(?:ing|to))?|ke|ny)
+            |
+            o(?:re|st)|uch)|n(?:eed|o[tw]|umber)|o(?:ff|n(?:ly|e)|ut|wn)|p(?:eople|lace)
+            |
+            right|s(?:ame|ee|uch)|t(?:h(?:at|is|rough|e)|ime)|using
+            |
+            w(?:eb|h(?:ere|y)|ith(?:out)?|or(?:ld|k))|y(?:ears?|ou(?:(?:\'re|r))?)
+            )$/""", token, re.VERBOSE):
                 continue
 
             # Are we in the body? If so, apply some body-specific breakouts.
-            if (region == 1 or region == 2):
+            if region in (1, 2):
                 if CHEW_BODY_MAILADDRS and re.match(r"\S\@\S", token):
                     rettokens.append(self._tokenise_mail_addrs(token))
                 elif CHEW_BODY_URIS and re.match(r"\S\.[a-z]", token, re.I):
@@ -1267,35 +1287,40 @@ class BayesPlugin(pad.plugins.base.BasePlugin):
                     continue
 
                 # Special tokenisation for some headers:
-                if l_header in (u"message-id", u"x-message-id", u"resent-message-id"):
-                    val = self._pre_chew_message_id(val)
-                elif PRE_CHEW_ADDR_HEADERS and l_header in addr_headers:
-                    val = self._pre_chew_addr_header(val)
-                elif l_header == u"received":
-                    val = self._pre_chew_received(val)
-                elif l_header == u"content-type":
-                    val = self._pre_chew_content_type(val)
-                elif l_header == u"mime-version":
-                    val = val.replace(u"1.0", u"")  # Totally innocuous.
-                elif l_leader in MARK_PRESENCE_ONLY_HDRS:
-                    val = "1"  # Just mark the presence, they create lots of hapaxen.
-
-                if MAP_HEADERS_MID and l_header in {u"in-reply-to", u"references", u"message-id"}:
-                    parsed[u"*MI"] = val
-                if MAP_HEADERS_FROMTOCC and l_header in {u"from", u"to", u"cc"}:
-                    parsed[u"*Ad"] = val
-                if MAP_HEADERS_USERAGENT and l_header in {u"x-mailer", u"user-agent"}:
-                    parsed[u"*UA"] = val
-
-                # Replace header name with "compressed" version if possible.
-                header = HEADER_NAME_COMPRESSION.get(header, header)
-
-                if header in parsed:
-                    parsed[header] = u"%s %s" % (parsed[hdr], val)
-                else:
-                    parsed[header] = val
-                logger.debug(u'bayes: header tokens for %s = "%s"' % (header, parsed[header]))
+                header = self._parse_special_header(addr_headers, header, l_header,
+                                                    parsed, val)
         return parsed
+
+    def _parse_special_header(self, addr_headers, header, l_header, parsed, val):
+        if l_header in (u"message-id", u"x-message-id", u"resent-message-id"):
+            val = self._pre_chew_message_id(val)
+        elif PRE_CHEW_ADDR_HEADERS and l_header in addr_headers:
+            val = self._pre_chew_addr_header(val)
+        elif l_header == u"received":
+            val = self._pre_chew_received(val)
+        elif l_header == u"content-type":
+            val = self._pre_chew_content_type(val)
+        elif l_header == u"mime-version":
+            val = val.replace(u"1.0", u"")  # Totally innocuous.
+        elif l_header in MARK_PRESENCE_ONLY_HDRS:
+            val = "1"  # Just mark the presence, they create lots of hapaxen.
+        if MAP_HEADERS_MID and l_header in {u"in-reply-to", u"references",
+                                            u"message-id"}:
+            parsed[u"*MI"] = val
+        if MAP_HEADERS_FROMTOCC and l_header in {u"from", u"to", u"cc"}:
+            parsed[u"*Ad"] = val
+        if MAP_HEADERS_USERAGENT and l_header in {u"x-mailer", u"user-agent"}:
+            parsed[u"*UA"] = val
+
+        # Replace header name with "compressed" version if possible.
+        header = HEADER_NAME_COMPRESSION.get(header, header)
+        if header in parsed:
+            parsed[header] = u"%s %s" % (parsed[header], val)
+        else:
+            parsed[header] = val
+        self.ctxt.log.debug(
+            u'bayes: header tokens for %s = "%s"' % (header, parsed[header]))
+        return header
 
     @staticmethod
     def _pre_chew_content_type(val):
@@ -1328,7 +1353,8 @@ class BayesPlugin(pad.plugins.base.BasePlugin):
         val = re.sub(r"<[A-Za-z0-9]{7}-[A-Za-z0-9]{6}-0[A-Za-z0-9]\@", "", val)
 
         # Sendmail:
-        val = re.sub(r"<20\d\d[01]\d[0123]\d[012]\d[012345]\d[012345]\d\.[A-F0-9]{10,12}\@", "", val)
+        val = re.sub(r"<20\d\d[01]\d[0123]\d[012]\d[012345]"
+                     r"\d[012345]\d\.[A-F0-9]{10,12}\@", "", val)
 
         # Try to split Message-ID segments on probable ID boundaries. Note that
         # Outlook message-ids seem to contain a server identifier ID in the last
@@ -1344,7 +1370,8 @@ class BayesPlugin(pad.plugins.base.BasePlugin):
         val = re.sub(r"\swith\sSMTP\sid\sg[\dA-Z]{10,12}\s", " ", val)  # Sendmail
         val = re.sub(r"\swith\sESMTP\sid\s[\dA-F]{10,12}\s", " ", val)  # Sendmail
         val = re.sub(r"\bid\s[a-zA-Z0-9]{7,20}\b", " ", val)  # Sendmail
-        val = re.sub(r"\bid\s[A-Za-z0-9]{7}-[A-Za-z0-9]{6}-0[A-Za-z0-9]", " ", val)  # Exim
+        val = re.sub(r"\bid\s[A-Za-z0-9]{7}-[A-Za-z0-9]{6}-0[A-Za-z0-9]",
+                     " ", val)  # Exim
 
         val = re.sub(
             r"(?:(?:Mon|Tue|Wed|Thu|Fri|Sat|Sun),\s)?"
@@ -1368,8 +1395,7 @@ class BayesPlugin(pad.plugins.base.BasePlugin):
         val = re.sub(r"\b(?:with|from|for|SMTP|ESMTP)\b", " ", val)
         return val
 
-    @staticmethod
-    def _pre_chew_addr_header(val):
+    def _pre_chew_addr_header(self, val):
         addrs = []
         for addr in self.find_all_addrs_in_line(val):
             addrs.extend(self._tokenise_mail_addrs(addr))
@@ -1404,11 +1430,13 @@ class BayesPlugin(pad.plugins.base.BasePlugin):
             # TODO: Find test_log implementation.
             if self["detailed_bayes_score"]:
                 pass
-                # XXX This seems to append to the report output when the -t parameter is given
+                # XXX This seems to append to the report output
+                # XXX when the -t parameter is given
                 # test_log("score: %3.4f, hits: %s" % (bayes_score, bayes_hits))
             else:
                 pass
-                # XXX This seems to append to the report output when the -t parameter is given
+                # XXX This seems to append to the report output
+                # XXX when the -t parameter is given
                 # test_log("score: %3.4f" % bayes_score)
             return True
         return False
@@ -1498,8 +1526,9 @@ class BayesPlugin(pad.plugins.base.BasePlugin):
         # If none of the tokens were found in the DB, we're going to skip
         # this message...
         if not pw:
-            self.ctxt.log.debug("bayes: cannot use bayes on this message; none of the tokens were found in the database")
-            return self._skip_scan(msg, score, caller_untie)
+            self.ctxt.log.debug("bayes: cannot use bayes on this message; "
+                                "none of the tokens were found in the database")
+            return self._skip_scan(msg, None, caller_untie)
 
         tcount_total = len(msgtokens)
         self.set_local(msg, "count", tcount_total)
@@ -1558,8 +1587,10 @@ class BayesPlugin(pad.plugins.base.BasePlugin):
 
             self.ctxt.log.debug("bayes: token '%s' => %s", raw_token, pw_prob)
 
-        if not sorted_tokens or (REQUIRE_SIGNIFICANT_TOKENS_TO_SCORE > 0 and len(sorted_tokens) <= REQUIRE_SIGNIFICANT_TOKENS_TO_SCORE):
-            self.ctxt.log.debug("bayes: cannot use bayes on this message; not enough usable tokens found")
+
+        if not sorted_tokens or (0 < len(sorted_tokens) <= REQUIRE_SIGNIFICANT_TOKENS_TO_SCORE):
+            self.ctxt.log.debug("bayes: cannot use bayes on this message; "
+                                "not enough usable tokens found")
             return self._skip_scan(msg, None, caller_untie)
 
         score = combine(ns, nn, sorted_tokens)
@@ -1589,13 +1620,16 @@ class BayesPlugin(pad.plugins.base.BasePlugin):
         # XXX Although it is possible to do this by calling the wlbleval plugin
         # XXX I think it's better if we copy that small function and not
         # XXX depend on it, or even better move the code somewhere common
-        ig_from = self.check_address_in_list(msg.get_from_addresses(), "bayes_ignore_from")
-        ig_to = self.check_address_in_list(msg.get_to_addresses(), "bayes_ignore_to")
+        ig_from = self.check_address_in_list(msg.get_from_addresses(),
+                                             "bayes_ignore_from")
+        ig_to = self.check_address_in_list(msg.get_to_addresses(),
+                                           "bayes_ignore_to")
 
         ignore = ig_from or ig_to
 
         if ignore:
-            self.ctxt.log.debug("bayes: not using bayes, bayes_ignore_from or _to rule")
+            self.ctxt.log.debug("bayes: not using bayes, "
+                                "bayes_ignore_from or _to rule")
 
         return ignore
 
@@ -1607,7 +1641,9 @@ class BayesPlugin(pad.plugins.base.BasePlugin):
             s, n = self.store.tok_get(token)[:2]
         if not s and not n:
             return
-        probabilities_ref = self._compute_prob_for_all_tokens([[token, s, n, 0]], ns, nn)
+        probabilities_ref = self._compute_prob_for_all_tokens(
+            [[token, s, n, 0]], ns, nn
+        )
         return probabilities_ref[0]
 
     def _compute_declassification_distance(self, Ns, Nn, ns, nn, prob):
@@ -1640,7 +1676,7 @@ class BayesPlugin(pad.plugins.base.BasePlugin):
         p = 0.5 - MIN_PROB_STRENGTH
 
         if not USE_ROBINSON_FX_EQUATION_FOR_LOW_FREQS:
-            return int(1.0 - 1e-6 + nb * Na * p / (Nb * ( 1 - p))) - na
+            return int(1.0 - 1e-6 + nb * Na * p / (Nb * (1 - p))) - na
 
         s = FW_S_CONSTANT
         sx = FW_S_DOT_X
@@ -1653,7 +1689,6 @@ class BayesPlugin(pad.plugins.base.BasePlugin):
 
         # This shouldn't be necessary. Should not be < 1.
         return 1 if dd_exact < 1 else int(dd_exact)
-
 
     def bayes_report_make_list(self, pms, info, param):
         if not info:
@@ -1672,7 +1707,7 @@ class BayesPlugin(pad.plugins.base.BasePlugin):
         }
 
         try:
-            raw_fmt = formats[fmt_arg] if fmt_arg else "$p-$D--$t"
+            raw_fmt = formats[ftm_arg] if ftm_arg else "$p-$D--$t"
         except KeyError:
             return "Invalid format, must be one of: %s" % (",".join(formats))
 
