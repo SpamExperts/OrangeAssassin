@@ -674,6 +674,20 @@ class Store(object):
             cursor.close()
         return result
 
+    def seen_delete(self, id, msgid):
+        if has_sqlalchemy:
+            self.conn.execute(
+                "DELETE FROM bayes_seen WHERE msgid = :msgid",
+                {"msgid": msgid}
+            )
+        else:
+            cursor = self.conn.cursor()
+            cursor.execute(
+                "DELETE FROM bayes_seen WHERE msgid = %s",
+                (msgid,)
+            )
+            cursor.close()
+
     def seen_put(self, msgid, flag):
         """Set the "seen" flag for the specified message."""
         if has_sqlalchemy:
@@ -1265,7 +1279,7 @@ class BayesPlugin(pad.plugins.base.BasePlugin):
         # huge) and can be appropriately converted to a string.
 
         for header in headers:
-            values = msg.get_all(header)
+            values = msg.msg.get_all(header)
             if header.lower() == u"received":
                 # Use only the last 2 received lines: usually a good source of
                 # spamware tokens and HELO names.
@@ -1340,7 +1354,7 @@ class BayesPlugin(pad.plugins.base.BasePlugin):
             r"<([0-9a-f]{4})[0-9a-f]{4}[0-9a-f]{4}\$"
             r"([0-9a-f]{4})[0-9a-f]{4}\$"
             r"([0-9a-f]{8})\@(\S+)>",
-            r" OEA\1 OEB\2 OEC\3 \4 ")
+            r" OEA\1 OEB\2 OEC\3 \4 ", val)
 
         # Exim:
         val = re.sub(r"<[A-Za-z0-9]{7}-[A-Za-z0-9]{6}-0[A-Za-z0-9]\@", "", val)
@@ -1543,7 +1557,8 @@ class BayesPlugin(pad.plugins.base.BasePlugin):
         tinfo_hammy = []
         self.set_local(msg, "bayes_token_info_hammy", tinfo_hammy)
 
-        tok_strength = {key: abs(value["prob"] - 0.5) for key, value in pw.items()}
+        tok_strength = {key: abs(value["prob"] - 0.5)
+                        for key, value in pw.items()}
 
         # Now take the most significant tokens and calculate probs using
         # Robinson's formula.
