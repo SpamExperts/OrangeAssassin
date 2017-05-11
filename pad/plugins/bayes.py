@@ -136,8 +136,8 @@ class Chi(object):
         S = ln(S) + Sexp * cls.LN2
         H = ln(H) + Hexp * cls.LN2
 
-        S = 1.0 - cls.chi2Q(-2.0 * S, n)
-        H = 1.0 - cls.chi2Q(-2.0 * H, n)
+        S = 1.0 - cls.chi2Q(-2.0 * S, len(sortedref))
+        H = 1.0 - cls.chi2Q(-2.0 * H, len(sortedref))
         prob = (S - H + 1.0) / 2.0
         return prob
 
@@ -1573,13 +1573,13 @@ class BayesPlugin(pad.plugins.base.BasePlugin):
         for tok in pw_keys:
             if tok_strength[tok] < MIN_PROB_STRENGTH:
                 continue
-            pw_tok = pw[tok]
+            pw_tok = pw.get(tok)
             pw_prob = pw_tok["prob"]
 
             # What's more expensive, scanning headers for HAMMYTOKENS and
             # SPAMMYTOKENS tags that aren't there or collecting data that
             # won't be used?  Just collecting the data is certainly simpler.
-            raw_token = pw[tok] or "(unknown)"
+            raw_token = pw_tok or "(unknown)"
             s = pw_tok["spam_count"]
             n = pw_tok["ham_count"]
             a = pw_tok["atime"]
