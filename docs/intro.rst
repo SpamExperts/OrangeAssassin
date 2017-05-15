@@ -2,12 +2,12 @@
 Introduction
 ************
 
-SpamPAD is a open-source drop-in replacement for SpamAssassin.
+OrangeAssassin is an open-source drop-in replacement for SpamAssassin.
 
 Compatibility
 =============
 
-SpamPAD is compatible with the following Python versions:
+OrangeAssassin is compatible with the following Python versions:
 
 * Python 2.7
 * Python 3.2 and later
@@ -17,17 +17,17 @@ SpamPAD is compatible with the following Python versions:
 Contribute
 ==========
 
-- `Issue Tracker <http://github.com/SpamExperts/SpamPAD/issues>`_
-- `Source Code <http://github.com/SpamExperts/SpamPAD>`_
+- `Issue Tracker <http://github.com/SpamExperts/OrangeAssassin/issues>`_
+- `Source Code <http://github.com/SpamExperts/OrangeAssassin>`_
 
 Getting the source
 ==================
 
 To clone the repository using git simply run::
 
-    git clone https://github.com/SpamExperts/SpamPAD
+    git clone https://github.com/SpamExperts/OrangeAssassin
 
-Please feel free to `fork us <https://github.com/SpamExperts/SpamPAD/fork>`_
+Please feel free to `fork us <https://github.com/SpamExperts/OrangeAssassin/fork>`_
 and submit your pull requests.
 
 Running tests
@@ -50,15 +50,15 @@ To run the project's tests you will need to first:
     Some requirements (e.g. Pillow) require some additional build
     dependencies when installing them.
 
-The SpamPAD tests are split into *unittest* and *functional* tests.
+The OrangeAssassin tests are split into *unittest* and *functional* tests.
 
 *Unitests* perform checks against the current source code and **not**
-the installed version of SpamPAD. To run all the unittests suite::
+the installed version of OrangeAssassin. To run all the unittests suite::
 
     py.test tests/unit/
 
 *Functional* tests perform checks against the installed version of
-SpamPAD and **not** the current source code. These are more extensive
+OrangeAssassin and **not** the current source code. These are more extensive
 and generally take longer to run. They also might need special setup.
 To run the full suite of functional tests::
 
@@ -79,10 +79,10 @@ An example for Python3 would be:
 .. code-block:: bash
 
     sudo apt-get install python3-dev libjpeg-dev build-essential zlib1g-dev
-    virtualenv -p /usr/bin/python3 ~/pad-env
-    source ~/pad-env/bin/activate
-    git clone https://github.com/SpamExperts/SpamPAD
-    cd SpamPAD
+    virtualenv -p /usr/bin/python3 ~/oa-env
+    source ~/oa-env/bin/activate
+    git clone https://github.com/SpamExperts/OrangeAssassin
+    cd OrangeAssassin
     pip install sqlalchemy || pip install pymysql
     pip install -r requirements/base.txt
     pip install -r requirements/python3.txt
@@ -108,7 +108,7 @@ In order to build the documentation based on the docs files from the
 repository:
 
 #. Run the same steps for running the tests (including installing all
-   requirements, installing SpamPAD, etc.).
+   requirements, installing OrangeAssassin, etc.).
 #. Install the documentation libraries from `requirements/docs.txt`
 #. Change directory to `docs`
 #. Run `make html`
@@ -126,5 +126,5 @@ License
 =======
 
 This program is free software; you can redistribute it and/or modify it under
-the terms of the GNU General Public License `version 2 <http://www.gnu.org/licenses/gpl-2.0.html>`_
+the terms of the Apache Software Foundation License `version 2 <https://www.apache.org/licenses/LICENSE-2.0>`_
 only of the License.

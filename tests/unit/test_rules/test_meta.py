@@ -7,8 +7,8 @@ try:
 except ImportError:
     from mock import patch, Mock, MagicMock, call
 
-import pad.errors
-import pad.rules.meta
+import oa.errors
+import oa.rules.meta
 
 
 class TestMetaRule(unittest.TestCase):
@@ -22,25 +22,25 @@ class TestMetaRule(unittest.TestCase):
 
     def test_init(self):
         perlrule = "TEST_1 && TEST_2"
-        rule = pad.rules.meta.MetaRule("TEST", perlrule)
+        rule = oa.rules.meta.MetaRule("TEST", perlrule)
         self.assertEqual(rule.rule, perlrule)
 
     def test_postparsing(self):
         perlrule = "TEST_1 && TEST_2"
-        rule = pad.rules.meta.MetaRule("TEST", perlrule)
+        rule = oa.rules.meta.MetaRule("TEST", perlrule)
         mock_ruleset = MagicMock()
         result = rule.postparsing(mock_ruleset)
         self.assertEqual(result, None)
 
     def test_postparsing_no_match(self):
         perlrule = "TEST_1"
-        rule = pad.rules.meta.MetaRule("TEST", perlrule)
+        rule = oa.rules.meta.MetaRule("TEST", perlrule)
         mock_ruleset = MagicMock()
         self.assertRaises(AssertionError, rule.postparsing(mock_ruleset))
 
     def test_match(self):
         mock_match = Mock(return_value=True)
-        rule = pad.rules.meta.MetaRule("TEST", "None")
+        rule = oa.rules.meta.MetaRule("TEST", "None")
         rule._location["match"] = mock_match
         result = rule.match(self.mock_msg)
 
@@ -49,7 +49,7 @@ class TestMetaRule(unittest.TestCase):
 
     def test_match_notmatched(self):
         mock_match = Mock(return_value=False)
-        rule = pad.rules.meta.MetaRule("TEST", "None")
+        rule = oa.rules.meta.MetaRule("TEST", "None")
         rule._location["match"] = mock_match
         result = rule.match(self.mock_msg)
 
@@ -59,7 +59,7 @@ class TestMetaRule(unittest.TestCase):
     def test_get_rule_kwargs(self):
         data = {"value": "TEST_1 && TEST_2"}
         expected = {"rule": "TEST_1 && TEST_2"}
-        kwargs = pad.rules.meta.MetaRule.get_rule_kwargs(data)
+        kwargs = oa.rules.meta.MetaRule.get_rule_kwargs(data)
         self.assertEqual(kwargs, expected)
 
 

@@ -2,10 +2,10 @@
 
 from __future__ import print_function, absolute_import
 
-import pad.plugins.base
+import oa.plugins.base
 
 
-class TestPluginReportRevoke(pad.plugins.base.BasePlugin):
+class TestPluginReportRevoke(oa.plugins.base.BasePlugin):
     """Sample plugin that can be used for testing."""
     options = {}
     eval_rules = ()

@@ -5,7 +5,7 @@ import unittest
 import tests.util
 
 PRE_CONFIG = """
-loadplugin pad.plugins.dkim.DKIMPlugin
+loadplugin oa.plugins.dkim.DKIMPlugin
 report _SCORE_
 report _TESTS_
 """

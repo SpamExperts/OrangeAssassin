@@ -12,7 +12,7 @@ try:
 except ImportError:
     from mock import patch, Mock, MagicMock, call
 
-import pad.plugins
+import oa.plugins
 
 
 class PDFInfoBase(unittest.TestCase):
@@ -24,7 +24,7 @@ class PDFInfoBase(unittest.TestCase):
         self.options = {}
         self.global_data = {}
         self.msg_data = {}
-        patch("pad.plugins.pdf_info.PDFInfoPlugin.options",
+        patch("oa.plugins.pdf_info.PDFInfoPlugin.options",
               self.options).start()
         self.mock_ctxt = MagicMock(**{
             "get_plugin_data.side_effect": lambda p, k: self.msg_data[k],
@@ -37,7 +37,7 @@ class PDFInfoBase(unittest.TestCase):
             "side_effect": lambda p, k, v: self.msg_data.update({k: v}),
         })
         self.mock_msg.msg = None
-        self.plugin = pad.plugins.pdf_info.PDFInfoPlugin(self.mock_ctxt)
+        self.plugin = oa.plugins.pdf_info.PDFInfoPlugin(self.mock_ctxt)
 
     def tearDown(self):
         unittest.TestCase.tearDown(self)
@@ -47,9 +47,9 @@ class PDFInfoBase(unittest.TestCase):
 class TestPDFInfo(PDFInfoBase):
     """Tests for the metadata extract and _save_stats"""
     def test_extract_metadata(self):
-        patch("pad.plugins.pdf_info.PDFInfoPlugin._add_name").start()
-        patch("pad.plugins.pdf_info.PDFInfoPlugin._update_counts").start()
-        patch("pad.plugins.pdf_info.PDFInfoPlugin._save_stats").start()
+        patch("oa.plugins.pdf_info.PDFInfoPlugin._add_name").start()
+        patch("oa.plugins.pdf_info.PDFInfoPlugin._update_counts").start()
+        patch("oa.plugins.pdf_info.PDFInfoPlugin._save_stats").start()
         add_name_calls = []
         update_counts_calls = []
         save_stats_calls = []
@@ -93,11 +93,11 @@ class TestPDFInfo(PDFInfoBase):
 
     def test_save_stats(self):
         """Test the _save_stats method"""
-        patch("pad.plugins.pdf_info.PDFInfoPlugin._update_details").start()
+        patch("oa.plugins.pdf_info.PDFInfoPlugin._update_details").start()
         patch(
-            "pad.plugins.pdf_info.PDFInfoPlugin._update_image_counts").start()
+            "oa.plugins.pdf_info.PDFInfoPlugin._update_image_counts").start()
         patch(
-            "pad.plugins.pdf_info.PDFInfoPlugin._update_pixel_coverage").start()
+            "oa.plugins.pdf_info.PDFInfoPlugin._update_pixel_coverage").start()
         datastore = BytesIO()
         with open("tests/data/pdftest.pdf", "rb") as pdf_file:
             datastore.write(pdf_file.read())
@@ -131,11 +131,11 @@ class TestPDFInfo(PDFInfoBase):
 
     def test_save_stats_text(self):
         """Test the _save_stats method"""
-        patch("pad.plugins.pdf_info.PDFInfoPlugin._update_details").start()
+        patch("oa.plugins.pdf_info.PDFInfoPlugin._update_details").start()
         patch(
-            "pad.plugins.pdf_info.PDFInfoPlugin._update_image_counts").start()
+            "oa.plugins.pdf_info.PDFInfoPlugin._update_image_counts").start()
         patch(
-            "pad.plugins.pdf_info.PDFInfoPlugin._update_pixel_coverage").start()
+            "oa.plugins.pdf_info.PDFInfoPlugin._update_pixel_coverage").start()
         datastore = BytesIO()
         with open("tests/data/pdftest_text.pdf", "rb") as pdf_file:
             datastore.write(pdf_file.read())
@@ -163,11 +163,11 @@ class TestPDFInfo(PDFInfoBase):
 
     def test_save_stats_encrypted(self):
         """Test the _save_stats method"""
-        patch("pad.plugins.pdf_info.PDFInfoPlugin._update_details").start()
+        patch("oa.plugins.pdf_info.PDFInfoPlugin._update_details").start()
         patch(
-            "pad.plugins.pdf_info.PDFInfoPlugin._update_image_counts").start()
+            "oa.plugins.pdf_info.PDFInfoPlugin._update_image_counts").start()
         patch(
-            "pad.plugins.pdf_info.PDFInfoPlugin._update_pixel_coverage").start()
+            "oa.plugins.pdf_info.PDFInfoPlugin._update_pixel_coverage").start()
         datastore = BytesIO()
         with open("tests/data/pdftest_encrypted.pdf", "rb") as pdf_file:
             datastore.write(pdf_file.read())
@@ -418,7 +418,7 @@ class TestPDFDetails(PDFInfoBase):
         """Test the match_details method when regex is wrong"""
         pdf_id = "1234567890"
         self.plugin._update_details(self.mock_msg, pdf_id, "author", "test")
-        with self.assertRaises(pad.errors.InvalidRegex):
+        with self.assertRaises(oa.errors.InvalidRegex):
             self.plugin.pdf_match_details(self.mock_msg, "author", r".*")
 
 

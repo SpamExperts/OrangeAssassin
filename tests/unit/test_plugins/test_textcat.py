@@ -7,7 +7,7 @@ try:
 except ImportError:
     from mock import patch, Mock, MagicMock
 
-import pad.plugins.textcat
+import oa.plugins.textcat
 
 
 class TestTextCat(unittest.TestCase):
@@ -16,7 +16,7 @@ class TestTextCat(unittest.TestCase):
     def setUp(self):
         unittest.TestCase.setUp(self)
         self.mock_detect_langs = patch(
-                "pad.plugins.textcat.langdetect.detect_langs").start()
+                "oa.plugins.textcat.langdetect.detect_langs").start()
         self.mock_msg = MagicMock()
         self.msg_data = {}
         self.global_data = {
@@ -45,7 +45,7 @@ class TestTextCat(unittest.TestCase):
     def test_all_ok(self):
         self.mock_detect_langs.return_value = [Mock(lang="en", prob=0.99)]
 
-        plugin = pad.plugins.textcat.TextCatPlugin(self.mock_ctxt)
+        plugin = oa.plugins.textcat.TextCatPlugin(self.mock_ctxt)
         result = plugin.check_language(self.mock_msg)
         self.assertEqual(result, False)
 
@@ -53,7 +53,7 @@ class TestTextCat(unittest.TestCase):
         self.mock_detect_langs.return_value = [Mock(lang="en", prob=0.99)]
         self.global_data["ok_languages"] = ["en"]
 
-        plugin = pad.plugins.textcat.TextCatPlugin(self.mock_ctxt)
+        plugin = oa.plugins.textcat.TextCatPlugin(self.mock_ctxt)
         result = plugin.check_language(self.mock_msg)
         self.assertEqual(result, False)
 
@@ -61,7 +61,7 @@ class TestTextCat(unittest.TestCase):
         self.mock_detect_langs.return_value = [Mock(lang="fr", prob=0.99)]
         self.global_data["ok_languages"] = ["en"]
 
-        plugin = pad.plugins.textcat.TextCatPlugin(self.mock_ctxt)
+        plugin = oa.plugins.textcat.TextCatPlugin(self.mock_ctxt)
         result = plugin.check_language(self.mock_msg)
         self.assertEqual(result, True)
 
@@ -70,7 +70,7 @@ class TestTextCat(unittest.TestCase):
                                                Mock(lang="en", prob=0.71)]
         self.global_data["ok_languages"] = ["en", "fr"]
 
-        plugin = pad.plugins.textcat.TextCatPlugin(self.mock_ctxt)
+        plugin = oa.plugins.textcat.TextCatPlugin(self.mock_ctxt)
         result = plugin.check_language(self.mock_msg)
         self.assertEqual(result, False)
 
@@ -79,7 +79,7 @@ class TestTextCat(unittest.TestCase):
                                                Mock(lang="en", prob=0.71)]
         self.global_data["ok_languages"] = ["en", "fr"]
 
-        plugin = pad.plugins.textcat.TextCatPlugin(self.mock_ctxt)
+        plugin = oa.plugins.textcat.TextCatPlugin(self.mock_ctxt)
         result = plugin.check_language(self.mock_msg)
         self.assertEqual(result, True)
 
@@ -90,7 +90,7 @@ class TestTextCat(unittest.TestCase):
         self.global_data["ok_languages"] = ["en", "fr"]
         self.global_data["textcat_max_languages"] = 2
 
-        plugin = pad.plugins.textcat.TextCatPlugin(self.mock_ctxt)
+        plugin = oa.plugins.textcat.TextCatPlugin(self.mock_ctxt)
         result = plugin.check_language(self.mock_msg)
         self.assertEqual(result, False)
 
@@ -99,12 +99,12 @@ class TestTextCat(unittest.TestCase):
                                                Mock(lang="en", prob=0.71)]
         self.global_data["ok_languages"] = ["en", "fr"]
 
-        plugin = pad.plugins.textcat.TextCatPlugin(self.mock_ctxt)
+        plugin = oa.plugins.textcat.TextCatPlugin(self.mock_ctxt)
         result = plugin.check_language(self.mock_msg)
         self.assertEqual(result, False)
 
     def test_set_list_option(self):
-        plugin = pad.plugins.textcat.TextCatPlugin(self.mock_ctxt)
+        plugin = oa.plugins.textcat.TextCatPlugin(self.mock_ctxt)
         plugin.set_list_option("my_key", "test1 test2 test3")
 
         self.mock_ctxt.set_plugin_data.assert_called_with(

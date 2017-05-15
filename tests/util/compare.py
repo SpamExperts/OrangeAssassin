@@ -2,7 +2,7 @@
 from __future__ import print_function
 import subprocess
 
-spampad_args = [
+OrangeAssassin_args = [
     "./scripts/match.py",
     "-d",
     "-S",
@@ -24,7 +24,7 @@ spamassassin_args = [
     "tests/data/debug.eml"
 ]
 
-for args in (spampad_args, spamassassin_args):
+for args in (OrangeAssassin_args, spamassassin_args):
     print(" ".join(args))
     output = subprocess.check_output(args)
     print(output)

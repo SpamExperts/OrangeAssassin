@@ -21,7 +21,7 @@ before_script:
   - mkdir -p shippable/codecoverage
 
 script:
-  - py.test tests/ --cov pad --cov scripts --cov-report term-missing --junit-xml=shippable/testresults/py.test.xml
+  - py.test tests/ --cov oa --cov scripts --cov-report term-missing --junit-xml=shippable/testresults/py.test.xml
 after_script:
   - coverage xml -o shippable/codecoverage/coverage.xml
 

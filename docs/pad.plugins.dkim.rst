@@ -48,7 +48,7 @@ Options
     Removes an email address with its corresponding signing-domain field from
     def_whitelist_from_dkim and whitelist_from_dkim tables, if it exists.
 **adsp_override** [] (type `list`)
-    To override domain's signing practices in a SpamPad configuration file,
+    To override domain's signing practices in a OrangeAssassin configuration file,
     specify an adsp_override directive for each sending domain to be overridden.
     An optional second parameter is one of the following keywords:
     nxdomain, unknown, all, discardable, custom_low, custom_med, custom_high.
@@ -77,4 +77,4 @@ EVAL rules
 Tags
 ====
 
-<Describe TAGS>
+None

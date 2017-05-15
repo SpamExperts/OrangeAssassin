@@ -8,7 +8,7 @@ try:
 except ImportError:
     from mock import patch, Mock, MagicMock, call
 
-import pad.plugins.spf
+import oa.plugins.spf
 
 
 class TestParsed(unittest.TestCase):
@@ -30,12 +30,12 @@ class TestParsed(unittest.TestCase):
                                                   v: self.msg_data.
                                   setdefault(k, v),
         })
-        self.mock_rcvd_headers = patch("pad.plugins.spf."
+        self.mock_rcvd_headers = patch("oa.plugins.spf."
                                        "SpfPlugin.received_headers").start()
-        self.mock_check_spf = patch("pad.plugins.spf."
+        self.mock_check_spf = patch("oa.plugins.spf."
                                        "SpfPlugin.check_spf_header").start()
 
-        self.plug = pad.plugins.spf.SpfPlugin(self.mock_ctxt)
+        self.plug = oa.plugins.spf.SpfPlugin(self.mock_ctxt)
 
     def tearDown(self):
         unittest.TestCase.tearDown(self)
@@ -91,17 +91,17 @@ class TestCheckSPF(unittest.TestCase):
                                   setdefault(k, v),
         })
 
-        self.mock_check_whitelist = patch("pad.plugins.spf.SpfPlugin."
+        self.mock_check_whitelist = patch("oa.plugins.spf.SpfPlugin."
                                           "check_spf_whitelist").start()
         #
         self.mock_check_spf_received_header = patch(
-            "pad.plugins.spf.SpfPlugin.check_spf_received_header").start()
+            "oa.plugins.spf.SpfPlugin.check_spf_received_header").start()
         self.mock_check_authres_header = patch(
-            "pad.plugins.spf.SpfPlugin.check_authres_header").start()
+            "oa.plugins.spf.SpfPlugin.check_authres_header").start()
         self.mock_received_header = patch(
-            "pad.plugins.spf.SpfPlugin.received_headers").start()
+            "oa.plugins.spf.SpfPlugin.received_headers").start()
 
-        self.plug = pad.plugins.spf.SpfPlugin(self.mock_ctxt)
+        self.plug = oa.plugins.spf.SpfPlugin(self.mock_ctxt)
 
     def tearDown(self):
         unittest.TestCase.tearDown(self)
@@ -242,12 +242,12 @@ class TestCheckWhitelist(unittest.TestCase):
                                   setdefault(k, v),
         })
 
-        self.mock_parse_list = patch("pad.plugins.spf.SpfPlugin."
+        self.mock_parse_list = patch("oa.plugins.spf.SpfPlugin."
                                           "parse_list").start()
-        self.mock_check_for_spf_pass = patch("pad.plugins.spf.SpfPlugin."
+        self.mock_check_for_spf_pass = patch("oa.plugins.spf.SpfPlugin."
                                      "check_for_spf_pass").start()
 
-        self.plug = pad.plugins.spf.SpfPlugin(self.mock_ctxt)
+        self.plug = oa.plugins.spf.SpfPlugin(self.mock_ctxt)
 
     def tearDown(self):
         unittest.TestCase.tearDown(self)
@@ -301,10 +301,10 @@ class TestReceivedHeaders(unittest.TestCase):
                                   setdefault(k, v),
         })
 
-        self.mock_query_spf = patch("pad.plugins.spf.SpfPlugin."
+        self.mock_query_spf = patch("oa.plugins.spf.SpfPlugin."
                                      "_query_spf").start()
 
-        self.plug = pad.plugins.spf.SpfPlugin(self.mock_ctxt)
+        self.plug = oa.plugins.spf.SpfPlugin(self.mock_ctxt)
 
     def tearDown(self):
         unittest.TestCase.tearDown(self)
@@ -389,10 +389,10 @@ class TestCheckHeaders(unittest.TestCase):
                                   setdefault(k, v),
         })
 
-        self.mock_query_spf = patch("pad.plugins.spf.SpfPlugin."
+        self.mock_query_spf = patch("oa.plugins.spf.SpfPlugin."
                                     "_query_spf").start()
 
-        self.plug = pad.plugins.spf.SpfPlugin(self.mock_ctxt)
+        self.plug = oa.plugins.spf.SpfPlugin(self.mock_ctxt)
 
     def tearDown(self):
         unittest.TestCase.tearDown(self)

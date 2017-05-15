@@ -3,14 +3,14 @@ from builtins import str
 
 import unittest
 import ipaddress
-import pad.networks
+import oa.networks
 
 
 
 class TrustedNetworkTest(unittest.TestCase):
 
     def setUp(self):
-        self.network = pad.networks.TrustedNetworks()
+        self.network = oa.networks.TrustedNetworks()
 
     def tearDown(self):
         pass
@@ -41,7 +41,7 @@ class TrustedNetworkTest(unittest.TestCase):
 class InternalNetworkTest(unittest.TestCase):
 
     def setUp(self):
-        self.network = pad.networks.InternalNetworks()
+        self.network = oa.networks.InternalNetworks()
 
     def tearDown(self):
         pass
@@ -73,7 +73,7 @@ class InternalNetworkTest(unittest.TestCase):
 class MSANetworkTest(unittest.TestCase):
 
     def setUp(self):
-        self.network = pad.networks.MSANetworks()
+        self.network = oa.networks.MSANetworks()
 
     def tearDown(self):
         pass
@@ -102,21 +102,21 @@ class NetworkListTest(unittest.TestCase):
 
     def setUp(self):
         super(NetworkListTest, self).setUp()
-        self.networks = pad.networks.NetworkList()
+        self.networks = oa.networks.NetworkList()
 
     def tearDown(self):
         super(NetworkListTest, self).tearDown()
 
     def test_format_network_string_full_mask(self):
-        network = pad.networks._format_network_str("127.", "32")
+        network = oa.networks._format_network_str("127.", "32")
         self.assertEqual(network, "127.0.0.0/32")
 
     def test_format_network_string_full_mask_partial(self):
-        network = pad.networks._format_network_str("127.0.0.", "32")
+        network = oa.networks._format_network_str("127.0.0.", "32")
         self.assertEqual(network, "127.0.0.0/32")
 
     def test_format_network_string_no_mask(self):
-        network = pad.networks._format_network_str("127.", "")
+        network = oa.networks._format_network_str("127.", "")
         self.assertEqual(network, "127.0.0.0/8")
 
     def test_extract_network(self):

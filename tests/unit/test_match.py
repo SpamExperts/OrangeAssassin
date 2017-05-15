@@ -10,7 +10,7 @@ except ImportError:
     from mock import patch, Mock, MagicMock, mock_open, call
 
 import scripts.match
-import pad.errors
+import oa.errors
 
 EXAMPLE_EMAIL = ()
 
@@ -20,12 +20,12 @@ class TestRevokeReport(unittest.TestCase):
                     u"Message Stub 3",]
 
     def setUp(self):
-        ruleset = patch("scripts.match.pad.rules."
+        ruleset = patch("scripts.match.oa.rules."
                         "parser.parse_pad_rules").start()
         self.ctxt = ruleset.return_value.get_ruleset.return_value.ctxt
         patch("scripts.match.MessageList").start()
-        self.mock_get_configs = patch("pad.config.get_config_files").start()
-        msg_class = patch("scripts.match.pad.message.Message").start()
+        self.mock_get_configs = patch("oa.config.get_config_files").start()
+        msg_class = patch("scripts.match.oa.message.Message").start()
         self.messages = [msg_class(self.ctxt, x) for x in self.raw_messages]
 
     def tearDown(self):
@@ -80,8 +80,8 @@ class TestRevokeReport(unittest.TestCase):
         patch("scripts.match.parse_arguments",
               return_value=options).start()
         self.mock_parse = patch(
-            "pad.rules.parser.parse_pad_rules",
-            side_effect=pad.errors.MaxRecursionDepthExceeded).start()
+            "oa.rules.parser.parse_pad_rules",
+            side_effect=oa.errors.MaxRecursionDepthExceeded).start()
         with self.assertRaises(SystemExit):
             scripts.match.main()
 
@@ -93,8 +93,8 @@ class TestRevokeReport(unittest.TestCase):
         patch("scripts.match.parse_arguments",
               return_value=options).start()
         self.mock_parse = patch(
-            "pad.rules.parser.parse_pad_rules",
-            side_effect=pad.errors.ParsingError).start()
+            "oa.rules.parser.parse_pad_rules",
+            side_effect=oa.errors.ParsingError).start()
         with self.assertRaises(SystemExit):
             scripts.match.main()
 

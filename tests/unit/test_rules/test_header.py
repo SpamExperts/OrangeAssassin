@@ -7,15 +7,15 @@ try:
 except ImportError:
     from mock import patch, Mock, call
 
-import pad.rules.header
+import oa.rules.header
 
 
 class TestMimeHeader(unittest.TestCase):
     def setUp(self):
         unittest.TestCase.setUp(self)
-        self.mock_raw_mime = patch("pad.rules.header._PatternMimeRawHeaderRule").start()
-        self.mock_mime = patch("pad.rules.header._PatternMimeHeaderRule").start()
-        self.mock_perl2re = patch("pad.rules.header.pad.regex.perl2re").start()
+        self.mock_raw_mime = patch("oa.rules.header._PatternMimeRawHeaderRule").start()
+        self.mock_mime = patch("oa.rules.header._PatternMimeHeaderRule").start()
+        self.mock_perl2re = patch("oa.rules.header.oa.regex.perl2re").start()
 
     def tearDown(self):
         unittest.TestCase.tearDown(self)
@@ -25,7 +25,7 @@ class TestMimeHeader(unittest.TestCase):
         data = {"value": "Content-Id =~ /test/"}
         expected = {"header_name": "Content-Id",
                     "pattern": self.mock_perl2re(" /test/", "=~")}
-        result = pad.rules.header.MimeHeaderRule.get_rule("TEST", data)
+        result = oa.rules.header.MimeHeaderRule.get_rule("TEST", data)
         self.mock_perl2re.assert_called_with(" /test/", "=~")
         self.assertEqual(self.mock_mime("TEST", **expected), result)
 
@@ -33,7 +33,7 @@ class TestMimeHeader(unittest.TestCase):
         data = {"value": "Content-Id:raw =~ /test/"}
         expected = {"header_name": "Content-Id",
                     "pattern": self.mock_perl2re(" /test/", "=~")}
-        result = pad.rules.header.MimeHeaderRule.get_rule("TEST", data)
+        result = oa.rules.header.MimeHeaderRule.get_rule("TEST", data)
         self.mock_perl2re.assert_called_with(" /test/", "=~")
         self.assertEqual(self.mock_raw_mime("TEST", **expected), result)
 
@@ -41,12 +41,12 @@ class TestMimeHeader(unittest.TestCase):
         data = {"value": "Content-Id !~ /test/"}
         expected = {"header_name": "Content-Id",
                     "pattern": self.mock_perl2re(" /test/", "!~")}
-        result = pad.rules.header.MimeHeaderRule.get_rule("TEST", data)
+        result = oa.rules.header.MimeHeaderRule.get_rule("TEST", data)
         self.mock_perl2re.assert_called_with(" /test/", "!~")
         self.assertEqual(self.mock_mime("TEST", **expected), result)
 
     def test_match(self):
-        result = pad.rules.header.MimeHeaderRule("TEST")
+        result = oa.rules.header.MimeHeaderRule("TEST")
         self.assertRaises(NotImplementedError, result.match, Mock())
 
 
@@ -64,9 +64,9 @@ class TestPatternMimeHeader(unittest.TestCase):
     def test_match(self):
         header_name = "Content-Id"
         mock_pattern = Mock(**{"match.return_value": True})
-        rule = pad.rules.header._PatternMimeHeaderRule("TEST",
-                                                       pattern=mock_pattern,
-                                                       header_name=header_name)
+        rule = oa.rules.header._PatternMimeHeaderRule("TEST",
+                                                      pattern=mock_pattern,
+                                                      header_name=header_name)
         result = rule.match(self.mock_msg)
 
         self.mock_msg.get_decoded_mime_header.assert_called_with(header_name)
@@ -76,9 +76,9 @@ class TestPatternMimeHeader(unittest.TestCase):
     def test_match_notmatched(self):
         header_name = "Content-Id"
         mock_pattern = Mock(**{"match.return_value": False})
-        rule = pad.rules.header._PatternMimeHeaderRule("TEST",
-                                                       pattern=mock_pattern,
-                                                       header_name=header_name)
+        rule = oa.rules.header._PatternMimeHeaderRule("TEST",
+                                                      pattern=mock_pattern,
+                                                      header_name=header_name)
         result = rule.match(self.mock_msg)
 
         calls = [call(value) for value in self.mime_headers]
@@ -101,9 +101,9 @@ class TestPatternRawMimeHeader(unittest.TestCase):
     def test_match(self):
         header_name = "Content-Id"
         mock_pattern = Mock(**{"match.return_value": True})
-        rule = pad.rules.header._PatternMimeRawHeaderRule("TEST",
-                                                          pattern=mock_pattern,
-                                                          header_name=header_name)
+        rule = oa.rules.header._PatternMimeRawHeaderRule("TEST",
+                                                         pattern=mock_pattern,
+                                                         header_name=header_name)
         result = rule.match(self.mock_msg)
 
         self.mock_msg.get_raw_mime_header.assert_called_with(header_name)
@@ -113,9 +113,9 @@ class TestPatternRawMimeHeader(unittest.TestCase):
     def test_match_notmatched(self):
         header_name = "Content-Id"
         mock_pattern = Mock(**{"match.return_value": False})
-        rule = pad.rules.header._PatternMimeRawHeaderRule("TEST",
-                                                          pattern=mock_pattern,
-                                                          header_name=header_name)
+        rule = oa.rules.header._PatternMimeRawHeaderRule("TEST",
+                                                         pattern=mock_pattern,
+                                                         header_name=header_name)
         result = rule.match(self.mock_msg)
 
         calls = [call(value) for value in self.mime_headers]
@@ -135,15 +135,15 @@ class TestHeaderRule(unittest.TestCase):
         unittest.TestCase.setUp(self)
         self.mocks = {}
         for mock in self._mocks:
-            self.mocks[mock] = patch("pad.rules.header.%s" % mock).start()
-        self.mock_perl2re = patch("pad.rules.header.pad.regex.perl2re").start()
+            self.mocks[mock] = patch("oa.rules.header.%s" % mock).start()
+        self.mock_perl2re = patch("oa.rules.header.oa.regex.perl2re").start()
 
     def tearDown(self):
         unittest.TestCase.tearDown(self)
         patch.stopall()
 
     def test_match(self):
-        result = pad.rules.header.HeaderRule("TEST")
+        result = oa.rules.header.HeaderRule("TEST")
         self.assertRaises(NotImplementedError, result.match, Mock())
 
     def check_get_rule(self, value, klass, name=None, pattern=None, op="=~"):
@@ -154,7 +154,7 @@ class TestHeaderRule(unittest.TestCase):
         if pattern is not None:
             expected["pattern"] = self.mock_perl2re(pattern)
 
-        result = pad.rules.header.HeaderRule.get_rule("TEST", data)
+        result = oa.rules.header.HeaderRule.get_rule("TEST", data)
         if pattern is not None:
             self.mock_perl2re.assert_called_with(" /test/", op)
         self.assertEqual(self.mocks[klass]("TEST", **expected), result)
@@ -205,12 +205,12 @@ class TestExistsHeader(unittest.TestCase):
         patch.stopall()
 
     def test_match(self):
-        rule = pad.rules.header._ExistsHeaderRule("TEST", header_name="test1")
+        rule = oa.rules.header._ExistsHeaderRule("TEST", header_name="test1")
         result = rule.match(self.mock_msg)
         self.assertEqual(result, True)
 
     def test_match_notmatched(self):
-        rule = pad.rules.header._ExistsHeaderRule("TEST", header_name="test3")
+        rule = oa.rules.header._ExistsHeaderRule("TEST", header_name="test3")
         result = rule.match(self.mock_msg)
         self.assertEqual(result, False)
 
@@ -229,9 +229,9 @@ class TestPatternHeader(unittest.TestCase):
     def test_match(self):
         header_name = "X-Test"
         mock_pattern = Mock(**{"match.return_value": True})
-        rule = pad.rules.header._PatternHeaderRule("TEST",
-                                                   pattern=mock_pattern,
-                                                   header_name=header_name)
+        rule = oa.rules.header._PatternHeaderRule("TEST",
+                                                  pattern=mock_pattern,
+                                                  header_name=header_name)
         result = rule.match(self.mock_msg)
 
         self.mock_msg.get_decoded_header.assert_called_with(header_name)
@@ -241,9 +241,9 @@ class TestPatternHeader(unittest.TestCase):
     def test_match_notmatched(self):
         header_name = "X-Test"
         mock_pattern = Mock(**{"match.return_value": False})
-        rule = pad.rules.header._PatternHeaderRule("TEST",
-                                                   pattern=mock_pattern,
-                                                   header_name=header_name)
+        rule = oa.rules.header._PatternHeaderRule("TEST",
+                                                  pattern=mock_pattern,
+                                                  header_name=header_name)
         result = rule.match(self.mock_msg)
 
         calls = [call(value) for value in self.headers]
@@ -266,9 +266,9 @@ class TestPatternRawHeader(unittest.TestCase):
     def test_match(self):
         header_name = "X-Test"
         mock_pattern = Mock(**{"match.return_value": True})
-        rule = pad.rules.header._PatternRawHeaderRule("TEST",
-                                                      pattern=mock_pattern,
-                                                      header_name=header_name)
+        rule = oa.rules.header._PatternRawHeaderRule("TEST",
+                                                     pattern=mock_pattern,
+                                                     header_name=header_name)
         result = rule.match(self.mock_msg)
 
         self.mock_msg.get_raw_header.assert_called_with(header_name)
@@ -278,9 +278,9 @@ class TestPatternRawHeader(unittest.TestCase):
     def test_match_notmatched(self):
         header_name = "X-Test"
         mock_pattern = Mock(**{"match.return_value": False})
-        rule = pad.rules.header._PatternRawHeaderRule("TEST",
-                                                      pattern=mock_pattern,
-                                                      header_name=header_name)
+        rule = oa.rules.header._PatternRawHeaderRule("TEST",
+                                                     pattern=mock_pattern,
+                                                     header_name=header_name)
         result = rule.match(self.mock_msg)
 
         calls = [call(value) for value in self.headers]
@@ -303,9 +303,9 @@ class TestPatternAddrHeader(unittest.TestCase):
     def test_match(self):
         header_name = "X-Test"
         mock_pattern = Mock(**{"match.return_value": True})
-        rule = pad.rules.header._PatternAddrHeaderRule("TEST",
-                                                       pattern=mock_pattern,
-                                                       header_name=header_name)
+        rule = oa.rules.header._PatternAddrHeaderRule("TEST",
+                                                      pattern=mock_pattern,
+                                                      header_name=header_name)
         result = rule.match(self.mock_msg)
 
         self.mock_msg.get_addr_header.assert_called_with(header_name)
@@ -315,9 +315,9 @@ class TestPatternAddrHeader(unittest.TestCase):
     def test_match_notmatched(self):
         header_name = "X-Test"
         mock_pattern = Mock(**{"match.return_value": False})
-        rule = pad.rules.header._PatternAddrHeaderRule("TEST",
-                                                       pattern=mock_pattern,
-                                                       header_name=header_name)
+        rule = oa.rules.header._PatternAddrHeaderRule("TEST",
+                                                      pattern=mock_pattern,
+                                                      header_name=header_name)
         result = rule.match(self.mock_msg)
 
         calls = [call(value) for value in self.headers]
@@ -340,9 +340,9 @@ class TestPatternNameHeader(unittest.TestCase):
     def test_match(self):
         header_name = "X-Test"
         mock_pattern = Mock(**{"match.return_value": True})
-        rule = pad.rules.header._PatternNameHeaderRule("TEST",
-                                                       pattern=mock_pattern,
-                                                       header_name=header_name)
+        rule = oa.rules.header._PatternNameHeaderRule("TEST",
+                                                      pattern=mock_pattern,
+                                                      header_name=header_name)
         result = rule.match(self.mock_msg)
 
         self.mock_msg.get_name_header.assert_called_with(header_name)
@@ -352,9 +352,9 @@ class TestPatternNameHeader(unittest.TestCase):
     def test_match_notmatched(self):
         header_name = "X-Test"
         mock_pattern = Mock(**{"match.return_value": False})
-        rule = pad.rules.header._PatternNameHeaderRule("TEST",
-                                                       pattern=mock_pattern,
-                                                       header_name=header_name)
+        rule = oa.rules.header._PatternNameHeaderRule("TEST",
+                                                      pattern=mock_pattern,
+                                                      header_name=header_name)
         result = rule.match(self.mock_msg)
 
         calls = [call(value) for value in self.headers]
@@ -367,20 +367,20 @@ class TestMultiplePatternHeader(unittest.TestCase):
     def setUp(self):
         unittest.TestCase.setUp(self)
         self.header_names = ["X-Test1", "X-Test2"]
-        pad.rules.header._MultiplePatternHeaderRule._headers = self.header_names
+        oa.rules.header._MultiplePatternHeaderRule._headers = self.header_names
         self.headers = ["test1", "test2"]
         self.mock_msg = Mock(**{"get_decoded_header.return_value":
                                 self.headers})
 
     def tearDown(self):
         unittest.TestCase.tearDown(self)
-        pad.rules.header._MultiplePatternHeaderRule._headers = None
+        oa.rules.header._MultiplePatternHeaderRule._headers = None
         patch.stopall()
 
     def test_match(self):
         mock_pattern = Mock(**{"match.return_value": True})
-        rule = pad.rules.header._MultiplePatternHeaderRule("TEST",
-                                                           pattern=mock_pattern)
+        rule = oa.rules.header._MultiplePatternHeaderRule("TEST",
+                                                          pattern=mock_pattern)
         result = rule.match(self.mock_msg)
 
         self.mock_msg.get_decoded_header.assert_called_with(self.header_names[0])
@@ -389,8 +389,8 @@ class TestMultiplePatternHeader(unittest.TestCase):
 
     def test_match_notmatched(self):
         mock_pattern = Mock(**{"match.return_value": False})
-        rule = pad.rules.header._MultiplePatternHeaderRule("TEST",
-                                                           pattern=mock_pattern)
+        rule = oa.rules.header._MultiplePatternHeaderRule("TEST",
+                                                          pattern=mock_pattern)
         result = rule.match(self.mock_msg)
 
         calls = [call(value) for value in self.header_names]
@@ -415,7 +415,7 @@ class TestAllHeaderRule(unittest.TestCase):
 
     def test_match(self):
         mock_pattern = Mock(**{"match.return_value": True})
-        rule = pad.rules.header._AllHeaderRule("TEST", pattern=mock_pattern)
+        rule = oa.rules.header._AllHeaderRule("TEST", pattern=mock_pattern)
         result = rule.match(self.mock_msg)
 
         self.assertTrue(self.mock_msg.iter_decoded_headers.called)
@@ -424,7 +424,7 @@ class TestAllHeaderRule(unittest.TestCase):
 
     def test_match_notmatched(self):
         mock_pattern = Mock(**{"match.return_value": False})
-        rule = pad.rules.header._AllHeaderRule("TEST", pattern=mock_pattern)
+        rule = oa.rules.header._AllHeaderRule("TEST", pattern=mock_pattern)
         result = rule.match(self.mock_msg)
 
         self.assertTrue(self.mock_msg.iter_decoded_headers.called)

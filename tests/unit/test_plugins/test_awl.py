@@ -16,8 +16,8 @@ except:
 
     has_sqlalchemy = False
 
-import pad.plugins
-from pad.plugins import awl
+import oa.plugins
+from oa.plugins import awl
 
 from collections import defaultdict
 
@@ -42,7 +42,7 @@ class TestAWLBase(unittest.TestCase):
             "side_effect": lambda p, k, v: self.msg_data.setdefault(k, v),
         })
 
-        self.plugin = pad.plugins.awl.AutoWhiteListPlugin(self.mock_ctxt)
+        self.plugin = oa.plugins.awl.AutoWhiteListPlugin(self.mock_ctxt)
 
     def tearDown(self):
         unittest.TestCase.tearDown(self)
@@ -126,11 +126,11 @@ class TestAWLBase(unittest.TestCase):
 
     def test_parsed_metadata(self):
         get_from = patch(
-            "pad.plugins.awl.AutoWhiteListPlugin._get_from").start()
+            "oa.plugins.awl.AutoWhiteListPlugin._get_from").start()
         get_signed_by = patch(
-            "pad.plugins.awl.AutoWhiteListPlugin._get_signed_by").start()
+            "oa.plugins.awl.AutoWhiteListPlugin._get_signed_by").start()
         get_origin_ip = patch(
-            "pad.plugins.awl.AutoWhiteListPlugin._get_origin_ip").start()
+            "oa.plugins.awl.AutoWhiteListPlugin._get_origin_ip").start()
         self.plugin.parsed_metadata(self.mock_msg)
         get_from.assert_called_with(self.mock_msg)
         get_signed_by.assert_called_with(self.mock_msg)
@@ -160,12 +160,12 @@ if has_sqlalchemy:
 
             # self.mock_msg.msg = None
             get_session = patch(
-                "pad.plugins.awl.AutoWhiteListPlugin.get_session").start()
+                "oa.plugins.awl.AutoWhiteListPlugin.get_session").start()
             engine = create_engine("sqlite://")
             awl.Base.metadata.create_all(engine)
             self.session = sessionmaker(bind=engine)()
             get_session.return_value = self.session
-            self.plugin = pad.plugins.awl.AutoWhiteListPlugin(self.mock_ctxt)
+            self.plugin = oa.plugins.awl.AutoWhiteListPlugin(self.mock_ctxt)
 
         def tearDown(self):
             unittest.TestCase.tearDown(self)
@@ -173,11 +173,11 @@ if has_sqlalchemy:
 
         def test_get_entry(self):
             get_engine = patch(
-                "pad.plugins.awl.AutoWhiteListPlugin.get_engine").start()
+                "oa.plugins.awl.AutoWhiteListPlugin.get_engine").start()
             hasSQLAlchemy = patch(
-                "pad.plugins.awl.has_sqlalchemy", True, create=True).start()
+                "oa.plugins.awl.has_sqlalchemy", True, create=True).start()
             getEntrySQLAlchemy = patch(
-                "pad.plugins.awl.AutoWhiteListPlugin.get_sqlalch_entry").start()
+                "oa.plugins.awl.AutoWhiteListPlugin.get_sqlalch_entry").start()
             address = ""
             ip = ""
             signed_by = ""
@@ -189,16 +189,16 @@ if has_sqlalchemy:
             self.mock_msg.score = 0
             self.global_data["auto_whitelist_factor"] = 0
             getLocal = patch(
-                "pad.plugins.awl.AutoWhiteListPlugin.get_local").start()
+                "oa.plugins.awl.AutoWhiteListPlugin.get_local").start()
             getLocal.return_value = ""
             getEntry = patch(
-                "pad.plugins.awl.AutoWhiteListPlugin.get_entry").start()
+                "oa.plugins.awl.AutoWhiteListPlugin.get_entry").start()
             getEntry.return_value = None
             hasMySQL = patch(
-                "pad.plugins.awl.AutoWhiteListPlugin.has_mysql", False, create=True)
+                "oa.plugins.awl.AutoWhiteListPlugin.has_mysql", False, create=True)
             hasMySQL.start()
             pluginTags = patch(
-                "pad.plugins.awl.AutoWhiteListPlugin.plugin_tags_sqlalch").start()
+                "oa.plugins.awl.AutoWhiteListPlugin.plugin_tags_sqlalch").start()
             self.plugin.check_from_in_auto_whitelist(self.mock_msg)
 
             pluginTags.assert_called_with(self.mock_msg, "", "", "", 0, 0, None)
@@ -229,15 +229,15 @@ if has_sqlalchemy:
                                   ipaddress.IPv4Address(u"8.8.8.8"))
 
             hasMySQL = patch(
-                "pad.plugins.awl.AutoWhiteListPlugin.has_mysql", False, create=True)
+                "oa.plugins.awl.AutoWhiteListPlugin.has_mysql", False, create=True)
             hasMySQL.start()
 
             get_eng = patch(
-                "pad.plugins.awl.AutoWhiteListPlugin.get_engine").start()
+                "oa.plugins.awl.AutoWhiteListPlugin.get_engine").start()
             get_eng.return_value = create_engine("sqlite://")
 
             hasSQLAlchemy = patch(
-                "pad.plugins.awl.has_sqlalchemy", True, create=True).start()
+                "oa.plugins.awl.has_sqlalchemy", True, create=True).start()
 
             self.plugin.check_from_in_auto_whitelist(self.mock_msg,
                                                      target="header")
@@ -263,11 +263,11 @@ if has_sqlalchemy:
             self.plugin.set_local(self.mock_msg, "originip", ipaddress.IPv4Address(
                                                u"8.8.8.8"))
             hasMySQL = patch(
-                "pad.plugins.awl.AutoWhiteListPlugin.has_mysql", False, create=True)
+                "oa.plugins.awl.AutoWhiteListPlugin.has_mysql", False, create=True)
             hasMySQL.start()
 
             get_eng = patch(
-                "pad.plugins.awl.AutoWhiteListPlugin.get_engine").start()
+                "oa.plugins.awl.AutoWhiteListPlugin.get_engine").start()
             get_eng.return_value = create_engine("sqlite://")
 
             self.plugin.check_from_in_auto_whitelist(self.mock_msg,
@@ -298,9 +298,9 @@ class TestAWLBasePyMySQL(unittest.TestCase):
             "side_effect": lambda p, k, v: self.msg_data.setdefault(k, v),
         })
         self.mock_msg.msg = None
-        get_session = patch("pad.plugins.awl.AutoWhiteListPlugin.get_session")
+        get_session = patch("oa.plugins.awl.AutoWhiteListPlugin.get_session")
         get_session.start()
-        self.plugin = pad.plugins.awl.AutoWhiteListPlugin(self.mock_ctxt)
+        self.plugin = oa.plugins.awl.AutoWhiteListPlugin(self.mock_ctxt)
 
     def tearDown(self):
         unittest.TestCase.tearDown(self)
@@ -308,11 +308,11 @@ class TestAWLBasePyMySQL(unittest.TestCase):
 
     def test_get_entry(self):
         get_engine = patch(
-            "pad.plugins.awl.AutoWhiteListPlugin.get_engine").start()
+            "oa.plugins.awl.AutoWhiteListPlugin.get_engine").start()
         hasSQLAlchemy = patch(
-            "pad.plugins.awl.has_sqlalchemy", False, create=True).start()
+            "oa.plugins.awl.has_sqlalchemy", False, create=True).start()
         getEntryMySQL = patch(
-            "pad.plugins.awl.AutoWhiteListPlugin.get_mysql_entry").start()
+            "oa.plugins.awl.AutoWhiteListPlugin.get_mysql_entry").start()
         address = ""
         ip = ""
         signed_by = ""
@@ -324,17 +324,17 @@ class TestAWLBasePyMySQL(unittest.TestCase):
         self.mock_msg.score = 0
         self.global_data["auto_whitelist_factor"] = 0
         getLocal = patch(
-            "pad.plugins.awl.AutoWhiteListPlugin.get_local").start()
+            "oa.plugins.awl.AutoWhiteListPlugin.get_local").start()
         getLocal.return_value = ""
         getEntry = patch(
-            "pad.plugins.awl.AutoWhiteListPlugin.get_entry").start()
+            "oa.plugins.awl.AutoWhiteListPlugin.get_entry").start()
         getEntry.return_value = None
         hasMySQL = patch(
-            "pad.plugins.awl.AutoWhiteListPlugin.has_mysql", True,
+            "oa.plugins.awl.AutoWhiteListPlugin.has_mysql", True,
             create=True)
         hasMySQL.start()
         plugin_tags = patch(
-            "pad.plugins.awl.AutoWhiteListPlugin.plugin_tags_mysql").start()
+            "oa.plugins.awl.AutoWhiteListPlugin.plugin_tags_mysql").start()
         self.plugin.check_from_in_auto_whitelist(self.mock_msg)
         getLocal.assert_has_calls([call(self.mock_msg, "originip"),
                                    call(self.mock_msg, "from"),
@@ -346,20 +346,20 @@ class TestAWLBasePyMySQL(unittest.TestCase):
         self.mock_msg.score = 0
         self.global_data["auto_whitelist_factor"] = 0
         getLocal = patch(
-            "pad.plugins.awl.AutoWhiteListPlugin.get_local").start()
+            "oa.plugins.awl.AutoWhiteListPlugin.get_local").start()
         getLocal.return_value = "example"
         awl_key_ip = patch(
-            "pad.plugins.awl.AutoWhiteListPlugin.ip_to_awl_key").start()
+            "oa.plugins.awl.AutoWhiteListPlugin.ip_to_awl_key").start()
         awl_key_ip.return_value = None
         getEntry = patch(
-            "pad.plugins.awl.AutoWhiteListPlugin.get_entry").start()
+            "oa.plugins.awl.AutoWhiteListPlugin.get_entry").start()
         getEntry.return_value = None
         hasMySQL = patch(
-            "pad.plugins.awl.AutoWhiteListPlugin.has_mysql", True,
+            "oa.plugins.awl.AutoWhiteListPlugin.has_mysql", True,
             create=True)
         hasMySQL.start()
         plugin_tags = patch(
-            "pad.plugins.awl.AutoWhiteListPlugin.plugin_tags_mysql").start()
+            "oa.plugins.awl.AutoWhiteListPlugin.plugin_tags_mysql").start()
         self.plugin.check_from_in_auto_whitelist(self.mock_msg)
         getLocal.assert_has_calls([call(self.mock_msg, "originip"),
                                    call(self.mock_msg, "from"),

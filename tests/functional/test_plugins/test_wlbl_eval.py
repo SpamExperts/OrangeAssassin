@@ -6,7 +6,7 @@ import tests.util
 
 # Load plugin and report matched RULES and SCORE
 PRE_CONFIG = """
-loadplugin pad.plugins.wlbl_eval.WLBLEvalPlugin
+loadplugin oa.plugins.wlbl_eval.WLBLEvalPlugin
 report _SCORE_
 report _TESTS_
 """

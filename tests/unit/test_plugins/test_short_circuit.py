@@ -7,8 +7,8 @@ try:
 except ImportError:
     from mock import patch, Mock, MagicMock, call
 
-import pad.errors
-import pad.plugins.short_circuit
+import oa.errors
+import oa.plugins.short_circuit
 
 
 class TestShortCircuit(unittest.TestCase):
@@ -20,7 +20,7 @@ class TestShortCircuit(unittest.TestCase):
             "shortcircuit": [],
         }
         self.mock_ctxt = MagicMock()
-        self.plugin = pad.plugins.short_circuit.ShortCircuit(self.mock_ctxt)
+        self.plugin = oa.plugins.short_circuit.ShortCircuit(self.mock_ctxt)
         self.plugin.set_global = self.global_data.__setitem__
         self.plugin.get_global = self.global_data.__getitem__
         self.mock_ruleset = MagicMock()
@@ -73,7 +73,7 @@ class TestShortCircuit(unittest.TestCase):
         self.mock_rule.match.return_value = True
 
         wrapped = self.plugin.get_wrapped_method(self.mock_rule, "on")
-        with self.assertRaises(pad.errors.StopProcessing):
+        with self.assertRaises(oa.errors.StopProcessing):
             wrapped(self.mock_msg)
 
         self.assertEqual(self.mock_msg.plugin_tags, {
@@ -86,7 +86,7 @@ class TestShortCircuit(unittest.TestCase):
         self.mock_rule.match.return_value = True
 
         wrapped = self.plugin.get_wrapped_method(self.mock_rule, "on")
-        with self.assertRaises(pad.errors.StopProcessing):
+        with self.assertRaises(oa.errors.StopProcessing):
             wrapped(self.mock_msg)
 
         self.assertEqual(self.mock_msg.score, 5)
@@ -96,7 +96,7 @@ class TestShortCircuit(unittest.TestCase):
         self.mock_rule.match.return_value = True
 
         wrapped = self.plugin.get_wrapped_method(self.mock_rule, "spam")
-        with self.assertRaises(pad.errors.StopProcessing):
+        with self.assertRaises(oa.errors.StopProcessing):
             wrapped(self.mock_msg)
 
         self.assertEqual(self.mock_msg.plugin_tags, {
@@ -109,7 +109,7 @@ class TestShortCircuit(unittest.TestCase):
         self.mock_rule.match.return_value = True
 
         wrapped = self.plugin.get_wrapped_method(self.mock_rule, "spam")
-        with self.assertRaises(pad.errors.StopProcessing):
+        with self.assertRaises(oa.errors.StopProcessing):
             wrapped(self.mock_msg)
 
         self.assertEqual(self.mock_msg.score, 105)
@@ -119,7 +119,7 @@ class TestShortCircuit(unittest.TestCase):
         self.mock_rule.match.return_value = True
 
         wrapped = self.plugin.get_wrapped_method(self.mock_rule, "ham")
-        with self.assertRaises(pad.errors.StopProcessing):
+        with self.assertRaises(oa.errors.StopProcessing):
             wrapped(self.mock_msg)
 
         self.assertEqual(self.mock_msg.plugin_tags, {
@@ -132,7 +132,7 @@ class TestShortCircuit(unittest.TestCase):
         self.mock_rule.match.return_value = True
 
         wrapped = self.plugin.get_wrapped_method(self.mock_rule, "ham")
-        with self.assertRaises(pad.errors.StopProcessing):
+        with self.assertRaises(oa.errors.StopProcessing):
             wrapped(self.mock_msg)
 
         self.assertEqual(self.mock_msg.score, -95)

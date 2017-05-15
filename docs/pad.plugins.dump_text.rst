@@ -15,7 +15,7 @@ Example usage
 Usage
 =====
 
-<Description>
+Sample plugin used for testing.
 
 Options
 =======
@@ -35,5 +35,5 @@ EVAL rules
 Tags
 ====
 
-<Describe TAGS>
+None
 

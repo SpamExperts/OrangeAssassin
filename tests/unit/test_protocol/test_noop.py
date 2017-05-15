@@ -7,8 +7,8 @@ try:
 except ImportError:
     from mock import patch, Mock, call
 
-import pad
-import pad.protocol.noop
+import oa
+import oa.protocol.noop
 
 
 class TestNoopCommand(unittest.TestCase):
@@ -23,14 +23,14 @@ class TestNoopCommand(unittest.TestCase):
         patch.stopall()
 
     def test_skip(self):
-        pad.protocol.noop.SkipCommand(self.mockr, self.mockw, self.mockrules)
+        oa.protocol.noop.SkipCommand(self.mockr, self.mockw, self.mockrules)
         self.assertFalse(self.mockw.called)
 
     def test_ping(self):
-        pad.protocol.noop.PingCommand(self.mockr, self.mockw, self.mockrules)
+        oa.protocol.noop.PingCommand(self.mockr, self.mockw, self.mockrules)
 
         calls = [
-            call(("SPAMD/%s 0 PONG\r\n" % pad.__version__).encode("utf8")),
+            call(("SPAMD/%s 0 PONG\r\n" % oa.__version__).encode("utf8")),
         ]
 
         self.mockw.write.assert_has_calls(calls)

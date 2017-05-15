@@ -30,7 +30,7 @@ class TestPDFInfoPlugin(tests.util.TestBase):
     @unittest.SkipTest
     def test_real_msg_with_errors(self):
         """Check real multipart message"""
-        cwd = os.path.join(os.getcwd(), "pad", "plugins", "pdf_info.py")
+        cwd = os.path.join(os.getcwd(), "oa", "plugins", "pdf_info.py")
         self.setup_conf(CONFIG + "\n",
                 pre_config="loadplugin PDFInfoPlugin {0}\n"
                 "report _SCORE_".format(cwd))

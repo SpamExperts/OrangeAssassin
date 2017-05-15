@@ -7,7 +7,7 @@ try:
 except ImportError:
     from mock import patch, Mock, MagicMock, call
 
-import pad.plugins.replace_tags
+import oa.plugins.replace_tags
 
 
 class TestReplaceTags(unittest.TestCase):
@@ -23,7 +23,7 @@ class TestReplaceTags(unittest.TestCase):
             "replace_rules": [],
         }
         self.mock_ctxt = MagicMock()
-        self.plugin = pad.plugins.replace_tags.ReplaceTags(self.mock_ctxt)
+        self.plugin = oa.plugins.replace_tags.ReplaceTags(self.mock_ctxt)
         self.plugin.set_global = self.global_data.__setitem__
         self.plugin.get_global = self.global_data.__getitem__
         self.mock_ruleset = MagicMock()

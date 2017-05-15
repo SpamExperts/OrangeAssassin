@@ -12,7 +12,7 @@ import tests.util
 
 # Load plugin and report matched RULES and SCORE
 PRE_CONFIG = """
-loadplugin pad.plugins.uri_eval.URIEvalPlugin
+loadplugin oa.plugins.uri_eval.URIEvalPlugin
 
 report _SCORE_
 report _TESTS_

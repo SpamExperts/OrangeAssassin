@@ -8,7 +8,7 @@ try:
 except ImportError:
     from mock import patch, Mock, MagicMock, call
 
-import pad.plugins.spam_cop
+import oa.plugins.spam_cop
 
 
 class TestSpamCop(unittest.TestCase):
@@ -28,15 +28,15 @@ class TestSpamCop(unittest.TestCase):
         })
 
         self.mock_now_date = patch(
-            "pad.plugins.spam_cop.SpamCopPlugin.get_now_date").start()
+            "oa.plugins.spam_cop.SpamCopPlugin.get_now_date").start()
         self.mock_mail_date = patch(
-            "pad.plugins.spam_cop.SpamCopPlugin.get_mail_date").start()
+            "oa.plugins.spam_cop.SpamCopPlugin.get_mail_date").start()
         self.mock_send_mail = patch(
-            "pad.plugins.spam_cop.SpamCopPlugin.send_mail_method").start()
+            "oa.plugins.spam_cop.SpamCopPlugin.send_mail_method").start()
         self.mock_mime = patch(
-            "pad.plugins.spam_cop.email.mime").start()
+            "oa.plugins.spam_cop.email.mime").start()
 
-        self.plug = pad.plugins.spam_cop.SpamCopPlugin(self.mock_ctxt)
+        self.plug = oa.plugins.spam_cop.SpamCopPlugin(self.mock_ctxt)
 
     def tearDown(self):
         unittest.TestCase.tearDown(self)
@@ -89,17 +89,17 @@ class TestSendMail(unittest.TestCase):
         })
 
         self.mock_plugin_report = patch(
-            "pad.plugins.spam_cop.SpamCopPlugin.plugin_report").start()
+            "oa.plugins.spam_cop.SpamCopPlugin.plugin_report").start()
         self.mock_now_date = patch(
-            "pad.plugins.spam_cop.SpamCopPlugin.get_now_date").start()
+            "oa.plugins.spam_cop.SpamCopPlugin.get_now_date").start()
         self.mock_smtp = patch(
-            "pad.plugins.spam_cop.smtplib").start()
+            "oa.plugins.spam_cop.smtplib").start()
         self.mock_send_mail = patch(
-            "pad.plugins.spam_cop.smtplib.sendmail").start()
+            "oa.plugins.spam_cop.smtplib.sendmail").start()
         self.mock_dns = patch(
-            "pad.dns_interface.DNSInterface.query").start()
+            "oa.dns_interface.DNSInterface.query").start()
 
-        self.plug = pad.plugins.spam_cop.SpamCopPlugin(self.mock_ctxt)
+        self.plug = oa.plugins.spam_cop.SpamCopPlugin(self.mock_ctxt)
 
     def tearDown(self):
         unittest.TestCase.tearDown(self)
@@ -151,9 +151,9 @@ class TestGetDate(unittest.TestCase):
         })
 
         self.mock_get_decoded_header = patch(
-            "pad.message.Message.get_decoded_header").start()
+            "oa.message.Message.get_decoded_header").start()
 
-        self.plug = pad.plugins.spam_cop.SpamCopPlugin(self.mock_ctxt)
+        self.plug = oa.plugins.spam_cop.SpamCopPlugin(self.mock_ctxt)
 
     def tearDown(self):
         unittest.TestCase.tearDown(self)

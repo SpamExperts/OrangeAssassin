@@ -9,10 +9,10 @@ scripts Package
     :undoc-members:
     :show-inheritance:
 
-:mod:`padd` Module
+:mod:`oad` Module
 ---------------------
 
-.. automodule:: padd
+.. automodule:: oad
     :members:
     :undoc-members:
     :show-inheritance:

@@ -7,7 +7,7 @@ Each rule has a unique identifier, writen in all caps, and can have multiple
 options.
 
 After all rules are checked a final score is provided for the message and
-according to the `required_score` option the message is marked is spam.
+according to the `required_score` option the message is marked as spam.
 
 .. _defining-rules:
 
@@ -35,7 +35,7 @@ the following exceptions:
 
 .. note::
 
-    Rule that are not checked can still be used in combination with other
+    Rules that are not checked can still be used in combination with other
     rules. See the `meta` rule type for more details.
 
 .. _rule-options:

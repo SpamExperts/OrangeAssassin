@@ -2,21 +2,21 @@
 Configuration
 *************
 
-This page describes how to configure SpamPAD.
+This page describes how to configure OrangeAssassin.
 
 .. _configuration-files:
 
 Configuration files
 ===================
 
-The SpamPAD configuration can be separated into multiple files. These are read
+The OrangeAssassin configuration can be separated into multiple files. These are read
 from the `configpath` and `sitepath` directories. You can change these
 locations using the `-C` or `-S` options of the daemon and CLI script.
 
-More files can be included from other location by using the include option::
+More files can be included from other locations by using the include option::
 
-    # This include a different file
-    include /etc/spampad/custom_prefs.cf
+    # This includes a different file
+    include /etc/orangeassassin/custom_prefs.cf
 
 Users can also configure custom preferences in their home directory when
 running the CLI script. This location is also customizable with the `-P`
@@ -25,7 +25,7 @@ will have to enable it with `allow_user_rules`.
 
 .. note::
 
-    The order the files IS important as it determines the order of the rules
+    The order of the files IS important as it determines the order of the rules
     loading and executing. To change the order in which the rules are checked
     see the :ref:`priority rule option <priority-rule-options>`.
 
@@ -34,7 +34,7 @@ will have to enable it with `allow_user_rules`.
 Configuration types
 ===================
 
-SpamPAD accepts various types of configuration options. The current types are:
+OrangeAssassin accepts various types of configuration options. The current types are:
 
 **int**
     Integer number.
@@ -57,7 +57,7 @@ SpamPAD accepts various types of configuration options. The current types are:
     setting.
 **append**
     This option can be specified multiple times without overriding previous
-    settings. Every time the option is specified the values are appended to
+    settings. Every time the option is specified the values are appended
     to a list. For example for the report option::
 
         report This message was marked as spam on _HOSTNAME_.
@@ -69,6 +69,7 @@ SpamPAD accepts various types of configuration options. The current types are:
         ["This message was marked as spam on _HOSTNAME_.",
          "The message score was _SCORE_.",
          "Contact me at _CONTACTADDRESS_."]
+
 **clear**
     Clears one or more of the append type option.
 
@@ -78,7 +79,7 @@ Compiling rules
 ===============
 
 
-Users can compile rules in SpamPAD in two ways:
+Users can compile rules in OrangeAssassin in two ways:
     
     1. Re-parsing the rules::
         
@@ -87,14 +88,14 @@ Users can compile rules in SpamPAD in two ways:
     2. Avoiding re-parsing, in order to use this ability, users should:
 
         2.1. Run compile.py with -sp flag to specify the path for the file where
-        will be done the serialization::
+        the serialization will be done::
 
              $ ./scripts/compile.py -t -C /root/myconf/ --sitepath /root/myconf/ < /root/test.eml -se /serializepath
 
         2.2. Run match.py using:
         
             - se (use serialization)
-            - sp (specify the path for the file where was done the serialization)
+            - sp (specify the path for the file where the serialization was done)
 
 
     .. note::
@@ -116,7 +117,7 @@ Filtering options
 -----------------
 
 **required_score** 5.0 (type `float`)
-    Set minimum required score for a message to get for it to be treated as
+    Set a minimum required score for a message for it to be treated as
     spam.
 **use_bayes** True (type `bool`)
     Controls whether or not the bayesian filter should be checked.
@@ -145,11 +146,11 @@ Message modifications
     `X-Spam-` and the header string ill have any TAGS replaced with their
     values. For example::
 
-        add_header all PAD-Report Checked with SpamPAD _SCORE_
+        add_header all OA-Report Checked with OrangeAssassin _SCORE_
 
     Will add a new header to every message like::
 
-        X-Spam-PAD-Report: Checked with SpamPAD <score>
+        X-Spam-OA-Report: Checked with OrangeAssassin <score>
 **remove_header** [] (type `append`)
     Removes all header from message with the specified name. The value for this
     option must be in the following format::
@@ -178,9 +179,9 @@ Reporting
     contains the `report` for this message. Note this only applies to
     messages classified as spam.
 
-    When this option is set to 1 and the messages is marked as spam, SpamPAD
+    When this option is set to 1 and the messages is marked as spam, OrangeAssassin
     will generate a multipart/mixed messages. The new message will have
-    `text/plain` part with the SpamPAD report and `message/rfc882` part with
+    `text/plain` part with the OrangeAssassin report and `message/rfc882` part with
     the original message.
 
     When the option is set to 2 instead of using a `messages/rfc882` content
@@ -285,7 +286,7 @@ Syntax::
     MSA hosts, also known as MX relays are hosts that accept mail from your own
     users and authenticate them properly.
 
-    These relays will never accept mail from hosts taht aren't authenticated in
+    These relays will never accept mail from hosts that aren't authenticated in
     some way. If an MSA relays is found then all relays after it will get the
     same internal/trusted classification as that one
 
@@ -369,11 +370,11 @@ DNS
 **dns_query_restriction** "" ( type `string` )
     Configure restrictions for querying the dns. Almost all dns queries are
     subject to the dns_query_restriction. Before performing a query the domain
-    is tested against these restrictions and when a match occurs the the query
+    is tested against these restrictions and when a match occurs the query
     is performed according to the allow/deny setting for that match. If no
     match is found then the query is allowed by default.
     
-    when testing a domain it's labels are stripped succesively to check if a
+    When testing a domain it's labels are stripped successively to check if a
     parent matches. 
         
     All of the following would be denied example.com, 1.example.com
@@ -391,7 +392,7 @@ DNS
         dns_query_restriction deny example.com
         dns_query_restriction allow 1.example.com
 
-    In this case example.com and all of it's subdomsins would be denied except
+    In this case example.com and all of its subdomains would be denied except
     1.example.com and all of it's subdomains which would be allowed
 
 

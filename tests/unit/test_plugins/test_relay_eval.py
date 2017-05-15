@@ -1,5 +1,5 @@
 
-"""Test for pad.plugins.relay_eval Plugin"""
+"""Test for oa.plugins.relay_eval Plugin"""
 
 
 import unittest
@@ -9,8 +9,8 @@ try:
 except ImportError:
     from mock import patch, Mock, MagicMock, call
 
-import pad.plugins.relay_eval
-import pad.message
+import oa.plugins.relay_eval
+import oa.message
 
 
 class TestRelayEvalBase(unittest.TestCase):
@@ -21,7 +21,7 @@ class TestRelayEvalBase(unittest.TestCase):
         self.mock_ctxt = MagicMock()
         self.mock_msg = MagicMock(msg={}, trusted_relays=[],
                                   untrusted_relays=[])
-        self.plugin = pad.plugins.relay_eval.RelayEval(self.mock_ctxt)
+        self.plugin = oa.plugins.relay_eval.RelayEval(self.mock_ctxt)
         self.plugin.set_local = lambda m, k, v: self.local_data.__setitem__(k,
                                                                             v)
         self.plugin.get_local = lambda m, k: self.local_data.__getitem__(k)

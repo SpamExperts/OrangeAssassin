@@ -106,7 +106,7 @@ This is a abcdef123456 test message.
 
 
 class TestDaemonBase(unittest.TestCase):
-    daemon_script = "scripts/padd.py"
+    daemon_script = "scripts/oad.py"
     # Uncomment this to test under spamd
     # daemon_script = "spamd"
     test_conf = os.path.abspath("tests/test_padd_conf/")
@@ -133,7 +133,7 @@ class TestDaemonBase(unittest.TestCase):
         args = [cls.daemon_script, "-D", "-C", cls.test_conf,
                 "--siteconfigpath", cls.test_conf, "--allow-tell",
                 "-i", "127.0.0.1", "-p", str(cls.port)]
-        if cls.daemon_script == "scripts/padd.py":
+        if cls.daemon_script == "scripts/oad.py":
             args.append("--log-file")
             args.append(os.path.abspath("padd.log"))
         cls.padd_procs.append(subprocess.Popen(args))
@@ -185,7 +185,7 @@ class TestDaemon(TestDaemonBase):
         unittest.TestCase.tearDown(self)
 
     def test_ping(self):
-        """Return a confirmation that padd.py/spamd is alive."""
+        """Return a confirmation that oad.py/spamd is alive."""
         process = "PING"
         command = "%s SPAMC/1.2\r\n" % process
         result = self.send_to_proc(command)
@@ -267,7 +267,7 @@ class TestDaemon(TestDaemonBase):
 
         third_msg = list(msg.walk())[2]["Content-Description"]
 
-        self.assertEqual(third_msg, "original message before SpamPAD")
+        self.assertEqual(third_msg, "original message before OrangeAssassin")
 
     def test_process_content_body_spam(self):
         process_row = "PROCESS"
@@ -331,7 +331,7 @@ class TestDaemon(TestDaemonBase):
                    (process_row, content_row, TEST_MSG))
         result = self.send_to_proc(command).split("\r\n", 4)
         expected = [u'0 EX_OK',
-                    u'Spam: False ; 0 / 5.0',
+                    u'Spam: False ; 0.0 / 5.0',
                     u'Content-length: 0',
                     u'',
                     u'']
@@ -381,7 +381,7 @@ class TestDaemon(TestDaemonBase):
                    (process_row, content_row, TEST_MSG))
         result = self.send_to_proc(command).split("\r\n")
         expected = [u'0 EX_OK',
-                    u'Spam: False ; 0 / 5.0',
+                    u'Spam: False ; 0.0 / 5.0',
                     u'Content-length: 0',
                     u'',
                     u'']
@@ -410,7 +410,7 @@ class TestDaemon(TestDaemonBase):
                    (process_row, content_row, MULTIPART_MSG))
         result = self.send_to_proc(command).split("\r\n")
         expected = [u'0 EX_OK',
-                    u'Spam: False ; 0 / 5.0',
+                    u'Spam: False ; 0.0 / 5.0',
                     u'Content-length: 0',
                     u'', u'']
         self.assertEqual(expected, result)
@@ -538,7 +538,7 @@ class TestUserConfigDaemon(TestDaemon):
                    (process_row, content_row,
                     USER_TEST_MSG.replace("abcdef123456", "abcdef555555")))
         result = self.send_to_proc(command).split("\r\n")
-        expected = [u'0 EX_OK', u'Spam: False ; 0 / 5.0',
+        expected = [u'0 EX_OK', u'Spam: False ; 0.0 / 5.0',
                     u'Content-length: 0', u'', u'']
         self.assertEqual(result, expected)
 
@@ -576,7 +576,7 @@ class TestUserConfigDaemon(TestDaemon):
         content_row = "Content-length: %s\r\n" % self.user_msg_len
         command = ("%s SPAMC/1.2\r\n%s\r\n%s\r\n" %
                    (process_row, content_row, USER_TEST_MSG))
-        with self.assertRaises(AssertionError):
+        with self.assertRaises(self.failureException):
             self.send_to_proc(command).split("\r\n")
 
     def test_user_msg_spam_override(self):

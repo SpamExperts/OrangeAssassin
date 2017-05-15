@@ -47,6 +47,7 @@ Available plugins
     pad.plugins.dkim
     pad.plugins.uri_eval
     pad.plugins.relay_eval
+    pad.plugins.auto_learn_threshold
 
 
 Plugin reference

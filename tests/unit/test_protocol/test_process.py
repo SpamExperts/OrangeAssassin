@@ -7,8 +7,8 @@ try:
 except ImportError:
     from mock import patch, Mock, call
 
-import pad
-import pad.protocol.process
+import oa
+import oa.protocol.process
 
 
 class TestProcessCommand(unittest.TestCase):
@@ -23,7 +23,7 @@ class TestProcessCommand(unittest.TestCase):
         self.mockrules = Mock(conf=self.conf)
         self.mockserver.get_user_ruleset.return_value = self.mockrules
         for klass in ("ProcessCommand", "HeadersCommand"):
-            patch("pad.protocol.process.%s.get_and_handle" % klass).start()
+            patch("oa.protocol.process.%s.get_and_handle" % klass).start()
         self.msg = Mock(score=0)
 
     def tearDown(self):
@@ -31,34 +31,34 @@ class TestProcessCommand(unittest.TestCase):
         patch.stopall()
 
     def test_process(self):
-        cmd = pad.protocol.process.ProcessCommand(self.mockr, self.mockw,
-                                                  self.mockserver)
+        cmd = oa.protocol.process.ProcessCommand(self.mockr, self.mockw,
+                                                 self.mockserver)
         self.mockrules.get_adjusted_message.return_value = "Test"
         result = list(cmd.handle(self.msg, {}))
         self.mockrules.match.assert_called_with(self.msg)
 
     def test_process_result(self):
-        cmd = pad.protocol.process.ProcessCommand(self.mockr, self.mockw,
-                                                  self.mockserver)
+        cmd = oa.protocol.process.ProcessCommand(self.mockr, self.mockw,
+                                                 self.mockserver)
         self.mockrules.get_adjusted_message.return_value = "Test"
         result = list(cmd.handle(self.msg, {}))
-        self.assertEqual(result, ['Spam: False ; 0 / 5\r\n',
+        self.assertEqual(result, ['Spam: False ; 0.0 / 5\r\n',
                                   'Content-length: 4\r\n\r\n', 'Test'])
         self.mockrules.get_adjusted_message.assert_called_with(self.msg)
 
     def test_headers(self):
-        cmd = pad.protocol.process.HeadersCommand(self.mockr, self.mockw,
-                                                  self.mockserver)
+        cmd = oa.protocol.process.HeadersCommand(self.mockr, self.mockw,
+                                                 self.mockserver)
         self.mockrules.get_adjusted_message.return_value = "Test"
         result = list(cmd.handle(self.msg, {}))
         self.mockrules.match.assert_called_with(self.msg)
 
     def test_headers_result(self):
-        cmd = pad.protocol.process.HeadersCommand(self.mockr, self.mockw,
-                                                  self.mockserver)
+        cmd = oa.protocol.process.HeadersCommand(self.mockr, self.mockw,
+                                                 self.mockserver)
         self.mockrules.get_adjusted_message.return_value = "Test"
         result = list(cmd.handle(self.msg, {}))
-        self.assertEqual(result, ['Spam: False ; 0 / 5\r\n',
+        self.assertEqual(result, ['Spam: False ; 0.0 / 5\r\n',
                                   'Content-length: 4\r\n\r\n', 'Test'])
         self.mockrules.get_adjusted_message.assert_called_with(
             self.msg, header_only=True

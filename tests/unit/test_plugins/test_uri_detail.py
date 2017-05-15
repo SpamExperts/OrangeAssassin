@@ -11,9 +11,9 @@ except ImportError:
     from mock import patch, MagicMock, Mock, call
 
 
-import pad.context
-import pad.message
-import pad.plugins.uri_detail
+import oa.context
+import oa.message
+import oa.plugins.uri_detail
 
 def _get_basic_message(text=""):
     msg = MIMEMultipart()
@@ -31,16 +31,16 @@ class TestURIDetail(unittest.TestCase):
         unittest.TestCase.setUp(self)
         self.options = {}
         self.global_data = {"geodb":"/innexistent/location/"}
-        self.cmds = {"uri_detail": pad.plugins.uri_detail.URIDetailRule}
-        patch("pad.plugins.uri_detail.URIDetailPlugin.options",
+        self.cmds = {"uri_detail": oa.plugins.uri_detail.URIDetailRule}
+        patch("oa.plugins.uri_detail.URIDetailPlugin.options",
               self.options).start()
-        patch("pad.plugins.uri_detail.URIDetailPlugin.cmds",
+        patch("oa.plugins.uri_detail.URIDetailPlugin.cmds",
               self.cmds).start()
         self.mock_ctxt = MagicMock(**{
             "get_plugin_data.side_effect": lambda p, k: self.global_data[k],
             "set_plugin_data.side_effect": lambda p, k, v: self.global_data.setdefault(k, v)}
                                   )
-        self.plugin = pad.plugins.uri_detail.URIDetailPlugin(self.mock_ctxt)
+        self.plugin = oa.plugins.uri_detail.URIDetailPlugin(self.mock_ctxt)
 
     def tearDown(self):
         unittest.TestCase.tearDown(self)
@@ -61,7 +61,7 @@ class TestURIDetail(unittest.TestCase):
         htmltext = ("<html><body><a href='http://example.com'>example.com</a>"
                     "</body></html>")
         emsg = _get_basic_message(htmltext)
-        msg = pad.message.Message(self.mock_ctxt, emsg.as_string())
+        msg = oa.message.Message(self.mock_ctxt, emsg.as_string())
         self.plugin.parsed_metadata(msg)
         expected = {u"http://example.com":
                         {"a":
@@ -78,7 +78,7 @@ class TestURIDetail(unittest.TestCase):
         """Test the plugin by asking it process one line of the configuration file"""
         htmltext = """http://example.com"""
         emsg = _get_basic_message(htmltext)
-        msg = pad.message.Message(self.mock_ctxt, emsg.as_string())
+        msg = oa.message.Message(self.mock_ctxt, emsg.as_string())
         self.plugin.parsed_metadata(msg)
         expected = {u"http://example.com":
                         {"parsed":
@@ -99,7 +99,7 @@ class TestURIDetail(unittest.TestCase):
                     "<link src='http://test%2Ecom'>exampletest.com</a>"
                     "</body></html>")
         emsg = _get_basic_message(htmltext)
-        msg = pad.message.Message(self.mock_ctxt, emsg.as_string())
+        msg = oa.message.Message(self.mock_ctxt, emsg.as_string())
         self.plugin.parsed_metadata(msg)
         expected = {'http://example.com':
                         {'a':
@@ -169,7 +169,7 @@ class TestUriDetailRule(unittest.TestCase):
     def test_match(self):
         """Test the match method in the Rule, the result of the match is True"""
         mock_pattern = (("domain", Mock(**{"match.return_value": True})),)
-        rule = pad.plugins.uri_detail.URIDetailRule("TEST", pattern=mock_pattern)
+        rule = oa.plugins.uri_detail.URIDetailRule("TEST", pattern=mock_pattern)
         result = rule.match(self.mock_msg)
         for key, pattern in mock_pattern:
             pattern.match.assert_called_once_with(
@@ -179,7 +179,7 @@ class TestUriDetailRule(unittest.TestCase):
     def test_match_notmatched(self):
         """Test the match method in the Rule, the result of the match is False"""
         mock_pattern = (("domain", Mock(**{"match.return_value": False})),)
-        rule = pad.plugins.uri_detail.URIDetailRule("TEST", pattern=mock_pattern)
+        rule = oa.plugins.uri_detail.URIDetailRule("TEST", pattern=mock_pattern)
         result = rule.match(self.mock_msg)
         calls = []
         for key in self.uri_detail_links:
@@ -193,10 +193,10 @@ class TestUriDetailRule(unittest.TestCase):
     def test_get_rule_kwargs(self):
         """Test getting the kwargs for the rule, the rule have keys (what to match in the
         link) and the value to be used in against the regex"""
-        mock_perl2re = patch("pad.rules.uri.pad.regex.perl2re").start()
+        mock_perl2re = patch("oa.rules.uri.oa.regex.perl2re").start()
         data = {"value": r'domain =~ /\bexample.com\b/'}
         expected = {"pattern": [("domain", mock_perl2re("/example.com/")),]}
-        kwargs = pad.plugins.uri_detail.URIDetailRule.get_rule_kwargs(data)
+        kwargs = oa.plugins.uri_detail.URIDetailRule.get_rule_kwargs(data)
         mock_perl2re.assert_called_with(r'/\bexample.com\b/', "=~")
         self.assertEqual(kwargs, expected)
 

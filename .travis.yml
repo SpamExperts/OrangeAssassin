@@ -29,21 +29,21 @@ install:
 before_script:
 - if [[ $USE_SQLALCHEMY == false ]]; then mysql -u root -e 'create database spampad;'; fi
 script:
-- py.test tests/unit/ --cov pad --cov scripts --cov-report term-missing
+- py.test tests/unit/ --cov oa --cov scripts --cov-report term-missing
 - env USE_PICKLES=0 py.test tests/functional/
 - if [[ $TRAVIS_PYTHON_VERSION != pypy* ]]; then env USE_PICKLES=1 py.test tests/functional/; fi
-- py.test tests/profiling/
+#- py.test tests/profiling/
 after_script:
 - cat .profile_results/*report.txt
-- pep8 --show-source pad
+- pep8 --show-source oa
 after_success:
 - bash <(curl -s https://codecov.io/bash)
 - coveralls
-notifications:
-  email:
-    secure: KQxfGXb3gk23vdaf1WtbFBVhIB1yreEJH8aBn4CWFKw1DcR8Yu/plPWXSxXtOiaJpsZHbmG9Zry+Hft+qUE3LY4EreqVDcDVsn3i/fJ5Yj4D0ag/3g+t5uW9fq8fjCOQB5TPft2yKJDrV/xrUvVOw/UiY0M6rBdJIg2zuVtb3kfSAHD8IF6BVJKztwPJf+reKvP5UWKH40wJQMOTBqooiavtQFAxYJgz6DtWdm+GNE+islMshFp7uZ5sn//qVVXZr0K1Cl60A04L5L4hKAiaF5FEKBGeu+0OxIXC8hAplMRmEQeS2kbqNv18W3u6OMrUalPx/XiF4u0kVuZNnHdDlLQeqClQgYW96pkvt4Z79H856dvWzE4/faeula6PkF9vd1GrIX0AddV6xxXFUKrXgaJrLLL0bhyTkU/GVQyutv2kuzm2ueCL7CFB+3KWGz0KDFaMzXz1p+jcIGSLLFVDjgw5Nv+z0C4iqPfZDai9WM5WzNwMAQHO8kUTlMwNmJj1x5vYSEbk+rEpfph2RHXUqPlhI56hyGPiDhtqW5oc83ASVg0I6b0SOiGQzbaBet0sKA/di3/2psLwGAxRAeLMofThCt/VjgmIwPVBOZ6lPToD/ytMxFhSLM7ttt0UKO9sC3A1YG6ziItVeX/w68k7X0USQbDy5ZnDh2tc+P/u61k=
-  slack:
-    secure: bHvycDnFh3TAzQRWl0uwCnRuiPSqB9vvXkvfDlI5qZe5YqFFoDLHub/1DDNrPzbhUIhFKwXP1be1Xq1USKL3qKUhPWdgnOZ0RsXxXIlA0ow8QSE+2tmavzeDIjumyZM4IgvVHOVxCqh1KRGBDQ9Bc07bsN6Fie0/4PDSUHEZ5b2qq/bJxkdSAXocMaddiLAWcUxCH1JOf63Wtqp7MczBQRz/K0DC+XWqfC3IcWtcneWFjxwsHUPrMHCu8KHE01jlvX87Kb6MOKu2YfwLlywcFzQg2d2jZfdFnv0nooyWfcV0VFJmSAAagKxrGBJviEofIX17Uf+iOZSBupU5m6HdCXSHw2zP5yecNfXmv2P/LMbQ8mt7iSIcQFTeQpTORS6UZdLWikccbV92+fyQygc/8DmnsJI7esI1ljqmE/ATpVu19BoQn7/pkwTYsEBSBLWDGwHP0ukp8NuI2ed2qsX+iFOGDPLT1SP7dwmNLsvMFdV4JqViSfaiBe0SUcohUZLzIQB3dEWf4RsOTM3/yF0yV+YLJ95dRdSFpcYJfdDcOv65M0siWzZQC1esC8/UO0Ox4+I0s4cVQze8l+XjOOuSDyGhqx6RGjrcaDJbrdjL4NJy/REayB+CSEKxaoI9YNAWjIDt+hpN1rJJ3+bkNmfzHy77Jv74QvjiAgZs6YOQP/s=
+#notifications:
+#  email:
+#    secure: KQxfGXb3gk23vdaf1WtbFBVhIB1yreEJH8aBn4CWFKw1DcR8Yu/plPWXSxXtOiaJpsZHbmG9Zry+Hft+qUE3LY4EreqVDcDVsn3i/fJ5Yj4D0ag/3g+t5uW9fq8fjCOQB5TPft2yKJDrV/xrUvVOw/UiY0M6rBdJIg2zuVtb3kfSAHD8IF6BVJKztwPJf+reKvP5UWKH40wJQMOTBqooiavtQFAxYJgz6DtWdm+GNE+islMshFp7uZ5sn//qVVXZr0K1Cl60A04L5L4hKAiaF5FEKBGeu+0OxIXC8hAplMRmEQeS2kbqNv18W3u6OMrUalPx/XiF4u0kVuZNnHdDlLQeqClQgYW96pkvt4Z79H856dvWzE4/faeula6PkF9vd1GrIX0AddV6xxXFUKrXgaJrLLL0bhyTkU/GVQyutv2kuzm2ueCL7CFB+3KWGz0KDFaMzXz1p+jcIGSLLFVDjgw5Nv+z0C4iqPfZDai9WM5WzNwMAQHO8kUTlMwNmJj1x5vYSEbk+rEpfph2RHXUqPlhI56hyGPiDhtqW5oc83ASVg0I6b0SOiGQzbaBet0sKA/di3/2psLwGAxRAeLMofThCt/VjgmIwPVBOZ6lPToD/ytMxFhSLM7ttt0UKO9sC3A1YG6ziItVeX/w68k7X0USQbDy5ZnDh2tc+P/u61k=
+#  slack:
+#    secure: bHvycDnFh3TAzQRWl0uwCnRuiPSqB9vvXkvfDlI5qZe5YqFFoDLHub/1DDNrPzbhUIhFKwXP1be1Xq1USKL3qKUhPWdgnOZ0RsXxXIlA0ow8QSE+2tmavzeDIjumyZM4IgvVHOVxCqh1KRGBDQ9Bc07bsN6Fie0/4PDSUHEZ5b2qq/bJxkdSAXocMaddiLAWcUxCH1JOf63Wtqp7MczBQRz/K0DC+XWqfC3IcWtcneWFjxwsHUPrMHCu8KHE01jlvX87Kb6MOKu2YfwLlywcFzQg2d2jZfdFnv0nooyWfcV0VFJmSAAagKxrGBJviEofIX17Uf+iOZSBupU5m6HdCXSHw2zP5yecNfXmv2P/LMbQ8mt7iSIcQFTeQpTORS6UZdLWikccbV92+fyQygc/8DmnsJI7esI1ljqmE/ATpVu19BoQn7/pkwTYsEBSBLWDGwHP0ukp8NuI2ed2qsX+iFOGDPLT1SP7dwmNLsvMFdV4JqViSfaiBe0SUcohUZLzIQB3dEWf4RsOTM3/yF0yV+YLJ95dRdSFpcYJfdDcOv65M0siWzZQC1esC8/UO0Ox4+I0s4cVQze8l+XjOOuSDyGhqx6RGjrcaDJbrdjL4NJy/REayB+CSEKxaoI9YNAWjIDt+hpN1rJJ3+bkNmfzHy77Jv74QvjiAgZs6YOQP/s=
 addons:
     code_climate:
-        repo_token: 1131f3f20c9c4e7d9323cdf25406baf91f425e24f0b2b015334ffd29bb2a0866
+        repo_token: c628098cb1f2f9bea6558e91cdd2e27c4a5919f6a9c19dd75da6203a9a6eda4c

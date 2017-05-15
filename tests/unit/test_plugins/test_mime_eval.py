@@ -7,9 +7,9 @@ except ImportError:
     from mock import patch, Mock, MagicMock, call
 
 
-import pad.message
-import pad.plugins
-import pad.plugins.mime_eval
+import oa.message
+import oa.plugins
+import oa.plugins.mime_eval
 
 
 class TestMIMEEval(unittest.TestCase):
@@ -31,7 +31,7 @@ class TestMIMEEval(unittest.TestCase):
                                   setdefault(k, v),
         })
 
-        self.plugin = pad.plugins.mime_eval.MIMEEval(self.mock_ctxt)
+        self.plugin = oa.plugins.mime_eval.MIMEEval(self.mock_ctxt)
 
     def tearDown(self):
         patch.stopall()
@@ -92,8 +92,8 @@ class TestMIMEEval(unittest.TestCase):
 
     def test_check_parse_flags_truncated_headers(self):
         self.mock_msg.raw_headers = {
-            "a"*(pad.plugins.mime_eval.MAX_HEADER_KEY + 2):
-                "b"*(pad.plugins.mime_eval.MAX_HEADER_VALUE + 2)}
+            "a"*(oa.plugins.mime_eval.MAX_HEADER_KEY + 2):
+                "b"*(oa.plugins.mime_eval.MAX_HEADER_VALUE + 2)}
         self.assertTrue(self.plugin.check_msg_parse_flags(
             self.mock_msg, "truncated_headers"
         ))

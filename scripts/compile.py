@@ -8,12 +8,12 @@ import argparse
 
 import dill as pickle
 
-import pad
-import pad.common
-import pad.config
-import pad.errors
-import pad.message
-import pad.rules.parser
+import oa
+import oa.common
+import oa.config
+import oa.errors
+import oa.message
+import oa.rules.parser
 
 SERIALIZED = False
 
@@ -63,13 +63,13 @@ def parse_arguments(args):
     parser.add_argument("-D", "--debug", action="store_true",
                         help="Enable debugging output", default=False)
     parser.add_argument("-v", "--version", action="version",
-                        version=pad.__version__)
+                        version=oa.__version__)
     parser.add_argument("-C", "--configpath", action="store",
                         help="Path to standard configuration directory",
-                        **pad.config.get_default_configs(site=False))
+                        **oa.config.get_default_configs(site=False))
     parser.add_argument("-S", "--sitepath", "--siteconfigpath", action="store",
                         help="Path to standard configuration directory",
-                        **pad.config.get_default_configs(site=True))
+                        **oa.config.get_default_configs(site=True))
     parser.add_argument("-p", "--prefspath", "--prefs-file",
                         default="~/.spamassassin/user_prefs",
                         help="Path to user preferences.")
@@ -96,7 +96,7 @@ def parse_arguments(args):
 
 
 def serialize(ruleset, path):
-    logger = logging.getLogger("pad-logger")
+    logger = logging.getLogger("oa-logger")
     logger.info("Compiling ruleset to %s", path)
     try:
         with open(os.path.expanduser(path), "wb") as f:
@@ -108,20 +108,20 @@ def serialize(ruleset, path):
 
 def main():
     options = parse_arguments(sys.argv[1:])
-    pad.config.LAZY_MODE = not options.lazy_mode
-    logger = pad.config.setup_logging("pad-logger",
-                                      debug=options.debug)
-    config_files = pad.config.get_config_files(options.configpath,
-                                               options.sitepath,
-                                               options.prefspath)
-    if not pad.common.can_compile():
+    oa.config.LAZY_MODE = not options.lazy_mode
+    logger = oa.config.setup_logging("oa-logger",
+                                     debug=options.debug)
+    config_files = oa.config.get_config_files(options.configpath,
+                                              options.sitepath,
+                                              options.prefspath)
+    if not oa.common.can_compile():
         logger.critical("Cannot compile in this environment")
         sys.exit(1)
 
     if not config_files:
         logger.critical("Config: no rules were found.")
         sys.exit(1)
-    ruleset = pad.rules.parser.parse_pad_rules(
+    ruleset = oa.rules.parser.parse_pad_rules(
         config_files, options.paranoid, not options.show_unknown
     ).get_ruleset()
 

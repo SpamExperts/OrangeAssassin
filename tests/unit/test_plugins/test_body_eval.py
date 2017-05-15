@@ -8,7 +8,7 @@ try:
 except ImportError:
     from mock import patch, Mock, MagicMock, call
 
-import pad.plugins.body_eval
+import oa.plugins.body_eval
 
 
 class TestBodyEval(unittest.TestCase):
@@ -22,7 +22,7 @@ class TestBodyEval(unittest.TestCase):
         self.global_data = {}
         self.mock_ctxt = MagicMock()
         self.mock_msg = MagicMock()
-        self.plugin = pad.plugins.body_eval.BodyEval(self.mock_ctxt)
+        self.plugin = oa.plugins.body_eval.BodyEval(self.mock_ctxt)
         self.plugin.set_local = lambda m, k, v: self.local_data.__setitem__(k, v)
         self.plugin.get_local = lambda m, k: self.local_data.__getitem__(k)
         self.plugin.set_global = self.global_data.__setitem__

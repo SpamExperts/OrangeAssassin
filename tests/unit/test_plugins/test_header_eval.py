@@ -9,7 +9,7 @@ try:
 except ImportError:
     from mock import patch, Mock, MagicMock, call
 
-import pad.plugins.header_eval
+import oa.plugins.header_eval
 
 
 class TestHeaderEvalBase(unittest.TestCase):
@@ -24,16 +24,16 @@ class TestHeaderEvalBase(unittest.TestCase):
                                    setdefault(k, v)
         })
         self.mock_msg = MagicMock()
-        self.plugin = pad.plugins.header_eval.HeaderEval(self.mock_ctxt)
+        self.plugin = oa.plugins.header_eval.HeaderEval(self.mock_ctxt)
         self.plugin.set_local = lambda m, k, v: self.local_data.__setitem__(k,
                                                                             v)
         self.plugin.get_local = lambda m, k: self.local_data.__getitem__(k)
         self.plugin.set_global = self.global_data.__setitem__
         self.plugin.get_global = self.global_data.__getitem__
         self.mock_ruleset = MagicMock()
-        self.mock_locale = patch("pad.plugins.header_eval."
-                                 "pad.locales.charset_ok_for_locales").start()
-        self.mock_is_domain_valid = patch("pad.plugins.header_eval."
+        self.mock_locale = patch("oa.plugins.header_eval."
+                                 "oa.locales.charset_ok_for_locales").start()
+        self.mock_is_domain_valid = patch("oa.plugins.header_eval."
                                           "HeaderEval.is_domain_valid").start()
 
     def tearDown(self):
@@ -108,7 +108,7 @@ class TestHeaderEval(TestHeaderEvalBase):
     def test_check_for_faraway_charset_in_headers_invalid_header(self):
         self.mock_locale.return_value = False
         self.mock_ctxt.conf.get_global.return_value = "ru"
-        patch("pad.plugins.header_eval.email.header.decode_header",
+        patch("oa.plugins.header_eval.email.header.decode_header",
               side_effect=ValueError).start()
         self.mock_msg.get_raw_header.return_value = ["=?UTF8?B?dGVzdA==?="]
         result = self.plugin.check_for_faraway_charset_in_headers(self.mock_msg)
@@ -236,7 +236,7 @@ class TestHeaderEval(TestHeaderEvalBase):
         ip = ""
         self.mock_msg.get_all_addr_header.side_effect = [[from_addr]]
         self.mock_msg.get_decoded_header.side_effect = [[received], [ip]]
-        patch("pad.plugins.header_eval.HeaderEval.gated_through_received_hdr_remover",
+        patch("oa.plugins.header_eval.HeaderEval.gated_through_received_hdr_remover",
               return_value=False).start()
         result = self.plugin.check_for_forged_eudoramail_received_headers(
             self.mock_msg)
@@ -249,7 +249,7 @@ class TestHeaderEval(TestHeaderEvalBase):
         ip = "192.168.34.41"
         self.mock_msg.get_all_addr_header.side_effect = [[from_addr]]
         self.mock_msg.get_decoded_header.side_effect = [[received], [ip]]
-        patch("pad.plugins.header_eval.HeaderEval.gated_through_received_hdr_remover",
+        patch("oa.plugins.header_eval.HeaderEval.gated_through_received_hdr_remover",
               return_value=False).start()
         result = self.plugin.check_for_forged_eudoramail_received_headers(
             self.mock_msg)
@@ -265,7 +265,7 @@ class TestHeaderEval(TestHeaderEvalBase):
     def test_check_for_forged_juno_received_headers_gated_through(self):
         from_addr = "test@juno.com"
         self.mock_msg.get_all_addr_header.side_effect = [[from_addr]]
-        patch("pad.plugins.header_eval.HeaderEval.gated_through_received_hdr_remover",
+        patch("oa.plugins.header_eval.HeaderEval.gated_through_received_hdr_remover",
               return_value=True).start()
         result = self.plugin.check_for_forged_juno_received_headers(
             self.mock_msg)
@@ -278,7 +278,7 @@ class TestHeaderEval(TestHeaderEvalBase):
         self.mock_msg.get_all_addr_header.side_effect = [[from_addr]]
         self.mock_msg.get_decoded_header.side_effect = [[xorig], [""],
                                                         [received]]
-        patch("pad.plugins.header_eval.HeaderEval.gated_through_received_hdr_remover",
+        patch("oa.plugins.header_eval.HeaderEval.gated_through_received_hdr_remover",
               return_value=False).start()
         result = self.plugin.check_for_forged_juno_received_headers(
             self.mock_msg)
@@ -292,7 +292,7 @@ class TestHeaderEval(TestHeaderEvalBase):
         self.mock_msg.get_all_addr_header.side_effect = [[from_addr]]
         self.mock_msg.get_decoded_header.side_effect = [[xorig], [xmailer],
                                                         [received]]
-        patch("pad.plugins.header_eval.HeaderEval.gated_through_received_hdr_remover",
+        patch("oa.plugins.header_eval.HeaderEval.gated_through_received_hdr_remover",
               return_value=False).start()
         result = self.plugin.check_for_forged_juno_received_headers(
             self.mock_msg)
@@ -306,7 +306,7 @@ class TestHeaderEval(TestHeaderEvalBase):
         self.mock_msg.get_all_addr_header.side_effect = [[from_addr]]
         self.mock_msg.get_decoded_header.side_effect = [[xorig], [xmailer],
                                                         [received]]
-        patch("pad.plugins.header_eval.HeaderEval.gated_through_received_hdr_remover",
+        patch("oa.plugins.header_eval.HeaderEval.gated_through_received_hdr_remover",
               return_value=False).start()
         result = self.plugin.check_for_forged_juno_received_headers(
             self.mock_msg)
@@ -320,7 +320,7 @@ class TestHeaderEval(TestHeaderEvalBase):
         self.mock_msg.get_all_addr_header.side_effect = [[from_addr]]
         self.mock_msg.get_decoded_header.side_effect = [[xorig], [xmailer],
                                                         [received]]
-        patch("pad.plugins.header_eval.HeaderEval.gated_through_received_hdr_remover",
+        patch("oa.plugins.header_eval.HeaderEval.gated_through_received_hdr_remover",
               return_value=False).start()
         result = self.plugin.check_for_forged_juno_received_headers(
             self.mock_msg)
@@ -334,7 +334,7 @@ class TestHeaderEval(TestHeaderEvalBase):
         self.mock_msg.get_all_addr_header.side_effect = [[from_addr]]
         self.mock_msg.get_decoded_header.side_effect = [[xorig], [xmailer],
                                                         [received]]
-        patch("pad.plugins.header_eval.HeaderEval.gated_through_received_hdr_remover",
+        patch("oa.plugins.header_eval.HeaderEval.gated_through_received_hdr_remover",
               return_value=False).start()
         result = self.plugin.check_for_forged_juno_received_headers(
             self.mock_msg)
@@ -547,7 +547,7 @@ To: user@gmail.com
                                                         [resent_to],
                                                         [xreceived]]
         patch(
-            "pad.plugins.header_eval.HeaderEval."
+            "oa.plugins.header_eval.HeaderEval."
             "gated_through_received_hdr_remover", return_value=False).start()
         result = self.plugin.check_for_forged_yahoo_received_headers(self.mock_msg)
         self.assertTrue(result)
@@ -566,7 +566,7 @@ To: user@gmail.com
                                                         [resent_to],
                                                         [xreceived]]
         patch(
-            "pad.plugins.header_eval.HeaderEval."
+            "oa.plugins.header_eval.HeaderEval."
             "gated_through_received_hdr_remover", return_value=False).start()
         result = self.plugin.check_for_forged_yahoo_received_headers(self.mock_msg)
         self.assertFalse(result)
@@ -593,7 +593,7 @@ To: user@gmail.com
                                          'by': 'mx9.webfaction.com', 'msa': 0}]
         self.mock_msg.untrusted_relays = []
         patch(
-            "pad.plugins.header_eval.HeaderEval."
+            "oa.plugins.header_eval.HeaderEval."
             "gated_through_received_hdr_remover", return_value=False).start()
         result = self.plugin.check_for_forged_yahoo_received_headers(self.mock_msg)
         self.assertFalse(result)
@@ -609,10 +609,10 @@ class TestMessageId(TestHeaderEvalBase):
     def setUp(self):
         super(TestMessageId, self).setUp()
         self.mock_gated = patch(
-            "pad.plugins.header_eval.HeaderEval."
+            "oa.plugins.header_eval.HeaderEval."
             "gated_through_received_hdr_remover").start()
         self.mock_check_msn = patch(
-            "pad.plugins.header_eval.HeaderEval."
+            "oa.plugins.header_eval.HeaderEval."
             "check_for_msn_groups_headers").start()
 
     def test_check_messageid_not_usable_list_unsubscribe_true(self):
@@ -801,7 +801,7 @@ for ; Sat, 18 Jun 2016 05:00:14 GMT"""]
     def test_check_date_diff_none(self):
         self.local_data = {"date_header_time": -1}
         result = self.plugin._check_date_diff(self.mock_msg)
-        self.assertEqual(result, 0)
+        self.assertEqual(result, datetime.timedelta(0))
 
     def test_check_date_diff(self):
         date_header_time = datetime.datetime(2016, 10, 10, 15, 0, 0)
@@ -1000,7 +1000,7 @@ class TestForgedHotmailRcvd(TestHeaderEvalBase):
     def setUp(self):
         super(TestForgedHotmailRcvd, self).setUp()
         self.headers = {}
-        self.mock_forged_hotmail = patch("pad.plugins.header_eval.HeaderEval."
+        self.mock_forged_hotmail = patch("oa.plugins.header_eval.HeaderEval."
                                          "_check_for_forged_hotmail"
                                          "_received_headers").start()
 

@@ -6,7 +6,7 @@ import tests.util
 
 # Load plugin and report matched RULES and SCORE
 PRE_CONFIG = """
-loadplugin pad.plugins.spf.SpfPlugin
+loadplugin oa.plugins.spf.SpfPlugin
 report _SCORE_
 report _TESTS_
 """
@@ -858,6 +858,301 @@ Received: from example.com ([1.2.3.4]) by test.com
         result = self.check_pad(email)
         self.check_report(result, 2, ['SPF_SOFTFAIL', 'SPF_HELO_FAIL'])
 
+    def test_whitelist_from_spf_with_identity_none(self):
+        lists = """whitelist_from_spf *spamexperts.com"""
+
+        email = """Received-SPF: pass (example.com: domain of test@example.com) identity=NonE
+Received: from example.com ([1.2.3.4]) by test.com
+    (envelope-from <test@spamexperts.com>)"""
+
+        self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG + lists)
+        result = self.check_pad(email)
+        self.check_report(result, 2, ['SPF_HELO_FAIL', 'SPF_SOFTFAIL'])
+
+    def test_whitelist_from_spf_with_identity_mfrom(self):
+        lists = """whitelist_from_spf *spamexperts.com"""
+
+        email = """Received-SPF: pass (example.com: domain of test@example.com) identity=mfROm
+Received: from example.com ([1.2.3.4]) by test.com
+    (envelope-from <test@spamexperts.com>)"""
+
+        self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG + lists)
+        result = self.check_pad(email)
+        self.check_report(result, 3, ['CHECK_FOR_SPF_WHITELIST', 'SPF_HELO_FAIL', 'SPF_PASS'])
+
+    def test_whitelist_from_spf_with_identity_mailfrom(self):
+        lists = """whitelist_from_spf *spamexperts.com"""
+
+        email = """Received-SPF: pass (example.com: domain of test@example.com) identity=mailFRom
+Received: from example.com ([1.2.3.4]) by test.com
+    (envelope-from <test@spamexperts.com>)"""
+
+        self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG + lists)
+        result = self.check_pad(email)
+        self.check_report(result, 3, ['CHECK_FOR_SPF_WHITELIST', 'SPF_HELO_FAIL', 'SPF_PASS'])
+
+    def test_whitelist_from_spf_with_incorrect_identity(self):
+        lists = """whitelist_from_spf *spamexperts.com"""
+
+        email = """Received-SPF: pass (example.com: domain of test@example.com) identity=mailFRo
+Received: from example.com ([1.2.3.4]) by test.com
+    (envelope-from <test@spamexperts.com>)"""
+
+        self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG + lists)
+        result = self.check_pad(email)
+        self.check_report(result, 2, ['SPF_SOFTFAIL', 'SPF_HELO_FAIL'])
+
+    # test for check_for_def_spf_whitelist_from()
+    def test_def_whitelist_from_spf_full_address(self):
+        lists = """def_whitelist_from_spf test@google.com"""
+
+        email = """Received: from example.com ([2a00:1450:4017:804::200e])
+        by test.com
+    (envelope-from <test@google.com>)"""
+
+        self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG + lists)
+        result = self.check_pad(email)
+        self.check_report(result, 3, ['SPF_PASS', 'SPF_HELO_FAIL',
+                                      'CHECK_FOR_DEF_SPF_WHITELIST'])
+
+    def test_def_whitelist_from_spf_with_wild_local_part(self):
+        lists = """def_whitelist_from_spf *@g?ogle.com"""
+
+        email = """Received: from example.com ([2a00:1450:4017:804::200e])
+        by test.com
+    (envelope-from <test@google.com>)"""
+
+        self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG + lists)
+        result = self.check_pad(email)
+        self.check_report(result, 3, ['SPF_PASS', 'SPF_HELO_FAIL',
+                                      'CHECK_FOR_DEF_SPF_WHITELIST'])
+
+    def test_def_whitelist_from_spf_with_full_domain(self):
+        lists = """def_whitelist_from_spf google.com"""
+
+        email = """Received: from example.com ([2a00:1450:4017:804::200e])
+        by test.com
+    (envelope-from <test@google.com>)"""
+
+        self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG + lists)
+        result = self.check_pad(email)
+        self.check_report(result, 3, ['SPF_PASS', 'SPF_HELO_FAIL',
+                                      'CHECK_FOR_DEF_SPF_WHITELIST'])
+
+    def test_def_whitelist_from_spf_with_regex(self):
+        lists = """def_whitelist_from_spf .*.com"""
+
+        email = """Received: from example.com ([2a00:1450:4017:804::200e])
+        by test.com
+    (envelope-from <test@google.com>)"""
+
+        self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG + lists)
+        result = self.check_pad(email)
+        self.check_report(result, 2, ['SPF_PASS', 'SPF_HELO_FAIL'])
+
+    def test_def_whitelist_from_spf_with_wild_domain(self):
+        lists = """def_whitelist_from_spf *goog?e.com"""
+
+        email = """Received: from example.com ([2a00:1450:4017:804::200e])
+        by test.com
+    (envelope-from <test@google.com>)"""
+
+        self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG + lists)
+        result = self.check_pad(email)
+        self.check_report(result, 3, ['SPF_PASS', 'SPF_HELO_FAIL',
+                                      'CHECK_FOR_DEF_SPF_WHITELIST'])
+
+    def test_def_whitelist_from_spf_with_empty_list(self):
+        lists = """def_whitelist_from_spf"""
+
+        email = """Received: from example.com ([2a00:1450:4017:804::200e])
+        by test.com
+    (envelope-from <test@google.com>)"""
+
+        self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG + lists)
+        result = self.check_pad(email)
+        self.check_report(result, 2, ['SPF_PASS', 'SPF_HELO_FAIL'])
+
+    def test_def_whitelist_from_spf_with_invalid_list(self):
+        lists = """def_whitelist_from_spf google"""
+
+        email = """Received: from example.com ([2a00:1450:4017:804::200e])
+        by test.com
+    (envelope-from <test@google.com>)"""
+
+        self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG + lists)
+        result = self.check_pad(email)
+        self.check_report(result, 2, ['SPF_PASS', 'SPF_HELO_FAIL'])
+
+    def test_def_whitelist_from_spf_with_combined_lists(self):
+        lists = """def_whitelist_from_spf *google.net *@google.com"""
+
+        email = """Received: from example.com ([2a00:1450:4017:804::200e])
+        by test.com
+    (envelope-from <test@google.com>)"""
+
+        self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG + lists)
+        result = self.check_pad(email)
+        self.check_report(result, 3, ['SPF_PASS', 'SPF_HELO_FAIL',
+                                      'CHECK_FOR_DEF_SPF_WHITELIST'])
+
+    def test_def_whitelist_from_spf_with_split_lists(self):
+        lists = """def_whitelist_from_spf *google.net
+                 def_whitelist_from_spf *@google.com"""
+
+        email = """Received: from example.com ([2a00:1450:4017:804::200e])
+        by test.com
+    (envelope-from <test@google.com>)"""
+
+        self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG + lists)
+        result = self.check_pad(email)
+        self.check_report(result, 3, ['SPF_PASS', 'SPF_HELO_FAIL',
+                                      'CHECK_FOR_DEF_SPF_WHITELIST'])
+
+    def test_def_whitelist_from_spf_with_spf_fail(self):
+        lists = """def_whitelist_from_spf *example.com"""
+
+        email = """Received: from example.com ([2a00:1450:4017:804::200e])
+        by test.com
+    (envelope-from <test@example.com>)"""
+
+        self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG + lists)
+        result = self.check_pad(email)
+        self.check_report(result, 2, ['SPF_FAIL', 'SPF_HELO_FAIL'])
+
+    def test_def_whitelist_from_spf_with_spf_softfail(self):
+        lists = """def_whitelist_from_spf *spamexperts.com"""
+
+        email = """Received: from example.com ([1.2.3.4]) by test.com
+    (envelope-from <test@spamexperts.com>)"""
+
+        self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG + lists)
+        result = self.check_pad(email)
+        self.check_report(result, 2, ['SPF_SOFTFAIL', 'SPF_HELO_FAIL'])
+
+    def test_def_whitelist_from_spf_with_spf_neutral(self):
+        lists = """def_whitelist_from_spf *spamexperts.com"""
+
+        email = """Received-SPF: neutral (example.com: domain of
+        test@example.com)
+Received: from example.com ([2a00:1450:4017:804::200e]) by test.com
+    (envelope-from <test@spamexperts.com>)"""
+
+        self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG + lists)
+        result = self.check_pad(email)
+        self.check_report(result, 2, ['SPF_NEUTRAL', 'SPF_HELO_FAIL'])
+
+    def test_def_whitelist_from_spf_with_spf_none(self):
+        lists = """def_whitelist_from_spf *spamexperts.com"""
+
+        email = """Received-SPF: none (example.com: domain of test@example.com)
+Received: from example.com ([2a00:1450:4017:804::200e]) by test.com
+    (envelope-from <test@spamexperts.com>)"""
+
+        self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG + lists)
+        result = self.check_pad(email)
+        self.check_report(result, 2, ['SPF_NONE', 'SPF_HELO_FAIL'])
+
+    def test_def_whitelist_from_spf_with_spf_permerror(self):
+        lists = """def_whitelist_from_spf *spamexperts.com"""
+
+        email = """Received-SPF: permerror (example.com: domain of test@example.com)
+Received: from example.com ([2a00:1450:4017:804::200e]) by test.com
+    (envelope-from <test@spamexperts.com>)"""
+
+        self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG + lists)
+        result = self.check_pad(email)
+        self.check_report(result, 2, ['SPF_PERMERROR', 'SPF_HELO_FAIL'])
+
+    def test_def_whitelist_from_spf_with_spf_temperror(self):
+        lists = """def_whitelist_from_spf *spamexperts.com"""
+
+        email = """Received-SPF: temperror (example.com: domain of test@example.com)
+Received: from example.com ([2a00:1450:4017:804::200e]) by test.com
+    (envelope-from <test@spamexperts.com>)"""
+
+        self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG + lists)
+        result = self.check_pad(email)
+        self.check_report(result, 2, ['SPF_TEMPERROR', 'SPF_HELO_FAIL'])
+
+    def test_def_whitelist_from_spf_with_spf_pass_and_ip_missmatch_ident(self):
+        lists = """def_whitelist_from_spf *spamexperts.com"""
+
+        email = """Received-SPF: pass (example.com: domain of test@example.com)
+Received: from example.com ([1.2.3.4]) by test.com
+    (envelope-from <test@spamexperts.com>)"""
+
+        self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG + lists)
+        result = self.check_pad(email)
+        self.check_report(result, 3, ['SPF_PASS', 'SPF_HELO_FAIL',
+                                      'CHECK_FOR_DEF_SPF_WHITELIST'])
+
+    def test_def_whitelist_from_spf_with_ignore_received_spf_header_method(self):
+        lists = """def_whitelist_from_spf *spamexperts.com
+                 ignore_received_spf_header 1"""
+
+        email = """Received-SPF: pass (example.com: domain of test@example.com)
+Received: from example.com ([1.2.3.4]) by test.com
+    (envelope-from <test@spamexperts.com>)"""
+
+        self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG + lists)
+        result = self.check_pad(email)
+        self.check_report(result, 2, ['SPF_SOFTFAIL', 'SPF_HELO_FAIL'])
+
+    def test_def_whitelist_from_spf_with_identity_none(self):
+        lists = """def_whitelist_from_spf *spamexperts.com"""
+
+        email = """Received-SPF: pass (example.com: domain of test@example.com) identity=NonE
+Received: from example.com ([1.2.3.4]) by test.com
+    (envelope-from <test@spamexperts.com>)"""
+
+        self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG + lists)
+        result = self.check_pad(email)
+        self.check_report(result, 2, ['SPF_HELO_FAIL', 'SPF_SOFTFAIL'])
+
+    def test_def_whitelist_from_spf_with_identity_mfrom(self):
+        lists = """def_whitelist_from_spf *spamexperts.com"""
+
+        email = """Received-SPF: pass (example.com: domain of test@example.com) identity=mfROm
+Received: from example.com ([1.2.3.4]) by test.com
+    (envelope-from <test@spamexperts.com>)"""
+
+        self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG + lists)
+        result = self.check_pad(email)
+        self.check_report(result, 3, ['CHECK_FOR_DEF_SPF_WHITELIST', 'SPF_HELO_FAIL', 'SPF_PASS'])
+
+    def test_def_whitelist_from_spf_with_identity_mailfrom(self):
+        lists = """def_whitelist_from_spf *spamexperts.com"""
+
+        email = """Received-SPF: pass (example.com: domain of test@example.com) identity=mailFRom
+Received: from example.com ([1.2.3.4]) by test.com
+    (envelope-from <test@spamexperts.com>)"""
+
+        self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG + lists)
+        result = self.check_pad(email)
+        self.check_report(result, 3, ['CHECK_FOR_DEF_SPF_WHITELIST', 'SPF_HELO_FAIL', 'SPF_PASS'])
+
+    def test_def_whitelist_from_spf_with_incorrect_identity(self):
+        lists = """def_whitelist_from_spf *spamexperts.com"""
+
+        email = """Received-SPF: pass (example.com: domain of test@example.com) identity=mailFRo
+Received: from example.com ([1.2.3.4]) by test.com
+    (envelope-from <test@spamexperts.com>)"""
+
+        self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG + lists)
+        result = self.check_pad(email)
+        self.check_report(result, 2, ['SPF_SOFTFAIL', 'SPF_HELO_FAIL'])
+
+    def test_def_whitelist_from_spf_with_identity_None(self):
+        lists = """def_whitelist_from_spf *spamexperts.com"""
+
+        email = """Received-SPF: pass (example.com: domain of test@example.com) identity=None
+Received: from example.com ([1.2.3.4]) by test.com
+    (envelope-from <test@spamexperts.com>)"""
+
+        self.setup_conf(config=CONFIG, pre_config=PRE_CONFIG + lists)
+        result = self.check_pad(email)
+        self.check_report(result, 2, ['SPF_HELO_FAIL', 'SPF_SOFTFAIL'])
 
 def suite():
     """Gather all the tests from this package in a test suite."""

@@ -7,7 +7,7 @@ try:
 except ImportError:
     from mock import patch, Mock, MagicMock, call
 
-import pad.plugins.free_mail
+import oa.plugins.free_mail
 
 
 class TestFreeMailBase(unittest.TestCase):
@@ -23,7 +23,7 @@ class TestFreeMailBase(unittest.TestCase):
         }
         self.mock_ctxt = MagicMock()
         self.mock_msg = MagicMock(msg={})
-        self.plugin = pad.plugins.free_mail.FreeMail(self.mock_ctxt)
+        self.plugin = oa.plugins.free_mail.FreeMail(self.mock_ctxt)
         self.plugin.set_local = lambda m, k, v: self.local_data.__setitem__(k,
                                                                             v)
         self.plugin.get_local = lambda m, k: self.local_data.__getitem__(k)
@@ -124,7 +124,7 @@ class TestEvalRules(TestFreeMailBase):
         self.assertFalse(result)
 
     def test_freemail_replyto_with_parse_body_false(self):
-        patch("pad.plugins.free_mail.FreeMail._parse_body", return_value=False).start()
+        patch("oa.plugins.free_mail.FreeMail._parse_body", return_value=False).start()
         self.global_data['freemail_skip_bulk_envfrom'] = False
         self.mock_msg.msg["Reply-To"] = "test@freemail2.example.com"
         self.mock_msg.msg["From"] = "test@freemail2.example.com"
@@ -132,7 +132,7 @@ class TestEvalRules(TestFreeMailBase):
         self.assertFalse(result)
 
     def test_freemail_replyto_with_parse_body_true(self):
-        patch("pad.plugins.free_mail.FreeMail._parse_body", return_value=True).start()
+        patch("oa.plugins.free_mail.FreeMail._parse_body", return_value=True).start()
         self.global_data['freemail_skip_bulk_envfrom'] = False
         self.global_data['freemail_body_emails'] = ["test@freemail.example.com"]
         self.mock_msg.msg["Reply-To"] = "test@freemail2.example.com"
@@ -143,7 +143,7 @@ class TestEvalRules(TestFreeMailBase):
         self.assertEqual(result, expected_result)
 
     def test_freemail_replyto_with_parse_body_true_false(self):
-        patch("pad.plugins.free_mail.FreeMail._parse_body", return_value=True).start()
+        patch("oa.plugins.free_mail.FreeMail._parse_body", return_value=True).start()
         self.global_data['freemail_skip_bulk_envfrom'] = False
         self.global_data['freemail_body_emails'] = ["test@freemail.example.com"]
         self.mock_msg.msg["Reply-To"] = "test@freemail.example.com"
@@ -243,13 +243,13 @@ class TestEvalRules(TestFreeMailBase):
         self.assertFalse(result)
 
     def test_freemail_body_not_parsed(self):
-        patch("pad.plugins.free_mail.FreeMail._parse_body", return_value=False).start()
+        patch("oa.plugins.free_mail.FreeMail._parse_body", return_value=False).start()
         result = self.plugin.check_freemail_body(self.mock_msg)
         self.assertFalse(result)
 
 #~~~~~~~~~~~~~~~~~~~~~~
     def test_freemail_body_parsed(self):
-        patch("pad.plugins.free_mail.FreeMail._parse_body", return_value=True).start()
+        patch("oa.plugins.free_mail.FreeMail._parse_body", return_value=True).start()
         self.global_data["body_emails"] = ["body@example.com",
                                            "body@freemail.example.com",
                                            "body2@freemail2.example.com"]
@@ -261,7 +261,7 @@ class TestEvalRules(TestFreeMailBase):
         self.assertEqual(result, expected_result)
 
     def test_freemail_body_parsed_regex(self):
-        patch("pad.plugins.free_mail.FreeMail._parse_body", return_value=True).start()
+        patch("oa.plugins.free_mail.FreeMail._parse_body", return_value=True).start()
         self.global_data["body_emails"] = ["body@example.com",
                                            "body@freemail.example.com",
                                            "body2@freemail2.example.com"]
