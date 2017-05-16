@@ -31,7 +31,7 @@ COMMANDS = {
 }
 
 
-class RequestHandler(spoon.server.Gulp):
+class RequestHandler(spoon.server.TCPGulp):
     """Handle a single request."""
 
     def handle(self):
