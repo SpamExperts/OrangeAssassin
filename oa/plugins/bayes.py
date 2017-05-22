@@ -17,10 +17,10 @@ http://www.linuxjournal.com/print.php?sid=6467
 The results are incorporated into SpamAssassin as the BAYES_* rules.
 """
 
-import hashlib
-import math
 import re
 import time
+import math
+import hashlib
 
 import oa.plugins.base
 from oa.regex import Regex
