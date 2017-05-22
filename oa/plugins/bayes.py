@@ -17,18 +17,18 @@ http://www.linuxjournal.com/print.php?sid=6467
 The results are incorporated into SpamAssassin as the BAYES_* rules.
 """
 
-import re
-import math
-import time
 import hashlib
-import email.utils
+import math
+import re
+import time
 
-import pad.plugins.base
-from pad.regex import Regex
+import oa.plugins.base
+from oa.regex import Regex
+
 try:
-    from pad.utils.bayes.sqlalchemy import Store
+    from oa.db.bayes.sqlalchemy import Store
 except ImportError:
-    from pad.utils.bayes.mysql import Store
+    from oa.db.bayes.mysql import Store
 
 
 GREY_AREA_TOKEN_RE = r"""
@@ -457,7 +457,7 @@ REQUIRE_SIGNIFICANT_TOKENS_TO_SCORE = -1
 MAX_TOKEN_LENGTH = 15
 
 
-class BayesPlugin(pad.plugins.base.BasePlugin):
+class BayesPlugin(oa.plugins.base.BasePlugin):
     """Implement a somewhat Bayesian plug-in."""
 
     learn_caller_will_untie = False
@@ -478,6 +478,7 @@ class BayesPlugin(pad.plugins.base.BasePlugin):
         u'bayes_sql_username': ('str', ''),
         u'bayes_sql_password': ('str', ''),
         u'bayes_auto_expire': ('int', 0),
+        u'bayes_token_sources': ('split', 'header visible invisible uri'),
     }
 
     eval_rules = ("check_bayes",)
@@ -510,6 +511,8 @@ class BayesPlugin(pad.plugins.base.BasePlugin):
             pass
 
     def parsed_metadata(self, msg):
+        self.ctxt.log.debug("rendered body %s", self['rendered'])
+        self.ctxt.log.debug("invisible body %s", self['invisible_rendered'])
         self[u"bayes_token_body"] = self.get_body_text_array_common(self["rendered"])
         self[u'bayes_token_inviz'] = self.get_body_text_array_common(self["invisible_rendered"])
         self[u'bayes_token_uris'] = []  # self.get_uri_list()
@@ -531,11 +534,10 @@ class BayesPlugin(pad.plugins.base.BasePlugin):
             "BAYESTCSPAMMY": tcspammy,
             "BAYESTCLEARNED": learned,
             "BAYESTC": count - learned,
-            "HAMMYTOKENS": self.get_local(msg, "bayes_token_info_hammy"),
-            "SPAMMYTOKENS": self.get_local(msg, "bayes_token_info_spammy"),
+            "HAMMYTOKENS": self.bayes_report_make_list(msg, self.get_local(msg, "bayes_token_info_hammy")),
+            "SPAMMYTOKENS": self.bayes_report_make_list(msg, self.get_local(msg, "bayes_token_info_spammy")),
             "TOKENSUMMARY": summary,
         })
-
 
     def finish(self):
         """Finish processing the message."""
@@ -1205,7 +1207,6 @@ class BayesPlugin(pad.plugins.base.BasePlugin):
 
             self.ctxt.log.debug("bayes: token '%s' => %s", raw_token, pw_prob)
 
-
         if not sorted_tokens or (0 < len(sorted_tokens) <= REQUIRE_SIGNIFICANT_TOKENS_TO_SCORE):
             self.ctxt.log.debug("bayes: cannot use bayes on this message; "
                                 "not enough usable tokens found")
@@ -1290,7 +1291,7 @@ class BayesPlugin(pad.plugins.base.BasePlugin):
         if abs(prob - 0.5) < MIN_PROB_STRENGTH:
             return 0
 
-        Na, na, Nb, nb = Nn, nn, Ns, ns if prob > 0.5 else Ns, ns, Nn, nn
+        Na, na, Nb, nb = (Nn, nn, Ns, ns) if prob > 0.5 else (Ns, ns, Nn, nn)
         p = 0.5 - MIN_PROB_STRENGTH
 
         if not USE_ROBINSON_FX_EQUATION_FOR_LOW_FREQS:
@@ -1308,49 +1309,54 @@ class BayesPlugin(pad.plugins.base.BasePlugin):
         # This shouldn't be necessary. Should not be < 1.
         return 1 if dd_exact < 1 else int(dd_exact)
 
-    def bayes_report_make_list(self, pms, info, param):
+    def bayes_report_make_list(self, msg, info, param=None):
         if not info:
             return "Tokens not available."
 
         limit, ftm_arg, more = (param or "5,,").split(",")
 
+        # f strings would have been nice here
         formats = {
-            "short": "$t",
-            "Short": 'Token: "$t"',
-            "compact": "$p-$D--$t",
-            "Compact": 'Probability $p -declassification distance $D '
-                       '("+" means > 9) --token: "$t"',
-            "medium": "$p-$D-$N--$t",
-            "long": "$p-$d--${h}h-${s}s--${a}d--$t",
-            "Long": 'Probability $p -declassification distance $D --in ${h} '
-                    'ham messages -and ${s} spam messages --${a} days old'
-                    '--token:"$t"'
+            "short": "{t}",
+            "Short": 'Token: "{t}"',
+            "compact": "{p}-{D}--{t}",
+            "Compact": 'Probability {p} -declassification distance {D} '
+                       '("+" means > 9) --token: "{t}"',
+            "medium": "{p}-{D}-{N}--{t}",
+            "long": "{p}-{d}--{h}h-{s}s--{a}d--{t}",
+            "Long": 'Probability {p} -declassification distance {D} --in {h} '
+                    'ham messages -and {s} spam messages --{a} days old'
+                    '--token:"{t}"'
         }
 
         try:
-            raw_fmt = formats[ftm_arg] if ftm_arg else "$p-$D--$t"
+            raw_fmt = formats[ftm_arg] if ftm_arg else "{p}-{D}--{t}"
         except KeyError:
             return "Invalid format, must be one of: %s" % (",".join(formats))
 
         fmt = '"%s"' % raw_fmt
-        amt = min((limit, len(info)))
+        amt = min((int(limit), len(info)))
         if not amt:
             return ""
 
-        ns = pms.bayes_nspam
-        nh = pms.bayes_nham
+        ns = self.get_local(msg, 'bayes_nspam')
+        nh = self.get_local(msg, 'bayes_nham')
         now = time.time()
-        def f(t, prob, s, h, u):
-            a = int((now - u) / (3600 * 24))
-            d = self._compute_declassification_distance(ns, nh, s, h, prob)
-            p = "%.3f" % prob
-            n = s + h
-            if prob < 0.5:
-                c = h
-                o = s
-            else:
-                c = s
-                o = h
-            return fmt(x)
 
-        return ", ".join(f(x) for x in info)
+        def f(prob, spam_count, ham_count, atime):
+            a = int((now - atime) / (3600 * 24))
+            d = self._compute_declassification_distance(ns, nh, spam_count, ham_count, prob)
+            p = "%.3f" % prob
+            n = spam_count + ham_count
+            if prob < 0.5:
+                c = ham_count
+                o = spam_count
+            else:
+                c = spam_count
+                o = ham_count
+            D,S,H,C,O,N = (float(x) for x in (d,spam_count,ham_count,c,o,n))
+            # XXX need to figure out t
+            return fmt.format(D=D, S=S, H=H, C=C, O=O, N=N,
+                              s=spam_count, p=p, h=ham_count, t='')
+
+        return ", ".join(f(**x[0]) for x in info)

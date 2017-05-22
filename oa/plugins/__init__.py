@@ -49,8 +49,7 @@ REIMPLEMENTED_PLUGINS = {
         "oa.plugins.uri_eval.URIEvalPlugin",
     "Mail::SpamAssassin::Plugin::AutoLearnThreshold":
         "oa.plugins.auto_learn_threshold.AutoLearnThreshold",
-    "Mail::SpamAssassin::Plugin::Bayes":
-        "oa.plugins.bayes.BayesPlugin",
+    "Mail::SpamAssassin::Plugin::Bayes": "oa.plugins.bayes.BayesPlugin",
     # NoOPS
     "Mail::SpamAssassin::Plugin::MIMEHeader":
         "oa.plugins.noop.MIMEHeaderPlugin",

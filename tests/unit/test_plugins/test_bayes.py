@@ -1,11 +1,13 @@
 """Tests for the Bayes plug-in."""
 
-import mock
 import email
 import hashlib
 import unittest
+
+import mock
 from mock import MagicMock
-from pad.plugins.bayes import BayesPlugin
+
+from oa.plugins.bayes import BayesPlugin
 
 
 class BayesTests(unittest.TestCase):

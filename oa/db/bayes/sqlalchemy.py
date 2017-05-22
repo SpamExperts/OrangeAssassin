@@ -1,4 +1,3 @@
-import pymysql
 from sqlalchemy.ext.declarative.api import declarative_base
 from sqlalchemy import Column, Integer, PrimaryKeyConstraint, String
 
