@@ -771,7 +771,7 @@ class BayesPlugin(oa.plugins.base.BasePlugin):
         for token in set(tuple(tokens)):
             if not token:
                 continue
-            yield hashlib.sha1(token.encode("utf8")).digest()[-5:]
+            yield hashlib.sha1(token.encode("utf8")).digest()[-5:], token
 
     def _tokenise_line(self, line, tokprefix, region):
         # Include quotes, .'s and -'s for URIs, and [$,]'s for Nigerian-scam
@@ -1133,7 +1133,7 @@ class BayesPlugin(oa.plugins.base.BasePlugin):
         ns, nn = self.store.nspam_nham_get()
         self.ctxt.log.debug("bayes: corpus size: nspam = %s, nham = %s", ns, nn)
         # XXX This has a timer in SA.
-        msgtokens = list(t for t in self.tokenise(msg))
+        msgtokens = dict(t for t in self.tokenise(msg))
         tokensdata = list(d for d in self.store.tok_get_all(msgtokens))
         probabilities_ref = self._compute_prob_for_all_tokens(tokensdata, ns, nn)
         pw = {}
@@ -1190,7 +1190,7 @@ class BayesPlugin(oa.plugins.base.BasePlugin):
             # What's more expensive, scanning headers for HAMMYTOKENS and
             # SPAMMYTOKENS tags that aren't there or collecting data that
             # won't be used?  Just collecting the data is certainly simpler.
-            raw_token = pw_tok or "(unknown)"
+            raw_token = msgtokens.get(tok.tobytes(), "(unknown)")
             s = pw_tok["spam_count"]
             n = pw_tok["ham_count"]
             a = pw_tok["atime"]
@@ -1343,7 +1343,7 @@ class BayesPlugin(oa.plugins.base.BasePlugin):
         nh = self.get_local(msg, 'bayes_nham')
         now = time.time()
 
-        def f(prob, spam_count, ham_count, atime):
+        def f(token, prob, spam_count, ham_count, atime):
             a = int((now - atime) / (3600 * 24))
             d = self._compute_declassification_distance(ns, nh, spam_count, ham_count, prob)
             p = "%.3f" % prob
@@ -1355,8 +1355,7 @@ class BayesPlugin(oa.plugins.base.BasePlugin):
                 c = spam_count
                 o = ham_count
             D,S,H,C,O,N = (float(x) for x in (d,spam_count,ham_count,c,o,n))
-            # XXX need to figure out t
             return fmt.format(D=D, S=S, H=H, C=C, O=O, N=N,
-                              s=spam_count, p=p, h=ham_count, t='')
+                              s=spam_count, p=p, h=ham_count, t=token)
 
-        return ", ".join(f(**x[0]) for x in info)
+        return ", ".join(f(*x) for x in info)
