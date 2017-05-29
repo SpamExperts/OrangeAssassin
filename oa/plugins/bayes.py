@@ -535,7 +535,7 @@ class BayesPlugin(oa.plugins.base.BasePlugin):
             "BAYESTCHAMMY": tchammy,
             "BAYESTCSPAMMY": tcspammy,
             "BAYESTCLEARNED": learned,
-            "BAYESTC": count - learned,
+            "BAYESTC": count,  # XXX This is still different than SA
             "HAMMYTOKENS": self.bayes_report_make_list(msg, self.get_local(msg, "bayes_token_info_hammy")),
             "SPAMMYTOKENS": self.bayes_report_make_list(msg, self.get_local(msg, "bayes_token_info_spammy")),
             "TOKENSUMMARY": summary,
