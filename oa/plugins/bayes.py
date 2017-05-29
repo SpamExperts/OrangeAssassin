@@ -47,7 +47,7 @@ o(?:re|st)|uch)|n(?:eed|o[tw]|umber)|o(?:ff|n(?:ly|e)|ut|wn)|p(?:eople|lace)
 right|s(?:ame|ee|uch)|t(?:h(?:at|is|rough|e)|ime)|using
 |
 w(?:eb|h(?:ere|y)|ith(?:out)?|or(?:ld|k))|y(?:ears?|ou(?:(?:\'re|r))?)
-)$/"""
+)$"""
 
 ADDR_HEADERS = {
     u"return-path", u"from", u"to", u"cc", u"reply-to", u"errors-to",
@@ -498,14 +498,14 @@ class BayesPlugin(oa.plugins.base.BasePlugin):
         return self['bayes_sql_password']
 
     def check_start(self, msg):
-        self['rendered'] = msg.msg['subject'] or '\n'
-        self['visible_rendered'] = msg.msg['subject'] or '\n'
-        self['invisible_rendered'] = ''
+        self['rendered'] = [msg.msg['subject'] or '\n']
+        self['visible_rendered'] = [msg.msg['subject'] or '\n']
+        self['invisible_rendered'] = []
 
     def extract_metadata(self, msg, payload, text, part):
         if part.get_content_type() == 'text/plain':
-            self['rendered'] += text
-            self['visible_rendered'] += text
+            self['rendered'].append(text)
+            self['visible_rendered'].append(text)
         if part.get_content_type() == 'text/html':
             # XXX SA parses these and checks for [in]visible content
             pass
@@ -513,6 +513,8 @@ class BayesPlugin(oa.plugins.base.BasePlugin):
     def parsed_metadata(self, msg):
         self.ctxt.log.debug("rendered body %s", self['rendered'])
         self.ctxt.log.debug("invisible body %s", self['invisible_rendered'])
+        self['rendered'] = "\n".join(self['rendered'])
+        self['invisible_rendered'] = "\n".join(self['invisible_rendered'])
         self[u"bayes_token_body"] = self.get_body_text_array_common(self["rendered"])
         self[u'bayes_token_inviz'] = self.get_body_text_array_common(self["invisible_rendered"])
         self[u'bayes_token_uris'] = []  # self.get_uri_list()
@@ -1134,8 +1136,8 @@ class BayesPlugin(oa.plugins.base.BasePlugin):
         self.ctxt.log.debug("bayes: corpus size: nspam = %s, nham = %s", ns, nn)
         # XXX This has a timer in SA.
         msgtokens = dict(t for t in self.tokenise(msg))
-        tokensdata = list(d for d in self.store.tok_get_all(msgtokens))
-        probabilities_ref = self._compute_prob_for_all_tokens(tokensdata, ns, nn)
+        tokensdata = list(d for d in self.store.tok_get_all(msgtokens) if d is not None)
+        probabilities_ref = (ref for ref in self._compute_prob_for_all_tokens(tokensdata, ns, nn) if ref is not None)
         pw = {}
         for tokendata, prob in zip(tokensdata, probabilities_ref):
             if prob is None:
@@ -1330,11 +1332,10 @@ class BayesPlugin(oa.plugins.base.BasePlugin):
         }
 
         try:
-            raw_fmt = formats[ftm_arg] if ftm_arg else "{p}-{D}--{t}"
+            fmt = formats[ftm_arg] if ftm_arg else "{p}-{D}--{t}"
         except KeyError:
             return "Invalid format, must be one of: %s" % (",".join(formats))
 
-        fmt = '"%s"' % raw_fmt
         amt = min((int(limit), len(info)))
         if not amt:
             return ""
