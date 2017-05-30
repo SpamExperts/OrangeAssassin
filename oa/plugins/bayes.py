@@ -801,7 +801,7 @@ class BayesPlugin(oa.plugins.base.BasePlugin):
 
         magic_re = self.store.get_magic_re()
 
-        rettokens = []
+        rettokens = set()
         for token in line.split():
             # Trim non-alphanumeric characters at the start of end.
             token = re.sub(r"^[-'\"\.,]+", "", token)
@@ -830,15 +830,15 @@ class BayesPlugin(oa.plugins.base.BasePlugin):
             # Are we in the body? If so, apply some body-specific breakouts.
             if region in (1, 2):
                 if CHEW_BODY_MAILADDRS and re.match(r"\S\@\S", token):
-                    rettokens.append(self._tokenise_mail_addrs(token))
+                    rettokens.add(self._tokenise_mail_addrs(token))
                 elif CHEW_BODY_URIS and re.match(r"\S\.[a-z]", token, re.I):
-                    rettokens.append(u"UD:" + token)  # The full token.
+                    rettokens.add(u"UD:" + token)  # The full token.
                     bit = token
                     while True:
                         bit = re.sub(r"^[^\.]+\.(.+)$", "\1", bit)
                         if not bit:
                             break
-                        rettokens.append("UD:" + bit)  # UD = URL domain
+                        rettokens.add("UD:" + bit)  # UD = URL domain
 
             # Note: do not trim down overlong tokens if they contain '*'.
             # This is used as part of split tokens such as "HTo:D*net"
@@ -852,7 +852,7 @@ class BayesPlugin(oa.plugins.base.BasePlugin):
                         token = re.sub(r"^(..?)", "", token)
                         if not token:
                             break
-                        rettokens.append("8:" + token)
+                        rettokens.add("8:" + token)
                     continue
 
                 if (region == 0 and HEADERS_TOKENIZE_LONG_TOKENS_AS_SKIPS) or (region == 1 and BODY_TOKENIZE_LONG_TOKENS_AS_SKIPS) or (region == 2 and URIS_TOKENIZE_LONG_TOKENS_AS_SKIPS):
@@ -863,20 +863,12 @@ class BayesPlugin(oa.plugins.base.BasePlugin):
 
             # Decompose tokens? Do this after shortening long tokens.
             if region in (1, 2) and DECOMPOSE_BODY_TOKENS:
-                if re.match(r"[^\w:\*]", token):
-                    decompd = token  # "Foo!"
-                    decompd = re.sub(r"[^\w:\*]", u"", decompd)
-                    rettokens.append(tokprefix + decompd)  # "Foo"
+                decomposed = re.sub(r"[^\w:\*]", u"", token)
+                rettokens.add(tokprefix + decomposed)  # "Foo"
+                rettokens.add(tokprefix + decomposed.lower())  # "foo"
+                rettokens.add(tokprefix + token.lower())  # "foo!"
 
-                if re.match(r"[A-Z]", token):
-                    decompd = token.lower()
-                    rettokens.append(tokprefix + decompd)  # "foo!"
-
-                    if re.match(r"[^\w:\*]", token):
-                        decompd = re.sub(r"[^\w:\*]", u"", decompd)
-                        rettokens.append(tokprefix + decompd)  # "foo"
-
-            rettokens.append(tokprefix + token)
+            rettokens.add(tokprefix + token)
         return rettokens
 
     def _tokenise_headers(self, msg):
