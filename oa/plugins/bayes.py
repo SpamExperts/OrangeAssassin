@@ -1188,7 +1188,7 @@ class BayesPlugin(oa.plugins.base.BasePlugin):
             # What's more expensive, scanning headers for HAMMYTOKENS and
             # SPAMMYTOKENS tags that aren't there or collecting data that
             # won't be used?  Just collecting the data is certainly simpler.
-            raw_token = msgtokens.get(tok.tobytes(), "(unknown)")
+            raw_token = msgtokens.get(tok, "(unknown)")
             s = pw_tok["spam_count"]
             n = pw_tok["ham_count"]
             a = pw_tok["atime"]
