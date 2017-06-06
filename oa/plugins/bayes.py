@@ -780,8 +780,12 @@ class BayesPlugin(oa.plugins.base.BasePlugin):
         # strings, and ISO-8859-15 alphas. Do not split on @'s; better
         # results keeping it.
         # Some useful tokens: "$31,000,000" "www.clock-speed.net" "f*ck" "Hits!"
-        line = re.sub(r"""-A-Za-z0-9,\@\*\!_'"\$.\241-\377""", "", line,
-                      re.DOTALL)
+        matches = re.findall(r"""([A-Za-z0-9,@*!_'"\$.\s-]+|
+                           [\xC0-\xDF][\x80-\xBF]|
+                           [\xE0-\xEF][\x80-\xBF]{2}|
+                           [\xF0-\xF4][\x80-\xBF]{3}|
+                           [\xA1-\xFF])|\s.""",  line, re.S | re.X)
+        line = " ".join(matches)
 
         # DO split on "..." or "--" or "---"; common formatting error
         # resulting in hapaxes. Keep the separator itself as a token, though,
