@@ -13,7 +13,7 @@ class PyzorPlugin(oa.plugins.base.BasePlugin):
     options = {"use_pyzor": ("bool", True),
                "pyzor_max": ("int", 5),
                "pyzor_timeout": ("float", 3.5),
-               "pyzor_servers": ("list", ["public.pyzor.org:24441"])}
+               "pyzor_servers": ("list", ["public.pyzor.org:24441", "oa.pyzor.org:24441"])}
 
     def finish_parsing_end(self, ruleset):
         """Create and store globally a pyzor client."""
