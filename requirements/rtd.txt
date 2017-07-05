@@ -1,5 +1,5 @@
 sphinx==1.6.3
-sphinx-autobuild==0.7.0
+sphinx-autobuild==0.7.1
 jinja2==2.9.6
 future==0.16.0
 raven==6.1.0
