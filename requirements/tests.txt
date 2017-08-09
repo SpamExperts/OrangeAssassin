@@ -1,10 +1,10 @@
 # Requirements for running tests.
 mock==2.0.0
-pytest==3.2.0
+pytest==3.2.1
 pytest-cov==2.5.1
 python-coveralls==2.9.1
 pep8==1.7.0
 se_profile==1.0.0
-sqlalchemy==1.1.12
+sqlalchemy==1.1.13
 git+https://github.com/SpamExperts/MINI-DNS-Server.git
 dnslib==0.9.7
