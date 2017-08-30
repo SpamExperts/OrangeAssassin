@@ -1,5 +1,7 @@
-from sqlalchemy.ext.declarative.api import declarative_base
-from sqlalchemy import Column, Integer, PrimaryKeyConstraint, String
+from __future__ import absolute_import
+from sqlalchemy.orm.exc import NoResultFound
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy import Column, Integer, PrimaryKeyConstraint, String, LargeBinary
 
 
 Base = declarative_base()
@@ -48,7 +50,7 @@ class BayesToken(Base):
     __tablename__ = "bayes_token"
 
     id = Column("id", Integer)
-    token = Column("token", String(5))
+    token = Column("token", LargeBinary(5))
     spam_count = Column("spam_count", Integer)
     ham_count = Column("ham_count", Integer)
     atime = Column("atime", Integer)
@@ -115,10 +117,17 @@ class Store(object):
         """Like tok_get, but for all tokens specified.
         Each returned tuple starts with the token."""
         for token in tokens:
-            yield self.conn.execute(
-                "SELECT token, spam_count, ham_count, atime "
-                "FROM bayes_token WHERE token=:token", {'token': token}
-            ).fetchone()
+            try:
+                yield self.conn.query(
+                    BayesToken.token, BayesToken.spam_count,
+                    BayesToken.ham_count, BayesToken.atime,
+                ).filter(BayesToken.token==bytes(token)).one()
+            except NoResultFound:
+                yield None
+            # yield self.conn.execute(
+            #     "SELECT token, spam_count, ham_count, atime "
+            #     "FROM bayes_token WHERE token=:token", {'token': token}
+            # ).fetchone()
 
     def seen_get(self, msgid):
         """Get the "seen" flag for the specified message."""
@@ -175,9 +184,9 @@ class Store(object):
     def tok_touch_all(self, touch_tokens, msgatime):
         """Update the access time for all the specified tokens."""
         for token in touch_tokens:
-            self.conn.execute("UPDATE bayes_token "
-                              "SET atime=:atime WHERE token=:token",
-                              {'atime': msgatime, 'token': token})
+            self.conn.query(BayesToken).filter(
+                BayesToken.token==bytes(token)
+            ).update({'atime':msgatime})
         self.conn.commit()
 
     def get_running_expire_tok(self):

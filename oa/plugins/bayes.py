@@ -108,7 +108,7 @@ class Chi(object):
         # SpamAssassin uses nspam/(nham+nspam) for S and nham/(nham+nspam)
         # for H. The SA code has a reference to bug 3118, but I can't find
         # that online, so I'm not sure what it is.
-        n = ns + nn
+        n = float(ns + nn)
         if not n:
             return 0.5
         S = ns / n
@@ -498,6 +498,10 @@ class BayesPlugin(oa.plugins.base.BasePlugin):
         return self['bayes_sql_password']
 
     def check_start(self, msg):
+        self.set_local(msg, 'learned', 0)
+        self.set_local(msg, 'bayes_token_info_hammy', [])
+        self.set_local(msg, 'bayes_token_info_spammy', [])
+        self.set_local(msg, 'count', 0)
         self['rendered'] = [msg.msg['subject'] or '\n']
         self['visible_rendered'] = [msg.msg['subject'] or '\n']
         self['invisible_rendered'] = []
@@ -534,8 +538,8 @@ class BayesPlugin(oa.plugins.base.BasePlugin):
         msg.plugin_tags.update({
             "BAYESTCHAMMY": tchammy,
             "BAYESTCSPAMMY": tcspammy,
-            "BAYESTCLEARNED": learned,
-            "BAYESTC": count,  # XXX This is still different than SA
+            "BAYESTCLEARNED": learned or '',
+            "BAYESTC": count or '',  # XXX This is still different than SA
             "HAMMYTOKENS": self.bayes_report_make_list(msg, self.get_local(msg, "bayes_token_info_hammy")),
             "SPAMMYTOKENS": self.bayes_report_make_list(msg, self.get_local(msg, "bayes_token_info_spammy")),
             "TOKENSUMMARY": summary,
@@ -1188,7 +1192,7 @@ class BayesPlugin(oa.plugins.base.BasePlugin):
             # What's more expensive, scanning headers for HAMMYTOKENS and
             # SPAMMYTOKENS tags that aren't there or collecting data that
             # won't be used?  Just collecting the data is certainly simpler.
-            raw_token = msgtokens.get(tok, "(unknown)")
+            raw_token = msgtokens.get(bytes(tok), "(unknown)")
             s = pw_tok["spam_count"]
             n = pw_tok["ham_count"]
             a = pw_tok["atime"]
@@ -1355,4 +1359,4 @@ class BayesPlugin(oa.plugins.base.BasePlugin):
             return fmt.format(D=D, S=S, H=H, C=C, O=O, N=N,
                               s=spam_count, p=p, h=ham_count, t=token)
 
-        return ", ".join(f(*x) for x in info)
+        return ", ".join(set(f(*x) for x in info))
