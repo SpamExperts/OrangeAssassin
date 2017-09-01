@@ -466,6 +466,8 @@ class BayesPlugin(oa.plugins.base.BasePlugin):
     use_ignores = True
 
     options = {
+        u'bayes_ignore_to': (u'list', ''),
+        u'bayes_ignore_from': (u'list', ''),
         u"use_learner": (u"bool", True),
         u"use_bayes_rules": (u"bool", True),
         u"detailed_bayes_score": (u"bool", False),
@@ -535,7 +537,12 @@ class BayesPlugin(oa.plugins.base.BasePlugin):
         summary = "Tokens new, {}; hammy, {}; neutral, {}; spammy, {}.".format(
             count - learned, tchammy, learned-tchammy-tcspammy, tcspammy
         )
+        try:
+            score = self.get_local(msg, 'bayes_score')
+        except KeyError:
+            score = ''
         msg.plugin_tags.update({
+            "BAYES": score,
             "BAYESTCHAMMY": tchammy,
             "BAYESTCSPAMMY": tcspammy,
             "BAYESTCLEARNED": learned or '',
@@ -1054,6 +1061,7 @@ class BayesPlugin(oa.plugins.base.BasePlugin):
 
         # XXX SA has a timer here.
         bayes_score = self.scan(msg)
+        self.set_local(msg, 'bayes_score', bayes_score)
         if bayes_score and (min_score < bayes_score <= max_score):
 
             # TODO: Find test_log implementation.
