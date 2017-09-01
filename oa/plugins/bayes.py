@@ -775,7 +775,7 @@ class BayesPlugin(oa.plugins.base.BasePlugin):
             if ADD_INVIZ_TOKENS_NO_PREFIX:
                 tokens.extend(self._tokenise_line(line, "", 1))
         hdrs = self._tokenise_headers(msg)
-        for prefix, value in hdrs.values():
+        for prefix, value in hdrs.items():
             tokens.extend(self._tokenise_line(value, "H%s:" % prefix, 0))
         # Remove duplicates, skip empty tokens (this happens sometimes),
         # generate a SHA1 hash, and take the lower 40 bits as the token.
@@ -1030,6 +1030,15 @@ class BayesPlugin(oa.plugins.base.BasePlugin):
         # prob of about 0.5. Waste of space!
         val = re.sub(r"\b(?:with|from|for|SMTP|ESMTP)\b", " ", val)
         return val
+
+    def find_all_addrs_in_line(self, line):
+        matches = re.search(
+            r"(?:mailto:)?\s([-a-z0-9_\+\:\=\!\#\$\%\&\*\^\?\{\}\|\~\/\.]+\@[-a-z0-9_\+\:\/]+)[-a-z0-9_\+\:\/]+",
+            line
+        )
+        if matches:
+            for match in matches.groups():
+                yield match[0]
 
     def _pre_chew_addr_header(self, val):
         addrs = []
