@@ -466,7 +466,6 @@ class BayesPlugin(oa.plugins.base.BasePlugin):
     use_ignores = True
 
     options = {
-        u"use_bayes": (u"bool", True),
         u"use_learner": (u"bool", True),
         u"use_bayes_rules": (u"bool", True),
         u"detailed_bayes_score": (u"bool", False),
@@ -498,6 +497,7 @@ class BayesPlugin(oa.plugins.base.BasePlugin):
         return self['bayes_sql_password']
 
     def check_start(self, msg):
+        self['use_bayes'] = self.ctxt.conf['use_bayes']
         self.set_local(msg, 'learned', 0)
         self.set_local(msg, 'bayes_token_info_hammy', [])
         self.set_local(msg, 'bayes_token_info_spammy', [])
