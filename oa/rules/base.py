@@ -66,7 +66,7 @@ class BaseRule(object):
             if ruleset.conf["autolearn"] and "noautolearn" in self.tflags:
                 self.score = 0
                 return
-            if not ruleset.conf["training"] and "learn" in self.tflags:
+            if not ruleset.conf["use_bayes"] and "learn" in self.tflags:
                 self.score = 0
                 return
             if not ruleset.conf["user_config"] and "userconf" in self.tflags:

@@ -192,3 +192,10 @@ Plugin :mod:`relay-eval`
         :undoc-members:
         :show-inheritance:
 
+Plugin :mod:`bayes`
+------------------------
+
+.. automodule:: pad.plugins.bayes
+:members:
+        :undoc-members:
+        :show-inheritance:

@@ -113,8 +113,10 @@ def get_config_files(config_path, siteconfig_path, userpref_path=None):
                 sorted(get_files_with_extension(config_path, ".cf")))
     config_files.extend(
             sorted(get_files_with_extension(siteconfig_path, ".cf")))
-    if userpref_path is not None and os.path.exists(userpref_path):
-        config_files.append(os.path.expanduser(userpref_path))
+    if userpref_path is not None:
+        userpref_path = os.path.expanduser(userpref_path)
+        if os.path.exists(userpref_path):
+            config_files.append(userpref_path)
     return config_files
 
 

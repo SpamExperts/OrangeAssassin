@@ -80,7 +80,6 @@ if has_sqlalchemy:
 class AutoWhiteListPlugin(oa.plugins.base.BasePlugin):
     """Reimplementation of the awl spamassassin plugin"""
 
-    dsn_name = "user_awl"
     has_mysql = False
     engine = None
 
@@ -90,7 +89,22 @@ class AutoWhiteListPlugin(oa.plugins.base.BasePlugin):
         "auto_whitelist_factor": ("float", 0.5),
         "auto_whitelist_ipv4_mask_len": ("int", 16),
         "auto_whitelist_ipv6_mask_len": ("int", 48),
+        "user_awl_dsn": ("str", ""),
+        "user_awl_sql_username": ("str", ""),
+        "user_awl_sql_password": ("str", ""),
     }
+
+    @property
+    def dsn(self):
+        return self['user_awl_dsn']
+
+    @property
+    def sql_username(self):
+        return self['user_awl_sql_username']
+
+    @property
+    def sql_password(self):
+        return self['user_awl_sql_password']
 
     def _get_origin_ip(self, msg):
         relays = []
