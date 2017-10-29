@@ -2,7 +2,7 @@ sphinx==1.6.5
 sphinx-autobuild==0.7.1
 jinja2==2.9.6
 future==0.16.0
-raven==6.2.1
+raven==6.3.0
 pyzor==1.0.0
 Pillow==4.3.0
 pygeoip==0.3.2
