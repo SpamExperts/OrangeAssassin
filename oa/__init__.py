@@ -1,4 +1,4 @@
 """Python Antispam Daemon"""
 
-__version__ = "1.0b"
-__release_date__ = "2017-03-28"
+__version__ = "1.1b"
+__release_date__ = "2018-01-08"
