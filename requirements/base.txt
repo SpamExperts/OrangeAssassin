@@ -9,4 +9,4 @@ langdetect==1.0.7
 PyPDF2==1.26.0
 pyspf==2.0.12t # rq.filter: ==2.0.12t
 spoon==1.0.6
-dkimpy==0.6.2
+dkimpy==0.7.0
