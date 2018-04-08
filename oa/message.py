@@ -10,6 +10,7 @@ import re
 import time
 import email
 import hashlib
+import calendar
 import functools
 import ipaddress
 import email.utils
@@ -589,7 +590,7 @@ class Message(oa.context.MessageContext):
             except IndexError:
                 continue
             ts = email.utils.parsedate(ts)
-            return time.mktime(ts)
+            return calendar.timegm(ts)
         # SA will look in other headers too. Perhaps we should also?
         return time.time()
 
