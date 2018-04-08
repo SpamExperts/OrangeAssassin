@@ -98,14 +98,15 @@ class TestBaseRule(unittest.TestCase):
 
     def test_preprocess_tflags_learn(self):
         mock_ruleset = Mock(conf={"use_network": True, "autolearn": False,
-                                  "training": False})
+                                  "training": False, "use_bayes": False})
         rule = oa.rules.base.BaseRule("TEST", None, "Some Rule", 0, ["learn"])
         rule.preprocess(mock_ruleset)
         self.assertEqual(rule.score, 0.0)
 
     def test_preprocess_tflags_userconf(self):
         mock_ruleset = Mock(conf={"use_network": False, "autolearn": False,
-                                  "training": False, "user_config": False})
+                                  "training": False, "user_config": False,
+                                  "use_bayes": True})
         rule = oa.rules.base.BaseRule("TEST", None, "Some Rule", 0,
                                       ["userconf"])
         rule.preprocess(mock_ruleset)
