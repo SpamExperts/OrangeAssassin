@@ -144,7 +144,7 @@ class TestDaemonBase(unittest.TestCase):
             # for more time. This is only ran once so the impact
             # is minimal anyway.
             # This should prevent random test failures on PyPy.
-            sleep_time = 2.0
+            sleep_time = 10.0
         time.sleep(sleep_time)
 
     @classmethod
