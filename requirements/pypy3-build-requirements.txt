@@ -1,1 +1,1 @@
-ipaddress==1.0.19
+ipaddress==1.0.21
