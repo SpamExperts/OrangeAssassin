@@ -2,7 +2,9 @@ from __future__ import absolute_import
 from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import Column, Integer, PrimaryKeyConstraint, String, LargeBinary
+from sqlalchemy.exc import OperationalError
 
+CURRENT_SCHEMA_VERSION = 0
 
 Base = declarative_base()
 
@@ -81,11 +83,21 @@ class BayesVars(Base):
     # Should also be a key on username, if we start using that.
 
 
+class DbMeta(Base):
+    __tablename__ = "db_meta"
+
+    key = Column("key", String(32))
+    value = Column("value", Integer)
+
+    __table_args__ = (PrimaryKeyConstraint("key"),)
+
+
 class Store(object):
     def __init__(self, plugin):
         self.engine = plugin.get_engine()
         self.conn = None
         self.plugin = plugin
+        self.db_checked = False
 
     def untie_db(self):
         """Remove the connection to the database."""
@@ -103,7 +115,44 @@ class Store(object):
     def tie_db_writeable(self):
         """Create a read/write connection to the database."""
         self.conn = self.plugin.get_session()
+        if not self.db_checked:
+            self.check_database()
+            self.db_checked = True
         return True
+
+    def check_database(self):
+        """
+        Verifies that the backing database exists and that the database schema
+        version is supported by the code. If there is no db_meta table in the database,
+        the database is assumed to be new/empty and the schema is created.
+
+        In the future, this method is expected to be able to alter the database
+        schema to match future code, but for now we just raise an Exception when
+        an unsupported schema version is detected.
+        """
+        try:
+            row = self.conn.execute(
+                "SELECT value FROM db_meta WHERE key = 'schema_version'"
+            ).fetchone()
+            if not row or row[0] != CURRENT_SCHEMA_VERSION:
+                raise Exception(
+                    "The database at '{}' has the wrong schema version"
+                    .format(self.plugin.dsn)
+                )
+
+        except OperationalError as e:
+            if "no such table" in str(e):
+                self._create_database_schema()
+            else:
+                raise
+
+    def _create_database_schema(self):
+        Base.metadata.create_all(self.plugin['engine'])
+        self.conn.execute(
+            "INSERT into db_meta VALUES ('schema_version', :current_version)",
+            {"current_version": CURRENT_SCHEMA_VERSION}
+        )
+        self.conn.commit()
 
     def tok_get(self, token):
         """Get the spam and ham counts, and access times for the specified token."""
@@ -131,9 +180,10 @@ class Store(object):
 
     def seen_get(self, msgid):
         """Get the "seen" flag for the specified message."""
-        return self.conn.execute(
+        row = self.conn.execute(
             "SELECT flag FROM bayes_seen WHERE msgid=:msgid",
-            {'msgid': msgid}).fetchone()[0]
+            {'msgid': msgid}).fetchone()
+        return row[0] if row else None
 
     def seen_delete(self, id, msgid):
         self.conn.execute(
