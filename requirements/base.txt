@@ -1,4 +1,4 @@
-dill==0.2.8.1
+dill==0.2.8.2
 future==0.16.0
 raven==6.9.0
 pyzor==1.0.0
