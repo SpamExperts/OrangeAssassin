@@ -1,2 +1,2 @@
 dnspython3==1.15.0
-py3dns==3.1.1
+py3dns==3.2.0
