@@ -4,7 +4,7 @@ jinja2==2.10
 future==0.16.0
 raven==6.9.0
 pyzor==1.0.0
-Pillow==5.2.0
+Pillow==5.3.0
 pygeoip==0.3.2
 langdetect==1.0.7
 PyPDF2==1.26.0
