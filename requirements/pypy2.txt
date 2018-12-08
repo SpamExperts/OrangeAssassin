@@ -1,4 +1,4 @@
 ipaddress==1.0.22
-dnspython==1.15.0
+dnspython==1.16.0
 pydns==2.3.6
 ipaddr==2.2.0
