@@ -12,13 +12,13 @@ from oa.regex import Regex
 CONVERT = (
     ("&&", " and "),
     ("||", " or "),
-    ("!", " not "),
+    ("!", " not ")
 )
 
 # Simple protection against recursion, or infinite loops with the meta rules.
 MAX_RECURSION = 10
 
-_SUBRULE_P = Regex(r"([_a-zA-Z]\w*)(?=\W|$)")
+_SUBRULE_P = Regex(r"((?:!\s*)?[_a-zA-Z]\w*)(?=\W|$)")
 
 
 class MetaRule(oa.rules.base.BaseRule):
@@ -46,7 +46,7 @@ class MetaRule(oa.rules.base.BaseRule):
             return
 
         subrules = set(_SUBRULE_P.findall(self.rule))
-        rule = _SUBRULE_P.sub(r"\1(msg)", self.rule)
+        rule = _SUBRULE_P.sub(r"(\1(msg))", self.rule)
         for operator, repl in CONVERT:
             rule = rule.replace(operator, repl)
         rule_match = "match = lambda msg: %s" % rule
@@ -56,8 +56,9 @@ class MetaRule(oa.rules.base.BaseRule):
 
         oa.rules.base.BaseRule.postparsing(self, ruleset)
         for subrule_name in subrules:
+            clean_subrule_name = subrule_name.strip("! \t")
             try:
-                subrule = ruleset.get_rule(subrule_name)
+                subrule = ruleset.get_rule(clean_subrule_name)
                 # Call any postparsing for this subrule to ensure that the rule
                 # is usable. (For example when the meta rule references other
                 # meta rules).
@@ -66,7 +67,7 @@ class MetaRule(oa.rules.base.BaseRule):
                 raise oa.errors.InvalidRule(self.name, "Undefined subrule "
                                                         "referenced %r" %
                                             subrule_name)
-            self._location[subrule_name] = subrule.match
+            self._location[clean_subrule_name] = subrule.match
         exec(_code_obj, self._location)
         assert "match" in self._location
 
