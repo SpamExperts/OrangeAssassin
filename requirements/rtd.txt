@@ -1,10 +1,10 @@
-sphinx==1.8.4
+sphinx==2.0.0
 sphinx-autobuild==0.7.1
-jinja2==2.10
+jinja2==2.10.1
 future==0.17.1
 raven==6.10.0
 pyzor==1.0.0
-Pillow==5.4.1
+Pillow==6.0.0
 pygeoip==0.3.2
 langdetect==1.0.7
 PyPDF2==1.26.0
@@ -15,9 +15,9 @@ spoon==1.0.6
 dnspython3==1.15.0
 py3dns==3.2.0
 mock==2.0.0
-pytest==4.3.0
+pytest==4.4.0
 pytest-cov==2.6.1
 python-coveralls==2.9.1
 pep8==1.7.1
 git+https://github.com/SpamExperts/MINI-DNS-Server.git
-dnslib==0.9.8
+dnslib==0.9.10
