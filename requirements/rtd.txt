@@ -14,7 +14,7 @@ pyspf==2.0.12t # rq.filter: ==2.0.12t
 spoon==1.0.6
 dnspython3==1.15.0
 py3dns==3.2.0
-mock==2.0.0
+mock==3.0.0
 pytest==4.4.1
 pytest-cov==2.6.1
 python-coveralls==2.9.1
