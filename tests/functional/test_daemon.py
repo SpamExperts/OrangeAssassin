@@ -483,7 +483,7 @@ class TestUserConfigDaemon(TestDaemon):
 
     username = getpass.getuser()
     user_pref = USER_CONFIG
-    user_dir = os.path.join("/home", username, ".spamassassin")
+    user_dir = os.path.join(os.path.expanduser("~"), ".spamassassin")
     user_msg_len = len(USER_TEST_MSG) + 2
 
     @classmethod
@@ -595,7 +595,7 @@ class TestUserConfigDaemon(TestDaemon):
 class TestDaemonReload(TestDaemonBase):
     username = getpass.getuser()
     user_pref = USER_CONFIG
-    user_dir = os.path.join("/home", username, ".spamassassin")
+    user_dir = os.path.join(os.path.expanduser("~"), ".spamassassin")
     user_msg_len = len(USER_TEST_MSG) + 2
 
     @classmethod
