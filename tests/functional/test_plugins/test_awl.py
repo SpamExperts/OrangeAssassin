@@ -9,11 +9,11 @@ import tests.util
 try:
     import pymysql
     use_sqlalchemy = False
-    CONF_MYSQL = "user_awl_dsn DBI:mysql:OrangeAssassin:127.0.0.1"
+    CONF_MYSQL = "user_awl_dsn DBI:mysql:spampad:127.0.0.1"
 except:
     import sqlite3
     use_sqlalchemy = True
-    CONF_MYSQL = "user_awl_dsn sqlite:///OrangeAssassin.db"
+    CONF_MYSQL = "user_awl_dsn sqlite:///spampad.db"
 
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS `awl` (
@@ -70,11 +70,11 @@ class TestFunctionalAWLPlugin(tests.util.TestBase):
         super(TestFunctionalAWLPlugin, self).setUp()
 
         if use_sqlalchemy:
-            self.db = sqlite3.connect("OrangeAssassin.db")
+            self.db = sqlite3.connect("spampad.db")
         else:
             self.db = pymysql.connect(host='localhost', port=3306,
                                       user='root',
-                                      db='OrangeAssassin')
+                                      db='spampad')
         self.c = self.db.cursor()
         self.c.execute(SCHEMA)
         self.db.commit()

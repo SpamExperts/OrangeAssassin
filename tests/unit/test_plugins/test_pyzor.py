@@ -70,7 +70,7 @@ class TestPyzorCheck(unittest.TestCase):
         plugin.check_pyzor(self.mock_msg)
 
         self.mock_client.check.assert_called_with(self.digest,
-                                                  ["public.pyzor.org", '24441'])
+                                                  ["oa.pyzor.org", '24441'])
 
     def test_check_pyzor_check_matched(self):
         self.global_data["client"] = self.mock_client
@@ -135,7 +135,7 @@ class TestPyzorReport(unittest.TestCase):
         plugin.plugin_report(self.mock_msg)
 
         self.mock_client.report.assert_called_with(self.digest,
-                                                   ["public.pyzor.org", '24441'])
+                                                   ["oa.pyzor.org", '24441'])
 
     def test_report_pyzor_ham(self):
         self.global_data["client"] = self.mock_client
@@ -145,7 +145,7 @@ class TestPyzorReport(unittest.TestCase):
         plugin.plugin_revoke(self.mock_msg)
 
         self.mock_client.whitelist.assert_called_with(self.digest,
-                                                      ["public.pyzor.org", '24441'])
+                                                      ["oa.pyzor.org", '24441'])
 
     def test_report_no_digest(self):
         self.global_data["client"] = self.mock_client

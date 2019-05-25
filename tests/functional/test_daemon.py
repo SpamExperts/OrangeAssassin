@@ -483,7 +483,7 @@ class TestUserConfigDaemon(TestDaemon):
 
     username = getpass.getuser()
     user_pref = USER_CONFIG
-    user_dir = os.path.join("/home", username, ".spamassassin")
+    user_dir = os.path.join(os.path.expanduser("~"), ".spamassassin")
     user_msg_len = len(USER_TEST_MSG) + 2
 
     @classmethod
@@ -576,7 +576,7 @@ class TestUserConfigDaemon(TestDaemon):
         content_row = "Content-length: %s\r\n" % self.user_msg_len
         command = ("%s SPAMC/1.2\r\n%s\r\n%s\r\n" %
                    (process_row, content_row, USER_TEST_MSG))
-        with self.assertRaises(AssertionError):
+        with self.assertRaises(self.failureException):
             self.send_to_proc(command).split("\r\n")
 
     def test_user_msg_spam_override(self):
@@ -595,7 +595,7 @@ class TestUserConfigDaemon(TestDaemon):
 class TestDaemonReload(TestDaemonBase):
     username = getpass.getuser()
     user_pref = USER_CONFIG
-    user_dir = os.path.join("/home", username, ".spamassassin")
+    user_dir = os.path.join(os.path.expanduser("~"), ".spamassassin")
     user_msg_len = len(USER_TEST_MSG) + 2
 
     @classmethod
