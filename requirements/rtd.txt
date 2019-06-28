@@ -1,4 +1,4 @@
-sphinx==1.4.1
+sphinx==2.1.2
 sphinx-autobuild==0.6.0
 jinja2==2.10.1
 future==0.15.2
