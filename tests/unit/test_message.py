@@ -5,11 +5,12 @@
 import unittest
 import collections
 import email.header
+import hashlib
 
 try:
-    from unittest.mock import patch, Mock, call
+    from unittest.mock import patch, Mock, call, MagicMock
 except ImportError:
-    from mock import patch, Mock, call
+    from mock import patch, Mock, call, MagicMock
 
 import oa.message
 import oa.config
@@ -161,6 +162,34 @@ class TestParseMessage(unittest.TestCase):
                            self.html_part))
         msg = oa.message.Message(self.mock_ctxt, "")
         self.assertEqual(msg.uri_list, {"http://example.com"})
+
+
+class TestMessageMisc(unittest.TestCase):
+    """
+    Some tests that doesn't require extensive mocking
+    """
+    def test_msgid(self):
+        msg_id = "test-id"
+        msg = oa.message.Message(MagicMock(), "Message-ID: <%s>\n\nTest" % msg_id)
+        self.assertEqual(msg_id, msg.msgid)
+
+    def test_get_msgid_generated(self):
+        """Test the get_msgid method when there is no Message-ID header."""
+        text = "Hello world!"
+        found_id = oa.message.Message(MagicMock(), "Subject: test\n\n%s" % text).msgid
+        combined = "None\x00%s" % text
+        msg_id = "%s@sa_generated" % hashlib.sha1(combined.encode('utf-8')).hexdigest()
+        self.assertEqual(msg_id, found_id)
+
+    def test_receive_date(self):
+        """Test the receive_date method."""
+        msg = ("""Received: from server6.seinternal.com ([178.63.74.9])\r
+        by mx99.antispamcloud.com with esmtps (TLSv1.2:DHE-RSA-AES128-SHA:128)\r
+        (Exim 4.85) id 1azjrM-000RwX-P5\r
+        for spam@mx99.antispamcloud.com; Mon, 09 May 2016 14:00:25 +0200\r\n\r\nHello world!""")
+        expected = 1462802425
+        result = oa.message.Message(MagicMock(), msg).receive_date
+        self.assertEqual(expected, result)
 
 
 class TestIterPartsMessage(unittest.TestCase):
