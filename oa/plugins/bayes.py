@@ -675,7 +675,7 @@ class BayesPlugin(oa.plugins.base.BasePlugin):
         # a safety measure.
         if msgatime - time.time() > 86400:
             msgatime = time.time()
-        tokens = self.tokenise(msg)
+        tokens = (t[1] for t in self.tokenise(msg))
         # XXX SA puts this in a timer.
         if isspam:
             self.store.nspam_nham_change(1, 0)
