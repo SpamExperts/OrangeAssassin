@@ -41,14 +41,6 @@ class TestBasePlugin(unittest.TestCase):
         self.mock_ctxt.set_plugin_data.assert_called_with("BasePlugin",
                                                           "test_bool", False)
 
-    def test_init_options_dsn_defaults(self):
-        oa.plugins.base.BasePlugin.dsn_name = "test_plugin"
-        oa.plugins.base.BasePlugin(self.mock_ctxt)
-
-        self.assertIn("test_plugin_dsn", self.options)
-        self.assertIn("test_plugin_sql_password", self.options)
-        self.assertIn("test_plugin_sql_username", self.options)
-
     def test_set_global(self):
         plugin = oa.plugins.base.BasePlugin(self.mock_ctxt)
 
@@ -166,13 +158,13 @@ class TestBasePlugin(unittest.TestCase):
                          return_value=alchemy).start()
         context = oa.context.GlobalContext()
 
-        oa.plugins.base.BasePlugin.dsn_name = "test_plugin"
+        oa.plugins.base.BasePlugin.dsn = dbi
+        oa.plugins.base.BasePlugin.sql_username = "testuser"
+        oa.plugins.base.BasePlugin.sql_password = "password"
         plugin = oa.plugins.base.BasePlugin(context)
 
         plugin_data = context.plugin_data["BasePlugin"]
         plugin_data["test_plugin_dsn"] = dbi
-        plugin_data["test_plugin_sql_username"] = "testuser"
-        plugin_data ["test_plugin_sql_password"] = "password"
 
         plugin.finish_parsing_end(self.mock_ruleset)
         mock_dbi.assert_called_with(dbi, "testuser", "password")
@@ -182,11 +174,8 @@ class TestBasePlugin(unittest.TestCase):
         alchemy = "mysql://testuser:password@localhost/spamassassin"
         context = oa.context.GlobalContext()
 
-        oa.plugins.base.BasePlugin.dsn_name = "test_plugin"
+        oa.plugins.base.BasePlugin.dsn = alchemy
         plugin = oa.plugins.base.BasePlugin(context)
-
-        plugin_data = context.plugin_data["BasePlugin"]
-        plugin_data["test_plugin_dsn"] = alchemy
 
         plugin.finish_parsing_end(self.mock_ruleset)
         self.mock_create_engine.assert_called_with(alchemy)
