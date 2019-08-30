@@ -6,9 +6,9 @@ import unittest
 import threading
 
 try:
-    from unittest.mock import patch, Mock, call, MagicMock
+    from unittest.mock import patch, Mock, call, MagicMock, ANY
 except ImportError:
-    from mock import patch, Mock, call, MagicMock
+    from mock import patch, Mock, call, MagicMock, ANY
 
 
 import oa.server
@@ -59,7 +59,7 @@ class TestServer(unittest.TestCase):
         patch("oa.server.COMMANDS", {"CHECK": mock_check}, create=True).start()
         oa.server.RequestHandler(mock_request, ("127.0.0.1", 47563),
                                  mock_server)
-        mock_check.assert_called_with(mock_rfile, mock_rfile,
+        mock_check.assert_called_with(mock_rfile, ANY,
                                       mock_server)
 
     def test_server(self):
