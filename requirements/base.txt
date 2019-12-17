@@ -2,7 +2,7 @@ dill==0.2.5
 future==0.15.2
 raven==5.13.0
 pyzor==1.0.0
-Pillow==4.0.0
+Pillow==6.2.1
 pygeoip==0.3.2
 python-dateutil==2.6.0
 langdetect==1.0.6
