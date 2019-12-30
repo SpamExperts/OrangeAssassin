@@ -7,4 +7,4 @@ pep8==1.7.0
 se_profile==1.0.0
 sqlalchemy==1.3.12
 git+https://github.com/SpamExperts/MINI-DNS-Server.git
-dnslib==0.9.6
+dnslib==0.9.12
