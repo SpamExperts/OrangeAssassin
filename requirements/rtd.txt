@@ -1,6 +1,6 @@
 sphinx==1.4.1
 sphinx-autobuild==0.6.0
-jinja2==2.10.3
+jinja2==2.11.0
 future==0.18.2
 raven==5.13.0
 pyzor==1.0.0
