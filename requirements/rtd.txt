@@ -9,7 +9,7 @@ pygeoip==0.3.2
 langdetect==1.0.8
 PyPDF2==1.25.1
 PyMySQL==0.7.9
-mysqlclient==1.4.6
+mysqlclient==2.0.0
 pyspf==2.0.14 # rq.filter: ==2.0.12t
 spoon==1.0.1
 dnspython3==1.12.0
