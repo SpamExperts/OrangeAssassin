@@ -1,7 +1,7 @@
 # Requirements for running tests.
 mock==2.0.0
 pytest==2.9.1
-pytest-cov==2.2.1
+pytest-cov==2.10.1
 python-coveralls==2.7.0
 pep8==1.7.1
 se_profile==1.0.0
