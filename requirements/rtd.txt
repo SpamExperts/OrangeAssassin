@@ -20,4 +20,4 @@ pytest-cov==2.2.1
 python-coveralls==2.7.0
 pep8==1.7.1
 git+https://github.com/SpamExperts/MINI-DNS-Server.git
-dnslib==0.9.12
+dnslib==0.9.14
