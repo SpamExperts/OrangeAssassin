@@ -17,7 +17,7 @@ py3dns==3.1.0
 mock==2.0.0
 pytest==2.9.1
 pytest-cov==2.2.1
-python-coveralls==2.7.0
+python-coveralls==2.9.3
 pep8==1.7.1
 git+https://github.com/SpamExperts/MINI-DNS-Server.git
 dnslib==0.9.12
