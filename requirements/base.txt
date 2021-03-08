@@ -4,7 +4,7 @@ raven==5.13.0
 pyzor==1.0.0
 Pillow==8.1.2
 pygeoip==0.3.2
-python-dateutil==2.6.0
+python-dateutil==2.8.1
 langdetect==1.0.8
 PyPDF2==1.25.1
 pyspf==2.0.14 # rq.filter: ==2.0.12t
