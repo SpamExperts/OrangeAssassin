@@ -1,5 +1,5 @@
 sphinx==3.5.2
-sphinx-autobuild==0.6.0
+sphinx-autobuild==2020.9.1
 jinja2==2.10.3
 future==0.18.2
 raven==5.13.0
