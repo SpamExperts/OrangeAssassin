@@ -12,11 +12,6 @@ OrangeAssassin
 .. image:: https://codeclimate.com/github/SpamExperts/OrangeAssassin/badges/gpa.svg
    :target: https://codeclimate.com/github/SpamExperts/OrangeAssassin
    :alt: Code Climate
-
-
-.. image:: https://requires.io/github/SpamExperts/OrangeAssassin/requirements.svg?branch=master
-     :target: https://requires.io/github/SpamExperts/OrangeAssassin/requirements/?branch=master
-     :alt: Requirements Status
      
 
 See our `Documentation <http://orangeassassin.readthedocs.org/>`_ for more details.
