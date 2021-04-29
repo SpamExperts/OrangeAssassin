@@ -1,0 +1,38 @@
+version: 2
+updates:
+- package-ecosystem: pip
+  directory: "/"
+  schedule:
+    interval: daily
+  open-pull-requests-limit: 99
+  allow:
+  - dependency-type: direct
+  - dependency-type: indirect
+  ignore:
+  - dependency-name: sqlalchemy
+    versions:
+    - 1.4.0
+    - 1.4.1
+    - 1.4.2
+    - 1.4.3
+    - 1.4.4
+    - 1.4.5
+    - 1.4.6
+    - 1.4.7
+    - 1.4.8
+    - 1.4.9
+  - dependency-name: sphinx
+    versions:
+    - 3.5.3
+  - dependency-name: sphinx-autobuild
+    versions:
+    - 2020.9.1
+  - dependency-name: pillow
+    versions:
+    - 8.1.1
+  - dependency-name: pytest
+    versions:
+    - 6.2.2
+  - dependency-name: jinja2
+    versions:
+    - 2.11.2
