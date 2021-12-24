@@ -86,3 +86,14 @@ class TestBodyRules(tests.util.TestBase):
                            "Please click this link: https://example.com and follow the instructions",
                            config=config,
                            score=9.0, symbols=["TEST_DKIM_AND_FROM", "TEST_FROM_AND_URL", "TEST_ALL_RULE"])
+
+    def test_header_meta_rule_combined_match_not_operator(self):
+        config = ("body __TEST_NOT_DIFFERENT   /instructions/\n"
+                  "body __TEST_NOT_DIFFERENT2  /follow/\n"
+                  "meta TEST_ALL_RULE (((__TEST_NOT_DIFFERENT*5) +! (1*__TEST_NOT_DIFFERENT2))>1)\n"
+                  "score TEST_ALL_RULE 5")
+        self.check_symbols("DKIM-Signature: TestDkim \n"
+                           "From: test <test@example.com>\n\n"
+                           "Please click this link: https://example.com and follow the instructions",
+                           config=config,
+                           score=5.0, symbols=["TEST_ALL_RULE"])
