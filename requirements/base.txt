@@ -6,7 +6,7 @@ Pillow==8.4.0
 pygeoip==0.3.2
 python-dateutil==2.6.0
 langdetect==1.0.9
-PyPDF2==1.25.1
+PyPDF2==2.10.9
 pyspf==2.0.14 # rq.filter: ==2.0.12t
 spoon==1.0.6
 dkimpy==0.5.6
