@@ -1,5 +1,5 @@
 dill==0.2.5
-future==0.18.2
+future==0.18.3
 raven==6.10.0
 pyzor==1.0.0
 Pillow==8.4.0
