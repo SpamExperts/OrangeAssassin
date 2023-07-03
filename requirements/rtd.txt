@@ -13,7 +13,7 @@ mysqlclient==1.4.6
 pyspf==2.0.14 # rq.filter: ==2.0.12t
 spoon==1.0.6
 dnspython3==1.12.0
-py3dns==3.1.0
+py3dns==4.0.0
 mock==2.0.0
 pytest==2.9.1
 pytest-cov==2.2.1
